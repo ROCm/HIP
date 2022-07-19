@@ -27,13 +27,17 @@ texture<float, hipTextureType2DLayered> tex2DL;
 
 __global__ void simpleKernelLayeredArray(T* outputData,
                                          int width, int height, int layer) {
+#if !defined(__HIP_NO_IMAGE_SUPPORT) || !__HIP_NO_IMAGE_SUPPORT
   unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
   unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
   outputData[layer * width * height + y * width + x] = tex2DLayered(tex2DL,
                                                               x, y, layer);
+#endif
 }
 
 TEST_CASE("Unit_hipSimpleTexture2DLayered_Check") {
+  CHECK_IMAGE_SUPPORT
+
   constexpr int SIZE = 512;
   constexpr int num_layers = 5;
   constexpr unsigned int width = SIZE;

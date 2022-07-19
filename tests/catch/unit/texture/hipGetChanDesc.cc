@@ -24,18 +24,10 @@ THE SOFTWARE.
 
 
 TEST_CASE("Unit_hipGetChannelDesc_CreateAndGet") {
+  CHECK_IMAGE_SUPPORT
+
   hipChannelFormatDesc chan_test, chan_desc;
   hipArray *hipArray;
-
-#if HT_AMD
-  int imageSupport{};
-  HIP_CHECK(hipDeviceGetAttribute(&imageSupport,
-                           hipDeviceAttributeImageSupport, 0));
-  if (!imageSupport) {
-    INFO("Texture is not supported on the device. Test is skipped");
-    return;
-  }
-#endif
 
   chan_desc = hipCreateChannelDesc(32, 0, 0, 0, hipChannelFormatKindSigned);
   HIP_CHECK(hipMallocArray(&hipArray, &chan_desc, C, R, 0));

@@ -22,12 +22,16 @@ THE SOFTWARE.
 texture<float, 2, hipReadModeElementType> tex;
 
 __global__ void tex2DKernel(float* outputData, int width) {
+#if !defined(__HIP_NO_IMAGE_SUPPORT) || !__HIP_NO_IMAGE_SUPPORT
   int x = blockIdx.x * blockDim.x + threadIdx.x;
   int y = blockIdx.y * blockDim.y + threadIdx.y;
   outputData[y * width + x] = tex2D(tex, x, y);
+#endif
 }
 
 TEST_CASE("Unit_hipTextureRef2D_Check") {
+  CHECK_IMAGE_SUPPORT
+
   constexpr int SIZE = 256;
   constexpr unsigned int width = SIZE;
   constexpr unsigned int height = SIZE;
