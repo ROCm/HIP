@@ -20,8 +20,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include <hip_test_common.hh>
-#include <memory>
 #include "MemUtils.hh"
 
 /*
@@ -34,15 +32,119 @@ using namespace mem_utils;
 // value used for memset operations
 constexpr int testValue = 0x11;
 
-static void checkForHostSync(hipStream_t stream, bool async, allocType type) {
-  if (async && type == allocType::deviceMalloc) {
-    HIP_CHECK_ERROR(hipStreamQuery(stream), hipErrorNotReady);
+
+/*
+ * Set of helper functions handling the different cases for memcpy
+ */
+
+static inline hipMemcpyKind getMemcpyType(allocType type, bool fromHost) {
+  hipMemcpyKind cpyType{};
+  if (fromHost) {
+    switch (type) {
+      case allocType::deviceMalloc:
+        cpyType = hipMemcpyHostToDevice;
+        break;
+      case allocType::devRegistered:
+        cpyType = hipMemcpyHostToDevice;
+        break;
+      default:  // host
+        cpyType = hipMemcpyHostToHost;
+        break;
+    }
   } else {
-    REQUIRE(true);
+    switch (type) {
+      case allocType::deviceMalloc:
+        cpyType = hipMemcpyDeviceToDevice;
+        break;
+      case allocType::devRegistered:
+        cpyType = hipMemcpyDeviceToDevice;
+        break;
+      default:  // host
+        cpyType = hipMemcpyDeviceToHost;
+        break;
+    }
+  }
+  return cpyType;
+}
+
+template <typename T>
+static inline void memcpyCheck(allocType type, memType memType, T* aPtr, MultiDData& data,
+                               T* fillerData, bool async, hipStream_t stream,
+                               bool fromHost) {
+  auto cpyType = getMemcpyType(type, fromHost);
+  auto sizeInBytes = data.pitch * data.getH() * data.getD() * sizeof(T);
+  switch (memType) {
+    case memType::hipMem:
+      if (async) {
+        HIP_CHECK(hipMemcpyAsync(aPtr + data.offset, fillerData, sizeInBytes, cpyType, stream));
+      } else {
+        HIP_CHECK(hipMemcpy(aPtr + data.offset, fillerData, sizeInBytes, cpyType));
+      }
+      break;
+    case memType::hipMem2D:
+      if (async) {
+        HIP_CHECK(hipMemcpy2DAsync(aPtr + data.offset, data.pitch, fillerData, sizeInBytes,
+                                   data.width, data.getH(), cpyType, stream));
+      } else {
+        HIP_CHECK(hipMemcpy2D(aPtr + data.offset, data.pitch, fillerData, sizeInBytes, data.width,
+                              data.getH(), cpyType));
+      }
+      break;
+    case memType::hipMem3D: {
+      hipMemcpy3DParms params{};
+      params.kind = cpyType;
+      params.srcPos = make_hipPos(0, 0, 0);
+      params.dstPos = make_hipPos(data.offset, data.offset, data.offset);
+      params.srcPtr = make_hipPitchedPtr(fillerData, data.width, data.width, data.getH());
+      params.dstPtr = make_hipPitchedPtr(aPtr, data.pitch, data.width, data.getH());
+      hipExtent extent;
+      extent.width = data.width * sizeof(T);
+      extent.height = data.getH();
+      extent.depth = data.getD();
+
+      params.extent = extent;
+      if (async) {
+        HIP_CHECK(hipMemcpy3DAsync(&params, stream));
+      } else {
+        HIP_CHECK(hipMemcpy3D(&params));
+      }
+      break;
+    }
+    default:
+      break;
+  }
+  if(fromHost) {
+    delete[] fillerData;
+  } else {
+  HIP_CHECK(hipFree(fillerData));
   }
 }
 
-static void checkForDeviceSync(hipStream_t stream) { HIP_CHECK(hipStreamQuery(stream)); }
+template <typename T> static inline T* createFillerData(size_t count, size_t value, bool fromHost) {
+  if (fromHost) {
+    T* fillerData = new T[count];
+    std::fill(fillerData, fillerData + count, value);
+    return fillerData;
+  } else {
+    T* fillerData;
+    HIP_CHECK(hipMalloc(&fillerData, count * sizeof(T)));
+    HIP_CHECK(hipMemset(fillerData, value, count * sizeof(T)));
+    return fillerData;
+  }
+}
+
+static void checkForSync(hipStream_t stream, bool async, allocType type, bool fromHost) {
+  if (fromHost) {
+    if (async && type == allocType::deviceMalloc) {
+      HIP_CHECK_ERROR(hipStreamQuery(stream), hipErrorNotReady);
+    } else {
+      REQUIRE(true);
+    }
+  } else {
+    HIP_CHECK(hipStreamQuery(stream));
+  }
+}
+
 
 // Helper function to run tests for hipMemset allocation types
 template <typename T>
@@ -50,26 +152,18 @@ static void runMemcpyTests(hipStream_t stream, bool async, allocType type, memTy
                            MultiDData data) {
   bool fromHost = GENERATE(true, false);
 
-  size_t dataH = data.height == 0 ? 1 : data.height;
-  size_t dataD = data.depth == 0 ? 1 : data.depth;
-
   std::pair<T*, T*> aPtr = initMemory<T>(type, memType, data);
-  size_t sizeInBytes = data.width * dataH * dataD;
+  size_t sizeInBytes = data.getCount();
 
   // filler data for device memory created beforehand as it uses memset
   // which might interfere with synchronization testing
-  createFillerData<T>(sizeInBytes, testValue);
+  auto fillerData = createFillerData<T>(sizeInBytes, testValue, fromHost);
   CAPTURE(type, memType, data.width, data.height, data.depth, stream, async, fromHost, sizeInBytes);
 
   launchLongRunningKernel(100, stream);
-  if (fromHost) {
-    hostMemcpyCheck(aPtr.first, type, testValue, memType, data, stream, async);
-    checkForHostSync(stream, async, type);
 
-  } else {
-    deviceMemcpyCheck(aPtr.first, type, memType, data, stream, async);
-    checkForDeviceSync(stream);
-  }
+  memcpyCheck(type, memType, aPtr.first, data, fillerData, async, stream, fromHost);
+  checkForSync(stream, async, type, fromHost);
   // verify
   HIP_CHECK(hipStreamSynchronize(stream));
   verifyData(aPtr.first, testValue, data, type, memType);

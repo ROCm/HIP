@@ -42,10 +42,10 @@ static constexpr std::initializer_list<tupletype> tableItems {
                };
 
 enum memType {
-  hipmemTypeDefault,
-  hipmemTypeD8,
-  hipmemTypeD16,
-  hipmemTypeD32
+  hipmemSetTypeDefault,
+  hipmemSetTypeD8,
+  hipmemSetTypeD16,
+  hipmemSetTypeD32
 };
 
 template<typename T>
@@ -60,18 +60,18 @@ static bool testhipMemset(T *A_h, T *A_d, T memsetval, enum memType type,
   REQUIRE(A_h != nullptr);
 
   for (int offset = MAX_OFFSET; offset >= 0; offset --) {
-    if (type == hipmemTypeDefault) {
+    if (type == hipmemSetTypeDefault) {
       HIP_CHECK(hipMemset(A_d + offset, memsetval, numElements - offset));
 
-    } else if (type == hipmemTypeD8) {
+    } else if (type == hipmemSetTypeD8) {
       HIP_CHECK(hipMemsetD8((hipDeviceptr_t)(A_d + offset), memsetval,
                                                     numElements - offset));
 
-    } else if (type == hipmemTypeD16) {
+    } else if (type == hipmemSetTypeD16) {
       HIP_CHECK(hipMemsetD16((hipDeviceptr_t)(A_d + offset), memsetval,
                                                     numElements - offset));
 
-    } else if (type == hipmemTypeD32) {
+    } else if (type == hipmemSetTypeD32) {
       HIP_CHECK(hipMemsetD32((hipDeviceptr_t)(A_d + offset), memsetval,
                                                     numElements - offset));
     }
@@ -106,19 +106,19 @@ static bool testhipMemsetAsync(T *A_h, T *A_d, T memsetval,
   REQUIRE(A_h != nullptr);
 
   for (int offset = MAX_OFFSET; offset >= 0; offset --) {
-    if (type == hipmemTypeDefault) {
+    if (type == hipmemSetTypeDefault) {
       HIP_CHECK(hipMemsetAsync(A_d + offset, memsetval, numElements - offset,
                                                                       stream));
 
-    } else if (type == hipmemTypeD8) {
+    } else if (type == hipmemSetTypeD8) {
       HIP_CHECK(hipMemsetD8Async((hipDeviceptr_t)(A_d + offset), memsetval,
                                                 numElements - offset, stream));
 
-    } else if (type == hipmemTypeD16) {
+    } else if (type == hipmemSetTypeD16) {
       HIP_CHECK(hipMemsetD16Async((hipDeviceptr_t)(A_d + offset), memsetval,
                                                 numElements - offset, stream));
 
-    } else if (type == hipmemTypeD32) {
+    } else if (type == hipmemSetTypeD32) {
       HIP_CHECK(hipMemsetD32Async((hipDeviceptr_t)(A_d + offset), memsetval,
                                                 numElements - offset, stream));
     }
@@ -157,27 +157,27 @@ TEST_CASE("Unit_hipMemset_SetMemoryWithOffset") {
                  GENERATE(table<size_t, char, int, int16_t, char>(tableItems));
 
 
-  SECTION("Memset with hipmemTypeDefault") {
+  SECTION("Memset with hipmemSetTypeDefault") {
     char *cA_d{nullptr}, *cA_h{nullptr};
-    ret = testhipMemset(cA_h, cA_d, memsetval, hipmemTypeDefault, N);
+    ret = testhipMemset(cA_h, cA_d, memsetval, hipmemSetTypeDefault, N);
     REQUIRE(ret == true);
   }
 
-  SECTION("Memset with hipmemTypeD32") {
+  SECTION("Memset with hipmemSetTypeD32") {
     int32_t *iA_d{nullptr}, *iA_h{nullptr};
-    ret = testhipMemset(iA_h, iA_d, memsetD32val, hipmemTypeD32, N);
+    ret = testhipMemset(iA_h, iA_d, memsetD32val, hipmemSetTypeD32, N);
     REQUIRE(ret == true);
   }
 
-  SECTION("Memset with hipmemTypeD16") {
+  SECTION("Memset with hipmemSetTypeD16") {
     int16_t *siA_d{nullptr}, *siA_h{nullptr};
-    ret = testhipMemset(siA_h, siA_d, memsetD16val, hipmemTypeD16, N);
+    ret = testhipMemset(siA_h, siA_d, memsetD16val, hipmemSetTypeD16, N);
     REQUIRE(ret == true);
   }
 
-  SECTION("Memset with hipmemTypeD8") {
+  SECTION("Memset with hipmemSetTypeD8") {
     char *cA_d{nullptr}, *cA_h{nullptr};
-    ret = testhipMemset(cA_h, cA_d, memsetD8val, hipmemTypeD8, N);
+    ret = testhipMemset(cA_h, cA_d, memsetD8val, hipmemSetTypeD8, N);
     REQUIRE(ret == true);
   }
 }
@@ -199,27 +199,27 @@ TEST_CASE("Unit_hipMemsetAsync_SetMemoryWithOffset") {
                  GENERATE(table<size_t, char, int, int16_t, char>(tableItems));
 
 
-  SECTION("Memset with hipmemTypeDefault") {
+  SECTION("Memset with hipmemSetTypeDefault") {
     char *cA_d{nullptr}, *cA_h{nullptr};
-    ret = testhipMemsetAsync(cA_h, cA_d, memsetval, hipmemTypeDefault, N);
+    ret = testhipMemsetAsync(cA_h, cA_d, memsetval, hipmemSetTypeDefault, N);
     REQUIRE(ret == true);
   }
 
-  SECTION("Memset with hipmemTypeD32") {
+  SECTION("Memset with hipmemSetTypeD32") {
     int32_t *iA_d{nullptr}, *iA_h{nullptr};
-    ret = testhipMemsetAsync(iA_h, iA_d, memsetD32val, hipmemTypeD32, N);
+    ret = testhipMemsetAsync(iA_h, iA_d, memsetD32val, hipmemSetTypeD32, N);
     REQUIRE(ret == true);
   }
 
-  SECTION("Memset with hipmemTypeD16") {
+  SECTION("Memset with hipmemSetTypeD16") {
     int16_t *siA_d{nullptr}, *siA_h{nullptr};
-    ret = testhipMemsetAsync(siA_h, siA_d, memsetD16val, hipmemTypeD16, N);
+    ret = testhipMemsetAsync(siA_h, siA_d, memsetD16val, hipmemSetTypeD16, N);
     REQUIRE(ret == true);
   }
 
-  SECTION("Memset with hipmemTypeD8") {
+  SECTION("Memset with hipmemSetTypeD8") {
     char *cA_d{nullptr}, *cA_h{nullptr};
-    ret = testhipMemsetAsync(cA_h, cA_d, memsetD8val, hipmemTypeD8, N);
+    ret = testhipMemsetAsync(cA_h, cA_d, memsetD8val, hipmemSetTypeD8, N);
     REQUIRE(ret == true);
   }
 }
