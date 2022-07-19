@@ -142,16 +142,10 @@ static void runTest_hipTextureFilterMode() {
 }
 
 TEST_CASE("Unit_hipNormalizedFloatValueTex_CheckModes") {
+  CHECK_IMAGE_SUPPORT
+
 #if HT_AMD
-  int imageSupport{};
-  HIP_CHECK(hipDeviceGetAttribute(&imageSupport,
-                           hipDeviceAttributeImageSupport, 0));
-  if (!imageSupport) {
-    INFO("Texture is not supported on the device. Test is skipped");
-    return;
-  }
   hipDeviceProp_t props;
-  HIP_CHECK(hipSetDevice(0));
   HIP_CHECK(hipGetDeviceProperties(&props, 0));
   INFO("Device :: " << props.name);
   INFO("Arch - AMD GPU :: " << props.gcnArch);

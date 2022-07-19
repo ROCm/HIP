@@ -138,14 +138,12 @@ static inline bool isEqual(const T &val0, const T &val1) {
 }
 
 template<typename T>
-bool runTest(const char *description) {
+bool runTest() {
   const int N = 1024;
   bool testResult = true;
   // Allocating the required buffer on gpu device
   T *texBuf, *texBufOut;
   T val[N], output[N];
-  printf("%s<%s>(): size: %zu, %zu\n", __FUNCTION__, description,
-         sizeof(T), sizeof(decltype(T::x)));
 
   memset(output, 0, sizeof(output));
   std::srand(std::time(nullptr)); // use current time as seed for random generator
@@ -199,46 +197,45 @@ bool runTest(const char *description) {
   HIP_CHECK(hipFree(texBuf));
   HIP_CHECK(hipFree(texBufOut));
 
-  printf(": %s\n", testResult ? "succeeded" : "failed");
   REQUIRE(testResult == true);
   return testResult;
 }
 
 TEST_CASE("Unit_hipTextureFetch_vector") {
-  checkImageSupport();
+  CHECK_IMAGE_SUPPORT
 
   // test for char
-  runTest<char1>("char1");
-  runTest<char2>("char2");
-  runTest<char4>("char4");
+  runTest<char1>();
+  runTest<char2>();
+  runTest<char4>();
 
   // test for uchar
-  runTest<uchar1>("uchar1");
-  runTest<uchar2>("uchar2");
-  runTest<uchar4>("uchar4");
+  runTest<uchar1>();
+  runTest<uchar2>();
+  runTest<uchar4>();
 
   // test for short
-  runTest<short1>("short1");
-  runTest<short2>("short2");
-  runTest<short4>("short4");
+  runTest<short1>();
+  runTest<short2>();
+  runTest<short4>();
 
   // test for ushort
-  runTest<ushort1>("ushort1");
-  runTest<ushort2>("ushort2");
-  runTest<ushort4>("ushort4");
+  runTest<ushort1>();
+  runTest<ushort2>();
+  runTest<ushort4>();
 
   // test for int
-  runTest<int1>("int1");
-  runTest<int2>("int2");
-  runTest<int4>("int4");
+  runTest<int1>();
+  runTest<int2>();
+  runTest<int4>();
 
   // test for unsigned int
-  runTest<uint1>("uint1");
-  runTest<uint2>("uint2");
-  runTest<uint4>("uint4");
+  runTest<uint1>();
+  runTest<uint2>();
+  runTest<uint4>();
 
   // test for float
-  runTest<float1>("float1");
-  runTest<float2>("float2");
-  runTest<float4>("float4");
+  runTest<float1>();
+  runTest<float2>();
+  runTest<float4>();
 }
