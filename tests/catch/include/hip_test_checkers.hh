@@ -99,6 +99,13 @@ size_t checkVectorADD(T* A_h, T* B_h, T* result_H, size_t N, bool expectMatch = 
 }
 
 template <typename T>
+size_t checkVectorSUB(T* A_h, T* B_h, T* result_H, size_t N, bool expectMatch = true,
+                      bool reportMismatch = true) {
+  return checkVectors<T>(
+      A_h, B_h, result_H, N, [](T a, T b) { return a - b; }, expectMatch, reportMismatch);
+}
+
+template <typename T>
 void checkTest(T* expected_H, T* result_H, size_t N, bool expectMatch = true) {
   checkVectors<T>(
       expected_H, expected_H, result_H, N,
