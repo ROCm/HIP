@@ -132,7 +132,7 @@ template <typename T> static inline T* createFillerData(size_t count, size_t val
   }
 }
 
-static void checkForSync(hipStream_t stream, bool async, allocType type, bool fromHost) {
+static void checkForSync(hipStream_t stream, allocType type, bool fromHost) {
   if (fromHost) {
     if (type == allocType::deviceMalloc) {
       HIP_CHECK_ERROR(hipStreamQuery(stream), hipErrorNotReady);
@@ -162,7 +162,7 @@ static void runMemcpyTests(hipStream_t stream, bool async, allocType type, memTy
   launchLongRunningKernel(100, stream);
 
   memcpyCheck(type, memType, aPtr.first, data, fillerData, async, stream, fromHost);
-  checkForSync(stream, async, type, fromHost);
+  checkForSync(stream, type, fromHost);
   // verify
   HIP_CHECK(hipStreamSynchronize(stream));
   verifyData(aPtr.first, testValue, data, type, memType);
@@ -188,6 +188,10 @@ TEST_CASE("Unit_hipMemcpySync") {
 }
 
 TEST_CASE("Unit_hipMemcpy2DSync") {
+#if HT_AMD
+  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-127 - Sync behaviour differs on AMD and Nvidia");
+  return;
+#endif
   allocType mallocType = GENERATE(allocType::deviceMalloc, allocType::hostMalloc,
                                   allocType::hostRegisted, allocType::devRegistered);
 
@@ -200,6 +204,10 @@ TEST_CASE("Unit_hipMemcpy2DSync") {
 }
 
 TEST_CASE("Unit_hipMemcpy3DSync") {
+#if HT_AMD
+  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-127 - Sync behaviour differs on AMD and Nvidia");
+  return;
+#endif
   allocType mallocType = GENERATE(allocType::deviceMalloc, allocType::hostMalloc,
                                   allocType::hostRegisted, allocType::devRegistered);
 
