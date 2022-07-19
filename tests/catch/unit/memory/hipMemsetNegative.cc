@@ -71,9 +71,6 @@ TEST_CASE("Unit_hipMemset_Negative_InvalidPtr") {
 
 
 TEST_CASE("Unit_hipMemset_Negative_OutOfBoundsSize") {
-#if HT_AMD
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-20");
-#endif
 
 #if !HT_AMD
   void* dst;
@@ -112,10 +109,6 @@ TEST_CASE("Unit_hipMemset2D_Negative_InvalidPtr") {
 }
 
 TEST_CASE("Unit_hipMemset2D_Negative_InvalidSizes") {
-#if HT_AMD
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-52");
-#endif
-
   void* dst;
   size_t realPitch;
   HIP_CHECK(hipMallocPitch(&dst, &realPitch, width, height));
@@ -181,10 +174,6 @@ TEST_CASE("Unit_hipMemset3D_Negative_ModifiedPtr") {
 }
 
 TEST_CASE("Unit_hipMemset3D_Negative_InvalidSizes") {
-#if HT_AMD
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-52");
-#endif
-
   hipPitchedPtr pitchedDevPtr;
   HIP_CHECK(hipMalloc3D(&pitchedDevPtr, validExtent));
   hipExtent invalidExtent{validExtent};

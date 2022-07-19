@@ -494,10 +494,6 @@ TEMPLATE_TEST_CASE("Unit_hipMallocArray_MaxTexture_Default", "", uint, int4, ush
 
 // Arrays with channels of different size are not allowed.
 TEST_CASE("Unit_hipMallocArray_Negative_DifferentChannelSizes") {
-#if HT_AMD
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-129");
-  return;
-#endif
   const int bitsX = GENERATE(8, 16, 32);
   const int bitsY = GENERATE(8, 16, 32);
   const int bitsZ = GENERATE(8, 16, 32);

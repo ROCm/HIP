@@ -65,10 +65,6 @@ TEST_CASE("Unit_hipHostUnregister_MemoryNotAccessableAfterUnregister") {
 }
 
 TEST_CASE("Unit_hipHostUnregister_NullPtr") {
-#if HT_AMD
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-90");
-  return;
-#endif
   HIP_CHECK_ERROR(hipHostUnregister(nullptr), hipErrorInvalidValue);
 }
 
