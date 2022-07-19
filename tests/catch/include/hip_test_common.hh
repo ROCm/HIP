@@ -271,6 +271,64 @@ void launchKernel(K kernel, Dim numBlocks, Dim numThreads, std::uint32_t memPerB
                                 std::forward<Args>(packedArgs)...);
 #endif
 }
+
+//---
+struct Pinned {
+  static const bool isPinned = true;
+  static const char* str() { return "Pinned"; };
+
+  static void* Alloc(size_t sizeBytes) {
+    void* p;
+    HIPCHECK(hipHostMalloc((void**)&p, sizeBytes));
+    return p;
+  };
+};
+
+
+//---
+struct Unpinned {
+    static const bool isPinned = false;
+    static const char* str() { return "Unpinned"; };
+
+    static void* Alloc(size_t sizeBytes) {
+        void* p = malloc(sizeBytes);
+        HIPASSERT(p);
+        return p;
+    };
+};
+
+
+struct Memcpy {
+    static const char* str() { return "Memcpy"; };
+};
+
+struct MemcpyAsync {
+  static const char* str() { return "MemcpyAsync"; };
+};
+
+
+template <typename C>
+struct MemTraits;
+
+
+template <>
+struct MemTraits<Memcpy> {
+  static void Copy(void* dest, const void* src, size_t sizeBytes, hipMemcpyKind kind,
+                    hipStream_t stream) {
+    (void)stream;
+    HIPCHECK(hipMemcpy(dest, src, sizeBytes, kind));
+  }
+};
+
+
+template <>
+struct MemTraits<MemcpyAsync> {
+  static void Copy(void* dest, const void* src, size_t sizeBytes, hipMemcpyKind kind,
+                    hipStream_t stream) {
+    HIPCHECK(hipMemcpyAsync(dest, src, sizeBytes, kind, stream));
+  }
+};
+
 }  // namespace HipTest
 
 
