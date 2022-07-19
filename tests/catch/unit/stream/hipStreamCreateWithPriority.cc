@@ -481,6 +481,16 @@ bool validateStreamPrioritiesWithEvents() {
   OP(high)
   #undef OP
 
+  // destroy stream
+  #define OP(x) \
+    if (enable_priority_##x) { \
+      HIP_CHECK(hipStreamDestroy(stream_##x)); \
+    }
+  OP(low)
+  OP(normal)
+  OP(high)
+  #undef OP
+
   // validate that stream priorities are working as expected
   #define OP(x, y) \
       if (enable_priority_##x && enable_priority_##y) { \
@@ -493,6 +503,17 @@ bool validateStreamPrioritiesWithEvents() {
   OP(low, normal)
   OP(normal, high)
   OP(low, high)
+  #undef OP
+
+  // free host & device memory
+  #define OP(x) \
+    free(src_h_##x); \
+    free(dst_h_##x); \
+    hipFree(src_d_##x); \
+    hipFree(dst_d_##x);
+  OP(low)
+  OP(normal)
+  OP(high)
   #undef OP
 
   return true;
