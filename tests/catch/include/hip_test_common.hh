@@ -203,7 +203,7 @@ static inline int RAND_R(unsigned* rand_seed) {
 
 inline bool isImageSupported() {
   int imageSupport = 1;
-#ifdef __HIP_PLATFORM_AMD__
+#if HT_AMD
   int device;
   HIP_CHECK(hipGetDevice(&device));
   HIPCHECK(hipDeviceGetAttribute(&imageSupport, hipDeviceAttributeImageSupport, device));
@@ -276,8 +276,6 @@ void launchKernel(K kernel, Dim numBlocks, Dim numThreads, std::uint32_t memPerB
 
 // This must be called in the beginning of image test app's main() to indicate whether image
 // is supported.
-#define checkImageSupport()                                                                        \
-  if (!HipTest::isImageSupported()) {                                                              \
-    printf("Texture is not support on the device. Skipped.\n");                                    \
-    return;                                                                                        \
-  }
+#define CHECK_IMAGE_SUPPORT                                                                \
+  if (!HipTest::isImageSupported())                                                      \
+    { INFO("Texture is not support on the device. Skipped."); return; }

@@ -22,14 +22,18 @@ THE SOFTWARE.
 #define N 512
 
 static __global__ void tex1dKernel(float *val, hipTextureObject_t obj) {
-    int k = blockIdx.x * blockDim.x + threadIdx.x;
-    if (k < N) {
-        val[k] = tex1Dfetch<float>(obj, k);
-    }
+#if !defined(__HIP_NO_IMAGE_SUPPORT) || !__HIP_NO_IMAGE_SUPPORT
+  int k = blockIdx.x * blockDim.x + threadIdx.x;
+  if (k < N) {
+    val[k] = tex1Dfetch<float>(obj, k);
+  }
+#endif
 }
 
 
 TEST_CASE("Unit_hipCreateTextureObject_tex1DfetchVerification") {
+  CHECK_IMAGE_SUPPORT
+
   // Allocating the required buffer on gpu device
   float *texBuf, *texBufOut;
   float val[N], output[N];
