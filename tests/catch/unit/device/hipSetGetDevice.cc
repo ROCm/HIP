@@ -96,6 +96,7 @@ TEST_CASE("Unit_hipSetGetDevice_Negative") {
 TEST_CASE("Unit_hipDeviceGet_Negative") {
   // TODO enable after EXSWCPHIPT-104 is fixed
 #if HT_NVIDIA
+  HIP_CHECK(hipInit(0));
   SECTION("Nullptr as handle") { HIP_CHECK_ERROR(hipDeviceGet(nullptr, 0), hipErrorInvalidValue); }
 #endif
 
