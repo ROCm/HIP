@@ -38,7 +38,7 @@ __global__ void vectors_not_equal(int n,
                                  const double* __restrict__ x,
                                  const double* __restrict__ y,
                                  double* __restrict__ workspace) {
-  int gid = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+  int gid = blockIdx.x * blockDim.x + threadIdx.x;
 
   double sum = 0.0;
   for(int idx = gid; idx < n; idx += hipGridDim_x * hipBlockDim_x) {
@@ -46,51 +46,51 @@ __global__ void vectors_not_equal(int n,
   }
 
   __shared__ double sdata[BLOCKSIZE];
-  sdata[hipThreadIdx_x] = sum;
+  sdata[threadIdx.x] = sum;
 
   __syncthreads();
 
-  if(hipThreadIdx_x < 128) {
-    sdata[hipThreadIdx_x] += sdata[hipThreadIdx_x + 128];
+  if(threadIdx.x < 128) {
+    sdata[threadIdx.x] += sdata[threadIdx.x + 128];
   }
   __syncthreads();
 
-  if(hipThreadIdx_x < 64){
-    sdata[hipThreadIdx_x] += sdata[hipThreadIdx_x + 64];
+  if(threadIdx.x < 64){
+    sdata[threadIdx.x] += sdata[threadIdx.x + 64];
   }
   __syncthreads();
 
-  if(hipThreadIdx_x < 32){
-    sdata[hipThreadIdx_x] += sdata[hipThreadIdx_x + 32];
+  if(threadIdx.x < 32){
+    sdata[threadIdx.x] += sdata[threadIdx.x + 32];
   }
   __syncthreads();
 
-  if(hipThreadIdx_x < 16) {
-    sdata[hipThreadIdx_x] += sdata[hipThreadIdx_x + 16];
+  if(threadIdx.x < 16) {
+    sdata[threadIdx.x] += sdata[threadIdx.x + 16];
   }
   __syncthreads();
 
-  if(hipThreadIdx_x < 8) {
-    sdata[hipThreadIdx_x] += sdata[hipThreadIdx_x + 8];
+  if(threadIdx.x < 8) {
+    sdata[threadIdx.x] += sdata[threadIdx.x + 8];
   }
   __syncthreads();
 
-  if(hipThreadIdx_x < 4) {
-    sdata[hipThreadIdx_x] += sdata[hipThreadIdx_x + 4];
+  if(threadIdx.x < 4) {
+    sdata[threadIdx.x] += sdata[threadIdx.x + 4];
   }
   __syncthreads();
 
-  if(hipThreadIdx_x < 2) {
-    sdata[hipThreadIdx_x] += sdata[hipThreadIdx_x + 2];
+  if(threadIdx.x < 2) {
+    sdata[threadIdx.x] += sdata[threadIdx.x + 2];
   }
   __syncthreads();
 
-  if(hipThreadIdx_x < 1) {
-    sdata[hipThreadIdx_x] += sdata[hipThreadIdx_x + 1];
+  if(threadIdx.x < 1) {
+    sdata[threadIdx.x] += sdata[threadIdx.x + 1];
   }
 
-  if(hipThreadIdx_x == 0) {
-    workspace[hipBlockIdx_x] = sdata[0];
+  if(threadIdx.x == 0) {
+    workspace[blockIdx.x] = sdata[0];
   }
 
 }
@@ -99,59 +99,59 @@ template <unsigned int BLOCKSIZE>
 __launch_bounds__(BLOCKSIZE)
 __global__ void vectors_equal(int n, const double* __restrict__ x,
                                   double* __restrict__ workspace) {
-  int gid = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+  int gid = blockIdx.x * blockDim.x + threadIdx.x;
 
   double sum = 0.0;
-  for(int idx = gid; idx < n; idx += hipGridDim_x * hipBlockDim_x) {
+  for(int idx = gid; idx < n; idx += hipGridDim_x * blockDim.x) {
     sum = fma(x[idx], x[idx], sum);
   }
 
   __shared__ double sdata[BLOCKSIZE];
-  sdata[hipThreadIdx_x] = sum;
+  sdata[threadIdx.x] = sum;
 
   __syncthreads();
 
-  if(hipThreadIdx_x < 128) {
-    sdata[hipThreadIdx_x] += sdata[hipThreadIdx_x + 128];
+  if(threadIdx.x < 128) {
+    sdata[threadIdx.x] += sdata[threadIdx.x + 128];
   }
   __syncthreads();
 
-  if(hipThreadIdx_x < 64) {
-    sdata[hipThreadIdx_x] += sdata[hipThreadIdx_x + 64];
+  if(threadIdx.x < 64) {
+    sdata[threadIdx.x] += sdata[threadIdx.x + 64];
   }
   __syncthreads();
 
-  if(hipThreadIdx_x < 32) {
-    sdata[hipThreadIdx_x] += sdata[hipThreadIdx_x + 32];
+  if(threadIdx.x < 32) {
+    sdata[threadIdx.x] += sdata[threadIdx.x + 32];
   }
   __syncthreads();
 
-  if(hipThreadIdx_x < 16) {
-    sdata[hipThreadIdx_x] += sdata[hipThreadIdx_x + 16];
+  if(threadIdx.x < 16) {
+    sdata[threadIdx.x] += sdata[threadIdx.x + 16];
   }
   __syncthreads();
 
-  if(hipThreadIdx_x < 8) {
-          sdata[hipThreadIdx_x] += sdata[hipThreadIdx_x + 8];
+  if(threadIdx.x < 8) {
+          sdata[threadIdx.x] += sdata[threadIdx.x + 8];
   }
   __syncthreads();
 
-  if(hipThreadIdx_x < 4) {
-    sdata[hipThreadIdx_x] += sdata[hipThreadIdx_x + 4];
+  if(threadIdx.x < 4) {
+    sdata[threadIdx.x] += sdata[threadIdx.x + 4];
   }
   __syncthreads();
 
-  if(hipThreadIdx_x < 2) {
-    sdata[hipThreadIdx_x] += sdata[hipThreadIdx_x + 2];
+  if(threadIdx.x < 2) {
+    sdata[threadIdx.x] += sdata[threadIdx.x + 2];
   }
   __syncthreads();
 
-  if(hipThreadIdx_x < 1) {
-    sdata[hipThreadIdx_x] += sdata[hipThreadIdx_x + 1];
+  if(threadIdx.x < 1) {
+    sdata[threadIdx.x] += sdata[threadIdx.x + 1];
   }
 
-  if(hipThreadIdx_x == 0) {
-    workspace[hipBlockIdx_x] = sdata[0];
+  if(threadIdx.x == 0) {
+    workspace[blockIdx.x] = sdata[0];
     }
 }
 
@@ -161,49 +161,49 @@ __global__ void dot_reduction(double* __restrict__ workspace) {
 
   __shared__ double sdata[BLOCKSIZE];
 
-  sdata[hipThreadIdx_x] = workspace[hipThreadIdx_x];
+  sdata[threadIdx.x] = workspace[threadIdx.x];
 
   __syncthreads();
 
-  if(hipThreadIdx_x < 128) {
-    sdata[hipThreadIdx_x] += sdata[hipThreadIdx_x + 128];
+  if(threadIdx.x < 128) {
+    sdata[threadIdx.x] += sdata[threadIdx.x + 128];
   }
   __syncthreads();
 
-  if(hipThreadIdx_x < 64) {
-    sdata[hipThreadIdx_x] += sdata[hipThreadIdx_x + 64];
+  if(threadIdx.x < 64) {
+    sdata[threadIdx.x] += sdata[threadIdx.x + 64];
   }
   __syncthreads();
 
-  if(hipThreadIdx_x < 32) {
-    sdata[hipThreadIdx_x] += sdata[hipThreadIdx_x + 32];
+  if(threadIdx.x < 32) {
+    sdata[threadIdx.x] += sdata[threadIdx.x + 32];
   }
   __syncthreads();
 
-  if(hipThreadIdx_x < 16) {
-    sdata[hipThreadIdx_x] += sdata[hipThreadIdx_x + 16];
+  if(threadIdx.x < 16) {
+    sdata[threadIdx.x] += sdata[threadIdx.x + 16];
   }
   __syncthreads();
 
-  if(hipThreadIdx_x < 8) {
-    sdata[hipThreadIdx_x] += sdata[hipThreadIdx_x + 8];
+  if(threadIdx.x < 8) {
+    sdata[threadIdx.x] += sdata[threadIdx.x + 8];
   }
   __syncthreads();
 
-  if(hipThreadIdx_x < 4) {
-    sdata[hipThreadIdx_x] += sdata[hipThreadIdx_x + 4];
+  if(threadIdx.x < 4) {
+    sdata[threadIdx.x] += sdata[threadIdx.x + 4];
   } __syncthreads();
 
-  if(hipThreadIdx_x < 2) {
-    sdata[hipThreadIdx_x] += sdata[hipThreadIdx_x + 2];
+  if(threadIdx.x < 2) {
+    sdata[threadIdx.x] += sdata[threadIdx.x + 2];
   }
   __syncthreads();
 
-  if(hipThreadIdx_x < 1) {
-    sdata[hipThreadIdx_x] += sdata[hipThreadIdx_x + 1];
+  if(threadIdx.x < 1) {
+    sdata[threadIdx.x] += sdata[threadIdx.x + 1];
   }
 
-  if(hipThreadIdx_x == 0) {
+  if(threadIdx.x == 0) {
     workspace[0] = sdata[0];
   }
 

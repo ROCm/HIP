@@ -26,10 +26,8 @@ THE SOFTWARE.
 
 class DriverContext {
  private:
-#if HT_NVIDIA
   hipCtx_t ctx;
   hipDevice_t device;
-#endif
 
  public:
   DriverContext();

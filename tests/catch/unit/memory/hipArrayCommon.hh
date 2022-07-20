@@ -122,3 +122,90 @@ inline size_t getFreeMem() {
   HIP_CHECK(hipMemGetInfo(&free, &total));
   return free;
 }
+
+struct Sizes {
+  int max1D;
+  std::array<int, 2> max2D;
+  std::array<int, 3> max3D;
+
+  Sizes(unsigned int flag) {
+    int device;
+    HIP_CHECK(hipGetDevice(&device));
+    static_assert(
+        hipArrayDefault == 0,
+        "hipArrayDefault is assumed to be equivalent to 0 for the following switch statment");
+#if HT_NVIDIA
+    static_assert(hipArraySurfaceLoadStore == CUDA_ARRAY3D_SURFACE_LDST,
+                  "hipArraySurface is assumed to be equivalent to CUDA_ARRAY3D_SURFACE_LDST for "
+                  "the following switch statment");
+#endif
+    switch (flag) {
+      case hipArrayDefault: {  // 0
+        hipDeviceProp_t prop;
+        HIP_CHECK(hipGetDeviceProperties(&prop, device));
+        max1D = prop.maxTexture1D;
+        max2D = {prop.maxTexture2D[0], prop.maxTexture2D[1]};
+        max3D = {prop.maxTexture3D[0], prop.maxTexture3D[1], prop.maxTexture3D[2]};
+        return;
+      }
+      case hipArraySurfaceLoadStore: {  // CUDA_ARRAY3D_SURFACE_LDST
+        int value;
+        HIP_CHECK(hipDeviceGetAttribute(&value, hipDeviceAttributeMaxSurface1D, device));
+        max1D = value;
+        HIP_CHECK(hipDeviceGetAttribute(&value, hipDeviceAttributeMaxSurface2D, device));
+        max2D = {value, value};
+        HIP_CHECK(hipDeviceGetAttribute(&value, hipDeviceAttributeMaxSurface3D, device));
+        max3D = {value, value, value};
+        return;
+      }
+      default: {
+        INFO("Array flag not supported");
+        REQUIRE(false);
+        return;
+      }
+    }
+  }
+};
+
+inline const char* channelFormatString(hipChannelFormatKind formatKind) noexcept {
+  switch (formatKind) {
+    case hipChannelFormatKindFloat:
+      return "float";
+    case hipChannelFormatKindSigned:
+      return "signed";
+    case hipChannelFormatKindUnsigned:
+      return "unsigned";
+    default:
+      return "error";
+  }
+}
+
+// All the possible formats for channel data in an array.
+static const std::vector<hipArray_Format> driverFormats{
+    HIP_AD_FORMAT_UNSIGNED_INT8, HIP_AD_FORMAT_UNSIGNED_INT16, HIP_AD_FORMAT_UNSIGNED_INT32,
+    HIP_AD_FORMAT_SIGNED_INT8,   HIP_AD_FORMAT_SIGNED_INT16,   HIP_AD_FORMAT_SIGNED_INT32,
+    HIP_AD_FORMAT_HALF,          HIP_AD_FORMAT_FLOAT};
+
+// Helpful for printing errors
+inline const char* formatToString(hipArray_Format f) {
+  switch (f) {
+    case HIP_AD_FORMAT_UNSIGNED_INT8:
+      return "Unsigned Int 8";
+    case HIP_AD_FORMAT_UNSIGNED_INT16:
+      return "Unsigned Int 16";
+    case HIP_AD_FORMAT_UNSIGNED_INT32:
+      return "Unsigned Int 32";
+    case HIP_AD_FORMAT_SIGNED_INT8:
+      return "Signed Int 8";
+    case HIP_AD_FORMAT_SIGNED_INT16:
+      return "Signed Int 16";
+    case HIP_AD_FORMAT_SIGNED_INT32:
+      return "Signed Int 32";
+    case HIP_AD_FORMAT_HALF:
+      return "Float 16";
+    case HIP_AD_FORMAT_FLOAT:
+      return "Float 32";
+    default:
+      return "not found";
+  }
+}

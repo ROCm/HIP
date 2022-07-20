@@ -22,22 +22,15 @@ THE SOFTWARE.
 __global__ void tex2DKernel(float* outputData,
                             hipTextureObject_t textureObject, int width) {
 #if !defined(__HIP_NO_IMAGE_SUPPORT) || !__HIP_NO_IMAGE_SUPPORT
-    int x = blockIdx.x * blockDim.x + threadIdx.x;
-    int y = blockIdx.y * blockDim.y + threadIdx.y;
-    outputData[y * width + x] = tex2D<float>(textureObject, x, y);
+  int x = blockIdx.x * blockDim.x + threadIdx.x;
+  int y = blockIdx.y * blockDim.y + threadIdx.y;
+  outputData[y * width + x] = tex2D<float>(textureObject, x, y);
 #endif
 }
 
 TEST_CASE("Unit_hipTextureObj2D_Check") {
-#if HT_AMD
-  int imageSupport{};
-  HIP_CHECK(hipDeviceGetAttribute(&imageSupport,
-                           hipDeviceAttributeImageSupport, 0));
-  if (!imageSupport) {
-    INFO("Texture is not supported on the device. Test is skipped");
-    return;
-  }
-#endif
+  CHECK_IMAGE_SUPPORT
+
   constexpr int SIZE = 256;
   constexpr unsigned int width = SIZE;
   constexpr unsigned int height = SIZE;

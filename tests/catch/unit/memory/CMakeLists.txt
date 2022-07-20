@@ -39,6 +39,7 @@ set(TEST_SRC
     hipMemcpyAllApiNegative.cc
     hipMemcpy_MultiThread.cc
     hipHostRegister.cc
+    hipHostUnregister.cc
     hipMallocPitch.cc
     hipMemPtrGetInfo.cc
     hipPointerGetAttributes.cc
@@ -75,11 +76,13 @@ set(TEST_SRC
     hipHostMalloc.cc
     hipMemcpy.cc
     hipMemcpyAsync.cc
+    hipMemsetFunctional.cc
     hipMallocPitch.cc
     hipMallocArray.cc
     hipMalloc3D.cc
     hipMalloc3DArray.cc
     hipArrayCreate.cc
+    hipArray3DCreate.cc
     hipDrvMemcpy3D.cc
     hipDrvMemcpy3DAsync.cc
     hipPointerGetAttribute.cc
@@ -87,6 +90,7 @@ set(TEST_SRC
     hipMallocMngdMultiThread.cc
     hipMemPrefetchAsync.cc
     hipArray.cc
+    hipMemVmm.cc
 )
 else()
 set(TEST_SRC
@@ -108,6 +112,7 @@ set(TEST_SRC
     hipMemcpyAllApiNegative.cc
     hipMemcpy_MultiThread.cc
     hipHostRegister.cc
+    hipHostUnregister.cc
     hipMallocPitch.cc
     hipHostGetFlags.cc
     hipHostGetDevicePointer.cc
@@ -140,11 +145,13 @@ set(TEST_SRC
     hipHostMalloc.cc
     hipMemcpy.cc
     hipMemcpyAsync.cc
+    hipMemsetFunctional.cc
     hipMallocPitch.cc
     hipMallocArray.cc
     hipMalloc3D.cc
     hipMalloc3DArray.cc
     hipArrayCreate.cc
+    hipArray3DCreate.cc
     hipDrvMemcpy3D.cc
     hipDrvMemcpy3DAsync.cc
     hipPointerGetAttribute.cc
