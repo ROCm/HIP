@@ -154,17 +154,16 @@ static inline std::pair<T*, T*> initMemory(allocType type, memType memType, Mult
 template <typename T>
 hipMemcpy3DParms createParams(hipMemcpyKind kind, T* aPtr, T* hostMem, size_t dataPitch,
                               size_t dataW, size_t dataH, size_t dataD) {
-  auto devPitchedPtr = make_hipPitchedPtr(aPtr, dataPitch, dataW, dataH);
   hipMemcpy3DParms p = {};
   p.kind = kind;
 
-  p.srcPtr.ptr = devPitchedPtr.ptr;
-  p.srcPtr.pitch = devPitchedPtr.pitch;
+  p.srcPtr.ptr = aPtr;
+  p.srcPtr.pitch = dataPitch;
   p.srcPtr.xsize = dataW;
   p.srcPtr.ysize = dataH;
 
   p.dstPtr.ptr = hostMem;
-  p.dstPtr.pitch = dataW * sizeof(char);
+  p.dstPtr.pitch = dataW * sizeof(T);
   p.dstPtr.xsize = dataW;
   p.dstPtr.ysize = dataH;
 
