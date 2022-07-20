@@ -72,7 +72,7 @@ TEST_CASE("Unit_hipGetSetDevice_MultiThreaded") {
   std::vector<std::thread> pool;
   pool.reserve(maxThreads);
 
-  for (int i = 0; i < maxThreads; i++) {
+  for (unsigned i = 0; i < maxThreads; i++) {
     pool.emplace_back(std::thread(thread));
   }
 
