@@ -70,9 +70,9 @@ Programmers familiar with CUDA will also be able to quickly learn and start codi
 Compute kernels are launched with the "hipLaunchKernelGGL" macro call.    Here is simple example showing a
 snippet of HIP API code:
 
-```cpp
-hipMalloc(&A_d, Nbytes));
-hipMalloc(&C_d, Nbytes));
+```
+hipMalloc(&A_d, Nbytes);
+hipMalloc(&C_d, Nbytes);
 
 hipMemcpy(A_d, A_h, Nbytes, hipMemcpyHostToDevice);
 
