@@ -452,6 +452,7 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributePhysicalMultiProcessorCount,              ///< All available physical compute
                                                                 ///< units for the device
     hipDeviceAttributeFineGrainSupport,                         ///< '1' if Device supports fine grain, '0' otherwise
+    hipDeviceAttributeWallClockRate,                            ///< Constant frequency of wall clock in kilohertz.
 
     hipDeviceAttributeAmdSpecificEnd = 19999,
     hipDeviceAttributeVendorSpecificBegin = 20000,
