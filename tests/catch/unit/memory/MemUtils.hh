@@ -152,17 +152,17 @@ static inline std::pair<T*, T*> initMemory(allocType type, memType memType, Mult
 }
 // create a hipMemcpy3DParams struct for the 3d version of memcpy to verify the memset operation
 template <typename T>
-hipMemcpy3DParms createParams(hipMemcpyKind kind, T* aPtr, T* hostMem, size_t dataPitch,
+hipMemcpy3DParms createParams(hipMemcpyKind kind, T* src, T* host_dst, size_t srcPitch,
                               size_t dataW, size_t dataH, size_t dataD) {
   hipMemcpy3DParms p = {};
   p.kind = kind;
 
-  p.srcPtr.ptr = aPtr;
-  p.srcPtr.pitch = dataPitch;
+  p.srcPtr.ptr = src;
+  p.srcPtr.pitch = srcPitch;
   p.srcPtr.xsize = dataW;
   p.srcPtr.ysize = dataH;
 
-  p.dstPtr.ptr = hostMem;
+  p.dstPtr.ptr = host_dst;
   p.dstPtr.pitch = dataW * sizeof(T);
   p.dstPtr.xsize = dataW;
   p.dstPtr.ysize = dataH;
@@ -363,8 +363,7 @@ template <typename T> static inline void freeStuff(T* aPtr, allocType type) {
 template <typename T>
 static inline void verifyData(T* aPtr, size_t value, MultiDData& data, allocType type,
                               memType memType) {
-  size_t sizeInBytes = data.width * data.getH() * data.getD();
-  std::unique_ptr<T[]> hostPtr = std::make_unique<T[]>(sizeInBytes);
+  std::unique_ptr<T[]> hostPtr = std::make_unique<T[]>(data.getCount());
   switch (type) {
     case allocType::deviceMalloc:
       deviceMallocCopy(memType, aPtr + getPtrOffset(data), hostPtr.get(), data.width, data.getH(),

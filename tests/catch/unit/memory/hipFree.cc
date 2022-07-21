@@ -274,15 +274,10 @@ TEMPLATE_TEST_CASE("Unit_hipFreeMultiTDev", "", char, int, float2, float4) {
   std::vector<std::thread> threads;
 
   for (auto ptr : ptrs) {
-<<<<<<< HEAD
     threads.emplace_back(([ptr] {
       HIP_CHECK_THREAD(hipFree(ptr));
       HIP_CHECK_THREAD(hipStreamQuery(nullptr));
     }));
-=======
-    threads.push_back(
-        std::thread([ptr] { HIP_CHECK_THREAD(workIsDoneCheck<TestType*>(ptr, DevFree)); }));
->>>>>>> Added testing for hipFree APIs
   }
 
   for (auto& t : threads) {
@@ -302,15 +297,10 @@ TEMPLATE_TEST_CASE("Unit_hipFreeMultiTHost", "", char, int, float2, float4) {
   std::vector<std::thread> threads;
 
   for (auto ptr : ptrs) {
-<<<<<<< HEAD
     threads.emplace_back(([ptr] {
       HIP_CHECK_THREAD(hipHostFree(ptr));
       HIP_CHECK_THREAD(hipStreamQuery(nullptr));
     }));
-=======
-    threads.push_back(
-        std::thread([ptr] { HIP_CHECK_THREAD(workIsDoneCheck<TestType*>(ptr, HostFree)); }));
->>>>>>> Added testing for hipFree APIs
   }
 
   for (auto& t : threads) {
@@ -342,17 +332,10 @@ TEMPLATE_TEST_CASE("Unit_hipFreeMultiTArray", "", char, int, float2, float4) {
 
 
     for (auto& ptr : ptrs) {
-<<<<<<< HEAD
       threads.emplace_back(([ptr] {
         HIP_CHECK_THREAD(hipArrayDestroy(ptr));
         HIP_CHECK_THREAD(hipStreamQuery(nullptr));
       }));
-=======
-      SECTION("ArrayDestroy") {
-        threads.push_back(std::thread(
-            [ptr] { HIP_CHECK_THREAD(workIsDoneCheck<hiparray>(ptr, ArrayDestroy)); }));
-      }
->>>>>>> Added testing for hipFree APIs
     }
     for (auto& t : threads) {
       t.join();
@@ -373,19 +356,10 @@ TEMPLATE_TEST_CASE("Unit_hipFreeMultiTArray", "", char, int, float2, float4) {
 
     for (auto ptr : ptrs) {
       SECTION("ArrayFree") {
-<<<<<<< HEAD
         threads.emplace_back(([ptr] {
           HIP_CHECK_THREAD(hipFreeArray(ptr));
           HIP_CHECK_THREAD(hipStreamQuery(nullptr));
         }));
-=======
-        threads.push_back(std::thread(
-            [ptr] { HIP_CHECK_THREAD(workIsDoneCheck<hipArray_t>(ptr, ArrayFree)); }));
-      }
-      SECTION("ArrayDestroy") {
-        threads.push_back(std::thread(
-            [ptr] { HIP_CHECK_THREAD(workIsDoneCheck<hipArray_t>(ptr, ArrayDestroy)); }));
->>>>>>> Added testing for hipFree APIs
       }
     }
     for (auto& t : threads) {
@@ -406,7 +380,6 @@ TEMPLATE_TEST_CASE("Unit_hipFreeMultiTArray", "", char, int, float2, float4) {
 
   std::vector<std::thread> threads;
 
-<<<<<<< HEAD
   SECTION("ArrayFree") {
     std::vector<hipArray_t> ptrs(numAllocs);
     for (auto& ptr : ptrs) {
@@ -432,16 +405,6 @@ TEMPLATE_TEST_CASE("Unit_hipFreeMultiTArray", "", char, int, float2, float4) {
         HIP_CHECK_THREAD(hipArrayDestroy(ptr));
         HIP_CHECK_THREAD(hipStreamQuery(nullptr));
       });
-=======
-  for (auto ptr : ptrs) {
-    SECTION("ArrayFree") {
-      threads.push_back(
-          std::thread([ptr] { HIP_CHECK_THREAD(workIsDoneCheck<hipArray_t>(ptr, ArrayFree)); }));
-    }
-    SECTION("ArrayDestroy") {
-      threads.push_back(std::thread(
-          [ptr] { HIP_CHECK_THREAD(workIsDoneCheck<hipArray_t>(ptr, ArrayDestroy)); }));
->>>>>>> Added testing for hipFree APIs
     }
   }
   for (auto& t : threads) {
