@@ -44,28 +44,79 @@ THE SOFTWARE.
 
 enum FreeType { DevFree, ArrayFree, ArrayDestroy, HostFree };
 
-// long running kernel (time based)
-__global__ void longRunningKernel(clock_t clock_count) {
+__global__ void waitKernel(clock_t offset) {
+  auto time = clock();
+  while (clock() - time < offset) {
+  }
+}
+
+static __global__ void clock_kernel(clock_t clock_count, size_t* clockOut, size_t* co = nullptr) {
+  *clockOut = clock();
   clock_t start_clock = clock();
   clock_t clock_offset = 0;
   while (clock_offset < clock_count) {
     clock_offset = clock() - start_clock;
   }
+  if (co != nullptr) *co = clock_offset;
 }
 
+class LongRunningKernel {
+ public:
+  static size_t Get() {
+    static LongRunningKernel instance;
+    return instance.clockTicksSec;
+  }
+  static void runKernelForMs(size_t ms, hipStream_t stream = nullptr) {
+    auto ticks = LongRunningKernel::Get();
+    hipLaunchKernelGGL(waitKernel, dim3(1), dim3(1), 0, stream, ticks * ms / 1000);
+    HIP_CHECK(hipGetLastError());
+  }
 
-// Helper function for long running kernel launch
-void lauchLongRunningKernel(clock_t miliseconds) {
-  hipDeviceProp_t prop;
-  int device;
-  HIP_CHECK(hipGetDevice(&device));
-  HIP_CHECK(hipGetDeviceProperties(&prop, device));
+ private:
+  LongRunningKernel() {
+    hipDeviceProp_t prop;
+    int device;
+    size_t *clockFromKernel, *clockOffset;
+    HIP_CHECK(hipMalloc(&clockFromKernel, sizeof(size_t)));
+    HIP_CHECK(hipMalloc(&clockOffset, sizeof(size_t)));
+    HIP_CHECK(hipGetDevice(&device));
+    HIP_CHECK(hipGetDeviceProperties(&prop, device));
 
-  clock_t value = static_cast<clock_t>(prop.clockRate);
-  clock_t time = value * miliseconds;
+    constexpr float mseconds = 1000;
+    constexpr float error = 0.02 * mseconds;
 
-  longRunningKernel<<<dim3(1), dim3(1), 0, 0>>>(time);
-}
+    clock_t devFreq = static_cast<clock_t>(prop.clockRate);  // in kHz
+    clock_t time = devFreq * mseconds;
+
+
+    while (1) {
+      auto start = std::chrono::high_resolution_clock::now();
+      hipLaunchKernelGGL(clock_kernel, dim3(1), dim3(1), 0, 0, time, clockFromKernel, clockOffset);
+      HIP_CHECK(hipGetLastError());
+      HIP_CHECK(hipDeviceSynchronize());
+      auto stop = std::chrono::high_resolution_clock::now();
+      auto result = std::chrono::duration<double, std::milli>(stop - start).count();
+      size_t co = 0;
+      HIP_CHECK(hipMemcpy(&co, clockOffset, sizeof(size_t), hipMemcpyDeviceToHost));
+      if (result >= (mseconds - error) && result <= (mseconds + error)) {
+        clockTicksSec = co;
+        HIP_CHECK(hipFree(clockFromKernel));
+        HIP_CHECK(hipFree(clockOffset));
+        break;
+      } else {
+        auto off = fabs(mseconds - result) / mseconds;
+        if (result >= mseconds) {
+          time -= (time * off);
+        } else {
+          time += (time * off);
+        }
+      }
+    }
+  }
+
+  size_t clockTicksSec;
+};
+
 
 // helper functions to release memory
 template <typename T> hipError_t freeStuff(T ptr, FreeType type) {
@@ -125,7 +176,7 @@ TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncDev", "", char, float, float2, float
   size_t size_mult = GENERATE(1, 32, 64, 128, 256);
   HIP_CHECK(hipMalloc(&devPtr, sizeof(TestType) * size_mult));
 
-  lauchLongRunningKernel(50);
+  LongRunningKernel::runKernelForMs(50);
   // make sure device is busy
   HIP_CHECK_ERROR(hipStreamQuery(nullptr), hipErrorNotReady);
   HIP_CHECK(workIsDoneCheck<TestType*>(devPtr, DevFree));
@@ -142,7 +193,7 @@ TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncHost", "", char, float, float2, floa
 
   HIP_CHECK(hipHostMalloc(&hostPtr, sizeof(TestType) * size_mult));
 
-  lauchLongRunningKernel(50);
+  LongRunningKernel::runKernelForMs(50);
   // make sure device is busy
   HIP_CHECK_ERROR(hipStreamQuery(nullptr), hipErrorNotReady);
   HIP_CHECK(workIsDoneCheck<TestType*>(hostPtr, HostFree));
@@ -167,7 +218,7 @@ TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncArray", "", char, float, float2, flo
     hipChannelFormatDesc desc = hipCreateChannelDesc<TestType>();
 
     HIP_CHECK(hipMallocArray(&arrayPtr, &desc, width, height, hipArrayDefault));
-    lauchLongRunningKernel(50);
+    LongRunningKernel::runKernelForMs(50);
     // make sure device is busy
     HIP_CHECK_ERROR(hipStreamQuery(nullptr), hipErrorNotReady);
     // Second free segfaults
@@ -182,7 +233,7 @@ TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncArray", "", char, float, float2, flo
     cuDesc.Format = HIP_AD_FORMAT_UNSIGNED_INT8;
     cuDesc.NumChannels = 2;
     HIP_CHECK(hipArrayCreate(&cuArrayPtr, &cuDesc));
-    lauchLongRunningKernel(50);
+    LongRunningKernel::runKernelForMs(50);
     // make sure device is busy
     HIP_CHECK_ERROR(hipStreamQuery(nullptr), hipErrorNotReady);
     HIP_CHECK(workIsDoneCheck<hiparray>(cuArrayPtr, ArrayDestroy));
@@ -205,7 +256,7 @@ TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncArray", "", char, float, float2, flo
   hipChannelFormatDesc desc = hipCreateChannelDesc<TestType>();
 
   HIP_CHECK(hipMallocArray(&arrayPtr, &desc, extent.width, extent.height, hipArrayDefault));
-  lauchLongRunningKernel(50);
+  LongRunningKernel::runKernelForMs(50);
   // make sure device is busy
   HIP_CHECK_ERROR(hipStreamQuery(nullptr), hipErrorNotReady);
   // Second free segfaults
