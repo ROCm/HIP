@@ -38,7 +38,7 @@ static inline int getGeviceCount() {
 }
 
 // Get Free Memory from the system
-static size_t getMemoryAmount() {
+static inline size_t getMemoryAmount() {
 #ifdef __linux__
   struct sysinfo info{};
   sysinfo(&info);
