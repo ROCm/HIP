@@ -121,14 +121,8 @@ static void runMipMapTest(unsigned int width, unsigned int height, unsigned int 
 #endif
 
 TEST_CASE("Unit_hipTextureMipmapObj2D_Check") {
-#if HT_AMD
-  int imageSupport{};
-  HIP_CHECK(hipDeviceGetAttribute(&imageSupport, hipDeviceAttributeImageSupport, 0));
-  if (!imageSupport) {
-    INFO("Texture is not supported on the device. Test is skipped");
-    return;
-  }
-#endif
+  CHECK_IMAGE_SUPPORT
+
 #ifdef _WIN32
   for (auto& hw : hw_vector) {
     for (auto& mip : mip_vector) {

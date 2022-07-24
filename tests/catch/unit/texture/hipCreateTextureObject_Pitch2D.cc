@@ -29,7 +29,7 @@ THE SOFTWARE.
  * Validates Pitch2D Resource texture object with negative and functional tests
  */
 TEST_CASE("Unit_hipCreateTextureObject_Pitch2DResource") {
-  checkImageSupport();
+  CHECK_IMAGE_SUPPORT
 
   hipError_t ret;
   hipResourceDesc resDesc;

@@ -23,9 +23,11 @@ THE SOFTWARE.
 #define offset 3
 
 static __global__ void tex1dKernel(float *val, hipTextureObject_t obj) {
+#if !defined(__HIP_NO_IMAGE_SUPPORT) || !__HIP_NO_IMAGE_SUPPORT
   int k = blockIdx.x * blockDim.x + threadIdx.x;
   if (k < (N - offset))
       val[k] = tex1Dfetch<float>(obj, k+offset);
+#endif
 }
 
 
@@ -84,7 +86,8 @@ static void runTest(hipTextureAddressMode addressMode,
 
   for (int i = 0; i < (N - offset); i++) {
       if (output[i] != val[i + offset]) {
-          INFO("Output not matching at index " << i);
+          INFO("Mismatch found at output[" << i << "]:" << output[i] <<
+               " val[" << i + offset << "]:" << val[i + offset]);
           REQUIRE(false);
       }
   }
@@ -103,16 +106,18 @@ static void runTest(hipTextureAddressMode addressMode,
 
 
 TEST_CASE("Unit_tex1Dfetch_CheckModes") {
-    SECTION("hipAddressModeClamp AND hipFilterModePoint") {
-      runTest(hipAddressModeClamp, hipFilterModePoint);
-    }
-    SECTION("hipAddressModeClamp AND hipFilterModeLinear") {
-      runTest(hipAddressModeClamp, hipFilterModeLinear);
-    }
-    SECTION("hipAddressModeWrap AND hipFilterModePoint") {
-      runTest(hipAddressModeWrap, hipFilterModePoint);
-    }
-    SECTION("hipAddressModeWrap AND hipFilterModeLinear") {
-      runTest(hipAddressModeWrap, hipFilterModeLinear);
-    }
+  CHECK_IMAGE_SUPPORT
+
+  SECTION("hipAddressModeClamp AND hipFilterModePoint") {
+    runTest(hipAddressModeClamp, hipFilterModePoint);
+  }
+  SECTION("hipAddressModeClamp AND hipFilterModeLinear") {
+    runTest(hipAddressModeClamp, hipFilterModeLinear);
+  }
+  SECTION("hipAddressModeWrap AND hipFilterModePoint") {
+    runTest(hipAddressModeWrap, hipFilterModePoint);
+  }
+  SECTION("hipAddressModeWrap AND hipFilterModeLinear") {
+    runTest(hipAddressModeWrap, hipFilterModeLinear);
+  }
 }

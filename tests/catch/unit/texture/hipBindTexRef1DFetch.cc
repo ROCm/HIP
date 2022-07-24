@@ -24,14 +24,17 @@ THE SOFTWARE.
 texture<float, 1, hipReadModeElementType> tex;
 
 static __global__ void kernel(float *out) {
+#if !defined(__HIP_NO_IMAGE_SUPPORT) || !__HIP_NO_IMAGE_SUPPORT
   int x = blockIdx.x * blockDim.x + threadIdx.x;
   if (x < N) {
       out[x] = tex1Dfetch(tex, x);
   }
+#endif
 }
 
-
 TEST_CASE("Unit_hipBindTexture_tex1DfetchVerification") {
+  CHECK_IMAGE_SUPPORT
+
   float *texBuf;
   float val[N], output[N];
   size_t offset = 0;
