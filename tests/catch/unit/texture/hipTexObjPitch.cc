@@ -38,20 +38,12 @@ static __global__ void texture2dCopyKernel(hipTextureObject_t texObj,
 
 TEMPLATE_TEST_CASE("Unit_hipTexObjPitch_texture2D", "", float, int,
                     unsigned char, int16_t, char, unsigned int) {
+  CHECK_IMAGE_SUPPORT
+
   TestType* B;
   TestType* A;
   TestType* devPtrB;
   TestType* devPtrA;
-
-#if HT_AMD
-  int imageSupport{};
-  HIP_CHECK(hipDeviceGetAttribute(&imageSupport,
-                           hipDeviceAttributeImageSupport, 0));
-  if (!imageSupport) {
-    INFO("Texture is not supported on the device. Test is skipped");
-    return;
-  }
-#endif
 
   B = new TestType[SIZE_H*SIZE_W];
   A = new TestType[SIZE_H*SIZE_W];
