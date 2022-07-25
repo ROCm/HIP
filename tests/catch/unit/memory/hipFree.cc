@@ -50,67 +50,87 @@ __global__ void waitKernel(clock_t offset) {
   }
 }
 
-static __global__ void clock_kernel(clock_t clock_count, size_t* clockOut, size_t* co = nullptr) {
-  *clockOut = clock();
+static __global__ void clock_kernel(clock_t clock_count, size_t* co) {
   clock_t start_clock = clock();
   clock_t clock_offset = 0;
   while (clock_offset < clock_count) {
     clock_offset = clock() - start_clock;
   }
-  if (co != nullptr) *co = clock_offset;
+  *co = clock_offset;
 }
 
 // number of clocks the device is running at (device frequency)
-static size_t ticks = 0;
+static size_t ticksPerMillisecond = 0;
 
 // helper function used to set the device frequency variable
 
 static size_t findTicks() {
   hipDeviceProp_t prop;
   int device;
-  size_t *clockFromKernel, *clockOffset;
-  HIP_CHECK(hipMalloc(&clockFromKernel, sizeof(size_t)));
+  size_t* clockOffset;
   HIP_CHECK(hipMalloc(&clockOffset, sizeof(size_t)));
+  hipEvent_t start, stop;
+  HIP_CHECK(hipEventCreate(&start));
+  HIP_CHECK(hipEventCreate(&stop));
   HIP_CHECK(hipGetDevice(&device));
   HIP_CHECK(hipGetDeviceProperties(&prop, device));
 
-  constexpr float mseconds = 1000;
-  constexpr float error = 0.02 * mseconds;
+  constexpr float milliseconds = 1000;
+  constexpr float tolerance = 0.00002 * milliseconds;
 
   clock_t devFreq = static_cast<clock_t>(prop.clockRate);  // in kHz
-  clock_t time = devFreq * mseconds;
+  clock_t time = devFreq * milliseconds;
+  // Warmup
+  hipLaunchKernelGGL(clock_kernel, dim3(1), dim3(1), 0, 0, time, clockOffset);
+  HIP_CHECK(hipGetLastError());
+  HIP_CHECK(hipDeviceSynchronize());
 
+  // try 10 times to find device frequency
+  int attempts = 6;
+  size_t co = 0;
 
-  while (1) {
-    auto start = std::chrono::high_resolution_clock::now();
-    hipLaunchKernelGGL(clock_kernel, dim3(1), dim3(1), 0, 0, time, clockFromKernel, clockOffset);
+  while (attempts > 0) {
+    HIP_CHECK(hipEventRecord(start));
+    hipLaunchKernelGGL(clock_kernel, dim3(1), dim3(1), 0, 0, time, clockOffset);
+    HIP_CHECK(hipEventRecord(stop));
     HIP_CHECK(hipGetLastError());
-    HIP_CHECK(hipDeviceSynchronize());
-    auto stop = std::chrono::high_resolution_clock::now();
-    auto result = std::chrono::duration<double, std::milli>(stop - start).count();
-    size_t co = 0;
+    HIP_CHECK(hipEventSynchronize(stop));
+
+    float executionTime = 0;
+    HIP_CHECK(hipEventElapsedTime(&executionTime, start, stop));
+
     HIP_CHECK(hipMemcpy(&co, clockOffset, sizeof(size_t), hipMemcpyDeviceToHost));
-    if (result >= (mseconds - error) && result <= (mseconds + error)) {
-      HIP_CHECK(hipFree(clockFromKernel));
+    if (executionTime >= (milliseconds - tolerance) &&
+        executionTime <= (milliseconds + tolerance)) {
       HIP_CHECK(hipFree(clockOffset));
+      HIP_CHECK(hipEventDestroy(start));
+      HIP_CHECK(hipEventDestroy(stop));
       return co;
 
     } else {
-      auto off = fabs(mseconds - result) / mseconds;
-      if (result >= mseconds) {
+      auto off = fabs(milliseconds - executionTime) / milliseconds;
+      if (executionTime >= milliseconds) {
         time -= (time * off);
+        --attempts;
       } else {
         time += (time * off);
+        --attempts;
       }
     }
   }
+  HIP_CHECK(hipFree(clockOffset));
+  HIP_CHECK(hipEventDestroy(start));
+  HIP_CHECK(hipEventDestroy(stop));
+  return co;
 }
 
+// Launches a kernel which runs for specified amount of time
+// Note: The current implementation uses HIP_CHECK which is not thread safe!
 static void runKernelForMs(size_t ms, hipStream_t stream = nullptr) {
-  if (ticks == 0) {
-    ticks = findTicks();
+  if (ticksPerMillisecond == 0) {
+    ticksPerMillisecond = findTicks();
   }
-  hipLaunchKernelGGL(waitKernel, dim3(1), dim3(1), 0, stream, ticks * ms / 1000);
+  hipLaunchKernelGGL(waitKernel, dim3(1), dim3(1), 0, stream, ticksPerMillisecond * ms / 1000);
   HIP_CHECK(hipGetLastError());
 }
 
