@@ -55,7 +55,7 @@ struct MinAlloc {
     size_t totalMemRet;
     // actual allocation should be bigger to reflect the minimum allocation on device
     HIP_CHECK(hipMemGetInfo(&freeMemRet, &totalMemRet));
-    REQUIRE(freeMemInit > freeMemRet);
+    REQUIRE(freeMemInit >= freeMemRet);
     HIP_CHECK(hipFree(A_mem));
 
     // store the size of minimum allocation
