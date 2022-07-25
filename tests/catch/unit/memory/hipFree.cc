@@ -127,7 +127,7 @@ static size_t findTicks() {
 // Launches a kernel which runs for specified amount of time
 // Note: The current implementation uses HIP_CHECK which is not thread safe!
 // Note the function assumes execution on a single device, if changing devices between calls of
-// runKernelForMs it is set ticksPerMillisecond = 0 (should be avoided as it slows down testing
+// runKernelForMs set ticksPerMillisecond back to 0 (should be avoided as it slows down testing
 // significantly)
 static void runKernelForMs(size_t millis, hipStream_t stream = nullptr) {
   if (ticksPerMillisecond == 0) {
