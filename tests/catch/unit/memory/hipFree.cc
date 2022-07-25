@@ -126,11 +126,11 @@ static size_t findTicks() {
 
 // Launches a kernel which runs for specified amount of time
 // Note: The current implementation uses HIP_CHECK which is not thread safe!
-static void runKernelForMs(size_t ms, hipStream_t stream = nullptr) {
+static void runKernelForMs(size_t millis, hipStream_t stream = nullptr) {
   if (ticksPerMillisecond == 0) {
     ticksPerMillisecond = findTicks();
   }
-  hipLaunchKernelGGL(waitKernel, dim3(1), dim3(1), 0, stream, ticksPerMillisecond * ms / 1000);
+  hipLaunchKernelGGL(waitKernel, dim3(1), dim3(1), 0, stream, ticksPerMillisecond * millis / 1000);
   HIP_CHECK(hipGetLastError());
 }
 
