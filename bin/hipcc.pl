@@ -187,11 +187,6 @@ if ($HIP_PLATFORM eq "amd") {
         print ("HIP_CLANG_TARGET=$HIP_CLANG_TARGET\n");
     }
 
-    if ($isWindows) {
-      $HIPCXXFLAGS .= " -std=c++14 -fms-extensions -fms-compatibility";
-    } else {
-      $HIPCXXFLAGS .= " -std=c++11";
-    }
     $HIPCXXFLAGS .= " -isystem \"$HIP_CLANG_INCLUDE_PATH/..\"";
     $HIPCFLAGS .= " -isystem \"$HIP_CLANG_INCLUDE_PATH/..\"";
     $HIPLDFLAGS .= " -L\"$HIP_LIB_PATH\"";
