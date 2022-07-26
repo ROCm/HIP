@@ -63,7 +63,6 @@ if(NOT APPLE)
             "$ENV{ROCM_PATH}/hip"
             ENV HIP_PATH
             ${_IMPORT_PREFIX}
-            /opt/rocm/hip
             DOC "HIP installed location"
             NO_DEFAULT_PATH
             )
@@ -86,8 +85,6 @@ if(NOT APPLE)
         "${HIP_ROOT_DIR}"
         ENV ROCM_PATH
         ENV HIP_PATH
-        /opt/rocm
-        /opt/rocm/hip
         PATH_SUFFIXES bin
         NO_DEFAULT_PATH
         )
@@ -104,8 +101,6 @@ if(NOT APPLE)
         "${HIP_ROOT_DIR}"
         ENV ROCM_PATH
         ENV HIP_PATH
-        /opt/rocm
-        /opt/rocm/hip
         PATH_SUFFIXES bin
         NO_DEFAULT_PATH
         )
@@ -128,8 +123,6 @@ if(NOT APPLE)
         "${HIP_ROOT_DIR}"
         ENV ROCM_PATH
         ENV HIP_PATH
-        /opt/rocm
-        /opt/rocm/hip
         PATH_SUFFIXES bin
         NO_DEFAULT_PATH
         )
@@ -254,7 +247,7 @@ elseif("${HIP_COMPILER}" STREQUAL "clang")
                 set(HIP_CLANG_PATH "${HIP_PATH}/../llvm/bin")
             endif()
         else()
-            set(HIP_CLANG_PATH "/opt/rocm/llvm/bin")
+            message(FATAL_ERROR "Unable to find the clang compiler path. Set ROCM_PATH or HIP_PATH in env ")
         endif()
     endif()
     #Number of parallel jobs by default is 1
@@ -681,7 +674,7 @@ macro(HIP_ADD_EXECUTABLE hip_target)
                     set(HIP_CLANG_PATH "${HIP_PATH}/../llvm/bin")
                 endif()
             else()
-                set(HIP_CLANG_PATH "/opt/rocm/llvm/bin")
+                message(FATAL_ERROR "Unable to find the clang compiler path. Set ROCM_PATH or HIP_PATH in env")
             endif()
         endif()
         set(CMAKE_HIP_LINK_EXECUTABLE "${HIP_HIPCC_CMAKE_LINKER_HELPER} ${HIP_CLANG_PATH} ${HIP_CLANG_PARALLEL_BUILD_LINK_OPTIONS} <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
