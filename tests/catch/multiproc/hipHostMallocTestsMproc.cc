@@ -41,7 +41,7 @@ Testcase Scenarios :
  * Defines
  */
 #define LIB_ROCMSMI "librocm_smi64.so"
-#define ALLOC_SIZE (1*1024*1024)
+#define ALLOC_SIZE (30*1024*1024)
 
 /**
  * Global variables
@@ -221,7 +221,11 @@ static bool validatePageTableAllocations(const char *devList, int visDevCnt) {
     }
 
     for (indx = 0; indx < numdev; indx++) {
-      if (current[indx] - prev[indx])
+      // For visible hip devices, there should be increase in VRAM usage
+      // due to page table allocations
+      // For NON visible hip devices, there can be reduction in VRAM usage
+      // due to removal of page tables from them
+      if (current[indx] > prev[indx])
         changeCnt++;
     }
 
