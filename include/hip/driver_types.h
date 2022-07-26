@@ -142,7 +142,7 @@ typedef enum HIPresourcetype_enum {
     HIP_RESOURCE_TYPE_MIPMAPPED_ARRAY = 0x01, /**< Mipmapped array resource */
     HIP_RESOURCE_TYPE_LINEAR          = 0x02, /**< Linear resource */
     HIP_RESOURCE_TYPE_PITCH2D         = 0x03  /**< Pitch 2D resource */
-} HIPresourcetype;
+} HIPresourcetype, hipResourcetype;
 /**
  * hip address modes
  */
