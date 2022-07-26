@@ -1842,7 +1842,7 @@ hipError_t hipGetLastError(void);
  */
 hipError_t hipPeekAtLastError(void);
 /**
- * @brief Return name of the specified error code in text form.
+ * @brief Return hip error as text string form.
  *
  * @param hip_error Error code to convert to name.
  * @return const char pointer to the NULL-terminated error name
@@ -1856,11 +1856,29 @@ const char* hipGetErrorName(hipError_t hip_error);
  * @param hipError Error code to convert to string.
  * @return const char pointer to the NULL-terminated error string
  *
- * @warning : on HCC, this function returns the name of the error (same as hipGetErrorName)
- *
  * @see hipGetErrorName, hipGetLastError, hipPeakAtLastError, hipError_t
  */
 const char* hipGetErrorString(hipError_t hipError);
+/**
+ * @brief Return hip error as text string form.
+ *
+ * @param [in] hipError Error code to convert to string.
+ * @param [out] const char pointer to the NULL-terminated error string
+ * @return #hipSuccess, #hipErrorInvalidValue
+ *
+ * @see hipGetErrorName, hipGetLastError, hipPeakAtLastError, hipError_t
+ */
+hipError_t hipDrvGetErrorName(hipError_t hipError, const char** errorString);
+/**
+ * @brief Return handy text string message to explain the error which occurred
+ *
+ * @param [in] hipError Error code to convert to string.
+ * @param [out] const char pointer to the NULL-terminated error string
+ * @return #hipSuccess, #hipErrorInvalidValue
+ *
+ * @see hipGetErrorName, hipGetLastError, hipPeakAtLastError, hipError_t
+ */
+hipError_t hipDrvGetErrorString(hipError_t hipError, const char** errorString);
 // end doxygen Error
 /**
  * @}
