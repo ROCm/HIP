@@ -33,7 +33,7 @@
 	   "Unit_hipArrayCreate_happy - float2",
 	   "Unit_hipArrayCreate_happy - float4",
 	   "Unit_hipMemVmm_Basic",
-	   "Unit_hipGraphExecMemcpyNodeSetParamsToSymbol_Functional"
+	   "Unit_hipGraphExecMemcpyNodeSetParamsToSymbol_Functional",
 	   "Unit_hipMallocManaged_MultiChunkMultiDevice",
 	   "Unit_hipMallocManaged_TwoPointers - int",
 	   "Unit_hipMallocManaged_TwoPointers - float",
@@ -42,6 +42,8 @@
 	   "Unit_hipMallocManaged_DeviceContextChange - int",
 	   "Unit_hipMallocManaged_DeviceContextChange - float",
 	   "Unit_hipMallocManaged_DeviceContextChange - double",
+	   "Unit_hipGraphNodeGetDependentNodes_Functional",
+	   "Unit_hipGraphNodeGetDependentNodes_ParamValidation",
 	   "Unit_hipGraphNodeGetDependencies_Functional",
 	   "Unit_hipGraphNodeGetDependencies_ParamValidation"
 	]
