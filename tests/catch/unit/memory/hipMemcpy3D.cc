@@ -552,9 +552,13 @@ void Memcpy3D<T>::simple_Memcpy3D() {
 */
 TEMPLATE_TEST_CASE("Unit_hipMemcpy3D_Basic", "[hipMemcpy3D]",
     int, unsigned int, float) {
-  int numDevices = 0;
-  auto i = GENERATE(10, 100, 1024, 10*1024);
+  int device = -1;
+  HIP_CHECK(hipGetDevice(&device));
+  hipDeviceProp_t prop;
+  HIP_CHECK(hipGetDeviceProperties(&prop,device));
+  auto i = GENERATE_COPY(10, 100, 1024, prop.maxTexture3D[0]);
   auto j = GENERATE(10, 100);
+  int numDevices = 0;
   HIP_CHECK(hipGetDeviceCount(&numDevices));
   if (numDevices > 1) {
     if (std::is_same<TestType, float>::value) {
