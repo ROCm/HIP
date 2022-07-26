@@ -24,25 +24,26 @@ THE SOFTWARE.
 #include <hip_test_common.hh>
 #include <hip_test_checkers.hh>
 #include <hip_test_kernels.hh>
+#include "hipArrayCommon.hh"
 #include "DriverContext.hh"
 
 /*
- * This testcase verifies [ hipFree || hipFreeArray || hipArrayDestroy || hipHostFree with
- * hipHostMalloc ]
+ * This testcase verifies [ hipFree || hipFreeArray || hipFreeType::ArrayDestroy ||
+ * hipFreeType::HostFree with hipHostMalloc ]
  * 1. Check that hipFree implicitly synchronises the device.
- * 2.Perform multiple allocations and then call hipFree on each pointer concurrently (from unique
+ * 2. Perform multiple allocations and then call hipFree on each pointer concurrently (from unique
  * threads) for different memory types and different allocation sizes.
  * 3. Pass nullptr as argument and check that no operation is performed and hipSuccess is returned.
  * 4. Pass an invalid ptr and check that hipErrorInvalidValue is returned.
  * 5. Call hipFree twice on the same pointer and check that the implementation handles the second
  * call correctly.
- * 6. HipHostFree only:
+ * 6. HipFreeType::HostFree only:
  *    Try to free memory that has been registered with hipHostRegister and check that
  * hipErrorInvalidValue is returned.
  */
 
 
-enum FreeType { DevFree, ArrayFree, ArrayDestroy, HostFree };
+enum class FreeType { DevFree, ArrayFree, ArrayDestroy, HostFree };
 
 __global__ void waitKernel(clock_t offset) {
   auto time = clock();
@@ -86,10 +87,10 @@ static size_t findTicks() {
   HIP_CHECK(hipDeviceSynchronize());
 
   // try 10 times to find device frequency
-  int attempts = 6;
+  // after 10 attempts the result is likely good enough so just accept it
   size_t co = 0;
 
-  while (attempts > 0) {
+  for (int attempts = 10; attempts > 0; attempts--) {
     HIP_CHECK(hipEventRecord(start));
     hipLaunchKernelGGL(clock_kernel, dim3(1), dim3(1), 0, 0, time, clockOffset);
     HIP_CHECK(hipEventRecord(stop));
@@ -102,11 +103,8 @@ static size_t findTicks() {
     HIP_CHECK(hipMemcpy(&co, clockOffset, sizeof(size_t), hipMemcpyDeviceToHost));
     if (executionTime >= (milliseconds - tolerance) &&
         executionTime <= (milliseconds + tolerance)) {
-      HIP_CHECK(hipFree(clockOffset));
-      HIP_CHECK(hipEventDestroy(start));
-      HIP_CHECK(hipEventDestroy(stop));
-      return co;
-
+      // Timing is within accepted tolerance, break here
+      break;
     } else {
       auto off = fabs(milliseconds - executionTime) / milliseconds;
       if (executionTime >= milliseconds) {
@@ -141,18 +139,15 @@ static void runKernelForMs(size_t millis, hipStream_t stream = nullptr) {
 // helper functions to release memory
 template <typename T> hipError_t freeStuff(T ptr, FreeType type) {
   switch (type) {
-    case DevFree:
+    case FreeType::DevFree:
       return hipFree(ptr);
-      break;
-    case HostFree:
+    case FreeType::HostFree:
       return hipHostFree(ptr);
-      break;
-    case ArrayFree: {
+    case FreeType::ArrayFree: {
       auto arrPtr = reinterpret_cast<hipArray_t>(ptr);
       return hipFreeArray(arrPtr);
-      break;
     }
-    case ArrayDestroy: {
+    case FreeType::ArrayDestroy: {
 #if HT_NVIDIA
       auto arrPtr = reinterpret_cast<hiparray>(ptr);
       return hipArrayDestroy(arrPtr);
@@ -160,11 +155,9 @@ template <typename T> hipError_t freeStuff(T ptr, FreeType type) {
       auto arrPtr = reinterpret_cast<hipArray_t>(ptr);
       return hipFreeArray(arrPtr);
 #endif
-      break;
     }
     default:
       return hipErrorIllegalState;
-      break;
   }
 }
 
@@ -199,7 +192,7 @@ TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncDev", "", char, float, float2, float
   runKernelForMs(50);
   // make sure device is busy
   HIP_CHECK_ERROR(hipStreamQuery(nullptr), hipErrorNotReady);
-  HIP_CHECK(workIsDoneCheck<TestType*>(devPtr, DevFree));
+  HIP_CHECK(workIsDoneCheck<TestType*>(devPtr, FreeType::DevFree));
   if (streamType == CREATEDSTR) HIP_CHECK(hipStreamDestroy(stream));
 }
 
@@ -216,7 +209,7 @@ TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncHost", "", char, float, float2, floa
   runKernelForMs(50);
   // make sure device is busy
   HIP_CHECK_ERROR(hipStreamQuery(nullptr), hipErrorNotReady);
-  HIP_CHECK(workIsDoneCheck<TestType*>(hostPtr, HostFree));
+  HIP_CHECK(workIsDoneCheck<TestType*>(hostPtr, FreeType::HostFree));
 
   if (streamType == CREATEDSTR) HIP_CHECK(hipStreamDestroy(stream));
 }
@@ -242,7 +235,7 @@ TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncArray", "", char, float, float2, flo
     // make sure device is busy
     HIP_CHECK_ERROR(hipStreamQuery(nullptr), hipErrorNotReady);
     // Second free segfaults
-    HIP_CHECK(workIsDoneCheck<hipArray_t>(arrayPtr, ArrayFree));
+    HIP_CHECK(workIsDoneCheck<hipArray_t>(arrayPtr, FreeType::ArrayFree));
   }
   SECTION("ArrayDestroy") {
     hiparray cuArrayPtr{};
@@ -250,13 +243,13 @@ TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncArray", "", char, float, float2, flo
     HIP_ARRAY_DESCRIPTOR cuDesc;
     cuDesc.Width = width;
     cuDesc.Height = height;
-    cuDesc.Format = HIP_AD_FORMAT_UNSIGNED_INT8;
-    cuDesc.NumChannels = 2;
+    cuDesc.Format = vec_info::format;
+    cuDesc.NumChannels = vec_info::size;
     HIP_CHECK(hipArrayCreate(&cuArrayPtr, &cuDesc));
     runKernelForMs(50);
     // make sure device is busy
     HIP_CHECK_ERROR(hipStreamQuery(nullptr), hipErrorNotReady);
-    HIP_CHECK(workIsDoneCheck<hiparray>(cuArrayPtr, ArrayDestroy));
+    HIP_CHECK(workIsDoneCheck<hiparray>(cuArrayPtr, FreeType::ArrayDestroy));
   }
 
   if (streamType == CREATEDSTR) HIP_CHECK(hipStreamDestroy(stream));
@@ -280,8 +273,10 @@ TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncArray", "", char, float, float2, flo
   // make sure device is busy
   HIP_CHECK_ERROR(hipStreamQuery(nullptr), hipErrorNotReady);
   // Second free segfaults
-  SECTION("ArrayDestroy") { HIP_CHECK(workIsDoneCheck<hipArray_t>(arrayPtr, ArrayDestroy)); }
-  SECTION("ArrayFree") { HIP_CHECK(workIsDoneCheck<hipArray_t>(arrayPtr, ArrayFree)); }
+  SECTION("ArrayDestroy") {
+    HIP_CHECK(workIsDoneCheck<hipArray_t>(arrayPtr, FreeType::ArrayDestroy));
+  }
+  SECTION("ArrayFree") { HIP_CHECK(workIsDoneCheck<hipArray_t>(arrayPtr, FreeType::ArrayFree)); }
 
   if (streamType == CREATEDSTR) HIP_CHECK(hipStreamDestroy(stream));
 }
@@ -293,12 +288,12 @@ TEST_CASE("Unit_hipFreeNegativeDev") {
   char* devPtr;
   SECTION("InvalidPtr") {
     devPtr = new (char);
-    HIP_CHECK_ERROR(freeStuff(devPtr, DevFree), hipErrorInvalidValue);
+    HIP_CHECK_ERROR(freeStuff(devPtr, FreeType::DevFree), hipErrorInvalidValue);
     delete devPtr;
   }
   SECTION("NullPtr") {
     devPtr = nullptr;
-    HIP_CHECK(freeStuff(devPtr, DevFree));
+    HIP_CHECK(freeStuff(devPtr, FreeType::DevFree));
   }
 }
 
@@ -307,17 +302,17 @@ TEST_CASE("Unit_hipFreeNegativeHost") {
   char* hostPtr{nullptr};
   SECTION("NullPtr") {
     hostPtr = nullptr;
-    HIP_CHECK(freeStuff(hostPtr, HostFree));
+    HIP_CHECK(freeStuff(hostPtr, FreeType::HostFree));
   }
   SECTION("InvalidPtr") {
     hostPtr = new (char);
-    HIP_CHECK_ERROR(freeStuff(hostPtr, HostFree), hipErrorInvalidValue);
+    HIP_CHECK_ERROR(freeStuff(hostPtr, FreeType::HostFree), hipErrorInvalidValue);
   }
   SECTION("hipHostRegister") {
     hostPtr = new char;
     auto flag = GENERATE(hipHostRegisterDefault, hipHostRegisterPortable, hipHostRegisterMapped);
     HIP_CHECK(hipHostRegister((void*)hostPtr, sizeof(char), flag));
-    HIP_CHECK_ERROR(freeStuff(hostPtr, HostFree), hipErrorInvalidValue);
+    HIP_CHECK_ERROR(freeStuff(hostPtr, FreeType::HostFree), hipErrorInvalidValue);
   }
 }
 
@@ -331,18 +326,18 @@ TEST_CASE("Unit_hipFreeNegativeArray") {
     arrayPtr = static_cast<hipArray*>(malloc(sizeof(char)));
 
     SECTION("ArrayFree") {
-      HIP_CHECK_ERROR(freeStuff(arrayPtr, ArrayFree), hipErrorContextIsDestroyed);
+      HIP_CHECK_ERROR(freeStuff(arrayPtr, FreeType::ArrayFree), hipErrorContextIsDestroyed);
     }
     SECTION("ArrayDestroy") {
-      HIP_CHECK_ERROR(freeStuff(cuArrayPtr, ArrayDestroy), hipErrorInvalidResourceHandle);
+      HIP_CHECK_ERROR(freeStuff(cuArrayPtr, FreeType::ArrayDestroy), hipErrorInvalidResourceHandle);
     }
     free(arrayPtr);
   }
   SECTION("NullPtr") {
     arrayPtr = nullptr;
-    SECTION("ArrayFree") { HIP_CHECK(freeStuff(arrayPtr, ArrayFree)); }
+    SECTION("ArrayFree") { HIP_CHECK(freeStuff(arrayPtr, FreeType::ArrayFree)); }
     SECTION("ArrayDestroy") {
-      HIP_CHECK_ERROR(freeStuff(cuArrayPtr, ArrayDestroy), hipErrorInvalidResourceHandle);
+      HIP_CHECK_ERROR(freeStuff(cuArrayPtr, FreeType::ArrayDestroy), hipErrorInvalidResourceHandle);
     }
   }
 }
@@ -356,18 +351,20 @@ TEST_CASE("Unit_hipFreeNegativeArray") {
     arrayPtr = static_cast<hipArray*>(malloc(sizeof(char)));
 
     SECTION("ArrayFree") {
-      HIP_CHECK_ERROR(freeStuff(arrayPtr, ArrayFree), hipErrorContextIsDestroyed);
+      HIP_CHECK_ERROR(freeStuff(arrayPtr, FreeType::ArrayFree), hipErrorContextIsDestroyed);
     }
     SECTION("ArrayDestroy") {
-      HIP_CHECK_ERROR(freeStuff(arrayPtr, ArrayDestroy), hipErrorContextIsDestroyed);
+      HIP_CHECK_ERROR(freeStuff(arrayPtr, FreeType::ArrayDestroy), hipErrorContextIsDestroyed);
     }
   }
 
   SECTION("NullPtr") {
     arrayPtr = nullptr;
-    SECTION("ArrayFree") { HIP_CHECK_ERROR(freeStuff(arrayPtr, ArrayFree), hipErrorInvalidValue); }
+    SECTION("ArrayFree") {
+      HIP_CHECK_ERROR(freeStuff(arrayPtr, FreeType::ArrayFree), hipErrorInvalidValue);
+    }
     SECTION("ArrayDestroy") {
-      HIP_CHECK_ERROR(freeStuff(arrayPtr, ArrayDestroy), hipErrorInvalidValue);
+      HIP_CHECK_ERROR(freeStuff(arrayPtr, FreeType::ArrayDestroy), hipErrorInvalidValue);
     }
   }
 }
@@ -381,8 +378,8 @@ TEST_CASE("Unit_hipFreeDoubleDevice") {
   size_t size_mult = width;
   HIP_CHECK(hipMalloc(&ptr, sizeof(char) * size_mult));
 
-  HIP_CHECK(freeStuff(ptr, DevFree));
-  HIP_CHECK_ERROR(freeStuff(ptr, DevFree), hipErrorInvalidValue);
+  HIP_CHECK(freeStuff(ptr, FreeType::DevFree));
+  HIP_CHECK_ERROR(freeStuff(ptr, FreeType::DevFree), hipErrorInvalidValue);
 }
 TEST_CASE("Unit_hipFreeDoubleHost") {
   size_t width = GENERATE(32, 512, 1024);
@@ -391,8 +388,8 @@ TEST_CASE("Unit_hipFreeDoubleHost") {
 
   HIP_CHECK(hipHostMalloc(&ptr, sizeof(char) * size_mult));
 
-  HIP_CHECK(freeStuff(ptr, HostFree));
-  HIP_CHECK_ERROR(freeStuff(ptr, HostFree), hipErrorInvalidValue);
+  HIP_CHECK(freeStuff(ptr, FreeType::HostFree));
+  HIP_CHECK_ERROR(freeStuff(ptr, FreeType::HostFree), hipErrorInvalidValue);
 }
 TEST_CASE("Unit_hipFreeDoubleArrayFree") {
 #if HT_NVIDIA
@@ -409,8 +406,8 @@ TEST_CASE("Unit_hipFreeDoubleArrayFree") {
 
   HIP_CHECK(hipMallocArray(&arrayPtr, &desc, extent.width, extent.height, hipArrayDefault));
 
-  HIP_CHECK(freeStuff(arrayPtr, ArrayFree));
-  HIP_CHECK_ERROR(freeStuff(arrayPtr, ArrayFree), hipErrorContextIsDestroyed);
+  HIP_CHECK(freeStuff(arrayPtr, FreeType::ArrayFree));
+  HIP_CHECK_ERROR(freeStuff(arrayPtr, FreeType::ArrayFree), hipErrorContextIsDestroyed);
 }
 #if HT_NVIDIA
 TEST_CASE("Unit_hipFreeDoubleArrayDestroy") {
@@ -421,18 +418,16 @@ TEST_CASE("Unit_hipFreeDoubleArrayDestroy") {
   size_t width = GENERATE(32, 512, 1024);
   size_t height = GENERATE(0, 32, 512, 1024);
   DriverContext ctx{};
-  // HipTest::HIP_SKIP_TEST("EXSWCPHIPT-81");
-  // return;
 
   hiparray ArrayPtr{};
   HIP_ARRAY_DESCRIPTOR cuDesc;
   cuDesc.Width = width;
   cuDesc.Height = height;
-  cuDesc.Format = HIP_AD_FORMAT_UNSIGNED_INT8;
-  cuDesc.NumChannels = 2;
+  cuDesc.Format = vec_info::format;
+  cuDesc.NumChannels = vec_info::size;
   HIP_CHECK(hipArrayCreate(&ArrayPtr, &cuDesc));
-  HIP_CHECK(freeStuff(ArrayPtr, ArrayDestroy));
-  HIP_CHECK_ERROR(freeStuff(ArrayPtr, ArrayDestroy), hipErrorContextIsDestroyed);
+  HIP_CHECK(freeStuff(ArrayPtr, FreeType::ArrayDestroy));
+  HIP_CHECK_ERROR(freeStuff(ArrayPtr, FreeType::ArrayDestroy), hipErrorContextIsDestroyed);
 }
 #endif
 
@@ -450,8 +445,8 @@ TEMPLATE_TEST_CASE("Unit_hipFreeMultiTDev", "", char, int, float2, float4) {
   std::vector<std::thread> threads;
 
   for (auto ptr : ptrs) {
-    threads.push_back(
-        std::thread([ptr]() { HIP_CHECK_THREAD(workIsDoneCheck<TestType*>(ptr, DevFree)); }));
+    threads.push_back(std::thread(
+        [ptr]() { HIP_CHECK_THREAD(workIsDoneCheck<TestType*>(ptr, FreeType::DevFree)); }));
   }
 
   for (auto& t : threads) {
@@ -472,8 +467,8 @@ TEMPLATE_TEST_CASE("Unit_hipFreeMultiTHost", "", char, int, float2, float4) {
   std::vector<std::thread> threads;
 
   for (auto ptr : ptrs) {
-    threads.push_back(
-        std::thread([ptr]() { HIP_CHECK_THREAD(workIsDoneCheck<TestType*>(ptr, HostFree)); }));
+    threads.push_back(std::thread(
+        [ptr]() { HIP_CHECK_THREAD(workIsDoneCheck<TestType*>(ptr, FreeType::HostFree)); }));
   }
 
   for (auto& t : threads) {
@@ -484,6 +479,7 @@ TEMPLATE_TEST_CASE("Unit_hipFreeMultiTHost", "", char, int, float2, float4) {
 
 #if HT_NVIDIA
 TEMPLATE_TEST_CASE("Unit_hipFreeMultiTArray", "", char, int, float2, float4) {
+  using vec_info = vector_info<TestType>;
   constexpr size_t numAllocs = 10;
   size_t width = GENERATE(32, 128, 256, 512, 1024);
   size_t height = GENERATE(32, 128, 256, 512, 1024);
@@ -495,8 +491,8 @@ TEMPLATE_TEST_CASE("Unit_hipFreeMultiTArray", "", char, int, float2, float4) {
     HIP_ARRAY_DESCRIPTOR cuDesc;
     cuDesc.Width = width;
     cuDesc.Height = height;
-    cuDesc.Format = HIP_AD_FORMAT_UNSIGNED_INT8;
-    cuDesc.NumChannels = 2;
+    cuDesc.Format = vec_info::format;
+    cuDesc.NumChannels = vec_info::size;
     for (auto& ptr : ptrs) {
       HIP_CHECK(hipArrayCreate(&ptr, &cuDesc));
     }
@@ -506,7 +502,7 @@ TEMPLATE_TEST_CASE("Unit_hipFreeMultiTArray", "", char, int, float2, float4) {
     for (auto& ptr : ptrs) {
       SECTION("ArrayDestroy") {
         threads.push_back(std::thread(
-            [ptr]() { HIP_CHECK_THREAD(workIsDoneCheck<hiparray>(ptr, ArrayDestroy)); }));
+            [ptr]() { HIP_CHECK_THREAD(workIsDoneCheck<hiparray>(ptr, FreeType::ArrayDestroy)); }));
       }
     }
     for (auto& t : threads) {
@@ -532,11 +528,12 @@ TEMPLATE_TEST_CASE("Unit_hipFreeMultiTArray", "", char, int, float2, float4) {
     for (auto ptr : ptrs) {
       SECTION("ArrayFree") {
         threads.push_back(std::thread(
-            [ptr]() { HIP_CHECK_THREAD(workIsDoneCheck<hipArray_t>(ptr, ArrayFree)); }));
+            [ptr]() { HIP_CHECK_THREAD(workIsDoneCheck<hipArray_t>(ptr, FreeType::ArrayFree)); }));
       }
       SECTION("ArrayDestroy") {
-        threads.push_back(std::thread(
-            [ptr]() { HIP_CHECK_THREAD(workIsDoneCheck<hipArray_t>(ptr, ArrayDestroy)); }));
+        threads.push_back(std::thread([ptr]() {
+          HIP_CHECK_THREAD(workIsDoneCheck<hipArray_t>(ptr, FreeType::ArrayDestroy));
+        }));
       }
     }
     for (auto& t : threads) {
@@ -548,27 +545,36 @@ TEMPLATE_TEST_CASE("Unit_hipFreeMultiTArray", "", char, int, float2, float4) {
 #else
 
 TEMPLATE_TEST_CASE("Unit_hipFreeMultiTArray", "", char, int, float2, float4) {
+  using vec_info = vector_info<TestType>;
   constexpr size_t numAllocs = 10;
-  std::vector<hipArray_t> ptrs(numAllocs);
   hipExtent extent{};
   extent.width = GENERATE(32, 128, 256, 512, 1024);
   extent.height = GENERATE(0, 32, 128, 256, 512, 1024);
   hipChannelFormatDesc desc = hipCreateChannelDesc<TestType>();
 
-  for (auto& ptr : ptrs) {
-    HIP_CHECK(hipMallocArray(&ptr, &desc, extent.width, extent.height, hipArrayDefault));
-  }
-
   std::vector<std::thread> threads;
 
-  for (auto ptr : ptrs) {
-    SECTION("ArrayFree") {
-      threads.push_back(
-          std::thread([ptr]() { HIP_CHECK_THREAD(workIsDoneCheck<hipArray_t>(ptr, ArrayFree)); }));
+  SECTION("ArrayFree") {
+    std::vector<hipArray_t> ptrs(numAllocs);
+    for (auto& ptr : ptrs) {
+      HIP_CHECK(hipMallocArray(&ptr, &desc, extent.width, extent.height, hipArrayDefault));
+      threads.emplace_back(
+          [ptr] { HIP_CHECK_THREAD(workIsDoneCheck<hipArray_t>(ptr, FreeType::ArrayFree)); });
     }
-    SECTION("ArrayDestroy") {
-      threads.push_back(std::thread(
-          [ptr]() { HIP_CHECK_THREAD(workIsDoneCheck<hipArray_t>(ptr, ArrayDestroy)); }));
+  }
+  SECTION("ArrayDestroy") {
+    std::vector<hiparray> cuArrayPtrs(numAllocs);
+
+    HIP_ARRAY_DESCRIPTOR cuDesc;
+    cuDesc.Width = extent.width;
+    cuDesc.Height = extent.height;
+    cuDesc.Format = vec_info::format;
+    cuDesc.NumChannels = vec_info::size;
+    for (auto ptr : cuArrayPtrs) {
+      HIP_CHECK(hipArrayCreate(&ptr, &cuDesc));
+
+      threads.emplace_back(
+          [ptr] { HIP_CHECK_THREAD(workIsDoneCheck<hipArray_t>(ptr, FreeType::ArrayDestroy)); });
     }
   }
   for (auto& t : threads) {
