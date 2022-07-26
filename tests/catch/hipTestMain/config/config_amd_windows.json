@@ -41,6 +41,8 @@
 	   "Unit_hipMallocManaged_DeviceContextChange - unsigned char",
 	   "Unit_hipMallocManaged_DeviceContextChange - int",
 	   "Unit_hipMallocManaged_DeviceContextChange - float",
-	   "Unit_hipMallocManaged_DeviceContextChange - double"
+	   "Unit_hipMallocManaged_DeviceContextChange - double",
+	   "Unit_hipGraphNodeGetDependentNodes_Functional",
+	   "Unit_hipGraphNodeGetDependentNodes_ParamValidation"
 	]
 }
