@@ -64,6 +64,9 @@ static __global__ void clock_kernel(clock_t clock_count, size_t* co) {
 static size_t ticksPerMillisecond = 0;
 // Amount of time kernel should wait
 constexpr size_t delay = 50;
+// Var used in multithreaded test cases
+constexpr size_t numAllocs = 10;
+
 
 // helper function used to set the device frequency variable
 
@@ -367,7 +370,6 @@ TEST_CASE("Unit_hipFreeDoubleArray") {
 
 
 TEMPLATE_TEST_CASE("Unit_hipFreeMultiTDev", "", char, int, float2, float4) {
-  constexpr size_t numAllocs = 10;
   std::vector<TestType*> ptrs(numAllocs);
   size_t allocSize = sizeof(TestType) * GENERATE(1, 32, 64, 128);
 
@@ -391,7 +393,6 @@ TEMPLATE_TEST_CASE("Unit_hipFreeMultiTDev", "", char, int, float2, float4) {
 }
 
 TEMPLATE_TEST_CASE("Unit_hipFreeMultiTHost", "", char, int, float2, float4) {
-  constexpr size_t numAllocs = 10;
   std::vector<TestType*> ptrs(numAllocs);
   size_t allocSize = sizeof(TestType) * GENERATE(1, 32, 64, 128);
 
@@ -417,7 +418,7 @@ TEMPLATE_TEST_CASE("Unit_hipFreeMultiTHost", "", char, int, float2, float4) {
 #if HT_NVIDIA
 TEMPLATE_TEST_CASE("Unit_hipFreeMultiTArray", "", char, int, float2, float4) {
   using vec_info = vector_info<TestType>;
-  constexpr size_t numAllocs = 10;
+
   size_t width = GENERATE(32, 128, 256, 512, 1024);
   size_t height = GENERATE(32, 128, 256, 512, 1024);
   DriverContext ctx;
@@ -449,7 +450,6 @@ TEMPLATE_TEST_CASE("Unit_hipFreeMultiTArray", "", char, int, float2, float4) {
   }
 
   SECTION("ArrayFree") {
-    constexpr size_t numAllocs = 10;
     std::vector<hipArray_t> ptrs(numAllocs);
     hipExtent extent{};
     extent.width = width;
@@ -478,7 +478,7 @@ TEMPLATE_TEST_CASE("Unit_hipFreeMultiTArray", "", char, int, float2, float4) {
 
 TEMPLATE_TEST_CASE("Unit_hipFreeMultiTArray", "", char, int, float2, float4) {
   using vec_info = vector_info<TestType>;
-  constexpr size_t numAllocs = 10;
+
   hipExtent extent{};
   extent.width = GENERATE(32, 128, 256, 512, 1024);
   extent.height = GENERATE(0, 32, 128, 256, 512, 1024);
