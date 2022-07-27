@@ -365,8 +365,6 @@ TEST_CASE("Unit_hipFreeDoubleArrayDestroy") {
 #else  // AMD
 
 TEST_CASE("Unit_hipFreeDoubleArray") {
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-120");
-  return;
 
   size_t width = GENERATE(32, 512, 1024);
   size_t height = GENERATE(0, 32, 512, 1024);
@@ -383,8 +381,8 @@ TEST_CASE("Unit_hipFreeDoubleArray") {
     HIP_CHECK_ERROR(hipFreeArray(arrayPtr), hipErrorContextIsDestroyed);
   }
   SECTION("ArrayDestroy") {
-    HIP_CHECK(hipArrayDestroy(ArrayPtr));
-    HIP_CHECK_ERROR(hipArrayDestroy(ArrayPtr), hipErrorContextIsDestroyed);
+    HIP_CHECK(hipArrayDestroy(arrayPtr));
+    HIP_CHECK_ERROR(hipArrayDestroy(arrayPtr), hipErrorContextIsDestroyed);
   }
 }
 
