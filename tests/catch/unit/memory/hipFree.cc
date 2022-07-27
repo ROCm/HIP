@@ -77,7 +77,7 @@ static size_t findTicks() {
   HIP_CHECK(hipGetDeviceProperties(&prop, device));
 
   constexpr float milliseconds = 1000;
-  constexpr float tolerance = 0.00002 * milliseconds;
+  constexpr float tolerance = 0.02 * milliseconds;
 
   clock_t devFreq = static_cast<clock_t>(prop.clockRate);  // in kHz
   clock_t time = devFreq * milliseconds;
