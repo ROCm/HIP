@@ -180,11 +180,6 @@ template <typename T> hipError_t workIsDoneCheck(T ptr, FreeType fType) {
 
 // DevFree, ArrayFree, ArrayDestroy, HostFree
 TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncDev", "", char, float, float2, float4) {
-  enum StreamType { NULLSTR, CREATEDSTR };
-  auto streamType = GENERATE(NULLSTR, CREATEDSTR);
-  hipStream_t stream{nullptr};
-  if (streamType == CREATEDSTR) HIP_CHECK(hipStreamCreate(&stream));
-
   TestType* devPtr{};
   size_t size_mult = GENERATE(1, 32, 64, 128, 256);
   HIP_CHECK(hipMalloc(&devPtr, sizeof(TestType) * size_mult));
@@ -193,14 +188,9 @@ TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncDev", "", char, float, float2, float
   // make sure device is busy
   HIP_CHECK_ERROR(hipStreamQuery(nullptr), hipErrorNotReady);
   HIP_CHECK(workIsDoneCheck<TestType*>(devPtr, FreeType::DevFree));
-  if (streamType == CREATEDSTR) HIP_CHECK(hipStreamDestroy(stream));
 }
 
 TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncHost", "", char, float, float2, float4) {
-  enum StreamType { NULLSTR, CREATEDSTR };
-  auto streamType = GENERATE(NULLSTR, CREATEDSTR);
-  hipStream_t stream{nullptr};
-  if (streamType == CREATEDSTR) HIP_CHECK(hipStreamCreate(&stream));
   TestType* hostPtr{};
   size_t size_mult = GENERATE(1, 32, 64, 128, 256);
 
@@ -210,21 +200,16 @@ TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncHost", "", char, float, float2, floa
   // make sure device is busy
   HIP_CHECK_ERROR(hipStreamQuery(nullptr), hipErrorNotReady);
   HIP_CHECK(workIsDoneCheck<TestType*>(hostPtr, FreeType::HostFree));
-
-  if (streamType == CREATEDSTR) HIP_CHECK(hipStreamDestroy(stream));
 }
 
 #if HT_NVIDIA
 TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncArray", "", char, float, float2, float4) {
+  using vec_info = vector_info<TestType>;
   DriverContext ctx;
+
 
   size_t width = GENERATE(32, 512, 1024);
   size_t height = GENERATE(32, 512, 1024);
-
-  enum StreamType { NULLSTR, CREATEDSTR };
-  auto streamType = GENERATE(NULLSTR, CREATEDSTR);
-  hipStream_t stream{nullptr};
-  if (streamType == CREATEDSTR) HIP_CHECK(hipStreamCreate(&stream));
 
   SECTION("ArrayFree") {
     hipArray_t arrayPtr{};
@@ -251,17 +236,10 @@ TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncArray", "", char, float, float2, flo
     HIP_CHECK_ERROR(hipStreamQuery(nullptr), hipErrorNotReady);
     HIP_CHECK(workIsDoneCheck<hiparray>(cuArrayPtr, FreeType::ArrayDestroy));
   }
-
-  if (streamType == CREATEDSTR) HIP_CHECK(hipStreamDestroy(stream));
 }
 #else  // AMD
 
 TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncArray", "", char, float, float2, float4) {
-  enum StreamType { NULLSTR, CREATEDSTR };
-  auto streamType = GENERATE(NULLSTR, CREATEDSTR);
-  hipStream_t stream{nullptr};
-  if (streamType == CREATEDSTR) HIP_CHECK(hipStreamCreate(&stream));
-
   hipArray_t arrayPtr{};
   hipExtent extent{};
   extent.width = GENERATE(32, 128, 256, 512, 1024);
@@ -277,8 +255,6 @@ TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncArray", "", char, float, float2, flo
     HIP_CHECK(workIsDoneCheck<hipArray_t>(arrayPtr, FreeType::ArrayDestroy));
   }
   SECTION("ArrayFree") { HIP_CHECK(workIsDoneCheck<hipArray_t>(arrayPtr, FreeType::ArrayFree)); }
-
-  if (streamType == CREATEDSTR) HIP_CHECK(hipStreamDestroy(stream));
 }
 
 #endif
@@ -314,6 +290,7 @@ TEST_CASE("Unit_hipFreeNegativeHost") {
     HIP_CHECK(hipHostRegister((void*)hostPtr, sizeof(char), flag));
     HIP_CHECK_ERROR(freeStuff(hostPtr, FreeType::HostFree), hipErrorInvalidValue);
   }
+  delete hostPtr;
 }
 
 #if HT_NVIDIA
@@ -367,6 +344,8 @@ TEST_CASE("Unit_hipFreeNegativeArray") {
       HIP_CHECK_ERROR(freeStuff(arrayPtr, FreeType::ArrayDestroy), hipErrorInvalidValue);
     }
   }
+
+  free(arrayPtr);
 }
 
 #endif
@@ -415,6 +394,8 @@ TEST_CASE("Unit_hipFreeDoubleArrayDestroy") {
   HipTest::HIP_SKIP_TEST("EXSWCPHIPT-120");
   return;
 #endif
+  using vec_info = vector_info<char>;
+
   size_t width = GENERATE(32, 512, 1024);
   size_t height = GENERATE(0, 32, 512, 1024);
   DriverContext ctx{};
