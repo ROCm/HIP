@@ -261,25 +261,19 @@ TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncArray", "", char, float, float2, flo
 
 // Freeing a invalid pointer with on device
 TEST_CASE("Unit_hipFreeNegativeDev") {
-  char* devPtr;
   SECTION("InvalidPtr") {
-    devPtr = new (char);
-    HIP_CHECK_ERROR(freeStuff(devPtr, FreeType::DevFree), hipErrorInvalidValue);
-    delete devPtr;
+    char value;
+    HIP_CHECK_ERROR(freeStuff(&value, FreeType::DevFree), hipErrorInvalidValue);
   }
   SECTION("NullPtr") {
-    devPtr = nullptr;
-    HIP_CHECK(freeStuff(devPtr, FreeType::DevFree));
+    HIP_CHECK(hipFree(nullptr));
   }
 }
 
 // Freeing a invalid pointer with on device
 TEST_CASE("Unit_hipFreeNegativeHost") {
   char* hostPtr{nullptr};
-  SECTION("NullPtr") {
-    hostPtr = nullptr;
-    HIP_CHECK(freeStuff(hostPtr, FreeType::HostFree));
-  }
+  SECTION("NullPtr") { HIP_CHECK(hipHostFree(nullptr)); }
   SECTION("InvalidPtr") {
     hostPtr = new (char);
     HIP_CHECK_ERROR(freeStuff(hostPtr, FreeType::HostFree), hipErrorInvalidValue);
@@ -426,8 +420,8 @@ TEMPLATE_TEST_CASE("Unit_hipFreeMultiTDev", "", char, int, float2, float4) {
   std::vector<std::thread> threads;
 
   for (auto ptr : ptrs) {
-    threads.push_back(std::thread(
-        [ptr]() { HIP_CHECK_THREAD(workIsDoneCheck<TestType*>(ptr, FreeType::DevFree)); }));
+    threads.emplace_back(std::thread(
+        [ptr] { HIP_CHECK_THREAD(workIsDoneCheck<TestType*>(ptr, FreeType::DevFree)); }));
   }
 
   for (auto& t : threads) {
@@ -448,8 +442,8 @@ TEMPLATE_TEST_CASE("Unit_hipFreeMultiTHost", "", char, int, float2, float4) {
   std::vector<std::thread> threads;
 
   for (auto ptr : ptrs) {
-    threads.push_back(std::thread(
-        [ptr]() { HIP_CHECK_THREAD(workIsDoneCheck<TestType*>(ptr, FreeType::HostFree)); }));
+    threads.emplace_back(std::thread(
+        [ptr] { HIP_CHECK_THREAD(workIsDoneCheck<TestType*>(ptr, FreeType::HostFree)); }));
   }
 
   for (auto& t : threads) {
@@ -482,8 +476,8 @@ TEMPLATE_TEST_CASE("Unit_hipFreeMultiTArray", "", char, int, float2, float4) {
 
     for (auto& ptr : ptrs) {
       SECTION("ArrayDestroy") {
-        threads.push_back(std::thread(
-            [ptr]() { HIP_CHECK_THREAD(workIsDoneCheck<hiparray>(ptr, FreeType::ArrayDestroy)); }));
+        threads.emplace_back(std::thread(
+            [ptr] { HIP_CHECK_THREAD(workIsDoneCheck<hiparray>(ptr, FreeType::ArrayDestroy)); }));
       }
     }
     for (auto& t : threads) {
@@ -508,13 +502,12 @@ TEMPLATE_TEST_CASE("Unit_hipFreeMultiTArray", "", char, int, float2, float4) {
 
     for (auto ptr : ptrs) {
       SECTION("ArrayFree") {
-        threads.push_back(std::thread(
-            [ptr]() { HIP_CHECK_THREAD(workIsDoneCheck<hipArray_t>(ptr, FreeType::ArrayFree)); }));
+        threads.emplace_back(std::thread(
+            [ptr] { HIP_CHECK_THREAD(workIsDoneCheck<hipArray_t>(ptr, FreeType::ArrayFree)); }));
       }
       SECTION("ArrayDestroy") {
-        threads.push_back(std::thread([ptr]() {
-          HIP_CHECK_THREAD(workIsDoneCheck<hipArray_t>(ptr, FreeType::ArrayDestroy));
-        }));
+        threads.emplace_back(std::thread(
+            [ptr] { HIP_CHECK_THREAD(workIsDoneCheck<hipArray_t>(ptr, FreeType::ArrayDestroy)); }));
       }
     }
     for (auto& t : threads) {
