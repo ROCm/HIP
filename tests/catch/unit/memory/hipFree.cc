@@ -322,11 +322,12 @@ TEST_CASE("Unit_hipFreeDoubleHost") {
   HIP_CHECK(hipHostFree(ptr));
   HIP_CHECK_ERROR(hipHostFree(ptr), hipErrorInvalidValue);
 }
-TEST_CASE("Unit_hipFreeDoubleArrayFree") {
+
 #if HT_NVIDIA
+TEST_CASE("Unit_hipFreeDoubleArrayFree") {
   HipTest::HIP_SKIP_TEST("EXSWCPHIPT-120");
   return;
-#endif
+
   size_t width = GENERATE(32, 512, 1024);
   size_t height = GENERATE(0, 32, 512, 1024);
   hipArray_t arrayPtr{};
@@ -340,12 +341,10 @@ TEST_CASE("Unit_hipFreeDoubleArrayFree") {
   HIP_CHECK(hipFreeArray(arrayPtr));
   HIP_CHECK_ERROR(hipFreeArray(arrayPtr), hipErrorContextIsDestroyed);
 }
-#if HT_NVIDIA
+
 TEST_CASE("Unit_hipFreeDoubleArrayDestroy") {
-#if HT_NVIDIA
   HipTest::HIP_SKIP_TEST("EXSWCPHIPT-120");
   return;
-#endif
   using vec_info = vector_info<char>;
 
   size_t width = GENERATE(32, 512, 1024);
@@ -362,6 +361,33 @@ TEST_CASE("Unit_hipFreeDoubleArrayDestroy") {
   HIP_CHECK(hipArrayDestroy(ArrayPtr));
   HIP_CHECK_ERROR(hipArrayDestroy(ArrayPtr), hipErrorContextIsDestroyed);
 }
+
+#else  // AMD
+
+TEST_CASE("Unit_hipFreeDoubleArray") {
+  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-120");
+  return;
+
+  size_t width = GENERATE(32, 512, 1024);
+  size_t height = GENERATE(0, 32, 512, 1024);
+  hipArray_t arrayPtr{};
+  hipExtent extent{};
+  extent.width = width;
+  extent.height = height;
+  hipChannelFormatDesc desc = hipCreateChannelDesc<char>();
+
+  HIP_CHECK(hipMallocArray(&arrayPtr, &desc, extent.width, extent.height, hipArrayDefault));
+
+  SECTION("ArrayFree") {
+    HIP_CHECK(hipFreeArray(arrayPtr));
+    HIP_CHECK_ERROR(hipFreeArray(arrayPtr), hipErrorContextIsDestroyed);
+  }
+  SECTION("ArrayDestroy") {
+    HIP_CHECK(hipArrayDestroy(ArrayPtr));
+    HIP_CHECK_ERROR(hipArrayDestroy(ArrayPtr), hipErrorContextIsDestroyed);
+  }
+}
+
 #endif
 
 
