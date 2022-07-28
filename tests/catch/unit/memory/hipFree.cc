@@ -141,7 +141,6 @@ static void runKernelForMs(size_t millis, hipStream_t stream = nullptr) {
 }
 
 
-// DevFree, ArrayFree, ArrayDestroy, HostFree
 TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncDev", "", char, float, float2, float4) {
   TestType* devPtr{};
   size_t size_mult = GENERATE(1, 32, 64, 128, 256);
@@ -238,7 +237,7 @@ TEST_CASE("Unit_hipFreeNegativeDev") {
   SECTION("NullPtr") { HIP_CHECK(hipFree(nullptr)); }
 }
 
-// Freeing a invalid pointer with on device
+// Freeing a invalid pointer with on host
 TEST_CASE("Unit_hipFreeNegativeHost") {
   SECTION("NullPtr") { HIP_CHECK(hipHostFree(nullptr)); }
   SECTION("InvalidPtr") {
@@ -260,29 +259,20 @@ TEST_CASE("Unit_hipFreeNegativeArray") {
   hipArray_t arrayPtr{};
   hiparray cuArrayPtr{};
 
-  SECTION("NullPtr") {
-    SECTION("ArrayFree") { HIP_CHECK(hipFreeArray(nullptr)); }
-    SECTION("ArrayDestroy") {
-      HIP_CHECK_ERROR(hipArrayDestroy(nullptr), hipErrorInvalidResourceHandle);
-    }
+  SECTION("ArrayFree") { HIP_CHECK(hipFreeArray(nullptr)); }
+  SECTION("ArrayDestroy") {
+    HIP_CHECK_ERROR(hipArrayDestroy(nullptr), hipErrorInvalidResourceHandle);
   }
 }
 #else
 
 // Freeing a invalid pointer with array
 TEST_CASE("Unit_hipFreeNegativeArray") {
-  hipArray_t arrayPtr{};
-
-  SECTION("NullPtr") {
-    SECTION("ArrayFree") { HIP_CHECK_ERROR(hipFreeArray(nullptr), hipErrorInvalidValue); }
-    SECTION("ArrayDestroy") { HIP_CHECK_ERROR(hipArrayDestroy(nullptr), hipErrorInvalidValue); }
-  }
-
-  free(arrayPtr);
+  SECTION("ArrayFree") { HIP_CHECK_ERROR(hipFreeArray(nullptr), hipErrorInvalidValue); }
+  SECTION("ArrayDestroy") { HIP_CHECK_ERROR(hipArrayDestroy(nullptr), hipErrorInvalidValue); }
 }
 
 #endif
-
 
 TEST_CASE("Unit_hipFreeDoubleDevice") {
   size_t width = GENERATE(32, 512, 1024);
