@@ -136,18 +136,26 @@ TEMPLATE_TEST_CASE("Unit_hipMalloc3DArray_happy", "", char, uchar2, uint2, int4,
 #if HT_AMD
   const unsigned int flags = hipArrayDefault;
 #else
-  const unsigned int flags = GENERATE(hipArrayDefault, hipArraySurfaceLoadStore);
+  const unsigned int flags =
+      GENERATE(hipArrayDefault, hipArraySurfaceLoadStore, hipArrayTextureGather);
 #endif
   constexpr size_t size = 64;
-  hipExtent extent;
 
-  SECTION("1D Array") { extent = make_hipExtent(size, 0, 0); }
-  SECTION("2D Array") { extent = make_hipExtent(size, size, 0); }
-  SECTION("3D Array") { extent = make_hipExtent(size, size, size); }
+  std::vector<hipExtent> extents;
+  extents.reserve(3);
+  extents.push_back({size, size, 0});  // 2D array
+  if (flags != hipArrayTextureGather) {
+    extents.push_back({size, 0, 0});        // 1D array
+    extents.push_back({size, size, size});  // 3D array
+  };
 
-  HIP_CHECK(hipMalloc3DArray(&array, &desc, extent, flags));
-  checkArrayIsExpected(array, desc, extent, flags);
-  HIP_CHECK(hipFreeArray(array));
+  for (const auto extent : extents) {
+    CAPTURE(flags, extent.width, extent.height, extent.depth);
+
+    HIP_CHECK(hipMalloc3DArray(&array, &desc, extent, flags));
+    checkArrayIsExpected(array, desc, extent, flags);
+    HIP_CHECK(hipFreeArray(array));
+  }
 }
 
 TEMPLATE_TEST_CASE("Unit_hipMalloc3DArray_MaxTexture", "", int, uint4, short, ushort2,
@@ -316,7 +324,7 @@ TEST_CASE("Unit_hipMalloc3DArray_Negative_InvalidFlags") {
   HIP_CHECK_ERROR(hipMalloc3DArray(&array, &desc, makeExtent(flag, s), flag), hipErrorInvalidValue);
 }
 
-void testInvalidDescription(hipChannelFormatDesc desc){
+void testInvalidDescription(hipChannelFormatDesc desc) {
   constexpr size_t s = 6;  // 6 to keep cubemap happy
   hipArray_t array;
 
@@ -419,4 +427,21 @@ TEST_CASE("Unit_hipMalloc3DArray_Negative_NumericLimit") {
   const auto flag = GENERATE(from_range(std::begin(validFlags), std::end(validFlags)));
   HIP_CHECK_ERROR(hipMalloc3DArray(&arrayPtr, &desc, makeExtent(flag, size), flag),
                   hipErrorInvalidValue);
+}
+
+// texture gather arrays are only allowed to be 2D
+TEMPLATE_TEST_CASE("Unit_hipMalloc3DArray_Negative_Non2DTextureGather", "", char, uchar2, short4,
+                   float2, float4) {
+#if HT_AMD
+  HipTest::HIP_SKIP_TEST("Texture Gather arrays not supported using AMD backend");
+  return;
+#endif
+  hipArray_t array;
+  const auto desc = hipCreateChannelDesc<TestType>();
+
+  constexpr unsigned int flags = hipArrayTextureGather;
+  constexpr size_t size = 64;
+  const hipExtent extent = GENERATE(make_hipExtent(size, 0, 0), make_hipExtent(size, size, size));
+
+  HIP_CHECK_ERROR(hipMalloc3DArray(&array, &desc, extent, flags), hipErrorInvalidValue);
 }
