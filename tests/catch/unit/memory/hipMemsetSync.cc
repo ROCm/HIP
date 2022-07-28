@@ -299,7 +299,6 @@ void verifyData(T* aPtr, size_t value, MultiDData& data, allocType type, memSetT
     for (size_t j = 0; j < dataH; j++) {
       for (size_t i = 0; i < data.width; i++) {
         idx = data.pitch * dataH * k + data.pitch * j + i;
-        CAPTURE(sizeInBytes, i, j, k, value, data.pitch, reinterpret_cast<long>(aPtr));
         allMatch = allMatch && static_cast<size_t>(hostPtr.get()[idx]) == value;
         if (!allMatch) REQUIRE(false);
       }
@@ -406,7 +405,7 @@ void runTests(allocType type, memSetType memsetType, MultiDData data, hipStream_
   bool async = GENERATE(true, false);
   CAPTURE(type, memsetType, data.width, data.height, data.depth, stream, async);
   std::pair<T*, T*> aPtr = initMemory<T>(type, memsetType, data);
-  runKernelForMs(300, stream);
+  runKernelForMs(100, stream);
   memsetCheck(aPtr.first, testValue, memsetType, data, async, stream);
 
   if (async || type == allocType::deviceMalloc) {
