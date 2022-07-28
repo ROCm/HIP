@@ -21,12 +21,9 @@ THE SOFTWARE.
 */
 
 
-#include <hip_test_common.hh>
-#include <hip_test_checkers.hh>
-#include <hip_test_kernels.hh>
+#include "MemUtils.hh"
 #include "hipArrayCommon.hh"
 #include "DriverContext.hh"
-#include "MemUtils.hh"
 
 /*
  * This testcase verifies [ hipFree || hipFreeArray || hipFreeType::ArrayDestroy ||
@@ -46,58 +43,8 @@ THE SOFTWARE.
 
 enum class FreeType { DevFree, ArrayFree, ArrayDestroy, HostFree };
 
-// helper functions to release memory
-template <typename T> hipError_t freeStuff(T ptr, FreeType type) {
-  switch (type) {
-    case DevFree:
-      return hipFree(ptr);
-      break;
-    case HostFree:
-      return hipHostFree(ptr);
-      break;
-    case ArrayFree: {
-      auto arrPtr = reinterpret_cast<hipArray_t>(ptr);
-      return hipFreeArray(arrPtr);
-      break;
-    }
-    case ArrayDestroy: {
-#if HT_NVIDIA
-      auto arrPtr = reinterpret_cast<hiparray>(ptr);
-      return hipArrayDestroy(arrPtr);
-#else
-      auto arrPtr = reinterpret_cast<hipArray_t>(ptr);
-      return hipFreeArray(arrPtr);
-#endif
-      break;
-    } else {
-      auto off = fabs(milliseconds - executionTime) / milliseconds;
-      if (executionTime >= milliseconds) {
-        time -= (time * off);
-        --attempts;
-      } else {
-        time += (time * off);
-        --attempts;
-      }
-    }
-  }
-  HIP_CHECK(hipFree(clockOffset));
-  HIP_CHECK(hipEventDestroy(start));
-  HIP_CHECK(hipEventDestroy(stop));
-  return co;
-}
-
-// Launches a kernel which runs for specified amount of time
-// Note: The current implementation uses HIP_CHECK which is not thread safe!
-// Note the function assumes execution on a single device, if changing devices between calls of
-// runKernelForMs set ticksPerMillisecond back to 0 (should be avoided as it slows down testing
-// significantly)
-static void runKernelForMs(size_t millis, hipStream_t stream = nullptr) {
-  if (ticksPerMillisecond == 0) {
-    ticksPerMillisecond = findTicks();
-  }
-  hipLaunchKernelGGL(waitKernel, dim3(1), dim3(1), 0, stream, ticksPerMillisecond * millis / 1000);
-  HIP_CHECK(hipGetLastError());
-}
+// Amount of time kernel should wait
+constexpr size_t delay = 50;
 
 
 TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncDev", "", char, float, float2, float4) {
@@ -184,6 +131,7 @@ TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncArray", "", char, float, float2, flo
     HIP_CHECK(hipStreamQuery(nullptr));
   }
 }
+
 #endif
 
 // Freeing a invalid pointer with on device
