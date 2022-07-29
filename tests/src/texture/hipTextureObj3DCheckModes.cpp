@@ -11,6 +11,7 @@
 #include "test_common.h"
 #include "hipTextureHelper.hpp"
 
+bool isGfx90a = false;
 
 template<bool normalizedCoords>
 __global__ void tex3DKernel(float *outputData, hipTextureObject_t textureObject,
@@ -20,7 +21,7 @@ __global__ void tex3DKernel(float *outputData, hipTextureObject_t textureObject,
   int x = blockIdx.x * blockDim.x + threadIdx.x;
   int y = blockIdx.y * blockDim.y + threadIdx.y;
   int z = blockIdx.z * blockDim.z + threadIdx.z;
-  outputData[z * width * depth + y * width + x] = tex3D<float>(textureObject,
+  outputData[z * width * height + y * width + x] = tex3D<float>(textureObject,
                         normalizedCoords ? (x + offsetX) / width : x + offsetX,
                         normalizedCoords ? (y + offsetY) / height : y + offsetY,
                         normalizedCoords ? (z + offsetZ) / depth : z + offsetZ);
@@ -40,7 +41,7 @@ bool runTest(const int width, const int height, const int depth, const float off
   for (int i = 0; i < depth; i++) {
     for (int j = 0; j < height; j++) {
       for (int k = 0; k < width; k++) {
-        int index = i * width * depth + j * width + k;
+        int index = i * width * height + j * width + k;
         hData[index] = index;
       }
     }
@@ -78,8 +79,17 @@ bool runTest(const int width, const int height, const int depth, const float off
 
   // Create texture object
   hipTextureObject_t textureObject = 0;
-  hipCreateTextureObject(&textureObject, &resDesc, &texDesc, NULL);
-
+  hipError_t res = hipCreateTextureObject(&textureObject, &resDesc, &texDesc, NULL);
+  if (res != hipSuccess) {
+    hipFreeArray(arr);
+    free(hData);
+    if (res == hipErrorNotSupported && isGfx90a) {
+      printf("gfx90a doesn't support 3D linear filter! Skipped!\n");
+    } else {
+      testResult = false;
+    }
+    return testResult;
+  }
   float *dData = NULL;
   hipMalloc((void**) &dData, size);
   hipMemset(dData, 0, size);
@@ -98,7 +108,7 @@ bool runTest(const int width, const int height, const int depth, const float off
   for (int i = 0; i < depth; i++) {
     for (int j = 0; j < height; j++) {
       for (int k = 0; k < width; k++) {
-        int index = i * width * depth + j * width + k;
+        int index = i * width * height + j * width + k;
         float expectedValue = getExpectedValue<addressMode, filterMode>(
             width, height, depth, offsetX + k, offsetY + j, offsetZ + i, hData);
 
@@ -112,11 +122,10 @@ bool runTest(const int width, const int height, const int depth, const float off
   }
 line1:
   hipDestroyTextureObject(textureObject);
+  free(hOutputData);
   hipFree(dData);
   hipFreeArray(arr);
   free(hData);
-  free(hOutputData);
-  printf("%s %s\n", __FUNCTION__, testResult ? "succeeded":"failed");
   return testResult;
 }
 
@@ -124,6 +133,13 @@ int main(int argc, char **argv) {
   checkImageSupport();
 
   bool testResult = true;
+
+  int device = 0;
+  hipDeviceProp_t props;
+  HIPCHECK(hipGetDeviceProperties(&props, device));
+  if (!strncmp(props.gcnArchName, "gfx90a", strlen("gfx90a"))) {
+    isGfx90a = true;
+  }
 
   testResult = testResult && runTest<hipAddressModeClamp, hipFilterModePoint, false>(256, 256, 256, -3.9, 6.1, 9.5);
   testResult = testResult && runTest<hipAddressModeClamp, hipFilterModePoint, false>(256, 256, 256, 4.4, -7.0, 5.3);

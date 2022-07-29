@@ -110,15 +110,8 @@ static void runSimpleTexture3D_Check(int width, int height, int depth,
 }
 
 TEST_CASE("Unit_hipSimpleTexture3D_Check_DataTypes") {
-#if HT_AMD
-  int imageSupport{};
-  HIP_CHECK(hipDeviceGetAttribute(&imageSupport,
-                           hipDeviceAttributeImageSupport, 0));
-  if (!imageSupport) {
-    INFO("Texture is not supported on the device. Test is skipped");
-    return;
-  }
-#endif
+  CHECK_IMAGE_SUPPORT
+
   for ( int i = 1; i < 25; i++ ) {
     runSimpleTexture3D_Check<float>(i, i, i, &texf);
     runSimpleTexture3D_Check<int>(i+1, i, i, &texi);

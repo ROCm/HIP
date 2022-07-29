@@ -146,3 +146,36 @@ TEST_CASE("Unit_hiprtc_namehandling") {
   hiprtcDestroyProgram(&prog);
   REQUIRE(compileResult == HIPRTC_SUCCESS);
 }
+
+TEST_CASE("Unit_hiprtc_getloweredname") {
+  using namespace std;
+  hiprtcProgram prog;
+  hiprtcCreateProgram(&prog,                 // prog
+                      template_kernel,       // buffer
+                      "template_kernel.cu",  // name
+                      0, nullptr, nullptr);
+
+  std::string name_expression = "my_sqrt<complex<double> >";
+  REQUIRE(HIPRTC_SUCCESS == hiprtcAddNameExpression(prog, name_expression.c_str()));
+
+  hiprtcResult compileResult{hiprtcCompileProgram(prog, 0, 0)};
+
+  size_t logSize;
+  HIPRTC_CHECK(hiprtcGetProgramLogSize(prog, &logSize));
+  if (logSize) {
+    string log(logSize, '\0');
+    HIPRTC_CHECK(hiprtcGetProgramLog(prog, &log[0]));
+    std::cout << log << '\n';
+  }
+
+  const char* mangled_instantiation_cstr;
+  // Verifies if hiprtcGetLoweredName successfully gets the lowered name for named expressions with space
+  REQUIRE(HIPRTC_SUCCESS == hiprtcGetLoweredName(prog, name_expression.c_str(), &mangled_instantiation_cstr));
+
+  std::string mangled_name_str = mangled_instantiation_cstr;
+  // Checks if the fetched lowered name is not empty
+  REQUIRE(mangled_name_str.size() > 0);
+
+  hiprtcDestroyProgram(&prog);
+  REQUIRE(compileResult == HIPRTC_SUCCESS);
+}
