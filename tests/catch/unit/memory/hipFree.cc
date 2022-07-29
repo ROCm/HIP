@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 
-#include "MemUtils.hh"
+#include <hip_test_common.hh>
 #include "hipArrayCommon.hh"
 #include "DriverContext.hh"
 

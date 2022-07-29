@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "MemUtils.hh"
+#include <hip_test_common.hh>
 /*
  * These testcases verify that synchronous memset functions are asynchronous with respect to the
  * host except when the target is pinned host memory or a Unified Memory region
@@ -277,7 +277,6 @@ template <typename T>
 void verifyData(T* aPtr, size_t value, MultiDData& data, allocType type, memSetType memType) {
   auto dataH = data.height == 0 ? 1 : data.height;
   auto dataD = data.depth == 0 ? 1 : data.depth;
-  size_t sizeInBytes = data.pitch * dataH * dataD;
   std::unique_ptr<T[]> hostPtr = std::make_unique<T[]>(data.pitch * dataH * dataD / sizeof(T));
   switch (type) {
     case allocType::deviceMalloc:
