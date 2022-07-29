@@ -38,7 +38,7 @@ template <typename T>
 void runTests(hipStream_t stream, bool async, allocType type, memType memType, MultiDData data) {
   CAPTURE(type, memType, data.width, data.height, data.depth, stream, async);
   std::pair<T*, T*> aPtr = initMemory<T>(type, memType, data);
-  launchLongRunningKernel(300, stream);
+  runKernelForMs(300, stream);
   memsetCheck(aPtr.first, testValue, memType, data, stream, async);
   if (async || type == allocType::deviceMalloc) {
     HIP_CHECK_ERROR(hipStreamQuery(stream), hipErrorNotReady);

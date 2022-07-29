@@ -1,26 +1,13 @@
 /*
-<<<<<<< HEAD
-Copyright (c) 2022 Advanced Micro Devices, Inc. All rights reserved.
-
-Permission is hereby granted, free of intge, to any person obtaining a copy
-=======
 Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
->>>>>>> SWDEV-336547 - SWDEV-336548 - SWDEV-336549 - Add test cases for hipArray (#2759)
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
-<<<<<<< HEAD
-
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
-
-=======
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
->>>>>>> SWDEV-336547 - SWDEV-336548 - SWDEV-336549 - Add test cases for hipArray (#2759)
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
@@ -38,20 +25,13 @@ THE SOFTWARE.
 /*
  * This testcase verifies hipMemGetInfo API
  * 1. Different memory chunk allocation
-<<<<<<< HEAD
- *  1.1. hipMalloc - smallest memory chunk that can be allocated is 1024
-=======
  *  1.1. hipMalloc - smallest memory chunck that can be allocated is 1024
->>>>>>> SWDEV-336547 - SWDEV-336548 - SWDEV-336549 - Add test cases for hipArray (#2759)
  *  1.2. hipMallocArray
  *  1.3. hipMalloc3D
  *  1.3. hipMalloc3DArray
  * 2. Allocation using different threads
  * 3. Negative: Invalid args
-<<<<<<< HEAD
-=======
  *
->>>>>>> SWDEV-336547 - SWDEV-336548 - SWDEV-336549 - Add test cases for hipArray (#2759)
  */
 
 struct MinAlloc {
@@ -72,11 +52,7 @@ struct MinAlloc {
     size_t totalMemRet;
     // actual allocation should be bigger to reflect the minimum allocation on device
     HIP_CHECK(hipMemGetInfo(&freeMemRet, &totalMemRet));
-<<<<<<< HEAD
-    REQUIRE(freeMemInit >= freeMemRet);
-=======
     REQUIRE(freeMemInit > freeMemRet);
->>>>>>> SWDEV-336547 - SWDEV-336548 - SWDEV-336549 - Add test cases for hipArray (#2759)
     HIP_CHECK(hipFree(A_mem));
 
     // store the size of minimum allocation
@@ -131,18 +107,12 @@ TEST_CASE("Unit_hipMemGetInfo_DifferentMallocLarge") {
   auto Malloc1Size = freeMemInit >> 1;
   // if the allocation is not divisible by the MinAllocation
   // take into account and add padding
-<<<<<<< HEAD
-=======
   fixAllocSize(Malloc1Size);
->>>>>>> SWDEV-336547 - SWDEV-336548 - SWDEV-336549 - Add test cases for hipArray (#2759)
   HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&A_mem), Malloc1Size));
 
   // allocate an extra quarter of free mem
   auto Malloc2Size = Malloc1Size >> 1;
-<<<<<<< HEAD
-=======
   fixAllocSize(Malloc2Size);
->>>>>>> SWDEV-336547 - SWDEV-336548 - SWDEV-336549 - Add test cases for hipArray (#2759)
   HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&B_mem), Malloc2Size));
 
   HIP_CHECK(hipMemGetInfo(&freeMemRet, &totalMemRet));
@@ -168,11 +138,7 @@ TEST_CASE("Unit_hipMemGetInfo_DifferentMallocSmall") {
   size_t freeMemRet;
   size_t totalMemRet;
   // allocate smaller chunk than minimum
-<<<<<<< HEAD
-  size_t Malloc1Size = 1;
-=======
   size_t Malloc1Size = 2;
->>>>>>> SWDEV-336547 - SWDEV-336548 - SWDEV-336549 - Add test cases for hipArray (#2759)
 
   HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&A_mem), Malloc1Size));
 
@@ -182,8 +148,6 @@ TEST_CASE("Unit_hipMemGetInfo_DifferentMallocSmall") {
   auto assumedFreeMem = freeMemInit - Malloc1Size;
   // Free memory should be less than assumed for
   // single allocation smaller than min allocation chunk
-<<<<<<< HEAD
-=======
   REQUIRE(freeMemRet < assumedFreeMem);
   // confirms that allocated memory is at least equal to smallest allocation
   assumedFreeMem = freeMemInit - MinAlloc::Get();
@@ -199,7 +163,6 @@ TEST_CASE("Unit_hipMemGetInfo_DifferentMallocSmall") {
 
   assumedFreeMem = freeMemInit - MinAlloc::Get();
   // confirms that allocated memory is at least equal to smallest allocation
->>>>>>> SWDEV-336547 - SWDEV-336548 - SWDEV-336549 - Add test cases for hipArray (#2759)
   REQUIRE(freeMemRet <= assumedFreeMem);
 
   HIP_CHECK(hipFree(A_mem));
@@ -227,10 +190,6 @@ TEST_CASE("Unit_hipMemGetInfo_DifferentMallocMultiSmall") {
 
 
   auto assumedFreeMem = freeMemInit - (MallocSize * 2);
-<<<<<<< HEAD
-
-  // Confirm mem alocation results
-=======
   // freeMemRet should be FreeMem - (1 * MinAlloc)
   // instead of FreeMem - (MinAlloc * 2)
   // since MinAlloc > MallocSize*2
@@ -242,14 +201,11 @@ TEST_CASE("Unit_hipMemGetInfo_DifferentMallocMultiSmall") {
 
   // confirms that allocated memory is at least equal to Min Allocation
   assumedFreeMem = freeMemInit - MinAlloc::Get();
->>>>>>> SWDEV-336547 - SWDEV-336548 - SWDEV-336549 - Add test cases for hipArray (#2759)
   REQUIRE(freeMemRet <= assumedFreeMem);
   HIP_CHECK(hipFree(A_mem));
   HIP_CHECK(hipFree(B_mem));
 }
 
-<<<<<<< HEAD
-=======
 TEST_CASE("Unit_hipMemGetInfo_DifferentMallocNotDiv") {
   size_t freeMemInit;
   size_t totalMemInit;
@@ -280,7 +236,6 @@ TEST_CASE("Unit_hipMemGetInfo_DifferentMallocNotDiv") {
 }
 
 
->>>>>>> SWDEV-336547 - SWDEV-336548 - SWDEV-336549 - Add test cases for hipArray (#2759)
 TEMPLATE_TEST_CASE("Unit_hipMemGetInfo_MallocArray", "", int, int4, char) {
   // get initial mem data
   size_t freeMemInit;
@@ -308,10 +263,7 @@ TEMPLATE_TEST_CASE("Unit_hipMemGetInfo_MallocArray", "", int, int4, char) {
   size_t usedMem = bytesPerItem * extent.width * (extent.height != 0 ? extent.height : 1);
 
   // ensure we allocate at least the min allocation for the array
-<<<<<<< HEAD
-=======
   fixAllocSize(usedMem);
->>>>>>> SWDEV-336547 - SWDEV-336548 - SWDEV-336549 - Add test cases for hipArray (#2759)
   MEMINFO(totalMemRet, freeMemInit, freeMemRet, usedMem);
 
   size_t assumedFreeMem = freeMemInit - usedMem;
@@ -330,15 +282,9 @@ TEST_CASE("Unit_hipMemGetInfo_Malloc3D") {
   // Allocate 3D object
   hipExtent extent{};
   // extent is given in bytes for with
-<<<<<<< HEAD
-  extent.width = GENERATE(32, 128, 256);
-  extent.height = GENERATE(32, 128, 256);
-  extent.depth = GENERATE(32, 128, 256);
-=======
   extent.width = GENERATE(32, 128, 256, 512);
   extent.height = GENERATE(32, 128, 256, 512);
   extent.depth = GENERATE(32, 128, 256, 512);
->>>>>>> SWDEV-336547 - SWDEV-336548 - SWDEV-336549 - Add test cases for hipArray (#2759)
   hipPitchedPtr A_mem{};
   HIP_CHECK(hipMalloc3D(&A_mem, extent));
 
@@ -349,10 +295,7 @@ TEST_CASE("Unit_hipMemGetInfo_Malloc3D") {
 
   // Verify result
   size_t mallocSize = A_mem.pitch * extent.height * extent.depth;
-<<<<<<< HEAD
-=======
   fixAllocSize(mallocSize);
->>>>>>> SWDEV-336547 - SWDEV-336548 - SWDEV-336549 - Add test cases for hipArray (#2759)
 
   size_t assumedFreeMem = freeMemInit - mallocSize;
   MEMINFO(totalMemRet, freeMemInit, freeMemRet, mallocSize);
@@ -426,6 +369,9 @@ TEMPLATE_TEST_CASE("Unit_hipMemGetInfo_Malloc3DArray", "", char, int, int4) {
     REQUIRE(mallocSize <= static_cast<size_t>(MinAlloc::Get()));
 
   } else {
+    // account for min allocation
+    fixAllocSize(mallocSize);
+
     MEMINFO(totalMemRet, freeMemInit, freeMemRet, mallocSize);
     size_t assumedFreeMem = freeMemInit - mallocSize;
     REQUIRE(freeMemRet <= assumedFreeMem);
@@ -445,15 +391,6 @@ TEST_CASE("Unit_hipMemGetInfo_ParaLarge") {
   auto Malloc1Size = freeMemInit >> 1;
   // if the allocation is not divisible by the MinAllocation
   // take into account and add padding
-<<<<<<< HEAD
-  std::thread t1(
-      [&] { HIP_CHECK_THREAD(hipMalloc(reinterpret_cast<void**>(&A_mem), Malloc1Size)); });
-
-  // allocate an extra quarter of free mem
-  auto Malloc2Size = Malloc1Size >> 1;
-  std::thread t2(
-      [&] { HIP_CHECK_THREAD(hipMalloc(reinterpret_cast<void**>(&B_mem), Malloc2Size)); });
-=======
   fixAllocSize(Malloc1Size);
   std::thread t1(
       [&]() { HIP_CHECK_THREAD(hipMalloc(reinterpret_cast<void**>(&A_mem), Malloc1Size)); });
@@ -463,7 +400,6 @@ TEST_CASE("Unit_hipMemGetInfo_ParaLarge") {
   fixAllocSize(Malloc2Size);
   std::thread t2(
       [&]() { HIP_CHECK_THREAD(hipMalloc(reinterpret_cast<void**>(&B_mem), Malloc2Size)); });
->>>>>>> SWDEV-336547 - SWDEV-336548 - SWDEV-336549 - Add test cases for hipArray (#2759)
 
   t1.join();
   t2.join();
@@ -487,17 +423,10 @@ TEST_CASE("Unit_hipMemGetInfo_ParaSmall") {
   HIP_CHECK(hipMemGetInfo(&freeMemInit, &totalMemInit));
   unsigned int* A_mem{nullptr};
   // allocate smaller chunk than minimum
-<<<<<<< HEAD
-  size_t Malloc1Size = 1;
-
-  std::thread t1(
-      [&] { HIP_CHECK_THREAD(hipMalloc(reinterpret_cast<void**>(&A_mem), Malloc1Size)) });
-=======
   size_t Malloc1Size = 2;
 
   std::thread t1(
       [&]() { HIP_CHECK_THREAD(hipMalloc(reinterpret_cast<void**>(&A_mem), Malloc1Size)) });
->>>>>>> SWDEV-336547 - SWDEV-336548 - SWDEV-336549 - Add test cases for hipArray (#2759)
   t1.join();
   HIP_CHECK_THREAD_FINALIZE();
   size_t freeMemRet;
@@ -509,11 +438,6 @@ TEST_CASE("Unit_hipMemGetInfo_ParaSmall") {
   auto assumedFreeMem = freeMemInit - Malloc1Size;
   // Free memory should be less than assumed for
   // single allocation smaller than min allocation chunk
-<<<<<<< HEAD
-  REQUIRE(freeMemRet <= assumedFreeMem);
-
-  HIP_CHECK(hipFree(A_mem));
-=======
   REQUIRE(freeMemRet < assumedFreeMem);
   // confirms that allocated memory is at least equal to smallest allocation allowed
   assumedFreeMem = freeMemInit - MinAlloc::Get();
@@ -601,18 +525,14 @@ TEST_CASE("Unit_hipMemGetInfo_ParaMultiSmall") {
   REQUIRE(freeMemRet <= assumedFreeMem);
   HIP_CHECK(hipFree(A_mem));
   HIP_CHECK(hipFree(B_mem));
->>>>>>> SWDEV-336547 - SWDEV-336548 - SWDEV-336549 - Add test cases for hipArray (#2759)
 }
 
 
 TEST_CASE("Unit_hipMemGetInfo_Negative") {
-<<<<<<< HEAD
-=======
 #if HT_AMD
   HipTest::HIP_SKIP_TEST(" EXSWCPHIPT-61");
   return;
 #endif
->>>>>>> SWDEV-336547 - SWDEV-336548 - SWDEV-336549 - Add test cases for hipArray (#2759)
   size_t freeMemInit;
   size_t totalMemInit;
   HIP_CHECK(hipMemGetInfo(&freeMemInit, &totalMemInit));
@@ -643,13 +563,6 @@ TEST_CASE("Unit_hipMemGetInfo_Negative") {
     HIP_CHECK(hipMemGetInfo(&freeMemRet, totalMemRet));
   }
   SECTION("Nullptr as both params passed to hipMemGetInfo") {
-<<<<<<< HEAD
-#if HT_AMD
-    HipTest::HIP_SKIP_TEST("EXSWCPHIPT-135");
-    return;
-#endif
-=======
->>>>>>> SWDEV-336547 - SWDEV-336548 - SWDEV-336549 - Add test cases for hipArray (#2759)
     size_t* freeMemRet = nullptr;
     size_t* totalMemRet = nullptr;
     HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&A_mem), MallocSize));
@@ -658,8 +571,4 @@ TEST_CASE("Unit_hipMemGetInfo_Negative") {
   }
 
   HIP_CHECK(hipFree(A_mem));
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> SWDEV-336547 - SWDEV-336548 - SWDEV-336549 - Add test cases for hipArray (#2759)

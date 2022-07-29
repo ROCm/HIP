@@ -35,11 +35,10 @@ using namespace mem_utils;
 
 // Helper function to run tests for hipMemset allocation types
 template <typename T>
-void runAsyncTests(hipStream_t stream, bool async, allocType type, memSetType memsetType,
+void runAsyncTests(hipStream_t stream, bool async, allocType type, memType memType,
                    MultiDData data1, MultiDData data2) {
-  std::ignore = stream;
   std::ignore = async;
-  std::pair<T*, T*> aPtr{};
+  std::pair<T*, T*> aPtr;
   MultiDData totalRange;
   totalRange.width = data1.width + data2.width;
   totalRange.height = data1.height + data2.height;
@@ -152,18 +151,8 @@ TEST_CASE("Unit_hipMemset3DASyncMulti") {
   data1.depth = data1.width;
   MultiDData data2;
   data2.width = data1.width;
-<<<<<<< HEAD
-<<<<<<< HEAD
   data2.height = data1.width;
   data2.depth = data1.width;
-=======
-  data2.height = data1.height;
-  data2.depth = data1.depth;
->>>>>>> All cases passing on Nvidia
-=======
-  data2.height = data1.width;
-  data2.depth = data1.width;
->>>>>>> Fixed versions 2D and 3D of memset Async
   data2.offset = data1.width;
 
   doMemTest<char>(runAsyncTests<char>, mallocType, memset_type, data1, data2);
