@@ -20,8 +20,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include <hip_test_common.hh>
-#include <memory>
+#include "MemUtils.hh"
+
 /*
  * These testcases verify that synchronous memset functions are asynchronous with respect to the
  * host except when the target is pinned host memory or a Unified Memory region
@@ -29,195 +29,17 @@ THE SOFTWARE.
 
 using namespace memset_utils;
 
-
-template <typename T>
-static void hostCopy(memSetType memType, T* aPtr, T* hostMem, size_t dataW, size_t dataH,
-                     size_t dataD, size_t& dataPitch) {
-  size_t elementSize = sizeof(T);
-  size_t sizeInBytes = elementSize * dataW * dataH * dataD;
-  hipMemcpy3DParms params{};
-  switch (memType) {
-    case memSetType::hipMemset3D: {
-      params.kind = hipMemcpyHostToHost;
-      params.srcPos = make_hipPos(0, 0, 0);
-      params.dstPos = make_hipPos(0, 0, 0);
-      params.srcPtr = make_hipPitchedPtr(aPtr, dataPitch, dataW, dataH);
-      params.dstPtr = make_hipPitchedPtr(hostMem, dataW, dataW, dataH);
-
-      hipExtent extent;
-      extent.width = dataW;
-      extent.height = dataH;
-      extent.depth = dataD;
-
-      params.extent = extent;
-
-      HIP_CHECK(hipMemcpy3D(&params));
-      break;
-    }
-
-    case memSetType::hipMemset2D:
-      HIP_CHECK(hipMemcpy2D(hostMem, dataW * elementSize, aPtr, dataPitch, dataW, dataH,
-                            hipMemcpyHostToHost));
-      break;
-
-    default:
-      HIP_CHECK(hipMemcpy(hostMem, aPtr, sizeInBytes, hipMemcpyHostToHost));
-      break;
-  }
-}
-
-template <typename T>
-static void devRegisteredCopy(memSetType memType, T* aPtr, T* hostMem, size_t dataW, size_t dataH,
-                              size_t dataD, size_t& dataPitch) {
-  size_t elementSize = sizeof(T);
-
-  switch (memType) {
-    case memSetType::hipMemset3D: {
-      hipMemcpy3DParms params{};
-      params.kind = hipMemcpyHostToHost;
-      params.srcPos = make_hipPos(0, 0, 0);
-      params.dstPos = make_hipPos(0, 0, 0);
-      params.srcPtr = make_hipPitchedPtr(aPtr, dataPitch, dataW, dataH);
-      params.dstPtr = make_hipPitchedPtr(hostMem, dataW, dataW, dataH);
-
-      hipExtent extent;
-      extent.width = dataW;
-      extent.height = dataH;
-      extent.depth = dataD;
-
-      params.extent = extent;
-
-      HIP_CHECK(hipMemcpy3D(&params));
-      break;
-    }
-
-    case memSetType::hipMemset2D:
-      HIP_CHECK(hipMemcpy2D(hostMem, dataW * elementSize, aPtr, dataPitch, dataW, dataH,
-                            hipMemcpyDeviceToHost));
-      break;
-
-    default: {
-      size_t sizeInBytes = elementSize * dataW * dataH * dataD;
-      HIP_CHECK(hipMemcpy(hostMem, aPtr, sizeInBytes, hipMemcpyDeviceToHost));
-      break;
-    }
-  }
-}
-
-// Copies device data to host and checks that each element is equal to the
-// specified value
-template <typename T>
-void verifyData(T* aPtr, size_t value, MultiDData& data, allocType type, memSetType memType) {
-  auto dataH = data.height == 0 ? 1 : data.height;
-  auto dataD = data.depth == 0 ? 1 : data.depth;
-  std::unique_ptr<T[]> hostPtr = std::make_unique<T[]>(data.pitch * dataH * dataD / sizeof(T));
-  switch (type) {
-    case allocType::deviceMalloc:
-      deviceMallocCopy(memType, aPtr, hostPtr.get(), data.width, dataH, dataD, data.pitch);
-      break;
-    case allocType::devRegistered:
-      devRegisteredCopy(memType, aPtr, hostPtr.get(), data.width, dataH, dataD, data.pitch);
-      break;
-    default:  // host allocated or host registered memory
-      hostCopy(memType, aPtr, hostPtr.get(), data.width, dataH, dataD, data.pitch);
-      break;
-  }
-
-
-  size_t idx;
-  bool allMatch = true;
-
-  for (size_t k = 0; k < dataD; k++) {
-    for (size_t j = 0; j < dataH; j++) {
-      for (size_t i = 0; i < data.width; i++) {
-        idx = data.pitch * dataH * k + data.pitch * j + i;
-        allMatch = allMatch && static_cast<size_t>(hostPtr.get()[idx]) == value;
-        if (!allMatch) REQUIRE(false);
-      }
-    }
-  }
-}
-
-// macro to allow reuse of functions for testing versions of hipMemset
-template <typename T>
-void memsetCheck(T* aPtr, size_t value, memSetType memsetType, MultiDData& data, bool async = false,
-                 hipStream_t stream = nullptr) {
-  size_t dataW = data.width;
-  size_t dataH = data.height == 0 ? 1 : data.height;
-  size_t dataD = data.depth == 0 ? 1 : data.depth;
-  size_t count = dataW * dataH * dataD;
-
-  switch (memsetType) {
-    case memSetType::hipMemset:
-      if (async) {
-        HIP_CHECK(hipMemsetAsync(aPtr, value, count, stream));
-      } else {
-        HIP_CHECK(hipMemset(aPtr, value, count));
-      }
-      break;
-
-    case memSetType::hipMemsetD8:
-      if (async) {
-        HIP_CHECK(hipMemsetD8Async(reinterpret_cast<hipDeviceptr_t>(aPtr), value, count, stream));
-      } else {
-        HIP_CHECK(hipMemsetD8(reinterpret_cast<hipDeviceptr_t>(aPtr), value, count));
-      }
-
-      break;
-
-    case memSetType::hipMemsetD16:
-      if (async) {
-        HIP_CHECK(hipMemsetD16Async(reinterpret_cast<hipDeviceptr_t>(aPtr), value, count, stream));
-      } else {
-        HIP_CHECK(hipMemsetD16(reinterpret_cast<hipDeviceptr_t>(aPtr), value, count));
-      }
-      break;
-
-    case memSetType::hipMemsetD32:
-      if (async) {
-        HIP_CHECK(hipMemsetD32Async(reinterpret_cast<hipDeviceptr_t>(aPtr), value, count, stream));
-      } else {
-        HIP_CHECK(hipMemsetD32(reinterpret_cast<hipDeviceptr_t>(aPtr), value, count));
-      }
-      break;
-
-    case memSetType::hipMemset2D:
-      if (async) {
-        HIP_CHECK(hipMemset2DAsync(aPtr, data.pitch, value, data.width, data.height, stream));
-      } else {
-        HIP_CHECK(hipMemset2D(aPtr, data.pitch, value, data.width, data.height));
-      }
-      break;
-
-    case memSetType::hipMemset3D:
-      hipExtent extent;
-      extent.width = data.width;
-      extent.height = data.height;
-      extent.depth = data.depth;
-      if (async) {
-        HIP_CHECK(hipMemset3DAsync(make_hipPitchedPtr(aPtr, data.pitch, data.width, data.height),
-                                   value, extent, stream));
-      } else {
-        HIP_CHECK(hipMemset3D(make_hipPitchedPtr(aPtr, data.pitch, data.width, data.height), value,
-                              extent));
-      }
-      break;
-
-    default:
-      REQUIRE(false);
-      break;
-  }
-}
-
+// value used for memset operations
+constexpr int testValue = 0x11;
 
 // Helper function to run tests for hipMemset allocation types
 template <typename T>
-void runTests(allocType type, memSetType memsetType, MultiDData data, hipStream_t stream) {
-  bool async = GENERATE(true, false);
+void runTests(hipStream_t stream, bool async, allocType type, memSetType memsetType,
+              MultiDData data) {
   CAPTURE(type, memsetType, data.width, data.height, data.depth, stream, async);
   std::pair<T*, T*> aPtr = initMemory<T>(type, memsetType, data);
   runKernelForMs(100, stream);
-  memsetCheck(aPtr.first, testValue, memsetType, data, async, stream);
+  memsetCheck(aPtr.first, testValue, memsetType, data, stream, async);
 
   if (async || type == allocType::deviceMalloc) {
     HIP_CHECK_ERROR(hipStreamQuery(stream), hipErrorNotReady);
@@ -235,19 +57,6 @@ void runTests(allocType type, memSetType memsetType, MultiDData data, hipStream_
   }
 }
 
-template <typename T>
-static void doMemsetTest(allocType mallocType, memSetType memset_type, MultiDData data) {
-  enum StreamType { NULLSTR, CREATEDSTR };
-  auto streamType = GENERATE(NULLSTR, CREATEDSTR);
-  hipStream_t stream{nullptr};
-
-  if (streamType == CREATEDSTR) HIP_CHECK(hipStreamCreate(&stream));
-
-  runTests<T>(mallocType, memset_type, data, stream);
-
-  if (streamType == CREATEDSTR) HIP_CHECK(hipStreamDestroy(stream));
-}
-
 TEST_CASE("Unit_hipMemsetSync") {
 #if HT_AMD
   HipTest::HIP_SKIP_TEST("EXSWCPHIPT-86");
@@ -258,7 +67,7 @@ TEST_CASE("Unit_hipMemsetSync") {
   memSetType memset_type = memSetType::hipMemset;
   MultiDData data;
   data.width = GENERATE(1, 1024);
-  doMemsetTest<char>(type, memset_type, data);
+  doMemsetTest<char>(runTests<char>, type, memset_type, data);
 }
 
 TEMPLATE_TEST_CASE("Unit_hipMemsetDSync", "", int8_t, int16_t, uint32_t) {
@@ -280,7 +89,7 @@ TEMPLATE_TEST_CASE("Unit_hipMemsetDSync", "", int8_t, int16_t, uint32_t) {
     memset_type = memSetType::hipMemsetD32;
   }
 
-  doMemsetTest<TestType>(mallocType, memset_type, data);
+  doMemsetTest<TestType>(runTests<char>, mallocType, memset_type, data);
 }
 
 TEST_CASE("Unit_hipMemset2DSync") {
@@ -295,7 +104,7 @@ TEST_CASE("Unit_hipMemset2DSync") {
   data.width = GENERATE(1, 1024);
   data.height = GENERATE(1, 1024);
 
-  doMemsetTest<char>(mallocType, memset_type, data);
+  doMemsetTest<char>(runTests<char>, mallocType, memset_type, data);
 }
 
 TEST_CASE("Unit_hipMemset3DSync") {
@@ -311,5 +120,5 @@ TEST_CASE("Unit_hipMemset3DSync") {
   data.height = GENERATE(1, 256);
   data.depth = GENERATE(1, 256);
 
-  doMemsetTest<char>(mallocType, memset_type, data);
+  doMemsetTest<char>(runTests<char>, mallocType, memset_type, data);
 }

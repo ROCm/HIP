@@ -20,9 +20,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-
-#include <hip_test_common.hh>
-#include <memory>
 #include "MemUtils.hh"
 
 /*
@@ -38,8 +35,10 @@ using namespace memset_utils;
 
 // Helper function to run tests for hipMemset allocation types
 template <typename T>
-void runAsyncTests(hipStream_t stream, allocType type, memSetType memsetType, MultiDData data1,
-                   MultiDData data2) {
+void runAsyncTests(hipStream_t stream, bool async, allocType type, memSetType memsetType,
+                   MultiDData data1, MultiDData data2) {
+  std::ignore = stream;
+  std::ignore = async;
   std::pair<T*, T*> aPtr{};
   MultiDData totalRange;
   totalRange.width = data1.width + data2.width;
