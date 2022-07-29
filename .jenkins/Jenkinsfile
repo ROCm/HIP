@@ -28,7 +28,7 @@ def hipBuildTest(String backendLabel) {
                }
             }
         }
-        stage("Build - HIT framework") {
+        stage("Build - HIT framework ${backendLabel}") {
             // Running the build on hipamd workspace
             dir("${WORKSPACE}/hipamd") {
                 sh  """#!/usr/bin/env bash
@@ -52,7 +52,7 @@ def hipBuildTest(String backendLabel) {
             }
         }
         timeout(time: 1, unit: 'HOURS') {
-            stage('HIP Unit Tests - HIT framework') {
+            stage('HIP Unit Tests - HIT framework ${backendLabel}') {
                 dir("${WORKSPACE}/hipamd/build") {
                     sh  """#!/usr/bin/env bash
                         set -x
@@ -67,7 +67,7 @@ def hipBuildTest(String backendLabel) {
                 }
             }
         }
-        stage("Build - Catch2 framework") {
+        stage("Build - Catch2 framework ${backendLabel}") {
             // Running the build on hipamd workspace
             dir("${WORKSPACE}/hipamd") {
                 sh  """#!/usr/bin/env bash
@@ -94,7 +94,7 @@ def hipBuildTest(String backendLabel) {
             }
         }
         timeout(time: 1, unit: 'HOURS') {
-            stage('HIP Unit Tests - Catch2 framework') {
+            stage('HIP Unit Tests - Catch2 framework ${backendLabel}') {
                 dir("${WORKSPACE}/hipamd/build") {
                     sh  """#!/usr/bin/env bash
                         set -x
