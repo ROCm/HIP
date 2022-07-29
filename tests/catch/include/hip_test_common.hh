@@ -166,7 +166,7 @@ static inline unsigned setNumBlocks(unsigned blocksPerCU, unsigned threadsPerBlo
   HIP_CHECK(hipGetDeviceProperties(&props, device));
 
   unsigned blocks = props.multiProcessorCount * blocksPerCU;
-  if (blocks * threadsPerBlock > N) {
+  if (blocks * threadsPerBlock < N) {
     blocks = (N + threadsPerBlock - 1) / threadsPerBlock;
   }
 
