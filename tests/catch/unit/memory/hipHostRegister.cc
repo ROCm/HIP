@@ -29,6 +29,7 @@ This testfile verifies the following scenarios of hipHostRegister API
 
 #include <hip_test_common.hh>
 #include <hip_test_helper.hh>
+#include "hip/hip_runtime_api.h"
 
 #define OFFSET 128
 static constexpr auto LEN{1024 * 1024};
@@ -173,28 +174,52 @@ TEMPLATE_TEST_CASE("Unit_hipHostRegister_Negative", "", int, float, double) {
     HIP_CHECK_ERROR(hipHostRegister(hostPtr, 0, 0), hipErrorInvalidValue);
   }
 
-#if HT_NVIDIA
-  // Flags aren't used for AMD devices currently
-  SECTION("hipHostRegister Negative Test - invalid flag") {
-    HIP_CHECK_ERROR(hipHostRegister(hostPtr, sizeBytes, 0b11111111), hipErrorInvalidValue);
+#if !HT_AMD
+  /* Flags aren't used for AMD devices currently */
+  SECTION("hipHostRegister Negative Test - flags") {
+
+    struct FlagType {
+      unsigned int value;
+      bool valid;
+    };
+
+    /* 0x08 is hipHostRegisterReadOnly which currently doesn't have a definition in the headers */
+    /* hipHostRegisterIoMemory is a valid flag but requires access to I/O mapped memory to be tested */
+    FlagType flags = GENERATE(
+        FlagType{hipHostRegisterDefault, true},
+        FlagType{hipHostRegisterPortable, true},
+        FlagType{0x08, true},
+        FlagType{hipHostRegisterPortable | hipHostRegisterMapped, true},
+        FlagType{hipHostRegisterPortable | hipHostRegisterMapped | 0x08, true},
+        FlagType{0xF0, false},
+        FlagType{0xFFF2, false},
+        FlagType{0xFFFFFFFF, false});
+
+    INFO("Testing hipHostRegister flag: " << flags.value);
+    if (flags.valid) {
+      HIP_CHECK(hipHostRegister(hostPtr, sizeBytes, flags.value));
+      HIP_CHECK(hipHostUnregister(hostPtr));
+    } else {
+      HIP_CHECK_ERROR(hipHostRegister(hostPtr, sizeBytes, flags.value), hipErrorInvalidValue);
+    }
   }
 #endif
 
-  size_t devMemAvail{0}, devMemFree{0};
-  HIP_CHECK(hipMemGetInfo(&devMemFree, &devMemAvail));
-  auto hostMemFree = HipTest::getMemoryAmount() /* In MB */ * 1024 * 1024;  // In bytes
-  REQUIRE(devMemFree > 0);
-  REQUIRE(devMemAvail > 0);
-  REQUIRE(hostMemFree > 0);
+    size_t devMemAvail{0}, devMemFree{0};
+    HIP_CHECK(hipMemGetInfo(&devMemFree, &devMemAvail));
+    auto hostMemFree = HipTest::getMemoryAmount() /* In MB */ * 1024 * 1024;  // In bytes
+    REQUIRE(devMemFree > 0);
+    REQUIRE(devMemAvail > 0);
+    REQUIRE(hostMemFree > 0);
 
-  size_t memFree = (std::min)(devMemFree, hostMemFree);  // which is the limiter cpu or gpu
+    size_t memFree = (std::min)(devMemFree, hostMemFree);  // which is the limiter cpu or gpu
 
-  SECTION("hipHostRegister Negative Test - invalid memory size") {
-    HIP_CHECK_ERROR(hipHostRegister(hostPtr, memFree, 0), hipErrorInvalidValue);
+    SECTION("hipHostRegister Negative Test - invalid memory size") {
+      HIP_CHECK_ERROR(hipHostRegister(hostPtr, memFree, 0), hipErrorInvalidValue);
+    }
+
+    free(hostPtr);
+    SECTION("hipHostRegister Negative Test - freed memory") {
+      HIP_CHECK_ERROR(hipHostRegister(hostPtr, 0, 0), hipErrorInvalidValue);
+    }
   }
-
-  free(hostPtr);
-  SECTION("hipHostRegister Negative Test - freed memory") {
-    HIP_CHECK_ERROR(hipHostRegister(hostPtr, 0, 0), hipErrorInvalidValue);
-  }
-}
