@@ -2,8 +2,6 @@
     "DisabledTests":
 	[
 	   "Unit_hipStreamPerThread_DeviceReset_1",
-	   "Unit_hipStreamSynchronize_NullStreamSynchronization",
-	   "Unit_hipStreamSynchronize_SynchronizeStreamAndQueryNullStream"
+	   "Unit_hipMallocManaged_OverSubscription"
 	]
-
 }

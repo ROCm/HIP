@@ -29,14 +29,18 @@ THE SOFTWARE.
 #define N 16
 #define offset 3
 __global__ void tex1dKernel(float *val, hipTextureObject_t obj) {
+#if !defined(__HIP_NO_IMAGE_SUPPORT) || !__HIP_NO_IMAGE_SUPPORT
     int k = blockIdx.x * blockDim.x + threadIdx.x;
     if (k < N)
         val[k] = tex1Dfetch<float>(obj, k+offset);
+#endif
 }
 
 int runTest(hipTextureAddressMode, hipTextureFilterMode);
 
 int main(int argc, char **argv) {
+    checkImageSupport();
+
     int testResult = runTest(hipAddressModeClamp,hipFilterModePoint);
     testResult = testResult & runTest(hipAddressModeClamp,hipFilterModeLinear);
     testResult = testResult & runTest(hipAddressModeBorder,hipFilterModePoint);

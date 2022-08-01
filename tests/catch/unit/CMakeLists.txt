@@ -18,19 +18,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-# build fails in windows
-if (UNIX)
-  add_subdirectory(memory)
-  add_subdirectory(graph)
-  add_subdirectory(rtc)
-endif()
-
+add_subdirectory(rtc)
 add_subdirectory(deviceLib)
+add_subdirectory(graph)
+add_subdirectory(memory)
 add_subdirectory(stream)
 add_subdirectory(event)
 add_subdirectory(occupancy)
 add_subdirectory(device)
 add_subdirectory(printf)
-add_subdirectory(printfExe)
 add_subdirectory(texture)
 add_subdirectory(streamperthread)
+add_subdirectory(kernel)
+add_subdirectory(multiThread)
