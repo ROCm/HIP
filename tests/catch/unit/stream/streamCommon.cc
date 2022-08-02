@@ -66,6 +66,9 @@ bool checkStreamFlags_(hipStream_t stream, bool checkFlags = false, unsigned fla
 
 inline namespace stream {
 
+/* Empty kernel to ensure work finishes on the stream quickly */
+__global__ void empty_kernel() {}
+
 bool checkStream(hipStream_t stream) {
   {  // Check default flags
     auto res = checkStreamFlags_(stream, true, hipStreamDefault);

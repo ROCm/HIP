@@ -22,8 +22,6 @@ THE SOFTWARE.
 
 namespace hipStreamSynchronizeTest {
 
-__global__ void emptyKernel() {}
-
 /**
  * @brief Check that hipStreamSynchronize handles empty streams properly.
  *
@@ -34,6 +32,8 @@ TEST_CASE("Unit_hipStreamSynchronize_EmptyStream") {
   HIP_CHECK(hipStreamSynchronize(stream));
   HIP_CHECK(hipStreamDestroy(stream));
 }
+
+#if HT_AMD /* Disabled because frequency based wait is timing out on nvidia platforms */
 
 /**
  * @brief Check that all work executing in a stream is finished after a call to
@@ -113,7 +113,9 @@ TEST_CASE("Unit_hipStreamSynchronize_SynchronizeStreamAndQueryNullStream") {
   HipTest::runKernelForDuration(std::chrono::milliseconds(2000), stream2);
 
   SECTION("Do not use NullStream") {}
-  SECTION("Submit Kernel to NullStream") { emptyKernel<<<1, 1, 0, hip::nullStream> > >(); }
+  SECTION("Submit Kernel to NullStream") {
+    hip::stream::empty_kernel<<<1, 1, 0, hip::nullStream> > >();
+  }
   SECTION("Query NullStream") {
     HIP_CHECK_ERROR(hipStreamQuery(hip::nullStream), hipErrorNotReady);
   }
@@ -149,4 +151,5 @@ TEST_CASE("Unit_hipStreamSynchronize_NullStreamAndStreamPerThread") {
   HIP_CHECK_ERROR(hipStreamQuery(hip::streamPerThread), hipSuccess);
   HIP_CHECK_ERROR(hipStreamQuery(hip::nullStream), hipSuccess);
 }
+#endif
 }  // namespace hipStreamSynchronizeTest

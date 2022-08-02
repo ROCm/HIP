@@ -24,6 +24,9 @@ THE SOFTWARE.
 namespace hip {
 inline namespace stream {
 
+/* Empty kernel to ensure work finishes on the stream quickly */
+__global__ void empty_kernel();
+
 const hipStream_t nullStream = nullptr;
 const hipStream_t streamPerThread = hipStreamPerThread;
 
