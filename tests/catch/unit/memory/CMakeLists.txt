@@ -91,6 +91,7 @@ set(TEST_SRC
     hipMemPrefetchAsync.cc
     hipArray.cc
     hipMemVmm.cc
+    hipMemGetInfo.cc
 )
 else()
 set(TEST_SRC
@@ -157,6 +158,7 @@ set(TEST_SRC
     hipPointerGetAttribute.cc
     hipDrvPtrGetAttributes.cc
     hipMemPrefetchAsync.cc
+    hipMemGetInfo.cc
 )
 endif()
 
