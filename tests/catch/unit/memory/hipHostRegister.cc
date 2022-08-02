@@ -177,8 +177,7 @@ TEMPLATE_TEST_CASE("Unit_hipHostRegister_Flags", "", int, float, double) {
   };
 
   /* EXSWCPHIPT-29 - 0x08 is hipHostRegisterReadOnly which currently doesn't have a definition in the headers */
-  /* hipHostRegisterIoMemory is a valid flag but requires access to I/O mapped memory to be tested
-   */
+  /* hipHostRegisterIoMemory is a valid flag but requires access to I/O mapped memory to be tested */
   FlagType flags = GENERATE(
       FlagType{hipHostRegisterDefault, true}, FlagType{hipHostRegisterPortable, true},
       FlagType{0x08, true}, FlagType{hipHostRegisterPortable | hipHostRegisterMapped, true},
