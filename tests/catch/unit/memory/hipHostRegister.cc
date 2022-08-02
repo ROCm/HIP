@@ -191,6 +191,8 @@ TEMPLATE_TEST_CASE("Unit_hipHostRegister_Flags", "", int, float, double) {
   } else {
     HIP_CHECK_ERROR(hipHostRegister(hostPtr, sizeBytes, flags.value), hipErrorInvalidValue);
   }
+
+  free(hostPtr);
 #endif
 }
 
