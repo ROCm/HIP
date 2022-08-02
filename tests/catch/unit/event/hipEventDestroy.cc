@@ -20,15 +20,19 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#include <chrono>
 #include <hip_test_checkers.hh>
 #include <hip_test_kernels.hh>
 #include <hip_test_common.hh>
 #include "hip/hip_runtime_api.h"
 
-static constexpr size_t vectorSize{16384};
+static constexpr size_t vectorSize{1024};
 
-
-static inline void launchVectorAdd(float*& A_h, float*& B_h, float*& C_h, hipStream_t stream) {
+/**
+ * @brief Launches vectorAdd kernel with a delay
+ */
+static inline void launchVectorAdd(float*& A_h, float*& B_h, float*& C_h,
+                                   std::chrono::milliseconds delay, hipStream_t stream = nullptr) {
   float* A_d{nullptr};
   float* B_d{nullptr};
   float* C_d{nullptr};
@@ -36,6 +40,7 @@ static inline void launchVectorAdd(float*& A_h, float*& B_h, float*& C_h, hipStr
   HIP_CHECK(hipHostGetDevicePointer(reinterpret_cast<void**>(&A_d), A_h, 0));
   HIP_CHECK(hipHostGetDevicePointer(reinterpret_cast<void**>(&B_d), B_h, 0));
   HIP_CHECK(hipHostGetDevicePointer(reinterpret_cast<void**>(&C_d), C_h, 0));
+  HipTest::runKernelForDuration(delay, stream);
   HipTest::vectorADD<<<1, 1, 0, stream>>>(A_d, B_d, C_d, vectorSize);
 }
 
@@ -46,10 +51,11 @@ static inline void launchVectorAdd(float*& A_h, float*& B_h, float*& C_h, hipStr
  */
 TEST_CASE("Unit_hipEventDestroy_Unfinished") {
   hipEvent_t event;
+
   HIP_CHECK(hipEventCreate(&event));
 
   float *A_h, *B_h, *C_h;
-  launchVectorAdd(A_h, B_h, C_h, nullptr);
+  launchVectorAdd(A_h, B_h, C_h, std::chrono::milliseconds(1000));
 
   HIP_CHECK(hipEventRecord(event));
   HIP_CHECK_ERROR(hipEventQuery(event), hipErrorNotReady);
@@ -72,7 +78,7 @@ TEST_CASE("Unit_hipEventDestroy_WithWaitingStream") {
   HIP_CHECK(hipStreamCreate(&stream));
 
   float *A_h, *B_h, *C_h;
-  launchVectorAdd(A_h, B_h, C_h, stream);
+  launchVectorAdd(A_h, B_h, C_h, std::chrono::milliseconds(1000), stream);
 
   HIP_CHECK(hipEventRecord(event, stream));
   HIP_CHECK_ERROR(hipEventQuery(event), hipErrorNotReady);
@@ -88,7 +94,7 @@ TEST_CASE("Unit_hipEventDestroy_WithWaitingStream") {
 
 TEST_CASE("Unit_hipEventDestroy_Negative") {
 #if HT_AMD
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-105");
+  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-103");
   return;
 #endif
 
