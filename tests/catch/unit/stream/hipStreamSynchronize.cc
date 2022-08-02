@@ -44,7 +44,8 @@ TEST_CASE("Unit_hipStreamSynchronize_FinishWork") {
   const hipStream_t explicitStream = reinterpret_cast<hipStream_t>(-1);
   hipStream_t stream = GENERATE_COPY(explicitStream, hip::nullStream, hip::streamPerThread);
 
-  if (stream == explicitStream) {
+  const bool isExplicitStream = stream == explicitStream;
+  if (isExplicitStream) {
     HIP_CHECK(hipStreamCreate(&stream));
   }
 
@@ -52,7 +53,7 @@ TEST_CASE("Unit_hipStreamSynchronize_FinishWork") {
   HIP_CHECK(hipStreamSynchronize(stream));
   HIP_CHECK(hipStreamQuery(stream));
 
-  if (stream != hip::nullStream && stream != hip::streamPerThread) {
+  if (isExplicitStream) {
     HIP_CHECK(hipStreamDestroy(stream));
   }
 }
