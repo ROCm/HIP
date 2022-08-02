@@ -405,7 +405,7 @@ void runTests(allocType type, memSetType memsetType, MultiDData data, hipStream_
   CAPTURE(type, memsetType, data.width, data.height, data.depth, stream, async);
   std::pair<T*, T*> aPtr = initMemory<T>(type, memsetType, data);
   using namespace std::chrono_literals;
-  const std::chrono::duration<int64_t, std::ratio<1, 1000>> delay = 100ms;
+  const std::chrono::duration<uint64_t, std::milli> delay = 100ms;
   HipTest::runKernelForDuration(delay, stream);
   memsetCheck(aPtr.first, testValue, memsetType, data, async, stream);
 
