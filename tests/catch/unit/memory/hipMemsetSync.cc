@@ -404,7 +404,9 @@ void runTests(allocType type, memSetType memsetType, MultiDData data, hipStream_
   bool async = GENERATE(true, false);
   CAPTURE(type, memsetType, data.width, data.height, data.depth, stream, async);
   std::pair<T*, T*> aPtr = initMemory<T>(type, memsetType, data);
-  runKernelForMs(100, stream);
+  using namespace std::chrono_literals;
+  const std::chrono::duration<int64_t, std::ratio<1, 1000>> delay = 100ms;
+  HipTest::runKernelForDuration(delay, stream);
   memsetCheck(aPtr.first, testValue, memsetType, data, async, stream);
 
   if (async || type == allocType::deviceMalloc) {

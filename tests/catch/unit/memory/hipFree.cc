@@ -45,7 +45,7 @@ enum class FreeType { DevFree, ArrayFree, ArrayDestroy, HostFree };
 
 // Amount of time kernel should wait
 using namespace std::chrono_literals;
-const std::chrono::duration delay = 50ms;
+const std::chrono::duration<int64_t, std::ratio<1, 1000>> delay = 50ms;
 constexpr size_t numAllocs = 10;
 
 #if HT_AMD /* Disabled because frequency based wait is timing out on nvidia platforms */
