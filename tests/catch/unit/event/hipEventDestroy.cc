@@ -26,6 +26,8 @@ THE SOFTWARE.
 #include <hip_test_common.hh>
 #include "hip/hip_runtime_api.h"
 
+#if HT_AMD /* Disabled because frequency based wait is timing out on nvidia platforms */
+
 static constexpr size_t vectorSize{1024};
 
 /**
@@ -110,3 +112,4 @@ TEST_CASE("Unit_hipEventDestroy_Negative") {
     HIP_CHECK_ERROR(hipEventDestroy(event), hipErrorContextIsDestroyed);
   }
 }
+#endif
