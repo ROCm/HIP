@@ -44,15 +44,17 @@ THE SOFTWARE.
 enum class FreeType { DevFree, ArrayFree, ArrayDestroy, HostFree };
 
 // Amount of time kernel should wait
-constexpr size_t delay = 50;
+using namespace std::chrono_literals;
+const std::chrono::duration delay = 50ms;
+constexpr size_t numAllocs = 10;
 
-
+#if HT_AMD /* Disabled because frequency based wait is timing out on nvidia platforms */
 TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncDev", "", char, float, float2, float4) {
   TestType* devPtr{};
   size_t size_mult = GENERATE(1, 32, 64, 128, 256);
   HIP_CHECK(hipMalloc(&devPtr, sizeof(TestType) * size_mult));
 
-  runKernelForMs(delay);
+  HipTest::runKernelForDuration(delay);
   // make sure device is busy
   HIP_CHECK_ERROR(hipStreamQuery(nullptr), hipErrorNotReady);
   HIP_CHECK(hipFree(devPtr));
@@ -65,14 +67,14 @@ TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncHost", "", char, float, float2, floa
 
   HIP_CHECK(hipHostMalloc(&hostPtr, sizeof(TestType) * size_mult));
 
-  runKernelForMs(delay);
+  HipTest::runKernelForDuration(delay);
   // make sure device is busy
   HIP_CHECK_ERROR(hipStreamQuery(nullptr), hipErrorNotReady);
   HIP_CHECK(hipHostFree(hostPtr));
   HIP_CHECK(hipStreamQuery(nullptr));
 }
 
-#if HT_NVIDIA
+#if HT_NVIDIA  // Meaningless at the moment, since we are not running wait kernel on nvidia.
 TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncArray", "", char, float, float2, float4) {
   using vec_info = vector_info<TestType>;
   DriverContext ctx;
@@ -86,7 +88,7 @@ TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncArray", "", char, float, float2, flo
     hipChannelFormatDesc desc = hipCreateChannelDesc<TestType>();
 
     HIP_CHECK(hipMallocArray(&arrayPtr, &desc, width, height, hipArrayDefault));
-    runKernelForMs(delay);
+    HipTest::runKernelForDuration(delay);
     // make sure device is busy
     HIP_CHECK_ERROR(hipStreamQuery(nullptr), hipErrorNotReady);
     HIP_CHECK(hipFreeArray(arrayPtr));
@@ -101,7 +103,7 @@ TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncArray", "", char, float, float2, flo
     cuDesc.Format = vec_info::format;
     cuDesc.NumChannels = vec_info::size;
     HIP_CHECK(hipArrayCreate(&cuArrayPtr, &cuDesc));
-    runKernelForMs(delay);
+    HipTest::runKernelForDuration(delay);
     // make sure device is busy
     HIP_CHECK_ERROR(hipStreamQuery(nullptr), hipErrorNotReady);
     HIP_CHECK(hipArrayDestroy(cuArrayPtr));
@@ -118,7 +120,7 @@ TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncArray", "", char, float, float2, flo
   hipChannelFormatDesc desc = hipCreateChannelDesc<TestType>();
 
   HIP_CHECK(hipMallocArray(&arrayPtr, &desc, extent.width, extent.height, hipArrayDefault));
-  runKernelForMs(delay);
+  HipTest::runKernelForDuration(delay);
   // make sure device is busy
   HIP_CHECK_ERROR(hipStreamQuery(nullptr), hipErrorNotReady);
   // Second free segfaults
@@ -132,6 +134,7 @@ TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncArray", "", char, float, float2, flo
   }
 }
 
+#endif
 #endif
 
 // Freeing a invalid pointer with on device
