@@ -48,11 +48,9 @@ TEST_CASE("Unit_hipStreamSynchronize_FinishWork") {
     HIP_CHECK(hipStreamCreate(&stream));
   }
 
-  hip::stream::waiting_kernel<<<1, 1, 0, stream>>>();
-  std::thread signalingThread = hip::stream::startSignalingThread();
+  HipTest::runKernelForDuration(std::chrono::milliseconds(500), stream);
   HIP_CHECK(hipStreamSynchronize(stream));
   HIP_CHECK(hipStreamQuery(stream));
-  signalingThread.join();
 
   if (stream != hip::nullStream && stream != hip::streamPerThread) {
     HIP_CHECK(hipStreamDestroy(stream));
@@ -61,28 +59,20 @@ TEST_CASE("Unit_hipStreamSynchronize_FinishWork") {
 
 /**
  * @brief Check that synchronizing the nullStream implicitly synchronizes all executing streams.
- *
- * Note: Test is disabled due to EXSWCPHIPT-23
  */
 TEST_CASE("Unit_hipStreamSynchronize_NullStreamSynchronization") {
   int totalStreams = 10;
 
   std::vector<hipStream_t> streams{};
-  std::vector<int*> semaphores{};
-  std::vector<std::thread> signalingThreads{};
 
   for (int i = 0; i < totalStreams; ++i) {
     hipStream_t stream;
-    int* semaphore = nullptr;
     HIP_CHECK(hipStreamCreate(&stream));
-    HIP_CHECK(hipMalloc(&semaphore, sizeof(int)));
-    HIP_CHECK(hipMemset(semaphore, 0, sizeof(int)));
     streams.push_back(stream);
-    semaphores.push_back(semaphore);
   }
 
   for (int i = 0; i < totalStreams; ++i) {
-    hip::stream::waiting_kernel<<<1, 1, 0, streams[i]>>>(semaphores[i]);
+    HipTest::runKernelForDuration(std::chrono::milliseconds(1000), streams[i]);
   }
 
   for (int i = 0; i < totalStreams; ++i) {
@@ -90,9 +80,6 @@ TEST_CASE("Unit_hipStreamSynchronize_NullStreamSynchronization") {
   }
 
   HIP_CHECK_ERROR(hipStreamQuery(hip::nullStream), hipErrorNotReady);
-  for (int i = 0; i < totalStreams; ++i) {
-    signalingThreads.push_back(hip::stream::startSignalingThread(semaphores[i]));
-  }
 
   HIP_CHECK(hipStreamSynchronize(hip::nullStream));
   HIP_CHECK(hipStreamQuery(hip::nullStream));
@@ -102,12 +89,7 @@ TEST_CASE("Unit_hipStreamSynchronize_NullStreamSynchronization") {
   }
 
   for (int i = 0; i < totalStreams; ++i) {
-    signalingThreads[i].join();
-  }
-
-  for (int i = 0; i < totalStreams; ++i) {
     HIP_CHECK(hipStreamDestroy(streams[i]));
-    HIP_CHECK(hipFree(semaphores[i]));
   }
 }
 
@@ -115,49 +97,42 @@ TEST_CASE("Unit_hipStreamSynchronize_NullStreamSynchronization") {
  * @brief Check that synchronizing one stream does implicitly synchronize other streams.
  *        Check that submiting work to the nullStream does not affect synchronization of other
  * streams. Check that querying the nullStream does not affect synchronization of other streams.
- * 
- * Note: Test is disabled due to EXSWCPHIPT-22
  */
 TEST_CASE("Unit_hipStreamSynchronize_SynchronizeStreamAndQueryNullStream") {
+#if HT_AMD
+  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-22");
+#else
+
   hipStream_t stream1;
   hipStream_t stream2;
 
   HIP_CHECK(hipStreamCreate(&stream1));
   HIP_CHECK(hipStreamCreate(&stream2));
 
-  int* semaphore1;
-  int* semaphore2;
-  HIP_CHECK(hipMalloc(&semaphore1, sizeof(int)));
-  HIP_CHECK(hipMemset(semaphore1, 0, sizeof(int)));
-  HIP_CHECK(hipMalloc(&semaphore2, sizeof(int)));
-  HIP_CHECK(hipMemset(semaphore2, 0, sizeof(int)));
-
-  hip::stream::waiting_kernel<<<1, 1, 0, stream1>>>(semaphore1);
-  hip::stream::waiting_kernel<<<1, 1, 0, stream2>>>(semaphore2);
+  HipTest::runKernelForDuration(std::chrono::milliseconds(500), stream1);
+  HipTest::runKernelForDuration(std::chrono::milliseconds(2000), stream2);
 
   SECTION("Do not use NullStream") {}
-  SECTION("Submit Kernel to NullStream") { emptyKernel<<<1, 1, 0, hip::nullStream>>>(); }
-  SECTION("Query NullStream") { HIP_CHECK_ERROR(hipStreamQuery(hip::nullStream), hipErrorNotReady); }
+  SECTION("Submit Kernel to NullStream") { emptyKernel<<<1, 1, 0, hip::nullStream> > >(); }
+  SECTION("Query NullStream") {
+    HIP_CHECK_ERROR(hipStreamQuery(hip::nullStream), hipErrorNotReady);
+  }
 
   HIP_CHECK_ERROR(hipStreamQuery(stream1), hipErrorNotReady);
   HIP_CHECK_ERROR(hipStreamQuery(stream2), hipErrorNotReady);
 
-  std::thread signalingThread = hip::stream::startSignalingThread(semaphore1);
+
   HIP_CHECK(hipStreamSynchronize(stream1));
-  signalingThread.join();
   HIP_CHECK(hipStreamQuery(stream1));
   HIP_CHECK_ERROR(hipStreamQuery(stream2), hipErrorNotReady);
   HIP_CHECK_ERROR(hipStreamQuery(hip::nullStream), hipErrorNotReady);
 
-  std::thread signalingThread2 = hip::stream::startSignalingThread(semaphore2);
-  signalingThread2.join();
   HIP_CHECK(hipStreamSynchronize(stream2));
   HIP_CHECK(hipStreamQuery(stream2));
 
-  HIP_CHECK(hipFree(semaphore1));
-  HIP_CHECK(hipFree(semaphore2));
   HIP_CHECK(hipStreamDestroy(stream1));
   HIP_CHECK(hipStreamDestroy(stream2));
+#endif
 }
 
 /**
@@ -166,14 +141,12 @@ TEST_CASE("Unit_hipStreamSynchronize_SynchronizeStreamAndQueryNullStream") {
  *
  */
 TEST_CASE("Unit_hipStreamSynchronize_NullStreamAndStreamPerThread") {
-  hip::stream::waiting_kernel<<<1, 1, 0, hip::streamPerThread>>>();
+  HipTest::runKernelForDuration(std::chrono::milliseconds(500), hip::streamPerThread);
   HIP_CHECK_ERROR(hipStreamQuery(hip::nullStream), hipErrorNotReady);
   HIP_CHECK_ERROR(hipStreamQuery(hip::streamPerThread), hipErrorNotReady);
-  hip::stream::waiting_kernel<<<1, 1, 0, hip::nullStream>>>();
-  std::thread signalingThread = hip::stream::startSignalingThread();
+  HipTest::runKernelForDuration(std::chrono::milliseconds(500), hip::nullStream);
   HIP_CHECK(hipStreamSynchronize(hip::nullStream))
   HIP_CHECK_ERROR(hipStreamQuery(hip::streamPerThread), hipSuccess);
   HIP_CHECK_ERROR(hipStreamQuery(hip::nullStream), hipSuccess);
-  signalingThread.join();
 }
 }  // namespace hipStreamSynchronizeTest
