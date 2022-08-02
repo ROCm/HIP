@@ -187,11 +187,6 @@ if ($HIP_PLATFORM eq "amd") {
         print ("HIP_CLANG_TARGET=$HIP_CLANG_TARGET\n");
     }
 
-    if ($isWindows) {
-      $HIPCXXFLAGS .= " -std=c++14 -fms-extensions -fms-compatibility";
-    } else {
-      $HIPCXXFLAGS .= " -std=c++11";
-    }
     $HIPCXXFLAGS .= " -isystem \"$HIP_CLANG_INCLUDE_PATH/..\"";
     $HIPCFLAGS .= " -isystem \"$HIP_CLANG_INCLUDE_PATH/..\"";
     $HIPLDFLAGS .= " -L\"$HIP_LIB_PATH\"";
@@ -595,8 +590,11 @@ foreach $arg (@ARGV)
     # common characters such as alphanumerics.
     # Do the quoting here because sometimes the $arg is changed in the loop
     # Important to have all of '-Xlinker' in the set of unquoted characters.
-    if (not $isWindows and $escapeArg) {       # Windows needs different quoting, ignore for now
+    if (not $isWindows and $escapeArg) {
         $arg =~ s/[^-a-zA-Z0-9_=+,.\/]/\\$&/g;
+    }
+    if ($isWindows and $escapeArg) {
+        $arg =~ s/[^-a-zA-Z0-9_=+,.:\/\\]/\\$&/g;
     }
     $toolArgs .= " $arg" unless $swallowArg;
     $prevArg = $arg;

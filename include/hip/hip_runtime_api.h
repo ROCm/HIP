@@ -452,6 +452,7 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributePhysicalMultiProcessorCount,              ///< All available physical compute
                                                                 ///< units for the device
     hipDeviceAttributeFineGrainSupport,                         ///< '1' if Device supports fine grain, '0' otherwise
+    hipDeviceAttributeWallClockRate,                            ///< Constant frequency of wall clock in kilohertz.
 
     hipDeviceAttributeAmdSpecificEnd = 19999,
     hipDeviceAttributeVendorSpecificBegin = 20000,
@@ -574,7 +575,7 @@ enum hipLimit_t {
 /** Disable event's capability to record timing information. May improve performance.*/
 #define hipEventDisableTiming  0x2
 
-/** Event can support IPC. Warnig: It is not supported in HIP.*/
+/** Event can support IPC. hipEventDisableTiming also must be set.*/
 #define hipEventInterprocess 0x4
 
 /** Use a device-scope release when recording this event. This flag is useful to obtain more
@@ -657,7 +658,7 @@ enum hipLimit_t {
 #define hipDeviceScheduleBlockingSync 0x4
 #define hipDeviceScheduleMask 0x7
 #define hipDeviceMapHost 0x8
-#define hipDeviceLmemResizeToMax 0x16
+#define hipDeviceLmemResizeToMax 0x10
 /** Default HIP array allocation flag.*/
 #define hipArrayDefault 0x00
 #define hipArrayLayered 0x01
@@ -1077,22 +1078,29 @@ typedef struct hipGraphNode* hipGraphNode_t;
 typedef struct hipGraphExec* hipGraphExec_t;
 
 /**
+ * An opaque value that represents a user obj
+ */
+typedef struct hipUserObject* hipUserObject_t;
+
+
+/**
  * @brief hipGraphNodeType
  * @enum
  *
  */
 typedef enum hipGraphNodeType {
-  hipGraphNodeTypeKernel = 1,             ///< GPU kernel node
-  hipGraphNodeTypeMemcpy = 2,             ///< Memcpy 3D node
-  hipGraphNodeTypeMemset = 3,             ///< Memset 1D node
-  hipGraphNodeTypeHost = 4,               ///< Host (executable) node
-  hipGraphNodeTypeGraph = 5,              ///< Node which executes an embedded graph
-  hipGraphNodeTypeEmpty = 6,              ///< Empty (no-op) node
-  hipGraphNodeTypeWaitEvent = 7,          ///< External event wait node
-  hipGraphNodeTypeEventRecord = 8,        ///< External event record node
-  hipGraphNodeTypeMemcpy1D = 9,           ///< Memcpy 1D node
-  hipGraphNodeTypeMemcpyFromSymbol = 10,  ///< MemcpyFromSymbol node
-  hipGraphNodeTypeMemcpyToSymbol = 11,    ///< MemcpyToSymbol node
+  hipGraphNodeTypeKernel = 0, ///< GPU kernel node
+  hipGraphNodeTypeMemcpy = 1, ///< Memcpy node
+  hipGraphNodeTypeMemset = 2, ///< Memset node
+  hipGraphNodeTypeHost = 3, ///< Host (executable) node
+  hipGraphNodeTypeGraph = 4, ///< Node which executes an embedded graph
+  hipGraphNodeTypeEmpty = 5, ///< Empty (no-op) node
+  hipGraphNodeTypeWaitEvent = 6, ///< External event wait node
+  hipGraphNodeTypeEventRecord = 7, ///< External event record node
+  hipGraphNodeTypeExtSemaphoreSignal = 8, ///< External Semaphore signal node
+  hipGraphNodeTypeExtSemaphoreWait = 9, ///< External Semaphore wait node
+  hipGraphNodeTypeMemcpyFromSymbol = 10, ///< MemcpyFromSymbol node
+  hipGraphNodeTypeMemcpyToSymbol = 11, ///< MemcpyToSymbol node
   hipGraphNodeTypeCount
 } hipGraphNodeType;
 
@@ -1187,12 +1195,18 @@ typedef enum hipGraphMemAttributeType {
   hipGraphMemAttrReservedMemCurrent, ///< Amount of memory, in bytes, currently allocated for graphs.
   hipGraphMemAttrReservedMemHigh,    ///< High watermark of memory, in bytes, currently allocated for graphs
 }hipGraphMemAttributeType;
+typedef enum hipUserObjectFlags {
+  hipUserObjectNoDestructorSync = 0x1, ///< Destructor execution is not synchronized.
+} hipUserObjectFlags;
+
+typedef enum hipUserObjectRetainFlags {
+  hipGraphUserObjectMove = 0x1, ///< Add new reference or retain.
+} hipUserObjectRetainFlags;
 
 typedef enum hipGraphInstantiateFlags {
   hipGraphInstantiateFlagAutoFreeOnLaunch =
       1,  ///< Automatically free memory allocated in a graph before relaunching.
 } hipGraphInstantiateFlags;
-#include <hip/amd_detail/amd_hip_runtime_pt_api.h>
 
 // Doxygen end group GlobalDefs
 /**  @} */
@@ -1517,9 +1531,9 @@ hipError_t hipGetDeviceProperties(hipDeviceProp_t* prop, int deviceId);
  */
 hipError_t hipDeviceSetCacheConfig(hipFuncCache_t cacheConfig);
 /**
- * @brief Set Cache configuration for a specific function
+ * @brief Get Cache configuration for a specific Device
  *
- * @param [in] cacheConfig
+ * @param [out] cacheConfig
  *
  * @returns #hipSuccess, #hipErrorNotInitialized
  * Note: AMD devices and some Nvidia GPUS do not support reconfigurable cache.  This hint is ignored
@@ -1714,13 +1728,13 @@ hipError_t hipIpcCloseMemHandle(void* devPtr);
 /**
  * @brief Gets an opaque interprocess handle for an event.
  *
- * This opaque handle may be copied into other processes and opened with cudaIpcOpenEventHandle.
- * Then cudaEventRecord, cudaEventSynchronize, cudaStreamWaitEvent and cudaEventQuery may be used in
+ * This opaque handle may be copied into other processes and opened with hipIpcOpenEventHandle.
+ * Then hipEventRecord, hipEventSynchronize, hipStreamWaitEvent and hipEventQuery may be used in
  * either process. Operations on the imported event after the exported event has been freed with hipEventDestroy
  * will result in undefined behavior.
  *
- * @param[out]  handle Pointer to cudaIpcEventHandle to return the opaque event handle
- * @param[in]   event  Event allocated with cudaEventInterprocess and cudaEventDisableTiming flags
+ * @param[out]  handle Pointer to hipIpcEventHandle to return the opaque event handle
+ * @param[in]   event  Event allocated with hipEventInterprocess and hipEventDisableTiming flags
  *
  * @returns #hipSuccess, #hipErrorInvalidConfiguration, #hipErrorInvalidValue
  *
@@ -1828,7 +1842,7 @@ hipError_t hipGetLastError(void);
  */
 hipError_t hipPeekAtLastError(void);
 /**
- * @brief Return name of the specified error code in text form.
+ * @brief Return hip error as text string form.
  *
  * @param hip_error Error code to convert to name.
  * @return const char pointer to the NULL-terminated error name
@@ -1842,11 +1856,29 @@ const char* hipGetErrorName(hipError_t hip_error);
  * @param hipError Error code to convert to string.
  * @return const char pointer to the NULL-terminated error string
  *
- * @warning : on HCC, this function returns the name of the error (same as hipGetErrorName)
- *
  * @see hipGetErrorName, hipGetLastError, hipPeakAtLastError, hipError_t
  */
 const char* hipGetErrorString(hipError_t hipError);
+/**
+ * @brief Return hip error as text string form.
+ *
+ * @param [in] hipError Error code to convert to string.
+ * @param [out] const char pointer to the NULL-terminated error string
+ * @return #hipSuccess, #hipErrorInvalidValue
+ *
+ * @see hipGetErrorName, hipGetLastError, hipPeakAtLastError, hipError_t
+ */
+hipError_t hipDrvGetErrorName(hipError_t hipError, const char** errorString);
+/**
+ * @brief Return handy text string message to explain the error which occurred
+ *
+ * @param [in] hipError Error code to convert to string.
+ * @param [out] const char pointer to the NULL-terminated error string
+ * @return #hipSuccess, #hipErrorInvalidValue
+ *
+ * @see hipGetErrorName, hipGetLastError, hipPeakAtLastError, hipError_t
+ */
+hipError_t hipDrvGetErrorString(hipError_t hipError, const char** errorString);
 // end doxygen Error
 /**
  * @}
@@ -2091,7 +2123,7 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
 /**
  *-------------------------------------------------------------------------------------------------
  *-------------------------------------------------------------------------------------------------
- *  @defgroup Stream Memory Operations
+ *  @defgroup StreamM Stream Memory Operations
  *  @{
  *  This section describes Stream Memory Wait and Write functions of HIP runtime API.
  */
@@ -2228,8 +2260,8 @@ hipError_t hipStreamWriteValue64(hipStream_t stream, void* ptr, uint64_t value, 
  for the synchroniation but can result in lower power and more resources for other CPU threads.
  * #hipEventDisableTiming : Disable recording of timing information. Events created with this flag
  would not record profiling data and provide best performance if used for synchronization.
- * @warning On AMD platform, hipEventInterprocess support is under development.  Use of this flag
- will return an error.
+ * #hipEventInterprocess : The event can be used as an interprocess event. hipEventDisableTiming
+ flag also must be set when hipEventInterprocess flag is set.
  *
  * @returns #hipSuccess, #hipErrorNotInitialized, #hipErrorInvalidValue,
  #hipErrorLaunchFailure, #hipErrorOutOfMemory
@@ -2590,7 +2622,7 @@ hipError_t hipHostMalloc(void** ptr, size_t size, unsigned int flags);
 /**
  *-------------------------------------------------------------------------------------------------
  *-------------------------------------------------------------------------------------------------
- *  @addtogroup Memory Managed Memory
+ *  @addtogroup MemoryM Managed Memory
  *  @{
  *  @ingroup Memory
  *  This section describes the managed memory management functions of HIP runtime API.
@@ -2698,7 +2730,7 @@ hipError_t hipStreamAttachMemAsync(hipStream_t stream,
 /**
  *-------------------------------------------------------------------------------------------------
  *-------------------------------------------------------------------------------------------------
- * @addtogroup Stream Ordered Memory Allocator
+ * @addtogroup StreamO Ordered Memory Allocator
  * @{
  * @ingroup Memory
  * This section describes Stream Ordered Memory Allocator functions of HIP runtime API.
@@ -3086,6 +3118,7 @@ hipError_t hipMemPoolImportPointer(
     void**                   dev_ptr,
     hipMemPool_t             mem_pool,
     hipMemPoolPtrExportData* export_data);
+// Doxygen end of ordered memory allocator
 /**
  * @}
  */
@@ -4917,20 +4950,6 @@ hipError_t hipBindTextureToMipmappedArray(
     const hipChannelFormatDesc* desc);
 
 /**
- * @brief Gets the texture reference related with the symbol.
- *
- * @param [out] texref  texture reference
- * @param [in] symbol  pointer to the symbol related with the texture for the reference
- *
- * @returns hipSuccess, hipErrorInvalidValue
- *
- */
-DEPRECATED(DEPRECATED_MSG)
- hipError_t hipGetTextureReference(
-    const textureReference** texref,
-    const void* symbol);
-
-/**
  * @brief Creates a texture object.
  *
  * @param [out] pTexObject  pointer to the texture object to create
@@ -5010,8 +5029,93 @@ hipError_t hipGetTextureObjectTextureDesc(
     hipTextureObject_t textureObject);
 
 /**
+ * @brief Creates a texture object.
+ *
+ * @param [out] pTexObject  pointer to texture object to create
+ * @param [in] pResDesc  pointer to resource descriptor
+ * @param [in] pTexDesc  pointer to texture descriptor
+ * @param [in] pResViewDesc  pointer to resource view descriptor
+ *
+ * @returns hipSuccess, hipErrorInvalidValue
  *
  */
+hipError_t hipTexObjectCreate(
+    hipTextureObject_t* pTexObject,
+    const HIP_RESOURCE_DESC* pResDesc,
+    const HIP_TEXTURE_DESC* pTexDesc,
+    const HIP_RESOURCE_VIEW_DESC* pResViewDesc);
+
+/**
+ * @brief Destroys a texture object.
+ *
+ * @param [in] texObject  texture object to destroy
+ *
+ * @returns hipSuccess, hipErrorInvalidValue
+ *
+ */
+hipError_t hipTexObjectDestroy(
+    hipTextureObject_t texObject);
+
+/**
+ * @brief Gets resource descriptor of a texture object.
+ *
+ * @param [out] pResDesc  pointer to resource descriptor
+ * @param [in] texObject  texture object
+ *
+ * @returns hipSuccess, hipErrorNotSupported, hipErrorInvalidValue
+ *
+ */
+hipError_t hipTexObjectGetResourceDesc(
+    HIP_RESOURCE_DESC* pResDesc,
+    hipTextureObject_t texObject);
+
+/**
+ * @brief Gets resource view descriptor of a texture object.
+ *
+ * @param [out] pResViewDesc  pointer to resource view descriptor
+ * @param [in] texObject  texture object
+ *
+ * @returns hipSuccess, hipErrorNotSupported, hipErrorInvalidValue
+ *
+ */
+hipError_t hipTexObjectGetResourceViewDesc(
+    HIP_RESOURCE_VIEW_DESC* pResViewDesc,
+    hipTextureObject_t texObject);
+
+/**
+ * @brief Gets texture descriptor of a texture object.
+ *
+ * @param [out] pTexDesc  pointer to texture descriptor
+ * @param [in] texObject  texture object
+ *
+ * @returns hipSuccess, hipErrorNotSupported, hipErrorInvalidValue
+ *
+ */
+hipError_t hipTexObjectGetTextureDesc(
+    HIP_TEXTURE_DESC* pTexDesc,
+    hipTextureObject_t texObject);
+
+/**
+ *
+ *  @addtogroup TextureD Texture Management [Deprecated]
+ *  @{
+ *  @ingroup Texture
+ *  This section describes the deprecated texture management functions of HIP runtime API.
+ */
+/**
+ * @brief Gets the texture reference related with the symbol.
+ *
+ * @param [out] texref  texture reference
+ * @param [in] symbol  pointer to the symbol related with the texture for the reference
+ *
+ * @returns hipSuccess, hipErrorInvalidValue
+ *
+ */
+DEPRECATED(DEPRECATED_MSG)
+ hipError_t hipGetTextureReference(
+    const textureReference** texref,
+    const void* symbol);
+
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetAddressMode(
     textureReference* texRef,
@@ -5035,30 +5139,6 @@ hipError_t hipTexRefSetFormat(
     textureReference* texRef,
     hipArray_Format fmt,
     int NumPackedComponents);
-hipError_t hipTexObjectCreate(
-    hipTextureObject_t* pTexObject,
-    const HIP_RESOURCE_DESC* pResDesc,
-    const HIP_TEXTURE_DESC* pTexDesc,
-    const HIP_RESOURCE_VIEW_DESC* pResViewDesc);
-hipError_t hipTexObjectDestroy(
-    hipTextureObject_t texObject);
-hipError_t hipTexObjectGetResourceDesc(
-    HIP_RESOURCE_DESC* pResDesc,
-    hipTextureObject_t texObject);
-hipError_t hipTexObjectGetResourceViewDesc(
-    HIP_RESOURCE_VIEW_DESC* pResViewDesc,
-    hipTextureObject_t texObject);
-hipError_t hipTexObjectGetTextureDesc(
-    HIP_TEXTURE_DESC* pTexDesc,
-    hipTextureObject_t texObject);
-
-/**
- *
- *  @addtogroup TextureD Texture Management [Deprecated]
- *  @{
- *  @ingroup Texture
- *  This section describes the deprecated texture management functions of HIP runtime API.
- */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipBindTexture(
     size_t* offset,
@@ -5145,21 +5225,7 @@ DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetMaxAnisotropy(
     textureReference* texRef,
     unsigned int maxAniso);
-// doxygen end deprecated texture management
-/**
- * @}
- */
-
-
-// The following are not supported.
-/**
- *
- *  @addtogroup TextureU Texture Management [Not supported]
- *  @{
- *  @ingroup Texture
- *  This section describes the texture management functions currently unsupported in HIP runtime.
- */
-DEPRECATED(DEPRECATED_MSG)
+    DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetBorderColor(
     textureReference* texRef,
     float* pBorderColor);
@@ -5181,6 +5247,21 @@ hipError_t hipTexRefSetMipmappedArray(
     textureReference* texRef,
     struct hipMipmappedArray* mipmappedArray,
     unsigned int Flags);
+
+// doxygen end deprecated texture management
+/**
+ * @}
+ */
+
+// The following are not supported.
+/**
+ *
+ *  @addtogroup TextureU Texture Management [Not supported]
+ *  @{
+ *  @ingroup Texture
+ *  This section describes the texture management functions currently unsupported in HIP runtime.
+ */
+
 hipError_t hipMipmappedArrayCreate(
     hipMipmappedArray_t* pHandle,
     HIP_ARRAY3D_DESCRIPTOR* pMipmappedArrayDesc,
@@ -5617,6 +5698,18 @@ hipError_t hipGraphInstantiateWithFlags(hipGraphExec_t* pGraphExec, hipGraph_t g
  * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphLaunch(hipGraphExec_t graphExec, hipStream_t stream);
+
+/**
+ * @brief uploads an executable graph in a stream
+ *
+ * @param [in] graphExec - instance of executable graph to launch.
+ * @param [in] stream - instance of stream in which to launch executable graph.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphUpload(hipGraphExec_t graphExec, hipStream_t stream);
 
 /**
  * @brief Destroys an executable graph
@@ -6231,6 +6324,67 @@ hipError_t hipDeviceSetGraphMemAttribute(int device, hipGraphMemAttributeType at
  * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipDeviceGraphMemTrim(int device);
+
+/**
+ * @brief Create an instance of userObject to manage lifetime of a resource.
+ *
+ * @param [out] object_out - pointer to instace of userobj.
+ * @param [in] ptr - pointer to pass to destroy function.
+ * @param [in] destroy - destroy callback to remove resource.
+ * @param [in] initialRefcount - reference to resource.
+ * @param [in] flags - flags passed to API.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipUserObjectCreate(hipUserObject_t* object_out, void* ptr, hipHostFn_t destroy, unsigned int initialRefcount, unsigned int flags);
+
+/**
+ * @brief Release number of references to resource.
+ *
+ * @param [in] object - pointer to instace of userobj.
+ * @param [in] count - reference to resource to be retained.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipUserObjectRelease(hipUserObject_t object, unsigned int count);
+
+/**
+ * @brief Retain number of references to resource.
+ *
+ * @param [in] object - pointer to instace of userobj.
+ * @param [in] count - reference to resource to be retained.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipUserObjectRetain(hipUserObject_t object, unsigned int count);
+
+/**
+ * @brief Retain user object for graphs.
+ *
+ * @param [in] graph - pointer to graph to retain the user object for.
+ * @param [in] object - pointer to instace of userobj.
+ * @param [in] count - reference to resource to be retained.
+ * @param [in] flags - flags passed to API.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphRetainUserObject(hipGraph_t graph, hipUserObject_t object, unsigned int count, unsigned int flags);
+
+/**
+ * @brief Release user object from graphs.
+ *
+ * @param [in] graph - pointer to graph to retain the user object for.
+ * @param [in] object - pointer to instace of userobj.
+ * @param [in] count - reference to resource to be retained.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphReleaseUserObject(hipGraph_t graph, hipUserObject_t object, unsigned int count);
 // doxygen end graph API
 /**
  * @}
@@ -6337,7 +6491,7 @@ typedef struct hipArrayMapInfo {
 /**
  *-------------------------------------------------------------------------------------------------
  *-------------------------------------------------------------------------------------------------
- *  @defgroup Virtual Memory Management
+ *  @defgroup Virtual Virtual Memory Management
  *  @{
  *  This section describes the virtual memory management functions of HIP runtime API.
  */
@@ -6812,6 +6966,8 @@ static inline hipError_t hipMallocManaged(T** devPtr, size_t size,
 
 #endif
 #endif
+
+#include <hip/amd_detail/amd_hip_runtime_pt_api.h>
 
 #if USE_PROF_API
 #include <hip/amd_detail/hip_prof_str.h>

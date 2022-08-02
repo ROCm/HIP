@@ -34,7 +34,7 @@ DECLARE_DATA();
 __global__ void print_things() {
   DECLARE_DATA();
 
-  uint tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+  uint tid = threadIdx.x + blockIdx.x * blockDim.x;
   const char *msg[] = {msg_short, msg_long1, msg_long2};
 
   printf("%s\n", msg[tid % 3]);

@@ -16,3 +16,10 @@ elseif (HIP_PLATFORM MATCHES "nvidia")
                     TEST_TARGET_NAME build_tests
                     COMPILE_OPTIONS -std=c++17)
 endif()
+
+# Standalone exes
+add_executable(printfFlags EXCLUDE_FROM_ALL printfFlags_exe.cc)
+add_executable(printfSpecifiers EXCLUDE_FROM_ALL printfSpecifiers_exe.cc)
+
+add_dependencies(printfTests printfFlags)
+add_dependencies(printfTests printfSpecifiers)
