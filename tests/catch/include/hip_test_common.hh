@@ -287,19 +287,19 @@ struct Pinned {
 
 //---
 struct Unpinned {
-    static const bool isPinned = false;
-    static const char* str() { return "Unpinned"; };
+  static const bool isPinned = false;
+  static const char* str() { return "Unpinned"; };
 
-    static void* Alloc(size_t sizeBytes) {
-        void* p = malloc(sizeBytes);
-        HIPASSERT(p);
-        return p;
-    };
+  static void* Alloc(size_t sizeBytes) {
+    void* p = malloc(sizeBytes);
+    HIPASSERT(p);
+    return p;
+  };
 };
 
 
 struct Memcpy {
-    static const char* str() { return "Memcpy"; };
+  static const char* str() { return "Memcpy"; };
 };
 
 struct MemcpyAsync {
@@ -307,30 +307,99 @@ struct MemcpyAsync {
 };
 
 
-template <typename C>
-struct MemTraits;
+template <typename C> struct MemTraits;
 
 
-template <>
-struct MemTraits<Memcpy> {
+template <> struct MemTraits<Memcpy> {
   static void Copy(void* dest, const void* src, size_t sizeBytes, hipMemcpyKind kind,
-                    hipStream_t stream) {
+                   hipStream_t stream) {
     (void)stream;
     HIPCHECK(hipMemcpy(dest, src, sizeBytes, kind));
   }
 };
 
 
-template <>
-struct MemTraits<MemcpyAsync> {
+template <> struct MemTraits<MemcpyAsync> {
   static void Copy(void* dest, const void* src, size_t sizeBytes, hipMemcpyKind kind,
-                    hipStream_t stream) {
+                   hipStream_t stream) {
     HIPCHECK(hipMemcpyAsync(dest, src, sizeBytes, kind, stream));
   }
 };
 
-}  // namespace HipTest
 
+namespace {
+static __global__ void waitKernel(clock_t offset) {
+  auto start = clock();
+  while ((clock() - start) < offset) {
+  }
+}
+
+// helper function used to set the device frequency variable
+// estimates the number of clock ticks in 1 second
+static size_t findTicksPerSecond() {
+  // first read the reported clockRate as a starting point
+  hipDeviceProp_t prop;
+  int device;
+  HIP_CHECK(hipGetDevice(&device));
+  HIP_CHECK(hipGetDeviceProperties(&prop, device));
+  clock_t devFreq = static_cast<clock_t>(prop.clockRate);  // in kHz
+  clock_t clockTicksPerSecond = devFreq * 1000;
+
+  // init
+  hipEvent_t start, stop;
+  HIP_CHECK(hipEventCreate(&start));
+  HIP_CHECK(hipEventCreate(&stop));
+
+  // Warmup
+  hipLaunchKernelGGL(waitKernel, dim3(1), dim3(1), 0, 0, clockTicksPerSecond);
+  HIP_CHECK(hipGetLastError());
+  HIP_CHECK(hipDeviceSynchronize());
+
+  // try 10 times to find device frequency
+  // after 10 attempts the result is likely good enough so just accept it
+  for (int attempts = 10; attempts > 0; --attempts) {
+    HIP_CHECK(hipEventRecord(start));
+    hipLaunchKernelGGL(waitKernel, dim3(1), dim3(1), 0, 0, clockTicksPerSecond);
+    HIP_CHECK(hipEventRecord(stop));
+    HIP_CHECK(hipGetLastError());
+    HIP_CHECK(hipEventSynchronize(stop));
+
+    float executionTimeMs = 0;
+    HIP_CHECK(hipEventElapsedTime(&executionTimeMs, start, stop));
+
+    constexpr float tolerance = 20;
+    if (fabs(executionTimeMs - 1000) <= tolerance) {
+      // Timing is within accepted tolerance, break here
+      break;
+    } else {
+      clockTicksPerSecond = (clockTicksPerSecond * 1000) / executionTimeMs;
+      --attempts;
+    }
+  }
+
+  // deinit
+  HIP_CHECK(hipEventDestroy(start));
+  HIP_CHECK(hipEventDestroy(stop));
+  return clockTicksPerSecond;
+}
+}  // namespace
+
+// Launches a kernel which runs for specified amount of time
+// Note: The current implementation uses HIP_CHECK which is not thread safe!
+// Note: the function assumes execution on a single device and caches the number of clock ticks per
+// second
+static inline void runKernelForDuration(std::chrono::milliseconds duration,
+                                        hipStream_t stream = nullptr) {
+  // number of clocks the device is running at (device frequency)
+  // each translation unit will have a copy of ticksPerSecond but this function isn't designed for
+  // precision so that's acceptable.
+  static size_t ticksPerSecond = findTicksPerSecond();
+  const auto millis = duration.count();
+  hipLaunchKernelGGL(waitKernel, dim3(1), dim3(1), 0, stream, ticksPerSecond * millis / 1000);
+  HIP_CHECK(hipGetLastError());
+}
+
+}  // namespace HipTest
 
 // This must be called in the beginning of image test app's main() to indicate whether image
 // is supported.
@@ -339,96 +408,3 @@ struct MemTraits<MemcpyAsync> {
     INFO("Texture is not support on the device. Skipped.");                                        \
     return;                                                                                        \
   }
-
-
-static __global__ void waitKernel(clock_t offset) {
-  auto time = clock();
-  while (clock() - time < offset) {
-  }
-}
-
-static __global__ void clock_kernel(clock_t clock_count, size_t* co) {
-  clock_t start_clock = clock();
-  clock_t clock_offset = 0;
-  while (clock_offset < clock_count) {
-    clock_offset = clock() - start_clock;
-  }
-  *co = clock_offset;
-}
-
-// number of clocks the device is running at (device frequency)
-static size_t ticksPerMillisecond = 0;
-// Var used in multithreaded test cases
-constexpr size_t numAllocs = 10;
-
-
-// helper function used to set the device frequency variable
-static size_t findTicks() {
-  hipDeviceProp_t prop;
-  int device;
-  size_t* clockOffset;
-  HIP_CHECK(hipMalloc(&clockOffset, sizeof(size_t)));
-  hipEvent_t start, stop;
-  HIP_CHECK(hipEventCreate(&start));
-  HIP_CHECK(hipEventCreate(&stop));
-  HIP_CHECK(hipGetDevice(&device));
-  HIP_CHECK(hipGetDeviceProperties(&prop, device));
-
-  constexpr float milliseconds = 1000;
-  constexpr float tolerance = 0.02 * milliseconds;
-
-  clock_t devFreq = static_cast<clock_t>(prop.clockRate);  // in kHz
-  clock_t time = devFreq * milliseconds;
-  // Warmup
-  hipLaunchKernelGGL(clock_kernel, dim3(1), dim3(1), 0, 0, time, clockOffset);
-  HIP_CHECK(hipGetLastError());
-  HIP_CHECK(hipDeviceSynchronize());
-
-  // try 10 times to find device frequency
-  // after 10 attempts the result is likely good enough so just accept it
-  size_t co = 0;
-
-  for (int attempts = 10; attempts > 0; attempts--) {
-    HIP_CHECK(hipEventRecord(start));
-    hipLaunchKernelGGL(clock_kernel, dim3(1), dim3(1), 0, 0, time, clockOffset);
-    HIP_CHECK(hipEventRecord(stop));
-    HIP_CHECK(hipGetLastError());
-    HIP_CHECK(hipEventSynchronize(stop));
-
-    float executionTime = 0;
-    HIP_CHECK(hipEventElapsedTime(&executionTime, start, stop));
-
-    HIP_CHECK(hipMemcpy(&co, clockOffset, sizeof(size_t), hipMemcpyDeviceToHost));
-    if (executionTime >= (milliseconds - tolerance) &&
-        executionTime <= (milliseconds + tolerance)) {
-      // Timing is within accepted tolerance, break here
-      break;
-    } else {
-      auto off = fabs(milliseconds - executionTime) / milliseconds;
-      if (executionTime >= milliseconds) {
-        time -= (time * off);
-        --attempts;
-      } else {
-        time += (time * off);
-        --attempts;
-      }
-    }
-  }
-  HIP_CHECK(hipFree(clockOffset));
-  HIP_CHECK(hipEventDestroy(start));
-  HIP_CHECK(hipEventDestroy(stop));
-  return co;
-}
-
-// Launches a kernel which runs for specified amount of time
-// Note: The current implementation uses HIP_CHECK which is not thread safe!
-// Note the function assumes execution on a single device, if changing devices between calls of
-// runKernelForMs set ticksPerMillisecond back to 0 (should be avoided as it slows down testing
-// significantly)
-static inline void runKernelForMs(size_t millis, hipStream_t stream = nullptr) {
-  if (ticksPerMillisecond == 0) {
-    ticksPerMillisecond = findTicks();
-  }
-  hipLaunchKernelGGL(waitKernel, dim3(1), dim3(1), 0, stream, ticksPerMillisecond * millis / 1000);
-  HIP_CHECK(hipGetLastError());
-}
