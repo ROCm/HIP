@@ -203,31 +203,30 @@ void partialMemsetTest(T valA, T valB, size_t count, size_t offset, MemsetType m
 }
 
 TEST_CASE("Unit_hipMemsetFunctional_PartialSet_1D") {
-  for (auto widthOffset = 8; widthOffset <= 8; widthOffset *= 2) {
-    SECTION("hipMemset - Partial Set") {
-      partialMemsetTest<char>(0x1, 0x42, 1024, widthOffset, hipMemsetTypeDefault, false);
-    }
-    SECTION("hipMemsetAsync - Partial Set") {
-      partialMemsetTest<char>(0x1, 0x42, 1024, widthOffset, hipMemsetTypeDefault, true);
-    }
-    SECTION("hipMemsetD8 - Partial Set") {
-      partialMemsetTest<int8_t>(0x1, 0xDE, 1024, widthOffset, hipMemsetTypeD8, false);
-    }
-    SECTION("hipMemsetD8Async - Partial Set") {
-      partialMemsetTest<int8_t>(0x1, 0xDE, 1024, widthOffset, hipMemsetTypeD8, true);
-    }
-    SECTION("hipMemsetD16 - Partial Set") {
-      partialMemsetTest<int16_t>(0x1, 0xDEAD, 1024, widthOffset, hipMemsetTypeD16, false);
-    }
-    SECTION("hipMemsetD16Async - Partial Set") {
-      partialMemsetTest<int16_t>(0x1, 0xDEAD, 1024, widthOffset, hipMemsetTypeD16, true);
-    }
-    SECTION("hipMemsetD32 - Partial Set") {
-      partialMemsetTest<uint32_t>(0x1, 0xDEADBEEF, 1024, widthOffset, hipMemsetTypeD32, false);
-    }
-    SECTION("hipMemsetD32Async - Partial Set") {
-      partialMemsetTest<uint32_t>(0x1, 0xDEADBEEF, 1024, widthOffset, hipMemsetTypeD32, true);
-    }
+  auto widthOffset = GENERATE(8, 16, 32, 64, 128, 256, 512, 1024);
+  SECTION("hipMemset - Partial Set") {
+    partialMemsetTest<char>(0x1, 0x42, 1024, widthOffset, hipMemsetTypeDefault, false);
+  }
+  SECTION("hipMemsetAsync - Partial Set") {
+    partialMemsetTest<char>(0x1, 0x42, 1024, widthOffset, hipMemsetTypeDefault, true);
+  }
+  SECTION("hipMemsetD8 - Partial Set") {
+    partialMemsetTest<int8_t>(0x1, 0xDE, 1024, widthOffset, hipMemsetTypeD8, false);
+  }
+  SECTION("hipMemsetD8Async - Partial Set") {
+    partialMemsetTest<int8_t>(0x1, 0xDE, 1024, widthOffset, hipMemsetTypeD8, true);
+  }
+  SECTION("hipMemsetD16 - Partial Set") {
+    partialMemsetTest<int16_t>(0x1, 0xDEAD, 1024, widthOffset, hipMemsetTypeD16, false);
+  }
+  SECTION("hipMemsetD16Async - Partial Set") {
+    partialMemsetTest<int16_t>(0x1, 0xDEAD, 1024, widthOffset, hipMemsetTypeD16, true);
+  }
+  SECTION("hipMemsetD32 - Partial Set") {
+    partialMemsetTest<uint32_t>(0x1, 0xDEADBEEF, 1024, widthOffset, hipMemsetTypeD32, false);
+  }
+  SECTION("hipMemsetD32Async - Partial Set") {
+    partialMemsetTest<uint32_t>(0x1, 0xDEADBEEF, 1024, widthOffset, hipMemsetTypeD32, true);
   }
 }
 

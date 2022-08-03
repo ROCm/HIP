@@ -95,6 +95,14 @@ static bool validateMemoryOnGPU(int gpu, bool concurOnOneGPU = false) {
   HIP_CHECK(hipSetDevice(gpu));
   HIP_CHECK(hipMemGetInfo(&prevAvl, &prevTot));
   HipTest::initArrays(&A_d, &B_d, &C_d, &A_h, &B_h, &C_h, N, false);
+  HIP_CHECK(hipMemGetInfo(&curAvl, &curTot));
+
+  if (!concurOnOneGPU && (prevAvl < curAvl || prevTot != curTot)) {
+    //In concurrent calls on one GPU, we cannot verify leaking in this way
+    printf("%s : Memory allocation mismatch observed."
+        "Possible memory leak.\n", __func__);
+    TestPassed &= false;
+  }
 
   unsigned blocks = HipTest::setNumBlocks(blocksPerCU, threadsPerBlock, N);
 
@@ -113,10 +121,11 @@ static bool validateMemoryOnGPU(int gpu, bool concurOnOneGPU = false) {
     TestPassed = false;
   }
 
+  HIP_CHECK(hipMemGetInfo(&prevAvl, &prevTot));
   HipTest::freeArrays(A_d, B_d, C_d, A_h, B_h, C_h, false);
   HIP_CHECK(hipMemGetInfo(&curAvl, &curTot));
 
-  if (!concurOnOneGPU && (prevAvl != curAvl || prevTot != curTot)) {
+  if (!concurOnOneGPU && (curAvl < prevAvl || prevTot != curTot)) {
     // In concurrent calls on one GPU, we cannot verify leaking in this way
     UNSCOPED_INFO("validateMemoryOnGPU : Memory allocation mismatch observed."
                   << "Possible memory leak.");

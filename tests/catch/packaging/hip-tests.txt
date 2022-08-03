@@ -20,9 +20,35 @@
 # THE SOFTWARE.
 cmake_minimum_required(VERSION 3.16.8)
 project(tests)
+
+MACRO(SUBDIRLIST result curdir)
+  FILE(GLOB children RELATIVE ${curdir} ${curdir}/*)
+  SET(dirlist "")
+  FOREACH(child ${children})
+    IF(IS_DIRECTORY ${curdir}/${child})
+      LIST(APPEND dirlist ${child})
+    ENDIF()
+  ENDFOREACH()
+  SET(${result} ${dirlist})
+ENDMACRO()
+
+SUBDIRLIST(SUBDIRS @PROJECT_BINARY_DIR@/@CATCH_BUILD_DIR@)
+
+FOREACH(subdir ${SUBDIRS})
+  set(CONTENT ${CONTENT} "subdirs(${subdir}) \n")
+ENDFOREACH()
+# Creating a CTestTestfile so ctest can be executed from @CATCH_BUILD_DIR@ level
+# This also helps in executing through jenkins and avoid permission issues
+file(WRITE @PROJECT_BINARY_DIR@/@CATCH_BUILD_DIR@/CTestTestfile.cmake
+           ${CONTENT})
+
 install(DIRECTORY @PROJECT_BINARY_DIR@/@CATCH_BUILD_DIR@
         DESTINATION .
-        USE_SOURCE_PERMISSIONS)
+        USE_SOURCE_PERMISSIONS
+        DIRECTORY_PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE
+                              GROUP_WRITE GROUP_READ GROUP_EXECUTE
+                              WORLD_WRITE WORLD_READ WORLD_EXECUTE)
+
 install(FILES @PROJECT_BINARY_DIR@/CTestTestfile.cmake
         DESTINATION .)
 
@@ -30,8 +56,13 @@ install(FILES @PROJECT_BINARY_DIR@/CTestTestfile.cmake
 # Packaging steps
 #############################
 set(CPACK_SET_DESTDIR TRUE)
-set(CPACK_INSTALL_PREFIX "@ROCM_PATH@/test/hip/")
-set(PKG_NAME catch-@HIP_PLATFORM@)
+set(CPACK_INSTALL_PREFIX @CPACK_INSTALL_PREFIX@)
+if(NOT DEFINED CPACK_INSTALL_PREFIX)
+  set(CPACK_INSTALL_PREFIX "/opt/rocm/test/hip/")
+endif()
+
+
+set(PKG_NAME hip-catch-@HIP_PLATFORM@)
 set(CPACK_PACKAGE_NAME ${PKG_NAME})
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "HIP: Heterogenous-computing Interface for Portability [CATCH TESTS]")
 set(CPACK_PACKAGE_DESCRIPTION "HIP:
