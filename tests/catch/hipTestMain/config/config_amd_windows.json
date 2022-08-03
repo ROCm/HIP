@@ -45,6 +45,15 @@
 	   "Unit_hipGraphNodeGetDependentNodes_Functional",
 	   "Unit_hipGraphNodeGetDependentNodes_ParamValidation",
 	   "Unit_hipGraphNodeGetDependencies_Functional",
-	   "Unit_hipGraphNodeGetDependencies_ParamValidation"
+	   "Unit_hipGraphNodeGetDependencies_ParamValidation",
+	   "Unit_hipMemGetInfo_DifferentMallocSmall",
+	   "Unit_hipMemGetInfo_MallocArray - int",
+	   "Unit_hipMemGetInfo_MallocArray - int4",
+	   "Unit_hipMemGetInfo_MallocArray - char",
+	   "Unit_hipMemGetInfo_Malloc3D",
+	   "Unit_hipMemGetInfo_Malloc3DArray - char",
+	   "Unit_hipMemGetInfo_Malloc3DArray - int",
+	   "Unit_hipMemGetInfo_Malloc3DArray - int4",
+	   "Unit_hipMemGetInfo_ParaSmall"
 	]
 }

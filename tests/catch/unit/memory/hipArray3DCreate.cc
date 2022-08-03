@@ -58,15 +58,17 @@ TEMPLATE_TEST_CASE("Unit_hipArray3DCreate_happy", "", char, uchar2, uint2, int4,
 #if HT_AMD
   desc.Flags = 0;
 #else
-  desc.Flags = GENERATE(0, CUDA_ARRAY3D_SURFACE_LDST);
+  desc.Flags = GENERATE(0, hipArraySurfaceLoadStore, hipArrayTextureGather);
 #endif
 
   constexpr size_t size = 64;
 
-  std::vector<hipExtent> extents{
-      {size, 0, 0},       // 1D array
-      {size, size, 0},    // 2D array
-      {size, size, size}  // 3D array
+  std::vector<hipExtent> extents;
+  extents.reserve(3);
+  extents.push_back({size, size, 0});  // 2D array
+  if (desc.Flags != hipArrayTextureGather) {
+    extents.push_back({size, 0, 0});        // 1D array
+    extents.push_back({size, size, size});  // 3D array
   };
 
   for (auto& extent : extents) {
@@ -100,8 +102,8 @@ TEMPLATE_TEST_CASE("Unit_hipArray3DCreate_MaxTexture", "", int, uint4, short, us
 #if HT_AMD
   desc.Flags = 0;
 #else
-  desc.Flags = GENERATE(0, CUDA_ARRAY3D_SURFACE_LDST);
-  if (desc.Flags == CUDA_ARRAY3D_SURFACE_LDST) {
+  desc.Flags = GENERATE(0, hipArraySurfaceLoadStore);
+  if (desc.Flags == hipArraySurfaceLoadStore) {
     HipTest::HIP_SKIP_TEST("EXSWCPHIPT-58");
     return;
   }
@@ -200,7 +202,7 @@ constexpr HIP_ARRAY3D_DESCRIPTOR defaultDescriptor(unsigned int flags, size_t si
   desc.Depth = size;
 
 #if HT_NVIDIA
-  if (flags == CUDA_ARRAY3D_TEXTURE_GATHER) {
+  if (flags == hipArrayTextureGather) {
     desc.Depth = 0;
   }
 #endif
@@ -247,8 +249,8 @@ TEST_CASE("Unit_hipArray3DCreate_Negative_ZeroHeight") {
   unsigned int flags = GENERATE(from_range(std::begin(validFlags), std::end(validFlags)));
   auto desc = defaultDescriptor(flags, 6);
 #if HT_NVIDIA
-  std::array<unsigned int, 2> exceptions{CUDA_ARRAY3D_LAYERED,
-                                         CUDA_ARRAY3D_LAYERED | CUDA_ARRAY3D_SURFACE_LDST};
+  std::array<unsigned int, 2> exceptions{hipArrayLayered,
+                                         hipArrayLayered | hipArraySurfaceLoadStore};
 #else
   std::array<unsigned int, 0> exceptions{};
 #endif
@@ -290,10 +292,9 @@ TEST_CASE("Unit_hipArray3DCreate_Negative_InvalidFlags") {
 
   // FIXME: use the same flags for both tests when the values exist for hip
 #if HT_NVIDIA
-  unsigned int flags =
-      GENERATE(0xDEADBEEF, CUDA_ARRAY3D_TEXTURE_GATHER | CUDA_ARRAY3D_SURFACE_LDST,
-               CUDA_ARRAY3D_TEXTURE_GATHER | CUDA_ARRAY3D_CUBEMAP,
-               CUDA_ARRAY3D_TEXTURE_GATHER | CUDA_ARRAY3D_SURFACE_LDST | CUDA_ARRAY3D_CUBEMAP);
+  unsigned int flags = GENERATE(0xDEADBEEF, hipArrayTextureGather | hipArraySurfaceLoadStore,
+                                hipArrayTextureGather | hipArrayCubemap,
+                                hipArrayTextureGather | hipArraySurfaceLoadStore | hipArrayCubemap);
 #else
   unsigned int flags = 0xDEADBEEF;
 #endif
@@ -318,4 +319,37 @@ TEST_CASE("Unit_hipArray3DCreate_Negative_NumericLimit") {
   auto desc = defaultDescriptor(flags, std::numeric_limits<size_t>::max());
 
   testInvalidDescription(desc);
+}
+
+// texture gather arrays may only be 2D
+TEMPLATE_TEST_CASE("Unit_hipArray3DCreate_Negative_Non2DTextureGather", "", char, uint2, int4,
+                   float2, float4) {
+#if HT_AMD
+  HipTest::HIP_SKIP_TEST("Texture Gather arrays not supported using AMD backend");
+  return;
+#endif
+  using vec_info = vector_info<TestType>;
+  DriverContext ctx;
+
+  HIP_ARRAY3D_DESCRIPTOR desc{};
+  desc.Format = vec_info::format;
+  desc.NumChannels = vec_info::size;
+  desc.Flags = hipArrayTextureGather;
+
+  constexpr size_t size = 64;
+
+  std::array<hipExtent, 2> extents{
+      make_hipExtent(size, 0, 0),        // 1D array
+      make_hipExtent(size, size, size),  // 3D array
+  };
+
+  for (auto& extent : extents) {
+    desc.Width = extent.width;
+    desc.Height = extent.height;
+    desc.Depth = extent.depth;
+
+    CAPTURE(desc.Width, desc.Height, desc.Depth);
+
+    testInvalidDescription(desc);
+  }
 }
