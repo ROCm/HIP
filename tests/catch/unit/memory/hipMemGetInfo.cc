@@ -71,7 +71,7 @@ struct MinAlloc {
 void fixAllocSize(size_t& allocation) {
   REQUIRE(MinAlloc::Get() >= 0);
   if (allocation % MinAlloc::Get() != 0) {
-    auto adjustment = allocation % (MinAlloc::Get();
+    auto adjustment = allocation % MinAlloc::Get();  // FIXME This does mod by zero
     adjustment = MinAlloc::Get() - adjustment;
     allocation = allocation + adjustment;
   }
