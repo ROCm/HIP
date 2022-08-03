@@ -5,7 +5,6 @@ set(TEST_SRC
     Unit_hipEventElapsedTime.cc
     Unit_hipEventRecord.cc
     Unit_hipEventIpc.cc
-    Unit_hipEventQuery.cc
 )
 
 # The test used wait mechanism and doesnt play well with all arch of nvidia
