@@ -78,8 +78,8 @@ TEST_CASE("Unit_hipStreamPerThread_StreamSynchronize") {
   constexpr unsigned int MAX_THREAD_CNT = 10;
   std::vector<std::thread> threads(MAX_THREAD_CNT);
 
-  for (auto &th : threads) {
-    th = std::thread([](){HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));});
+  for (auto& th : threads) {
+    th = std::thread([]() { HIP_CHECK(hipStreamSynchronize(hipStreamPerThread)); });
   }
 
   for (auto& th : threads) {
