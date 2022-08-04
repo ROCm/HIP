@@ -54,6 +54,10 @@
 	   "Unit_hipMemGetInfo_Malloc3DArray - char",
 	   "Unit_hipMemGetInfo_Malloc3DArray - int",
 	   "Unit_hipMemGetInfo_Malloc3DArray - int4",
-	   "Unit_hipMemGetInfo_ParaSmall"
+	   "Unit_hipMemGetInfo_ParaSmall",
+	   "Unit_hipMemGetInfo_ParaMultiSmall",
+	   "Unit_hipFreeMultiTDev",
+	   "Unit_hipFreeMultiTHost",
+	   "Unit_hipFreeMultiTArray"
 	]
 }
