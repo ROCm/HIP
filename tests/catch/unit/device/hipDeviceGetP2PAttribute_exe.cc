@@ -20,23 +20,43 @@ THE SOFTWARE.
 #include <hip/hip_runtime.h>
 #include "hip/hip_runtime_api.h"
 #include <hip_test_context.hh>
+#include <stdlib.h>
 
+bool UNSETENV(std::string var) {
+  int result = -1;
+  #ifdef __unix__
+    result = unsetenv(var.c_str());
+  #else
+    result = _putenv((var + '=').c_str());
+  #endif
+  return (result == 0) ? true: false;
+}
+
+bool SETENV(std::string var, std::string value, int overwrite) {
+  int result = -1;
+  #ifdef __unix__
+    result = setenv(var.c_str(), value.c_str(), overwrite);
+  #else
+    result = _putenv((var + '=' + value).c_str());
+  #endif
+  return (result == 0) ? true: false;
+}
 
 void inline hideDevices(const char* devices) {
 #if HT_NVIDIA
-  setenv("CUDA_VISIBLE_DEVICES", devices, 1);
+  SETENV("CUDA_VISIBLE_DEVICES", devices, 1);
 #else
-  setenv("HIP_VISIBLE_DEVICES", devices, 1);
-  setenv("ROCR_VISIBLE_DEVICES", devices, 1);
+  SETENV("HIP_VISIBLE_DEVICES", devices, 1);
+  SETENV("ROCR_VISIBLE_DEVICES", devices, 1);
 #endif
 }
 
 void inline unhideAllDevices() {
 #if HT_NVIDIA
-  unsetenv("CUDA_VISIBLE_DEVICES");
+  UNSETENV("CUDA_VISIBLE_DEVICES");
 #else
-  unsetenv("HIP_VISIBLE_DEVICES");
-  unsetenv("ROCR_VISIBLE_DEVICES");
+  UNSETENV("HIP_VISIBLE_DEVICES");
+  UNSETENV("ROCR_VISIBLE_DEVICES");
 #endif
 }
 
