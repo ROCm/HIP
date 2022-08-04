@@ -15,6 +15,7 @@ set(TEST_SRC
     hipStreamACb_MultiThread.cc
     hipStreamSynchronize.cc
     hipStreamQuery.cc
+    hipStreamWaitEvent.cc
     )
 else()
 set(TEST_SRC
@@ -35,7 +36,7 @@ set(TEST_SRC
     hipStreamQuery.cc
     )
 
-    set_source_files_properties(hipStreamAttachMemAsync.cc PROPERTIES COMPILE_FLAGS -std=c++17)
+    # set_source_files_properties(hipStreamAttachMemAsync.cc PROPERTIES COMPILE_FLAGS -std=c++17)
 endif()
 
 hip_add_exe_to_target(NAME StreamTest

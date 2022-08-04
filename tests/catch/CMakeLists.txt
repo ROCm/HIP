@@ -201,6 +201,11 @@ set(_catchInfo ${_catchInfo} "HIP_PLATFORM=${HIP_PLATFORM}\n")
 set(_catchInfo ${_catchInfo} "ARCHS=${HIP_GPU_ARCH_LIST}\n")
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/${CATCH_BUILD_DIR}/catchInfo.txt ${_catchInfo})
 
+# Enable device lambda on nvidia platforms
+if(HIP_COMPILER MATCHES "nvcc")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --extended-lambda")
+endif()
+
 # Disable CXX extensions (gnu++11 etc)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
