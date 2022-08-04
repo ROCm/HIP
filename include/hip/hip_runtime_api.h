@@ -153,24 +153,31 @@ typedef struct hipDeviceProp_t {
 } hipDeviceProp_t;
 
 
-/**
- * Memory type (for pointer attributes)
+ /*
+ * @brief HIP Memory type (for pointer attributes)
+ * @enum
+ * @ingroup Enumerations
  */
 typedef enum hipMemoryType {
-    hipMemoryTypeHost,    ///< Memory is physically located on host
-    hipMemoryTypeDevice,  ///< Memory is physically located on device. (see deviceId for specific
-                          ///< device)
-    hipMemoryTypeArray,   ///< Array memory, physically located on device. (see deviceId for specific
-                          ///< device)
-    hipMemoryTypeUnified, ///< Not used currently
-    hipMemoryTypeManaged  ///< Managed memory, automaticallly managed by the unified memory system
+    hipMemoryTypeHost = 0,    ///< Memory is physically located on host
+    hipMemoryTypeDevice = 1,  ///< Memory is physically located on device. (see deviceId for
+                              ///< specific device)
+    hipMemoryTypeArray = 2,   ///< Array memory, physically located on device. (see deviceId for
+                              ///< specific device)
+    hipMemoryTypeUnified = 3, ///< Not used currently
+    hipMemoryTypeManaged = 4  ///< Managed memory, automaticallly managed by the unified
+                              ///< memory system
 } hipMemoryType;
 
 /**
  * Pointer attributes
  */
 typedef struct hipPointerAttribute_t {
-    enum hipMemoryType memoryType;
+  union {
+      // Deprecated, use instead type
+      enum hipMemoryType memoryType;
+      enum hipMemoryType type;
+    };
     int device;
     void* devicePointer;
     void* hostPointer;
