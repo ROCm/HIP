@@ -27,15 +27,14 @@ hipMallocArray API test scenarios
 
 #include <hip_test_common.hh>
 #include <limits>
-#if defined(_WIN32) || defined(_WIN64)
 #include <numeric>
-#endif
+#include "hipArrayCommon.hh"
 
-static constexpr auto NUM_W{4};
-static constexpr auto BIGNUM_W{100};
-static constexpr auto BIGNUM_H{100};
-static constexpr auto NUM_H{4};
-static constexpr auto ARRAY_LOOP{100};
+static constexpr size_t NUM_W{4};
+static constexpr size_t NUM_H{4};
+static constexpr size_t BIGNUM_W{100};
+static constexpr size_t BIGNUM_H{100};
+static constexpr int ARRAY_LOOP{100};
 
 /*
  * This API verifies  memory allocations for small and
@@ -51,28 +50,32 @@ static constexpr auto ARRAY_LOOP{100};
  *
  */
 static void MallocArray_DiffSizes(int gpu) {
-  HIP_CHECK(hipSetDevice(gpu));
-  std::vector<std::pair<size_t, size_t>> array_size{{NUM_W, NUM_H}, {BIGNUM_W, BIGNUM_H}};
-  for (auto& size : array_size) {
-    std::array<hipArray_t, ARRAY_LOOP> A_d;
-    size_t tot, avail, ptot, pavail;
+  HIP_CHECK_THREAD(hipSetDevice(gpu));
+  //Use of GENERATE in thead function causes random failures with multithread condition.
+  std::vector<std::pair<size_t, size_t>> runs {std::make_pair(NUM_W, NUM_H), std::make_pair(BIGNUM_W, BIGNUM_H)};
+  for (const auto& size : runs) {
     hipChannelFormatDesc desc = hipCreateChannelDesc<float>();
-    HIP_CHECK(hipMemGetInfo(&pavail, &ptot));
+    std::array<hipArray_t, ARRAY_LOOP> A_d;
+    size_t pavail, avail;
+    HIP_CHECK_THREAD(hipMemGetInfo(&pavail, nullptr));
+
     for (int i = 0; i < ARRAY_LOOP; i++) {
-      HIP_CHECK(
-          hipMallocArray(&A_d[i], &desc, std::get<0>(size), std::get<1>(size), hipArrayDefault));
+      HIP_CHECK_THREAD(
+           hipMallocArray(&A_d[i], &desc, std::get<0>(size), std::get<1>(size), hipArrayDefault));
     }
     for (int i = 0; i < ARRAY_LOOP; i++) {
-      HIP_CHECK(hipFreeArray(A_d[i]));
+      HIP_CHECK_THREAD(hipFreeArray(A_d[i]));
     }
-    HIP_CHECK(hipMemGetInfo(&avail, &tot));
-    if ((pavail != avail)) {
-      HIPASSERT(false);
-    }
+
+    HIP_CHECK_THREAD(hipMemGetInfo(&avail, nullptr));
+    REQUIRE_THREAD(pavail == avail);
   }
 }
 
-TEST_CASE("Unit_hipMallocArray_DiffSizes") { MallocArray_DiffSizes(0); }
+TEST_CASE("Unit_hipMallocArray_DiffSizes") {
+  MallocArray_DiffSizes(0);
+  HIP_CHECK_THREAD_FINALIZE();
+}
 
 /*
 This testcase verifies the hipMallocArray API in multithreaded
@@ -83,80 +86,24 @@ TEST_CASE("Unit_hipMallocArray_MultiThread") {
   std::vector<std::thread> threadlist;
   int devCnt = 0;
   devCnt = HipTest::getDeviceCount();
-  size_t tot, avail, ptot, pavail;
-  HIP_CHECK(hipMemGetInfo(&pavail, &ptot));
+  const auto pavail = getFreeMem();
   for (int i = 0; i < devCnt; i++) {
-    // TODO the HIP_CHECK and HIPASSERT are not threadsafe so this test is broken.
     threadlist.push_back(std::thread(MallocArray_DiffSizes, i));
   }
 
   for (auto& t : threadlist) {
     t.join();
   }
-  HIP_CHECK(hipMemGetInfo(&avail, &tot));
+  HIP_CHECK_THREAD_FINALIZE();
 
+  const auto avail = getFreeMem();
   if (pavail != avail) {
     WARN("Memory leak of hipMalloc3D API in multithreaded scenario");
     REQUIRE(false);
   }
 }
 
-
-constexpr size_t BlockSize = 16;
-
-template <class T, size_t N> struct type_and_size {
-  using type = T;
-  static constexpr size_t size = N;
-};
-
-// scalars are interpreted as a vector of 1 length.
-// template <size_t N> using int_constant = std::integral_constant<size_t, N>;
-template <typename T> struct vector_info;
-template <> struct vector_info<int> : type_and_size<int, 1> {};
-template <> struct vector_info<float> : type_and_size<float, 1> {};
-template <> struct vector_info<short> : type_and_size<short, 1> {};
-template <> struct vector_info<char> : type_and_size<char, 1> {};
-template <> struct vector_info<unsigned int> : type_and_size<unsigned int, 1> {};
-template <> struct vector_info<unsigned short> : type_and_size<unsigned short, 1> {};
-template <> struct vector_info<unsigned char> : type_and_size<unsigned char, 1> {};
-
-template <> struct vector_info<int2> : type_and_size<int, 2> {};
-template <> struct vector_info<float2> : type_and_size<float, 2> {};
-template <> struct vector_info<short2> : type_and_size<short, 2> {};
-template <> struct vector_info<char2> : type_and_size<char, 2> {};
-template <> struct vector_info<uint2> : type_and_size<unsigned int, 2> {};
-template <> struct vector_info<ushort2> : type_and_size<unsigned short, 2> {};
-template <> struct vector_info<uchar2> : type_and_size<unsigned char, 2> {};
-
-template <> struct vector_info<int4> : type_and_size<int, 4> {};
-template <> struct vector_info<float4> : type_and_size<float, 4> {};
-template <> struct vector_info<short4> : type_and_size<short, 4> {};
-template <> struct vector_info<char4> : type_and_size<char, 4> {};
-template <> struct vector_info<uint4> : type_and_size<unsigned int, 4> {};
-template <> struct vector_info<ushort4> : type_and_size<unsigned short, 4> {};
-template <> struct vector_info<uchar4> : type_and_size<unsigned char, 4> {};
-
 // Kernels ///////////////////////////////////////
-
-// read from a texture using normalized coordinates
-constexpr size_t ChannelToRead = 1;
-template <typename T>
-__global__ void readFromTexture(T* output, hipTextureObject_t texObj, size_t width, size_t height,
-                                bool textureGather) {
-  // Calculate normalized texture coordinates
-  const unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
-  const unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
-  const float u = x / (float)width;
-
-  // Read from texture and write to global memory
-  if (height == 0) {
-    output[x] = tex1D<T>(texObj, u);
-  } else {
-    const float v = y / (float)height;
-    output[y * width + x] =
-        textureGather ? tex2Dgather<T>(texObj, u, v, ChannelToRead) : tex2D<T>(texObj, u, v);
-  }
-}
 
 template <typename T> __device__ void addOne(T* a) {
   using scalar_type = typename vector_info<T>::type;
@@ -188,30 +135,6 @@ template <typename T> __global__ void incSurface(hipSurfaceObject_t surf, size_t
 
 template <typename T> size_t getAllocSize(const size_t width, const size_t height) noexcept {
   return sizeof(T) * width * (height ? height : 1);
-}
-
-template <typename T> void checkDataIsAscending(const std::vector<T>& hostData) {
-  bool allMatch = true;
-  size_t i = 0;
-  for (; i < hostData.size(); ++i) {
-    allMatch = allMatch && hostData[i] == static_cast<T>(i);
-    if (!allMatch) break;
-  }
-  INFO("hostData[" << i << "] == " << static_cast<T>(hostData[i]));
-  REQUIRE(allMatch);
-}
-
-const char* channelFormatString(hipChannelFormatKind formatKind) noexcept {
-  switch (formatKind) {
-    case hipChannelFormatKindFloat:
-      return "float";
-    case hipChannelFormatKindSigned:
-      return "signed";
-    case hipChannelFormatKindUnsigned:
-      return "unsigned";
-    default:
-      return "error";
-  }
 }
 
 // Tests /////////////////////////////////////////
@@ -458,12 +381,6 @@ void testArrayAsSurface(hipArray_t arrayPtr, const size_t width, const size_t he
   HIP_CHECK(hipFree(device_data));
 }
 
-size_t getFreeMem() {
-  size_t free = 0, total = 0;
-  HIP_CHECK(hipMemGetInfo(&free, &total));
-  return free;
-}
-
 // The happy path of a default array and a SurfaceLoadStore array should work
 // Selection of types chosen to reduce compile times
 TEMPLATE_TEST_CASE("Unit_hipMallocArray_happy", "", uint, int, int4, ushort, short2, char, uchar2,
@@ -480,7 +397,7 @@ TEMPLATE_TEST_CASE("Unit_hipMallocArray_happy", "", uint, int, int4, ushort, sho
   // pointer to the array in device memory
   hipArray_t arrayPtr{};
   size_t width = 1024;
-  size_t height;
+  size_t height{};
 
   SECTION("hipArrayDefault") {
     height = GENERATE(0, 1024);
@@ -522,54 +439,55 @@ TEMPLATE_TEST_CASE("Unit_hipMallocArray_happy", "", uint, int, int4, ushort, sho
 // EXSWCPHIPT-71 - no equivalent value for maxSurface and maxTexture2DGather.
 TEMPLATE_TEST_CASE("Unit_hipMallocArray_MaxTexture_Default", "", uint, int4, ushort, short2, char,
                    char4, float2, float4) {
-  int device;
-  HIP_CHECK(hipGetDevice(&device));
-  hipDeviceProp_t prop;
-  HIP_CHECK(hipGetDeviceProperties(&prop, device));
   size_t width, height;
   hipArray_t array{};
   hipChannelFormatDesc desc = hipCreateChannelDesc<TestType>();
   const unsigned int flag = hipArrayDefault;
 
+  const Sizes sizes(flag);
+  CAPTURE(sizes.max1D, sizes.max2D, sizes.max3D);
+
+  const size_t s = 64;
+
   SECTION("Happy") {
     SECTION("1D - Max") {
-      width = prop.maxTexture1D;
+      width = sizes.max1D;
       height = 0;
     }
     SECTION("2D - Max Width") {
-      width = prop.maxTexture2D[0];
-      height = 64;
+      width = sizes.max2D[0];
+      height = s;
     }
     SECTION("2D - Max Height") {
-      width = 64;
-      height = prop.maxTexture2D[1];
+      width = s;
+      height = sizes.max2D[1];
     }
     SECTION("2D - Max Width and Height") {
-      width = prop.maxTexture2D[0];
-      height = prop.maxTexture2D[1];
+      width = sizes.max2D[0];
+      height = sizes.max2D[1];
     }
     auto maxArrayCreateError = hipMallocArray(&array, &desc, width, height, flag);
-    // this can try to alloc many GB of memory, so out of memory is fair
+    // this can try to alloc many GB of memory, so out of memory is acceptable
     if (maxArrayCreateError == hipErrorOutOfMemory) return;
     HIP_CHECK(maxArrayCreateError);
     HIP_CHECK(hipFreeArray(array));
   }
   SECTION("Negative") {
     SECTION("1D - More Than Max") {
-      width = prop.maxTexture1D + 1;
+      width = sizes.max1D + 1;
       height = 0;
     }
     SECTION("2D - More Than Max Width") {
-      width = prop.maxTexture2D[0] + 1;
-      height = 64;
+      width = sizes.max2D[0] + 1;
+      height = s;
     }
     SECTION("2D - More Than Max Height") {
-      width = 64;
-      height = prop.maxTexture2D[1] + 1;
+      width = s;
+      height = sizes.max2D[1] + 1;
     }
     SECTION("2D - More Than Max Width and Height") {
-      width = prop.maxTexture2D[0] + 1;
-      height = prop.maxTexture2D[1] + 1;
+      width = sizes.max2D[0] + 1;
+      height = sizes.max2D[1] + 1;
     }
     HIP_CHECK_ERROR(hipMallocArray(&array, &desc, width, height, flag), hipErrorInvalidValue);
   }
@@ -578,10 +496,6 @@ TEMPLATE_TEST_CASE("Unit_hipMallocArray_MaxTexture_Default", "", uint, int4, ush
 
 // Arrays with channels of different size are not allowed.
 TEST_CASE("Unit_hipMallocArray_Negative_DifferentChannelSizes") {
-#if HT_AMD
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-59");
-  return;
-#endif
   const int bitsX = GENERATE(8, 16, 32);
   const int bitsY = GENERATE(8, 16, 32);
   const int bitsZ = GENERATE(8, 16, 32);
@@ -634,10 +548,6 @@ TEST_CASE("Unit_hipMallocArray_Negative_ZeroWidth") {
 
 // Providing the array pointer as nullptr should return an error
 TEST_CASE("Unit_hipMallocArray_Negative_NullArrayPtr") {
-#if HT_AMD
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-45");
-  return;
-#endif
   hipChannelFormatDesc desc = hipCreateChannelDesc<float4>();
 
   HIP_CHECK_ERROR(hipMallocArray(nullptr, &desc, 1024, 0, hipArrayDefault), hipErrorInvalidValue);
@@ -645,10 +555,6 @@ TEST_CASE("Unit_hipMallocArray_Negative_NullArrayPtr") {
 
 // Providing the desc pointer as nullptr should return an error
 TEST_CASE("Unit_hipMallocArray_Negative_NullDescPtr") {
-#if HT_AMD
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-83");
-  return;
-#endif
   hipArray_t arrayPtr;
   HIP_CHECK_ERROR(hipMallocArray(&arrayPtr, nullptr, 1024, 0, hipArrayDefault),
                   hipErrorInvalidValue);
@@ -656,10 +562,6 @@ TEST_CASE("Unit_hipMallocArray_Negative_NullDescPtr") {
 
 // Inappropriate but related flags should still return an error
 TEST_CASE("Unit_hipMallocArray_Negative_BadFlags") {
-#if HT_AMD
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-72");
-  return;
-#endif
   hipChannelFormatDesc desc = hipCreateChannelDesc<float4>();
 
   hipArray_t arrayPtr;
@@ -757,7 +659,7 @@ TEST_CASE("Unit_hipMallocArray_Negative_3ChannelElement") {
 // The bit channel description should not allow any channels after a zero channel
 TEST_CASE("Unit_hipMallocArray_Negative_ChannelAfterZeroChannel") {
 #if HT_AMD
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-59");
+  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-129");
   return;
 #endif
   const int bits = GENERATE(8, 16, 32);

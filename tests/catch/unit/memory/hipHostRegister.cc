@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2022 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -28,51 +28,50 @@ This testfile verifies the following scenarios of hipHostRegister API
 */
 
 #include <hip_test_common.hh>
-#include <hip_test_checkers.hh>
-#include <hip_test_kernels.hh>
+#include <hip_test_helper.hh>
+#include "hip/hip_runtime_api.h"
 
 #define OFFSET 128
-static constexpr auto LEN{1024*1024};
+static constexpr auto LEN{1024 * 1024};
 
-template<typename T>
-__global__ void Inc(T* Ad) {
-    int tx = threadIdx.x + blockIdx.x * blockDim.x;
-    Ad[tx] = Ad[tx] + static_cast<T>(1);
+template <typename T> __global__ void Inc(T* Ad) {
+  int tx = threadIdx.x + blockIdx.x * blockDim.x;
+  Ad[tx] = Ad[tx] + static_cast<T>(1);
 }
 
 template <typename T>
-void doMemCopy(size_t numElements, int offset, T* A, T* Bh, T* Bd,
-               bool internalRegister) {
-    constexpr auto memsetval = 13.0f;
-    A = A + offset;
-    numElements -= offset;
+void doMemCopy(size_t numElements, int offset, T* A, T* Bh, T* Bd, bool internalRegister) {
+  constexpr auto memsetval = 13.0f;
+  A = A + offset;
+  numElements -= offset;
 
-    size_t sizeBytes = numElements * sizeof(T);
+  size_t sizeBytes = numElements * sizeof(T);
 
-    if (internalRegister) {
-        HIP_CHECK(hipHostRegister(A, sizeBytes, 0));
-    }
+  if (internalRegister) {
+    HIP_CHECK(hipHostRegister(A, sizeBytes, 0));
+  }
 
-    // Reset
-    for (size_t i = 0; i < numElements; i++) {
-        A[i] = static_cast<float>(i);
-        Bh[i] = 0.0f;
-    }
+  // Reset
+  for (size_t i = 0; i < numElements; i++) {
+    A[i] = static_cast<float>(i);
+    Bh[i] = 0.0f;
+  }
 
-    HIP_CHECK(hipMemset(Bd, memsetval, sizeBytes));
+  HIP_CHECK(hipMemset(Bd, memsetval, sizeBytes));
 
-    HIP_CHECK(hipMemcpy(Bd, A, sizeBytes, hipMemcpyHostToDevice));
-    HIP_CHECK(hipMemcpy(Bh, Bd, sizeBytes, hipMemcpyDeviceToHost));
+  HIP_CHECK(hipMemcpy(Bd, A, sizeBytes, hipMemcpyHostToDevice));
+  HIP_CHECK(hipMemcpy(Bh, Bd, sizeBytes, hipMemcpyDeviceToHost));
 
-    // Make sure the copy worked
-    for (size_t i = 0; i < numElements; i++) {
-       REQUIRE(Bh[i] == A[i]);
-    }
+  // Make sure the copy worked
+  for (size_t i = 0; i < numElements; i++) {
+    REQUIRE(Bh[i] == A[i]);
+  }
 
-    if (internalRegister) {
-        HIP_CHECK(hipHostUnregister(A));
-    }
+  if (internalRegister) {
+    HIP_CHECK(hipHostUnregister(A));
+  }
 }
+
 /*
 This testcase verifies the hipHostRegister API by
 1. Allocating the memory using malloc
@@ -81,9 +80,7 @@ This testcase verifies the hipHostRegister API by
 4. Launching kernel and access the device pointer variable
 5. performing hipMemset on the device pointer variable
 */
-TEMPLATE_TEST_CASE("Unit_hipHostRegister_ReferenceFromKernelandhipMemset",
-                   "", int,
-                   float, double) {
+TEMPLATE_TEST_CASE("Unit_hipHostRegister_ReferenceFromKernelandhipMemset", "", int, float, double) {
   size_t sizeBytes{LEN * sizeof(TestType)};
   TestType *A, **Ad;
   int num_devices;
@@ -118,14 +115,14 @@ TEMPLATE_TEST_CASE("Unit_hipHostRegister_ReferenceFromKernelandhipMemset",
   HIP_CHECK(hipHostUnregister(A));
 
   free(A);
-  delete [] Ad;
+  delete[] Ad;
 }
+
 /*
 This testcase verifies hipHostRegister API by
 performing memcpy on the hipHostRegistered variable.
 */
-TEMPLATE_TEST_CASE("Unit_hipHostRegister_Memcpy", "",
-                   int, float, double) {
+TEMPLATE_TEST_CASE("Unit_hipHostRegister_Memcpy", "", int, float, double) {
   // 1 refers to hipHostRegister
   // 0 refers to malloc
   auto mem_type = GENERATE(0, 1);
@@ -156,5 +153,77 @@ TEMPLATE_TEST_CASE("Unit_hipHostRegister_Memcpy", "",
 
   free(A);
   free(Bh);
-  hipFree(Bd);
+  HIP_CHECK(hipFree(Bd));
+}
+
+template <typename T> __global__ void fill_kernel(T* dataPtr, T value) {
+  size_t tid{blockIdx.x * blockDim.x + threadIdx.x};
+  dataPtr[tid] = value;
+}
+
+TEMPLATE_TEST_CASE("Unit_hipHostRegister_Flags", "", int, float, double) {
+#if HT_AMD
+  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-138");
+  return;
+#else
+
+  size_t sizeBytes = 1 * sizeof(TestType);
+  TestType* hostPtr = reinterpret_cast<TestType*>(malloc(sizeBytes));
+
+  /* Flags aren't used for AMD devices currently */
+  struct FlagType {
+    unsigned int value;
+    bool valid;
+  };
+
+  /* EXSWCPHIPT-29 - 0x08 is hipHostRegisterReadOnly which currently doesn't have a definition in the headers */
+  /* hipHostRegisterIoMemory is a valid flag but requires access to I/O mapped memory to be tested */
+  FlagType flags = GENERATE(
+      FlagType{hipHostRegisterDefault, true}, FlagType{hipHostRegisterPortable, true},
+      FlagType{0x08, true}, FlagType{hipHostRegisterPortable | hipHostRegisterMapped, true},
+      FlagType{hipHostRegisterPortable | hipHostRegisterMapped | 0x08, true}, FlagType{0xF0, false},
+      FlagType{0xFFF2, false}, FlagType{0xFFFFFFFF, false});
+
+  INFO("Testing hipHostRegister flag: " << flags.value);
+  if (flags.valid) {
+    HIP_CHECK(hipHostRegister(hostPtr, sizeBytes, flags.value));
+    HIP_CHECK(hipHostUnregister(hostPtr));
+  } else {
+    HIP_CHECK_ERROR(hipHostRegister(hostPtr, sizeBytes, flags.value), hipErrorInvalidValue);
+  }
+
+  free(hostPtr);
+#endif
+}
+
+TEMPLATE_TEST_CASE("Unit_hipHostRegister_Negative", "", int, float, double) {
+  TestType* hostPtr = nullptr;
+
+  size_t sizeBytes = 1 * sizeof(TestType);
+  SECTION("hipHostRegister Negative Test - nullptr") {
+    HIP_CHECK_ERROR(hipHostRegister(hostPtr, 1, 0), hipErrorInvalidValue);
+  }
+
+  hostPtr = reinterpret_cast<TestType*>(malloc(sizeBytes));
+  SECTION("hipHostRegister Negative Test - zero size") {
+    HIP_CHECK_ERROR(hipHostRegister(hostPtr, 0, 0), hipErrorInvalidValue);
+  }
+
+  size_t devMemAvail{0}, devMemFree{0};
+  HIP_CHECK(hipMemGetInfo(&devMemFree, &devMemAvail));
+  auto hostMemFree = HipTest::getMemoryAmount() /* In MB */ * 1024 * 1024;  // In bytes
+  REQUIRE(devMemFree > 0);
+  REQUIRE(devMemAvail > 0);
+  REQUIRE(hostMemFree > 0);
+
+  size_t memFree = (std::min)(devMemFree, hostMemFree);  // which is the limiter cpu or gpu
+
+  SECTION("hipHostRegister Negative Test - invalid memory size") {
+    HIP_CHECK_ERROR(hipHostRegister(hostPtr, memFree, 0), hipErrorInvalidValue);
+  }
+
+  free(hostPtr);
+  SECTION("hipHostRegister Negative Test - freed memory") {
+    HIP_CHECK_ERROR(hipHostRegister(hostPtr, 0, 0), hipErrorInvalidValue);
+  }
 }
