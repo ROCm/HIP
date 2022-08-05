@@ -54,6 +54,19 @@
 	   "Unit_hipMemGetInfo_Malloc3DArray - char",
 	   "Unit_hipMemGetInfo_Malloc3DArray - int",
 	   "Unit_hipMemGetInfo_Malloc3DArray - int4",
-	   "Unit_hipMemGetInfo_ParaSmall"
+	   "Unit_hipMemGetInfo_ParaSmall",
+	   "Unit_hipMemGetInfo_ParaMultiSmall",
+	   "Unit_hipFreeMultiTDev - char",
+	   "Unit_hipFreeMultiTDev - int",
+	   "Unit_hipFreeMultiTDev - float2",
+	   "Unit_hipFreeMultiTDev - float4",
+	   "Unit_hipFreeMultiTHost - char",
+	   "Unit_hipFreeMultiTHost - int",
+	   "Unit_hipFreeMultiTHost - float2",
+	   "Unit_hipFreeMultiTHost - float4",
+	   "Unit_hipFreeMultiTArray - char",
+	   "Unit_hipFreeMultiTArray - int",
+	   "Unit_hipFreeMultiTArray - float2",
+	   "Unit_hipFreeMultiTArray - float4"
 	]
 }

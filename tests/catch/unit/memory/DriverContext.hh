@@ -21,6 +21,8 @@ THE SOFTWARE.
 */
 
 #pragma once
+#include <memory>
+#include <hip_test_common.hh>
 
 #include <hip_test_context.hh>
 
