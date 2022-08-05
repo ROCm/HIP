@@ -66,7 +66,12 @@ class SpawnProc {
     auto dir = fs::path(TestContext::get().currentPath());
     dir /= exeName;
     exeName = dir.string();
-
+    // On Windows, fs::exists returns false without extension.
+    if (TestContext::get().isWindows()) {
+      if(fs::path(exeName).extension().empty()) {
+        exeName += ".exe";
+      }
+    }
     INFO("Testing that exe exists: " << exeName);
     REQUIRE(fs::exists(exeName));
 
@@ -92,13 +97,13 @@ class SpawnProc {
       execCmd += " > ";
       execCmd += tmpFileName;
     }
-
     auto res = std::system(execCmd.c_str());
 
     if (captureOutput) {
       std::ifstream t(tmpFileName.c_str());
       resultStr =
           std::string((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
+      t.close();
     }
 #if HT_LINUX
     return WEXITSTATUS(res);
