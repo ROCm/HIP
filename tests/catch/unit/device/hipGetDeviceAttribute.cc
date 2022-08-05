@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2022 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,9 +22,11 @@ THE SOFTWARE.
 // Test the device info API extensions for HIP
 
 #include <hip_test_common.hh>
+#include <string.h>
+#ifdef __linux__
+#include <unistd.h>
+#endif
 #include <iostream>
-
-
 
 static hipError_t test_hipDeviceGetAttribute(int deviceId,
                                       hipDeviceAttribute_t attr,
@@ -234,15 +236,78 @@ TEST_CASE("Unit_hipGetDeviceAttribute_CheckAttrValues") {
 /**
  * Validate the hipDeviceAttributeFineGrainSupport property in AMD.
  */
+#ifdef __linux__
 #if HT_AMD
+#define COMMAND_LEN 256
+#define BUFFER_LEN 512
+
+static bool isRocmPathSet() {
+  FILE *fpipe;
+  char const *command = "echo $ROCM_PATH";
+  fpipe = popen(command, "r");
+
+  if (fpipe == nullptr) {
+    printf("Unable to create command\n");
+    return false;
+  }
+  char command_op[BUFFER_LEN];
+  if (fgets(command_op, BUFFER_LEN, fpipe)) {
+    size_t len = strlen(command_op);
+    if (len > 1) {  // This is because fgets always adds newline character
+      pclose(fpipe);
+      return true;
+    }
+  }
+  pclose(fpipe);
+  return false;
+}
+
 // This is AMD specific property test
 TEST_CASE("Unit_hipGetDeviceAttribute_CheckFineGrainSupport") {
   int deviceId;
   int deviceCount = 0;
+  FILE *fpipe;
+  char command[COMMAND_LEN] = "";
+  const char *rocmpath = nullptr;
+  if (isRocmPathSet()) {
+    // For STG2 testing where /opt/rocm path is not present
+    rocmpath = "$ROCM_PATH/bin/rocminfo";
+  } else {
+    // Check if the rocminfo tool exists
+    rocmpath = "/opt/rocm/bin/rocminfo";
+  }
+  snprintf(command, COMMAND_LEN, "%s", rocmpath);
+  strncat(command, " | grep -i \"Segment:\\|Uuid:\"", COMMAND_LEN);
+  // Execute the rocminfo command and extract the segment info
+  fpipe = popen(command, "r");
+  if (fpipe == nullptr) {
+    printf("Unable to create command file\n");
+    return;
+  }
   HIP_CHECK(hipGetDeviceCount(&deviceCount));
-  REQUIRE(deviceCount > 0);
-  // Check hipDeviceAttributeFineGrainSupport for all available device
-  // in system.
+  assert(deviceCount > 0);
+  int *fine_grained_val = new int[deviceCount];
+  assert(fine_grained_val != nullptr);
+  bool *gpuFound = new bool[deviceCount];
+  assert(gpuFound != nullptr);
+  for (int i = 0; i < deviceCount; i++) {
+    gpuFound[i] = false;
+    fine_grained_val[i] = 0;  // Initialize to 0
+  }
+  char command_op[BUFFER_LEN];
+  int count = -1;
+  // Extract each segment flags
+  while (fgets(command_op, BUFFER_LEN, fpipe)) {
+    std::string rocminfo_line(command_op);
+    if ((std::string::npos != rocminfo_line.find("GPU-")) &&
+        (std::string::npos != rocminfo_line.find("Uuid:"))) {
+      count++;
+      gpuFound[count] = true;
+    } else if (gpuFound[count] &&
+    (std::string::npos != rocminfo_line.find("FLAGS: FINE GRAINED"))) {
+      fine_grained_val[count] = 1;
+    }
+  }
   for (int dev = 0; dev < deviceCount; dev++) {
     HIP_CHECK(hipSetDevice(dev));
     HIP_CHECK(hipGetDevice(&deviceId));
@@ -250,20 +315,14 @@ TEST_CASE("Unit_hipGetDeviceAttribute_CheckFineGrainSupport") {
     HIP_CHECK(hipGetDeviceProperties(&props, deviceId));
     int value = 0;
     HIP_CHECK(hipDeviceGetAttribute(&value,
-        hipDeviceAttributeFineGrainSupport, deviceId));
-    std::string gpu_arch_name(props.gcnArchName);
-    if (std::string::npos != gpu_arch_name.find("gfx90a")) {
-      // Current GPU is gfx90a architecture
-      REQUIRE(value == 1);
-    } else if (std::string::npos != gpu_arch_name.find("gfx906")) {
-      // Current GPU is gfx906 architecture
-      REQUIRE(value == 0);
-    } else if (std::string::npos != gpu_arch_name.find("gfx908")) {
-      // Current GPU is gfx908 architecture
-      REQUIRE(value == 0);
-    }
+              hipDeviceAttributeFineGrainSupport, deviceId));
+    REQUIRE(value == fine_grained_val[dev]);
   }
+  // Validate hipDeviceAttributeFineGrainSupport
+  delete[] fine_grained_val;
+  delete[] gpuFound;
 }
+#endif
 #endif
 /**
  * Validates negative scenarios for hipDeviceGetAttribute
