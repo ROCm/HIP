@@ -13,6 +13,7 @@ set(TEST_SRC
     syncthreadsand.cc
     syncthreadscount.cc
     syncthreadsor.cc
+    deviceAllocation.cc
 )
 
 # AMD only tests
@@ -42,6 +43,11 @@ set(AMD_ARCH_SPEC_TEST_SRC
     unsafeAtomicAdd_NonCoherent_withnounsafeflag.cc
     unsafeAtomicAdd_NonCoherent_withunsafeflag.cc
 )
+
+add_custom_target(kerDevAllocMultCO.code COMMAND ${CMAKE_CXX_COMPILER} --genco ${CMAKE_CURRENT_SOURCE_DIR}/kerDevAllocMultCO.cc -o ${CMAKE_CURRENT_BINARY_DIR}/../../unit/deviceLib/kerDevAllocMultCO.code -I${CMAKE_CURRENT_SOURCE_DIR}/../../../../include/ -I${CMAKE_CURRENT_SOURCE_DIR}/../../include)
+add_custom_target(kerDevWriteMultCO.code COMMAND ${CMAKE_CXX_COMPILER} --genco ${CMAKE_CURRENT_SOURCE_DIR}/kerDevWriteMultCO.cc -o ${CMAKE_CURRENT_BINARY_DIR}/../../unit/deviceLib/kerDevWriteMultCO.code -I${CMAKE_CURRENT_SOURCE_DIR}/../../../../include/ -I${CMAKE_CURRENT_SOURCE_DIR}/../../include)
+add_custom_target(kerDevFreeMultCO.code COMMAND ${CMAKE_CXX_COMPILER} --genco ${CMAKE_CURRENT_SOURCE_DIR}/kerDevFreeMultCO.cc -o ${CMAKE_CURRENT_BINARY_DIR}/../../unit/deviceLib/kerDevFreeMultCO.code -I${CMAKE_CURRENT_SOURCE_DIR}/../../../../include/ -I${CMAKE_CURRENT_SOURCE_DIR}/../../include)
+add_custom_target(kerDevAllocSingleKer.code COMMAND ${CMAKE_CXX_COMPILER} --genco ${CMAKE_CURRENT_SOURCE_DIR}/kerDevAllocSingleKer.cc -o ${CMAKE_CURRENT_BINARY_DIR}/../../unit/deviceLib/kerDevAllocSingleKer.code -I${CMAKE_CURRENT_SOURCE_DIR}/../../../../include/ -I${CMAKE_CURRENT_SOURCE_DIR}/../../include)
 
 if(HIP_PLATFORM MATCHES "amd")
     if (DEFINED OFFLOAD_ARCH_STR)
@@ -78,3 +84,4 @@ elseif(HIP_PLATFORM MATCHES "nvidia")
                       TEST_TARGET_NAME build_tests
                       COMPILE_OPTIONS --Wno-deprecated-declarations)
 endif()
+add_dependencies(build_tests kerDevAllocMultCO.code kerDevWriteMultCO.code kerDevFreeMultCO.code kerDevAllocSingleKer.code)
