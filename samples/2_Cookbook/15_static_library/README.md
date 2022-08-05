@@ -172,5 +172,8 @@ cmake ..
 make
 ./test_*.out
 ```
+It is recommended to use Visual Studio's command prompt for this sample due to requirement of MS Librarian tool - LIB.exe on windows platform.
+Override CMAKE_C_COMPILER and CMAKE_CXX_COMPILER to hipcc as Visual Studio's compiler would use cl.exe as default compiler.
+i.e. cmake.exe -GNinja -DCMAKE_CXX_COMPILER_ID=ROCMClang -DCMAKE_C_COMPILER_ID=ROCMClang -DCMAKE_PREFIX_PATH=%HIP_PATH% -DCMAKE_C_COMPILER=%HIP_PATH%/bin/hipcc.bat -DCMAKE_CXX_COMPILER=%HIP_PATH%/bin/hipcc.bat ..
 
 ## For More Infomation, please refer to the HIP FAQ.
