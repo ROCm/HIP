@@ -51,23 +51,25 @@ static constexpr int ARRAY_LOOP{100};
  */
 static void MallocArray_DiffSizes(int gpu) {
   HIP_CHECK_THREAD(hipSetDevice(gpu));
-  std::pair<size_t, size_t> size =
-      GENERATE(std::make_pair(NUM_W, NUM_H), std::make_pair(BIGNUM_W, BIGNUM_H));
-  hipChannelFormatDesc desc = hipCreateChannelDesc<float>();
-  std::array<hipArray_t, ARRAY_LOOP> A_d;
-  size_t pavail, avail;
-  HIP_CHECK_THREAD(hipMemGetInfo(&pavail, nullptr));
+  //Use of GENERATE in thead function causes random failures with multithread condition.
+  std::vector<std::pair<size_t, size_t>> runs {std::make_pair(NUM_W, NUM_H), std::make_pair(BIGNUM_W, BIGNUM_H)};
+  for (const auto& size : runs) {
+    hipChannelFormatDesc desc = hipCreateChannelDesc<float>();
+    std::array<hipArray_t, ARRAY_LOOP> A_d;
+    size_t pavail, avail;
+    HIP_CHECK_THREAD(hipMemGetInfo(&pavail, nullptr));
 
-  for (int i = 0; i < ARRAY_LOOP; i++) {
-    HIP_CHECK_THREAD(
-        hipMallocArray(&A_d[i], &desc, std::get<0>(size), std::get<1>(size), hipArrayDefault));
-  }
-  for (int i = 0; i < ARRAY_LOOP; i++) {
-    HIP_CHECK_THREAD(hipFreeArray(A_d[i]));
-  }
+    for (int i = 0; i < ARRAY_LOOP; i++) {
+      HIP_CHECK_THREAD(
+           hipMallocArray(&A_d[i], &desc, std::get<0>(size), std::get<1>(size), hipArrayDefault));
+    }
+    for (int i = 0; i < ARRAY_LOOP; i++) {
+      HIP_CHECK_THREAD(hipFreeArray(A_d[i]));
+    }
 
-  HIP_CHECK_THREAD(hipMemGetInfo(&avail, nullptr));
-  REQUIRE_THREAD(pavail == avail);
+    HIP_CHECK_THREAD(hipMemGetInfo(&avail, nullptr));
+    REQUIRE_THREAD(pavail == avail);
+  }
 }
 
 TEST_CASE("Unit_hipMallocArray_DiffSizes") {
