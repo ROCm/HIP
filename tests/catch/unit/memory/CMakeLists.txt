@@ -96,6 +96,7 @@ set(TEST_SRC
     hipMemcpySync.cc
     hipMemsetSync.cc
     hipMemsetAsync.cc
+    hipMemAdvise.cc
 )
 else()
 set(TEST_SRC
@@ -167,6 +168,7 @@ set(TEST_SRC
     hipMemcpySync.cc
     hipMemsetSync.cc
     hipMemsetAsync.cc
+    hipMemAdvise.cc
 )
 endif()
 
