@@ -49,23 +49,26 @@ static constexpr auto ARRAY_LOOP{100};
  */
 static void Malloc3DArray_DiffSizes(int gpu) {
   HIP_CHECK_THREAD(hipSetDevice(gpu));
-  const int size = GENERATE(ARRAY_SIZE, BIG_ARRAY_SIZE);
-  int width{size}, height{size}, depth{size};
-  hipChannelFormatDesc channelDesc = hipCreateChannelDesc<float>();
-  std::array<hipArray_t, ARRAY_LOOP> arr;
-  size_t pavail, avail;
-  HIP_CHECK_THREAD(hipMemGetInfo(&pavail, nullptr));
+  //Use of GENERATE in thead function causes random failures with multithread condition.
+  std::vector<size_t> runs {ARRAY_SIZE, BIG_ARRAY_SIZE};
+  for (const auto& size : runs) {
+    size_t width{size}, height{size}, depth{size};
+    hipChannelFormatDesc channelDesc = hipCreateChannelDesc<float>();
+    std::array<hipArray_t, ARRAY_LOOP> arr;
+    size_t pavail, avail;
+    HIP_CHECK_THREAD(hipMemGetInfo(&pavail, nullptr));
 
-  for (int i = 0; i < ARRAY_LOOP; i++) {
-    HIP_CHECK_THREAD(hipMalloc3DArray(&arr[i], &channelDesc, make_hipExtent(width, height, depth),
+    for (int i = 0; i < ARRAY_LOOP; i++) {
+      HIP_CHECK_THREAD(hipMalloc3DArray(&arr[i], &channelDesc, make_hipExtent(width, height, depth),
                                       hipArrayDefault));
-  }
-  for (int i = 0; i < ARRAY_LOOP; i++) {
-    HIP_CHECK_THREAD(hipFreeArray(arr[i]));
-  }
+    }
+    for (int i = 0; i < ARRAY_LOOP; i++) {
+      HIP_CHECK_THREAD(hipFreeArray(arr[i]));
+    }
 
-  HIP_CHECK_THREAD(hipMemGetInfo(&avail, nullptr));
-  REQUIRE_THREAD(pavail == avail);
+    HIP_CHECK_THREAD(hipMemGetInfo(&avail, nullptr));
+    REQUIRE_THREAD(pavail == avail);
+  }
 }
 
 TEST_CASE("Unit_hipMalloc3DArray_DiffSizes") {
