@@ -287,19 +287,19 @@ struct Pinned {
 
 //---
 struct Unpinned {
-    static const bool isPinned = false;
-    static const char* str() { return "Unpinned"; };
+  static const bool isPinned = false;
+  static const char* str() { return "Unpinned"; };
 
-    static void* Alloc(size_t sizeBytes) {
-        void* p = malloc(sizeBytes);
-        HIPASSERT(p);
-        return p;
-    };
+  static void* Alloc(size_t sizeBytes) {
+    void* p = malloc(sizeBytes);
+    HIPASSERT(p);
+    return p;
+  };
 };
 
 
 struct Memcpy {
-    static const char* str() { return "Memcpy"; };
+  static const char* str() { return "Memcpy"; };
 };
 
 struct MemcpyAsync {
@@ -307,33 +307,104 @@ struct MemcpyAsync {
 };
 
 
-template <typename C>
-struct MemTraits;
+template <typename C> struct MemTraits;
 
 
-template <>
-struct MemTraits<Memcpy> {
+template <> struct MemTraits<Memcpy> {
   static void Copy(void* dest, const void* src, size_t sizeBytes, hipMemcpyKind kind,
-                    hipStream_t stream) {
+                   hipStream_t stream) {
     (void)stream;
     HIPCHECK(hipMemcpy(dest, src, sizeBytes, kind));
   }
 };
 
 
-template <>
-struct MemTraits<MemcpyAsync> {
+template <> struct MemTraits<MemcpyAsync> {
   static void Copy(void* dest, const void* src, size_t sizeBytes, hipMemcpyKind kind,
-                    hipStream_t stream) {
+                   hipStream_t stream) {
     HIPCHECK(hipMemcpyAsync(dest, src, sizeBytes, kind, stream));
   }
 };
 
-}  // namespace HipTest
 
+namespace {
+static __global__ void waitKernel(clock_t offset) {
+  auto start = clock();
+  while ((clock() - start) < offset) {
+  }
+}
+
+// helper function used to set the device frequency variable
+// estimates the number of clock ticks in 1 second
+static size_t findTicksPerSecond() {
+  // first read the reported clockRate as a starting point
+  hipDeviceProp_t prop;
+  int device;
+  HIP_CHECK(hipGetDevice(&device));
+  HIP_CHECK(hipGetDeviceProperties(&prop, device));
+  clock_t devFreq = static_cast<clock_t>(prop.clockRate);  // in kHz
+  clock_t clockTicksPerSecond = devFreq * 1000;
+
+  // init
+  hipEvent_t start, stop;
+  HIP_CHECK(hipEventCreate(&start));
+  HIP_CHECK(hipEventCreate(&stop));
+
+  // Warmup
+  hipLaunchKernelGGL(waitKernel, dim3(1), dim3(1), 0, 0, clockTicksPerSecond);
+  HIP_CHECK(hipGetLastError());
+  HIP_CHECK(hipDeviceSynchronize());
+
+  // try 10 times to find device frequency
+  // after 10 attempts the result is likely good enough so just accept it
+  for (int attempts = 10; attempts > 0; --attempts) {
+    HIP_CHECK(hipEventRecord(start));
+    hipLaunchKernelGGL(waitKernel, dim3(1), dim3(1), 0, 0, clockTicksPerSecond);
+    HIP_CHECK(hipEventRecord(stop));
+    HIP_CHECK(hipGetLastError());
+    HIP_CHECK(hipEventSynchronize(stop));
+
+    float executionTimeMs = 0;
+    HIP_CHECK(hipEventElapsedTime(&executionTimeMs, start, stop));
+
+    constexpr float tolerance = 20;
+    if (fabs(executionTimeMs - 1000) <= tolerance) {
+      // Timing is within accepted tolerance, break here
+      break;
+    } else {
+      clockTicksPerSecond = (clockTicksPerSecond * 1000) / executionTimeMs;
+      --attempts;
+    }
+  }
+
+  // deinit
+  HIP_CHECK(hipEventDestroy(start));
+  HIP_CHECK(hipEventDestroy(stop));
+  return clockTicksPerSecond;
+}
+}  // namespace
+
+// Launches a kernel which runs for specified amount of time
+// Note: The current implementation uses HIP_CHECK which is not thread safe!
+// Note: the function assumes execution on a single device and caches the number of clock ticks per
+// second
+static inline void runKernelForDuration(std::chrono::milliseconds duration,
+                                        hipStream_t stream = nullptr) {
+  // number of clocks the device is running at (device frequency)
+  // each translation unit will have a copy of ticksPerSecond but this function isn't designed for
+  // precision so that's acceptable.
+  static size_t ticksPerSecond = findTicksPerSecond();
+  const auto millis = duration.count();
+  hipLaunchKernelGGL(waitKernel, dim3(1), dim3(1), 0, stream, ticksPerSecond * millis / 1000);
+  HIP_CHECK(hipGetLastError());
+}
+
+}  // namespace HipTest
 
 // This must be called in the beginning of image test app's main() to indicate whether image
 // is supported.
-#define CHECK_IMAGE_SUPPORT                                                                \
-  if (!HipTest::isImageSupported())                                                      \
-    { INFO("Texture is not support on the device. Skipped."); return; }
+#define CHECK_IMAGE_SUPPORT                                                                        \
+  if (!HipTest::isImageSupported()) {                                                              \
+    INFO("Texture is not support on the device. Skipped.");                                        \
+    return;                                                                                        \
+  }

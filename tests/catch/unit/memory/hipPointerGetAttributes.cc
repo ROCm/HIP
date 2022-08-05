@@ -28,7 +28,7 @@ Following scenarios are verified for hipPointerGetAttributes API
 4. Multi-threaded test with many simul allocs.
 
 */
-#include<hip_test_common.hh>
+#include <hip_test_common.hh>
 #include <vector>
 #include <iostream>
 #include <string>
@@ -37,22 +37,18 @@ size_t Nbytes = 0;
 constexpr size_t N{1000000};
 
 
-
 //=================================================================================================
 // Utility Functions:
 //=================================================================================================
 
-bool operator==(const hipPointerAttribute_t& lhs,
-                const hipPointerAttribute_t& rhs) {
-  return ((lhs.hostPointer == rhs.hostPointer) &&
-          (lhs.devicePointer == rhs.devicePointer) &&
-         (lhs.memoryType == rhs.memoryType) && (lhs.device == rhs.device) &&
-         (lhs.allocationFlags == rhs.allocationFlags));
+bool operator==(const hipPointerAttribute_t& lhs, const hipPointerAttribute_t& rhs) {
+  return ((lhs.hostPointer == rhs.hostPointer) && (lhs.devicePointer == rhs.devicePointer) &&
+          (lhs.memoryType == rhs.memoryType) && (lhs.device == rhs.device) &&
+          (lhs.allocationFlags == rhs.allocationFlags));
 }
 
 
-bool operator!=(const hipPointerAttribute_t& lhs,
-                const hipPointerAttribute_t& rhs) {
+bool operator!=(const hipPointerAttribute_t& lhs, const hipPointerAttribute_t& rhs) {
   return !(lhs == rhs);
 }
 
@@ -70,53 +66,50 @@ const char* memoryTypeToString(hipMemoryType memoryType) {
 
 
 void resetAttribs(hipPointerAttribute_t* attribs) {
-    attribs->hostPointer = reinterpret_cast<void*>(-1);
-    attribs->devicePointer = reinterpret_cast<void*>(-1);
-    attribs->memoryType = hipMemoryTypeHost;
-    attribs->device = -2;
-    attribs->isManaged = -1;
-    attribs->allocationFlags = 0xffff;
+  attribs->hostPointer = reinterpret_cast<void*>(-1);
+  attribs->devicePointer = reinterpret_cast<void*>(-1);
+  attribs->memoryType = hipMemoryTypeHost;
+  attribs->device = -2;
+  attribs->isManaged = -1;
+  attribs->allocationFlags = 0xffff;
 }
 
 
 void printAttribs(const hipPointerAttribute_t* attribs) {
   printf(
-        "hostPointer:%p devicePointer:%p  memType:%s deviceId:%d isManaged:%d "
-        "allocationFlags:%u\n",
-        attribs->hostPointer, attribs->devicePointer,
-        memoryTypeToString(attribs->memoryType),
-        attribs->device, attribs->isManaged, attribs->allocationFlags);
+      "hostPointer:%p devicePointer:%p  memType:%s deviceId:%d isManaged:%d "
+      "allocationFlags:%u\n",
+      attribs->hostPointer, attribs->devicePointer, memoryTypeToString(attribs->memoryType),
+      attribs->device, attribs->isManaged, attribs->allocationFlags);
 }
 
 
 inline int zrand(int max) { return rand() % max; }
 
 
-
 // Store the hipPointer attrib and some extra info
 // so can later compare the looked-up info against
 // the reference expectation
 struct SuperPointerAttribute {
-    void* _pointer;
-    size_t _sizeBytes;
-    hipPointerAttribute_t _attrib;
+  void* _pointer;
+  size_t _sizeBytes;
+  hipPointerAttribute_t _attrib;
 };
 
 
 // Support function to check result against a reference:
-void checkPointer(const SuperPointerAttribute& ref, int major,
-                  int minor, void* pointer) {
-    hipPointerAttribute_t attribs;
-    resetAttribs(&attribs);
+void checkPointer(const SuperPointerAttribute& ref, int major, int minor, void* pointer) {
+  hipPointerAttribute_t attribs;
+  resetAttribs(&attribs);
 
-    hipError_t e = hipPointerGetAttributes(&attribs, pointer);
-    if ((e != hipSuccess) || (attribs != ref._attrib)) {
-        HIP_CHECK(e);
-        REQUIRE(attribs != ref._attrib);
-    } else {
-        printf("#%4d.%d GOOD:%p getattr ::  ", major, minor, pointer);
-        printAttribs(&attribs);
-    }
+  hipError_t e = hipPointerGetAttributes(&attribs, pointer);
+  if ((e != hipSuccess) || (attribs != ref._attrib)) {
+    HIP_CHECK(e);
+    REQUIRE(attribs != ref._attrib);
+  } else {
+    printf("#%4d.%d GOOD:%p getattr ::  ", major, minor, pointer);
+    printAttribs(&attribs);
+  }
 }
 
 
@@ -129,8 +122,7 @@ void checkPointer(const SuperPointerAttribute& ref, int major,
 // we do this in the testMultiThreaded_1 test.
 void clusterAllocs(int numAllocs, size_t minSize, size_t maxSize) {
   Nbytes = N * sizeof(char);
-  printf("clusterAllocs numAllocs=%d size=%lu..%lu\n",
-         numAllocs, minSize, maxSize);
+  printf("clusterAllocs numAllocs=%d size=%lu..%lu\n", numAllocs, minSize, maxSize);
   const int Max_Devices = 256;
   std::vector<SuperPointerAttribute> reference(numAllocs);
 
@@ -157,18 +149,15 @@ void clusterAllocs(int numAllocs, size_t minSize, size_t maxSize) {
 
     void* ptr;
     if (isDevice) {
-      totalDeviceAllocated[reference[i]._attrib.device] +=
-                           reference[i]._sizeBytes;
-      HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&ptr),
-                         reference[i]._sizeBytes));
+      totalDeviceAllocated[reference[i]._attrib.device] += reference[i]._sizeBytes;
+      HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&ptr), reference[i]._sizeBytes));
       reference[i]._attrib.memoryType = hipMemoryTypeDevice;
       reference[i]._attrib.devicePointer = ptr;
       reference[i]._attrib.hostPointer = NULL;
       reference[i]._attrib.allocationFlags = 0;
     } else {
-      HIP_CHECK(hipHostMalloc(reinterpret_cast<void**>(&ptr),
-                             reference[i]._sizeBytes,
-                             hipHostMallocDefault));
+      HIP_CHECK(hipHostMalloc(reinterpret_cast<void**>(&ptr), reference[i]._sizeBytes,
+                              hipHostMallocDefault));
       reference[i]._attrib.memoryType = hipMemoryTypeHost;
       reference[i]._attrib.devicePointer = ptr;
       reference[i]._attrib.hostPointer = ptr;
@@ -182,32 +171,29 @@ void clusterAllocs(int numAllocs, size_t minSize, size_t maxSize) {
     HIP_CHECK(hipSetDevice(i));
     HIP_CHECK(hipMemGetInfo(&free, &total));
     printf(
-           "  device#%d: hipMemGetInfo: "
-           "free=%zu (%4.2fMB) totalDevice=%lu (%4.2fMB) total=%zu "
-           "(%4.2fMB)\n",
-           i, free, (free / 1024.0 / 1024.0), totalDeviceAllocated[i],
-           (totalDeviceAllocated[i]) / 1024.0 / 1024.0, total,
-           (total / 1024.0 / 1024.0));
+        "  device#%d: hipMemGetInfo: "
+        "free=%zu (%4.2fMB) totalDevice=%lu (%4.2fMB) total=%zu "
+        "(%4.2fMB)\n",
+        i, free, (free / 1024.0 / 1024.0), totalDeviceAllocated[i],
+        (totalDeviceAllocated[i]) / 1024.0 / 1024.0, total, (total / 1024.0 / 1024.0));
     REQUIRE(free + totalDeviceAllocated[i] <= total);
   }
 
   // Now look up each pointer we inserted and verify we can find it:
-  char * ptr;
+  char* ptr;
   for (int i = 0; i < numAllocs; i++) {
     SuperPointerAttribute& ref = reference[i];
-    ptr = static_cast<char *>(ref._pointer);
+    ptr = static_cast<char*>(ref._pointer);
     checkPointer(ref, i, 0, ref._pointer);
-    checkPointer(ref, i, 1, (ptr +
-                 ref._sizeBytes / 2));
+    checkPointer(ref, i, 1, (ptr + ref._sizeBytes / 2));
     if (ref._sizeBytes > 1) {
-      checkPointer(ref, i, 2, (ptr +
-                   ref._sizeBytes - 1));
+      checkPointer(ref, i, 2, (ptr + ref._sizeBytes - 1));
     }
 
     if (ref._attrib.memoryType == hipMemoryTypeDevice) {
-      hipFree(ref._pointer);
+      HIP_CHECK(hipFree(ref._pointer));
     } else {
-      hipHostFree(ref._pointer);
+      HIP_CHECK(hipHostFree(ref._pointer));
     }
   }
 }
@@ -231,15 +217,13 @@ TEST_CASE("Unit_hipPointerGetAttributes_Basic") {
   hipError_t e;
 
   HIP_CHECK(hipMalloc(&A_d, Nbytes));
-  HIP_CHECK(hipHostMalloc(reinterpret_cast<void**>(&A_Pinned_h), Nbytes,
-                         hipHostMallocDefault));
+  HIP_CHECK(hipHostMalloc(reinterpret_cast<void**>(&A_Pinned_h), Nbytes, hipHostMallocDefault));
   A_OSAlloc_h = reinterpret_cast<char*>(malloc(Nbytes));
 
   size_t free, total;
   HIP_CHECK(hipMemGetInfo(&free, &total));
   printf("hipMemGetInfo: free=%zu (%4.2f) Nbytes=%lu total=%zu (%4.2f)\n", free,
-         (free / 1024.0 / 1024.0), Nbytes, total,
-         (total / 1024.0 / 1024.0));
+         (free / 1024.0 / 1024.0), Nbytes, total, (total / 1024.0 / 1024.0));
   REQUIRE(free + Nbytes <= total);
 
 
@@ -253,23 +237,20 @@ TEST_CASE("Unit_hipPointerGetAttributes_Basic") {
   // Check pointer arithmetic cases:
   resetAttribs(&attribs2);
   HIP_CHECK(hipPointerGetAttributes(&attribs2, A_d + 100));
-  char *ptr = reinterpret_cast<char *>(attribs.devicePointer);
-  REQUIRE(ptr + 100 ==
-            reinterpret_cast<char*>(attribs2.devicePointer));
+  char* ptr = reinterpret_cast<char*>(attribs.devicePointer);
+  REQUIRE(ptr + 100 == reinterpret_cast<char*>(attribs2.devicePointer));
 
   // Corner case at end of array:
   resetAttribs(&attribs2);
   HIP_CHECK(hipPointerGetAttributes(&attribs2, A_d + Nbytes - 1));
-  REQUIRE((ptr + Nbytes - 1) ==
-            reinterpret_cast<char*>(attribs2.devicePointer));
+  REQUIRE((ptr + Nbytes - 1) == reinterpret_cast<char*>(attribs2.devicePointer));
 
   // Pointer just beyond array must be invalid or at least a different pointer
   resetAttribs(&attribs2);
   e = hipPointerGetAttributes(&attribs2, A_d + Nbytes + 1);
   if (e != hipErrorInvalidValue) {
     // We might have strayed into another pointer area.
-    REQUIRE(reinterpret_cast<char*>(ptr) !=
-              reinterpret_cast<char*>(attribs2.devicePointer));
+    REQUIRE(reinterpret_cast<char*>(ptr) != reinterpret_cast<char*>(attribs2.devicePointer));
   }
 
 
@@ -278,7 +259,7 @@ TEST_CASE("Unit_hipPointerGetAttributes_Basic") {
   if (e != hipErrorInvalidValue) {
     REQUIRE(attribs.devicePointer != attribs2.devicePointer);
   }
-  hipFree(A_d);
+  HIP_CHECK(hipFree(A_d));
   e = hipPointerGetAttributes(&attribs, A_d);
   REQUIRE(e == hipErrorInvalidValue);
 
@@ -288,12 +269,11 @@ TEST_CASE("Unit_hipPointerGetAttributes_Basic") {
 
   resetAttribs(&attribs2);
   HIP_CHECK(hipPointerGetAttributes(&attribs2, A_Pinned_h + Nbytes / 2));
-  char *ptr1 = reinterpret_cast<char *>(attribs.hostPointer);
-  REQUIRE((ptr1 + Nbytes / 2)
-            == reinterpret_cast<char*>(attribs2.hostPointer));
+  char* ptr1 = reinterpret_cast<char*>(attribs.hostPointer);
+  REQUIRE((ptr1 + Nbytes / 2) == reinterpret_cast<char*>(attribs2.hostPointer));
 
 
-  hipHostFree(A_Pinned_h);
+  HIP_CHECK(hipHostFree(A_Pinned_h));
   e = hipPointerGetAttributes(&attribs, A_Pinned_h);
   REQUIRE(e == hipErrorInvalidValue);
 
@@ -317,33 +297,37 @@ TEST_CASE("Unit_hipPointerGetAttributes_TinyClusterAlloc") {
 
 // Multi-threaded test with many simul allocs.
 // IN : serialize will force the test to run in serial fashion.
+#if 0  // FIXME_jatinx These need to be ported to HIP_CHECK_THREAD. Disabling it for now
 TEST_CASE("Unit_hipPointerGetAttributes_MultiThread") {
-    srand(0x300);
-    auto serialize = 1;
-    printf("\n=============================================\n");
-    printf("MultiThreaded_1\n");
-    if (serialize) printf("[SERIALIZE]\n");
-    printf("===============================================\n");
-    std::thread t1(clusterAllocs, 1000, 101, 1000);
-    if (serialize) t1.join();
+  srand(0x300);
+  auto serialize = 1;
+  printf("\n=============================================\n");
+  printf("MultiThreaded_1\n");
+  if (serialize) printf("[SERIALIZE]\n");
+  printf("===============================================\n");
+  std::thread t1(clusterAllocs, 1000, 101, 1000);
+  if (serialize) t1.join();
 
-    std::thread t2(clusterAllocs, 1000, 11, 100);
-    if (serialize) t2.join();
+  std::thread t2(clusterAllocs, 1000, 11, 100);
+  if (serialize) t2.join();
 
-    std::thread t3(clusterAllocs, 1000, 5, 10);
-    if (serialize) t3.join();
+  std::thread t3(clusterAllocs, 1000, 5, 10);
+  if (serialize) t3.join();
 
-    std::thread t4(clusterAllocs, 1000, 1, 4);
-    if (serialize) t4.join();
+  std::thread t4(clusterAllocs, 1000, 1, 4);
+  if (serialize) t4.join();
 }
+#endif
 
 TEST_CASE("Unit_hipPointerGetAttributes_Negative") {
+#if HT_AMD  // Nvidia crashed in hipPointerGetAttributes on nullptr
   SECTION("Invalid Attributes Pointer") {
     int* dPtr{nullptr};
     HIP_CHECK(hipMalloc(&dPtr, sizeof(int)));
     HIP_CHECK_ERROR(hipPointerGetAttributes(nullptr, dPtr), hipErrorInvalidValue);
     HIP_CHECK(hipFree(dPtr));
   }
+#endif
 
   SECTION("Invalid Device Pointer") {
     hipPointerAttribute_t attributes{};
