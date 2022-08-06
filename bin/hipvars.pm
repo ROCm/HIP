@@ -121,7 +121,7 @@ if (defined $HIP_RUNTIME and $HIP_RUNTIME eq "rocclr" and !defined $HIP_ROCCLR_H
 }
 
 if (not defined $HIP_PLATFORM) {
-    if (can_run("$HIP_CLANG_PATH/clang++") or can_run("clang++")) {
+    if (can_run("$HIP_CLANG_PATH/clang++") or can_run("amdclang++")) {
         $HIP_PLATFORM = "amd";
     } elsif (can_run("$CUDA_PATH/bin/nvcc") or can_run("nvcc")) {
         $HIP_PLATFORM = "nvidia";
