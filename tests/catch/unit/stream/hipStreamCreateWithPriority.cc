@@ -509,8 +509,8 @@ bool validateStreamPrioritiesWithEvents() {
   #define OP(x) \
     free(src_h_##x); \
     free(dst_h_##x); \
-    hipFree(src_d_##x); \
-    hipFree(dst_d_##x);
+    HIP_CHECK(hipFree(src_d_##x)); \
+    HIP_CHECK(hipFree(dst_d_##x));
   OP(low)
   OP(normal)
   OP(high)
