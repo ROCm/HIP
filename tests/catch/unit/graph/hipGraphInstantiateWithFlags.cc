@@ -160,6 +160,7 @@ void GraphInstantiateWithFlags_DependencyGraph(bool ctxt_change = false) {
   // Instantiate and launch the cloned graph
   HIP_CHECK(hipGraphInstantiateWithFlags(&graphExec, graph, 0));
   HIP_CHECK(hipGraphLaunch(graphExec, 0));
+  HIP_CHECK(hipStreamSynchronize(0));
 
   // Verify graph execution result
   HipTest::checkVectorADD(A_h, B_h, C_h, N);
@@ -248,26 +249,14 @@ by creating dependency graph and instantiate, launching and verifying
 the result
 */
 TEST_CASE("Unit_hipGraphInstantiateWithFlags_DependencyGraph") {
-  int numDevices = 0;
-  int canAccessPeer = 0;
-  HIP_CHECK(hipGetDeviceCount(&numDevices));
-  if (numDevices > 1) {
-    HIP_CHECK(hipDeviceCanAccessPeer(&canAccessPeer, 0, 1));
-    if (canAccessPeer) {
-      GraphInstantiateWithFlags_DependencyGraph();
-    } else {
-      SUCCEED("Machine does not seem to have P2P");
-    }
-  } else {
-    SUCCEED("skipped the testcase as no of devices is less than 2");
-  }
+  GraphInstantiateWithFlags_DependencyGraph();
 }
+
 /*
 This testcase verifies hipGraphInstantiateWithFlags API
 by creating dependency graph on GPU-0 and instantiate, launching and verifying
 the result on GPU-1
 */
-#if HT_NVIDIA
 TEST_CASE("Unit_hipGraphInstantiateWithFlags_DependencyGraphDeviceCtxtChg") {
   int numDevices = 0;
   int canAccessPeer = 0;
@@ -283,7 +272,7 @@ TEST_CASE("Unit_hipGraphInstantiateWithFlags_DependencyGraphDeviceCtxtChg") {
     SUCCEED("skipped the testcase as no of devices is less than 2");
   }
 }
-#endif
+
 /*
 This testcase verifies hipGraphInstantiateWithFlags API
 by creating capture graph and instantiate, launching and verifying
