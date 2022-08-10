@@ -149,8 +149,8 @@ TEST_CASE("Unit_hipExtStreamCreateWithCUMask_ValidateCallbackFunc") {
   HIP_CHECK(hipGetDeviceProperties(&props, 0));
   createDefaultCUMask(&defaultCUMask, props.multiProcessorCount);
 
-  hipExtStreamCreateWithCUMask(&mystream, defaultCUMask.size(),
-                               defaultCUMask.data());
+  HIP_CHECK(hipExtStreamCreateWithCUMask(&mystream, defaultCUMask.size(),
+                                         defaultCUMask.data()));
   HIP_CHECK(hipMemcpyAsync(A_d, A_h, Nbytes, hipMemcpyHostToDevice,
           mystream));
   const unsigned blocks = GRIDSIZE;
@@ -244,7 +244,7 @@ TEST_CASE("Unit_hipExtStreamCreateWithCUMask_Functionality") {
 
   hipLaunchKernelGGL(HipTest::vector_square, dim3(blocks),
                      dim3(threadsPerBlock), 0, streams[0], dA[0], dC[0], N);
-  hipDeviceSynchronize();
+  HIP_CHECK(hipDeviceSynchronize());
 
   auto single_end = std::chrono::steady_clock::now();
   std::chrono::duration<double> single_kernel_time = single_end - single_start;
@@ -264,7 +264,7 @@ TEST_CASE("Unit_hipExtStreamCreateWithCUMask_Functionality") {
     hipLaunchKernelGGL(HipTest::vector_square, dim3(blocks),
     dim3(threadsPerBlock), 0, streams[np], dA[np], dC[np], N);
   }
-  hipDeviceSynchronize();
+  HIP_CHECK(hipDeviceSynchronize());
 
   auto all_end = std::chrono::steady_clock::now();
   std::chrono::duration<double> all_kernel_time = all_end - all_start;
@@ -288,8 +288,8 @@ TEST_CASE("Unit_hipExtStreamCreateWithCUMask_Functionality") {
   delete [] hA;
   delete [] hC;
   for (int np = 0; np < KNumPartition; np++) {
-    hipFree(dC[np]);
-    hipFree(dA[np]);
+    HIP_CHECK(hipFree(dC[np]));
+    HIP_CHECK(hipFree(dA[np]));
     HIP_CHECK(hipStreamDestroy(streams[np]));
   }
 }
