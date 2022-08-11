@@ -219,11 +219,6 @@ TEST_CASE("Unit_hipArray3DCreate_Negative_NullArrayPtr") {
 
 // Providing the description pointer as nullptr should return an error
 TEST_CASE("Unit_hipArray3DCreate_Negative_NullDescPtr") {
-#if HT_AMD
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-130");
-  return;
-#endif
-
   DriverContext ctx;
   hiparray array;
   HIP_CHECK_ERROR(hipArray3DCreate(&array, nullptr), hipErrorInvalidValue);
