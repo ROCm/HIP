@@ -15,6 +15,7 @@ set(LINUX_TEST_SRC
     hipIpcEventHandle.cc
     hipIpcMemAccessTest.cc
     deviceAllocationMproc.cc
+    hipMemGetInfo.cc
 )
 
 # the last argument linker libraries is required for this test but optional to the function
