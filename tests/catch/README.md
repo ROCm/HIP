@@ -18,7 +18,7 @@ Tests in Catch2 are declared via ```TEST_CASE```.
 Running Subtest: ctest –R “...” (Regex to match the subtest name)
 
 ## New Features
-- Skip test without recompiling tests, by addition of a json file. Default name is ```config.json``` , this can be overridden by using the variable ```HT_CONFIG_FILE=some_config.json```.
+- Skip test without recompiling tests, by addition of a json file. Default name is ```config.json``` , this can be overridden by using the variable ```HIP_CATCH_EXCLUDE_FILE=some_config.json```.
 - Json file supports regex. Ex: All tests which has the word ‘Memset’ can be skipped using ‘*Memset*’
 - Support multiple skip test list which can be set via environment variable, so you can have multiple files containing different skip test lists and can pick and choose among them depending on your platform and os.
 - Better CI integration via xunit compatible output
@@ -53,8 +53,9 @@ TEST_CASE("hipExtAPIs") {
 ## Config file schema
 Some tests can be skipped using a config file placed in hipTestMain/config folder. Multiple config files can be defined for different configurations.
 The naming convention for the file needs to be "config_platform_os_archname.json"
-Platform and os are mandatory, "all" for os if the tests needs to be skipped for all OS.
+Platform and os are mandatory.
 Arch name is optional and takes precedence while loading the json file.
+Currently the json files need to be manually chosen by the executor for the architecture of choice.
 
 example:
 config_amd_windows.json
@@ -73,7 +74,7 @@ The schema of the json file is as follows:
 ```
 
 ## Environment Variables
-- `HT_CONFIG_FILE` : This variable can be set to the config file name or full path. Disabled tests will be read from this.
+- `HIP_CATCH_EXCLUDE_FILE` : This variable can be set to the config file name or full path. Disabled tests will be read from this.
 - `HT_LOG_ENABLE` : This is for debugging the HIP Test Framework itself. Setting it to 1, all `LogPrintf` will be printed on screen
 
 ## Test Macros
