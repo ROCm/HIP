@@ -63,7 +63,7 @@ static int _log_enable = (std::getenv("HT_LOG_ENABLE") ? 1 : 0);
   }
 
 typedef struct Config_ {
-  std::string json_file;  // Json file
+  std::vector<std::string> json_files;  // Json files
   std::string platform;   // amd/nvidia
   std::string os;         // windows/linux
 } Config;
@@ -99,14 +99,14 @@ class TestContext {
   std::unordered_map<std::string, rtcState> compiledKernels{};
 
   Config config_;
-  std::string& getJsonFile();
+  std::string& getCommonJsonFile();
   std::string substringFound(std::vector<std::string> list, std::string filename);
   void detectOS();
   void detectPlatform();
-  void fillConfig();
+  void getConfigFiles();
   void setExePath(int, char**);
   void parseOptions(int, char**);
-  bool parseJsonFile();
+  bool parseJsonFiles();
   std::string getMatchingConfigFile(std::string config_dir);
   const Config& getConfig() const { return config_; }
 
