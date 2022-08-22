@@ -35,7 +35,7 @@ __global__ void tex2DKernel(float *outputData, hipTextureObject_t textureObject,
 }
 
 template<hipTextureAddressMode addressMode, hipTextureFilterMode filterMode, bool normalizedCoords>
-void runTest(const int width, const int height, const float offsetX, const float offsetY) {
+static void runTest(const int width, const int height, const float offsetX, const float offsetY) {
   //printf("%s(addressMode=%d, filterMode=%d, normalizedCoords=%d, width=%d, height=%d, offsetX=%f, offsetY=%f)\n",
   //     __FUNCTION__, addressMode, filterMode, normalizedCoords, width, height, offsetX, offsetY);
   unsigned int size = width * height * sizeof(float);
@@ -92,7 +92,7 @@ void runTest(const int width, const int height, const float offsetX, const float
   for (int i = 0; i < height; i++) {
     for (int j = 0; j < width; j++) {
       int index = i * width + j;
-      float expectedValue = getExpectedValue<addressMode, filterMode>(width, height,
+      float expectedValue = getExpectedValue<float, addressMode, filterMode>(width, height,
                                                     offsetX + j, offsetY + i, hData);
       if (!hipTextureSamplingVerify<float, filterMode>(hOutputData[index], expectedValue)) {
         INFO("Mismatch at (" << offsetX + j << ", " << offsetY + i << "):" <<
