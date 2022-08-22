@@ -65,18 +65,81 @@ find_dependency(amd_comgr)
 
 include( "${CMAKE_CURRENT_LIST_DIR}/hip-lang-targets.cmake" )
 
+
+# Approach:Find LLVM directly using find_dependency()
+# IF LLVM_Successfully found, Check for VALID LLVM installation
+# using LLVM package version major no & amdgcn target check of clang binary
+# available in the LLVM install path found.
+# On Failure: If VALID LLVM installation is not found
+# Continued with old approach to use find_path() to search for LLVM include path
+# in predefined relative search Directories
+find_dependency(LLVM)
+if( LLVM_FOUND )
+  message(STATUS "Found LLVM PACKAGE in: ${LLVM_INSTALL_PREFIX}")
+  if( LLVM_VERSION_MAJOR )
+    # Check llvm package major version number to check for valid versions
+    if( ${LLVM_VERSION_MAJOR} GREATER_EQUAL 13 )
+      find_program(CLANG_TOOL_BINARY clang
+                   PATHS ${LLVM_TOOLS_BINARY_DIR} NO_DEFAULT_PATH)
+      if( CLANG_TOOL_BINARY )
+        # fetch clang targets
+        execute_process(COMMAND ${CLANG_TOOL_BINARY} --print-targets
+          OUTPUT_VARIABLE LLVM_CLANG_AMDGCN_DETAILS
+           OUTPUT_STRIP_TRAILING_WHITESPACE
+           RESULT_VARIABLE CLANG_AMDGCN_FETCH_RESULT)
+        # IF Successfully fetch clang targets, Check for amdgcn target
+        if( (NOT CLANG_AMDGCN_FETCH_RESULT) AND
+                              (LLVM_CLANG_AMDGCN_DETAILS MATCHES "amdgcn") )
+          message(STATUS "LLVM Package Clang Version ${LLVM_PACKAGE_VERSION}"
+                         " with amdgcn target FOUND" )
+          file(GLOB HIP_CLANG_INCLUDE_PATH "${LLVM_LIBRARY_DIR}/clang/*/include" )
+        else()
+          # LLVM Package installation with clang targets has no amdgcn
+          message(STATUS "Found LLVM PACKAGE does not include REQUIRED amdgcn target,"
+                         " available targets: ${LLVM_CLANG_AMDGCN_DETAILS}.\n" )
+          # Reset Flag to continue with old approach of predefined search path.
+          set(LLVM_FOUND FALSE)
+        endif() # CLANG Target Check
+      else()
+        # CLANG TOOL BINARY NOT FOUND
+        # Reset Flag to continue with old approach of predefined search path.
+        set(LLVM_FOUND FALSE)
+      endif() # CLANG TOOL BINARY Check
+    else()
+      # LLVM Package installation found is not with valid version
+      message(STATUS "Found LLVM PACKAGE is not of required version >= 13,"
+                     "found version:  ${LLVM_VERSION_MAJOR}.\n" )
+      # Reset Flag to continue with old approach of predefined search path.
+      set(LLVM_FOUND FALSE)
+    endif() # llvm package Version Check
+  else()
+    # LLVM_VERSION_MAJOR not available
+    # Reset Flag to continue with old approach of predefined search path.
+    set(LLVM_FOUND FALSE)
+  endif() # LLVM_VERSION_MAJOR Check
+else()
+  # Reset Flag to continue with old approach of predefined search path.
+  message(STATUS "LLVM PACKAGE NOT FOUND: using find_dep()\n" )
+endif() # LLVM FOUND Check
+
 # From hip-lang config directory, do three level up
 get_filename_component(_DIR "${CMAKE_CURRENT_LIST_DIR}" REALPATH)
 get_filename_component(_IMPORT_PREFIX "${_DIR}/../../../" REALPATH)
 
-
-#need _IMPORT_PREFIX to be set #FILE_REORG_BACKWARD_COMPATIBILITY
-file(GLOB HIP_CLANG_INCLUDE_SEARCH_PATHS "${_IMPORT_PREFIX}/../llvm/lib/clang/*/include")
-file(GLOB HIP_CLANG_INCLUDE_SEARCH_PATHS_REORG "${_IMPORT_PREFIX}/llvm/lib/clang/*/include")
-find_path(HIP_CLANG_INCLUDE_PATH __clang_cuda_math.h
+# Use find_path() to find LLVM in predefined search location
+# This is To retain old approach to use predefined search paths using find_path()
+# Old approach will be enabled only if:
+# NO Valid LLVM Package installation is found using find_dependency(LLVM)
+if(NOT LLVM_FOUND)
+  #need _IMPORT_PREFIX to be set #FILE_REORG_BACKWARD_COMPATIBILITY
+  file(GLOB HIP_CLANG_INCLUDE_SEARCH_PATHS "${_IMPORT_PREFIX}/../llvm/lib/clang/*/include")
+  file(GLOB HIP_CLANG_INCLUDE_SEARCH_PATHS_REORG "${_IMPORT_PREFIX}/llvm/lib/clang/*/include")
+  find_path(HIP_CLANG_INCLUDE_PATH __clang_cuda_math.h
     HINTS ${HIP_CLANG_INCLUDE_SEARCH_PATHS}
           ${HIP_CLANG_INCLUDE_SEARCH_PATHS_REORG}
     NO_DEFAULT_PATH)
+endif() # LLVM Package found Check
+
 get_filename_component(HIP_CLANG_INCLUDE_PATH "${HIP_CLANG_INCLUDE_PATH}" DIRECTORY)
 
 #If HIP isnot installed under ROCm, need this to find HSA assuming HSA is under ROCm
@@ -96,15 +159,37 @@ if (NOT HSA_HEADER)
   message (FATAL_ERROR "HSA header not found! ROCM_PATH environment not set")
 endif()
 
-get_filename_component(HIP_COMPILER_INSTALL_PATH ${CMAKE_HIP_COMPILER} DIRECTORY)
-file(GLOB HIP_CLANGRT_LIB_SEARCH_PATHS "${HIP_COMPILER_INSTALL_PATH}/../lib/clang/*/lib/*")
-find_library(CLANGRT_BUILTINS
-    NAMES
-      clang_rt.builtins
-      clang_rt.builtins-x86_64
-    PATHS
-      ${HIP_CLANGRT_LIB_SEARCH_PATHS}
-      ${HIP_CLANG_INCLUDE_PATH}/../lib/linux)
+# CLANGRT LIB Search Path setting based on valid LLVM Path found
+if( LLVM_FOUND )
+  # IF VALID LLVM Package successfully found using find_dependency(LLVM)
+  # Use binary tool option -print-libgcc-file-name --rtlib=compiler-rt
+  # To fetch the compiler rt library file name.
+  execute_process(
+    COMMAND ${CLANG_TOOL_BINARY} -print-libgcc-file-name --rtlib=compiler-rt
+    OUTPUT_VARIABLE CLANGRT_BUILTINS
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    RESULT_VARIABLE CLANGRT_BUILTINS_FETCH_EXIT_CODE)
+else()
+  # IF NO VALID LLVM Package successfully found using find_dependency(LLVM)
+  # using predefined search paths for backward compatibility.
+  get_filename_component(HIP_COMPILER_INSTALL_PATH ${CMAKE_HIP_COMPILER} DIRECTORY)
+  file(GLOB HIP_CLANGRT_LIB_SEARCH_PATHS "${HIP_COMPILER_INSTALL_PATH}/../lib/clang/*/lib/*")
+  find_library(CLANGRT_BUILTINS
+      NAMES
+        clang_rt.builtins
+        clang_rt.builtins-x86_64
+      PATHS
+        ${HIP_CLANGRT_LIB_SEARCH_PATHS}
+        ${HIP_CLANG_INCLUDE_PATH}/../lib/linux)
+  # IF Failed to find clang_rt library
+  if( "${CLANGRT_BUILTINS}" STREQUAL "CLANGRT_BUILTINS-NOTFOUND")
+    # Set Exit Code for handling failure
+    set(CLANGRT_BUILTINS_FETCH_EXIT_CODE "-1")
+  else()
+    set(CLANGRT_BUILTINS_FETCH_EXIT_CODE "0")
+  endif()
+endif()
+
 set_target_properties(hip-lang::device PROPERTIES
   INTERFACE_INCLUDE_DIRECTORIES "$<$<COMPILE_LANGUAGE:HIP>:${_IMPORT_PREFIX}/include;${HIP_CLANG_INCLUDE_PATH}>"
   INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "$<$<COMPILE_LANGUAGE:HIP>:${_IMPORT_PREFIX}/include;${HIP_CLANG_INCLUDE_PATH}>"
@@ -134,12 +219,12 @@ set_property(TARGET hip-lang::device APPEND PROPERTY
 )
 
 # Add support for __fp16 and _Float16, explicitly link with compiler-rt
-if(NOT CLANGRT_BUILTINS)
-    message(FATAL_ERROR "clangrt builtins lib not found")
-else()
+if( "${CLANGRT_BUILTINS_FETCH_EXIT_CODE}" STREQUAL "0" )
   set_property(TARGET hip-lang::device APPEND PROPERTY
     INTERFACE_LINK_LIBRARIES "$<$<LINK_LANGUAGE:HIP>:${CLANGRT_BUILTINS}>"
   )
+else()
+  message(FATAL_ERROR "clangrt builtins lib not found")
 endif()
 
 # Approved by CMake to use this name. This is used so that HIP can

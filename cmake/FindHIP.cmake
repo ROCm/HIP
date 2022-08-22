@@ -48,6 +48,64 @@ mark_as_advanced(HIP_HOST_COMPILATION_CPP)
 # FIND: HIP and associated helper binaries
 ###############################################################################
 
+# Approach:Find LLVM directly using find_dependency()
+# IF LLVM_Successfully found, Check for VALID LLVM installation
+# using LLVM package version major no & amdgcn target check of clang binary
+# available in the LLVM install path found.
+# On Failure: If VALID LLVM installation is not found
+# Continued with old approach to use find_path() to search for LLVM include path
+# in predefined relative search Directories
+include(CMakeFindDependencyMacro OPTIONAL RESULT_VARIABLE _CMakeFindDependencyMacro_FOUND)
+find_dependency(LLVM)
+if( LLVM_FOUND )
+  message(STATUS "Found LLVM PACKAGE in: ${LLVM_INSTALL_PREFIX}")
+  if( LLVM_VERSION_MAJOR )
+    # Check llvm package major version number to check for valid versions
+    if( ${LLVM_VERSION_MAJOR} GREATER_EQUAL 13 )
+      find_program(CLANG_TOOL_BINARY clang
+                   PATHS ${LLVM_TOOLS_BINARY_DIR} NO_DEFAULT_PATH)
+      if( CLANG_TOOL_BINARY )
+        # fetch clang targets
+        execute_process(COMMAND ${CLANG_TOOL_BINARY} --print-targets
+          OUTPUT_VARIABLE LLVM_CLANG_AMDGCN_DETAILS
+           OUTPUT_STRIP_TRAILING_WHITESPACE
+           RESULT_VARIABLE CLANG_AMDGCN_FETCH_RESULT)
+        # IF Successfully fetch clang targets, Check for amdgcn target
+        if( (NOT CLANG_AMDGCN_FETCH_RESULT) AND
+            (LLVM_CLANG_AMDGCN_DETAILS MATCHES "amdgcn") )
+          message(STATUS "LLVM Package Clang Version ${LLVM_PACKAGE_VERSION} "
+                         "with amdgcn target FOUND" )
+          set(HIP_CLANG_PATH ${LLVM_TOOLS_BINARY_DIR})
+        else()
+          # IF LLVM Package installation with clang targets has no amdgcn
+          message(STATUS "Found LLVM PACKAGE does not include REQUIRED amdgcn target,"
+                         " available targets: ${LLVM_CLANG_AMDGCN_DETAILS}.\n" )
+          # Reset Flag to continue with old approach of predefined search path.
+          set(LLVM_FOUND FALSE)
+        endif() # CLANG Target Check
+      else()
+        # CLANG TOOL BINARY NOT FOUND
+        # Reset Flag to continue with old approach of predefined search path.
+        set(LLVM_FOUND FALSE)
+      endif() # CLANG TOOL BINARY Check
+    else()
+      # IF LLVM Package installation found is not with valid version
+      message(STATUS "Found LLVM PACKAGE is not of required version >= 13,"
+                     "found version:  ${LLVM_VERSION_MAJOR}.\n" )
+      # Reset Flag to continue with old approach of predefined search path.
+      set(LLVM_FOUND FALSE)
+    endif() # llvm package Version Check
+  else()
+    # LLVM_VERSION_MAJOR not available
+    # Reset Flag to continue with old approach of predefined search path.
+    set(LLVM_FOUND FALSE)
+  endif() # LLVM_VERSION_MAJOR Check
+else()
+  # LLVM package not found
+  # Reset Flag to continue with old approach of predefined search path.
+  message(STATUS "LLVM PACKAGE NOT FOUND: using find_dep()\n" )
+endif() # LLVM FOUND Check
+
 get_filename_component(_IMPORT_PREFIX "${CMAKE_CURRENT_LIST_DIR}/../" REALPATH)
 
 # HIP is currently not supported for apple
@@ -230,6 +288,11 @@ if("${HIP_COMPILER}" STREQUAL "nvcc")
 elseif("${HIP_COMPILER}" STREQUAL "clang")
     #Set HIP_CLANG_PATH
     if("x${HIP_CLANG_PATH}" STREQUAL "x")
+      # IF VALID LLVM Package is Found
+      if( LLVM_FOUND )
+        # Use LLVM Package flags (LLVM_TOOLS_BINARY_DIR)
+        set(HIP_CLANG_PATH ${LLVM_TOOLS_BINARY_DIR})
+      else() # IF VALID LLVM Package is not found
         if(DEFINED ENV{HIP_CLANG_PATH})
             set(HIP_CLANG_PATH $ENV{HIP_CLANG_PATH})
         elseif(DEFINED ENV{ROCM_PATH})
@@ -252,7 +315,9 @@ elseif("${HIP_COMPILER}" STREQUAL "clang")
         else()
             message(FATAL_ERROR "Unable to find the clang compiler path. Set ROCM_PATH or HIP_PATH in env ")
         endif()
-    endif()
+      endif() # LLVM_FOUND Check
+    endif() # Set HIP_CLANG_PATH
+
     #Number of parallel jobs by default is 1
     if(NOT DEFINED HIP_CLANG_NUM_PARALLEL_JOBS)
       set(HIP_CLANG_NUM_PARALLEL_JOBS 1)
@@ -660,6 +725,11 @@ macro(HIP_ADD_EXECUTABLE hip_target)
     endif()
     if("${HIP_COMPILER}" STREQUAL "clang")
         if("x${HIP_CLANG_PATH}" STREQUAL "x")
+          # IF VALID LLVM Package is Found
+          if( LLVM_FOUND )
+            # Use LLVM Package flags (LLVM_TOOLS_BINARY_DIR)
+            set(HIP_CLANG_PATH ${LLVM_TOOLS_BINARY_DIR})
+          else() # IF VALID LLVM Package is not found
             if(DEFINED ENV{HIP_CLANG_PATH})
                 set(HIP_CLANG_PATH $ENV{HIP_CLANG_PATH})
             elseif(DEFINED ENV{ROCM_PATH})
@@ -682,7 +752,9 @@ macro(HIP_ADD_EXECUTABLE hip_target)
             else()
                 message(FATAL_ERROR "Unable to find the clang compiler path. Set ROCM_PATH or HIP_PATH in env")
             endif()
+          endif() # LLVM found Check
         endif()
+
         set(CMAKE_HIP_LINK_EXECUTABLE "${HIP_HIPCC_CMAKE_LINKER_HELPER} ${HIP_CLANG_PATH} ${HIP_CLANG_PARALLEL_BUILD_LINK_OPTIONS} <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
     else()
         set(CMAKE_HIP_LINK_EXECUTABLE "${HIP_HIPCC_CMAKE_LINKER_HELPER} <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
