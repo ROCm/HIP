@@ -145,3 +145,22 @@ TEST_CASE("Unit_hipGetSetDeviceFlags_Threaded") {
   test_thread.join();
   HIP_CHECK_THREAD_FINALIZE();
 }
+
+TEST_CASE("Unit_hipGetDeviceFlags_Positive_Context") {
+  auto validFlags = getValidFlags();
+  const unsigned int flags =
+      GENERATE_COPY(from_range(std::begin(validFlags), std::end(validFlags)));
+
+  hipInit(0);
+
+  hipCtx_t ctx;
+  HIP_CHECK(hipCtxCreate(&ctx, flags, 0));
+
+  unsigned int actual_flags;
+  HIP_CHECK(hipGetDeviceFlags(&actual_flags));
+
+  REQUIRE(actual_flags == flags);
+
+  hipCtxPopCurrent(&ctx);
+  hipCtxDestroy(ctx);
+}
