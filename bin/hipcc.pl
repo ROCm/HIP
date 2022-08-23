@@ -201,13 +201,11 @@ if ($HIP_PLATFORM eq "amd") {
     }
 
     if (not $isWindows) {
-        $HSA_PATH=$ENV{'HSA_PATH'} // "$ROCM_PATH/hsa";
         $HIPCXXFLAGS .= " -isystem $HSA_PATH/include";
         $HIPCFLAGS .= " -isystem $HSA_PATH/include";
     }
 
 } elsif ($HIP_PLATFORM eq "nvidia") {
-    $CUDA_PATH=$ENV{'CUDA_PATH'} // '/usr/local/cuda';
     $HIP_INCLUDE_PATH = "$HIP_PATH/include";
     if ($verbose & 0x2) {
         print ("CUDA_PATH=$CUDA_PATH\n");
