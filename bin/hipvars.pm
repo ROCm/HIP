@@ -94,9 +94,21 @@ if ($isWindows) {
 $HIP_ROCCLR_HOME=$ENV{'HIP_ROCCLR_HOME'};
 
 if (defined $HIP_ROCCLR_HOME) {
-    $HIP_INFO_PATH= "$HIP_ROCCLR_HOME/lib/.hipInfo";
+    # Only used for Windows builds
+    $LIB = "lib";
+    $HIP_INFO_PATH = "$HIP_ROCCLR_HOME/lib/.hipInfo";
 } else {
-    $HIP_INFO_PATH= "$HIP_PATH/lib/.hipInfo"; # use actual file
+    # Detect lib directory (i.e. 'lib64' or 'lib')
+    if (-e "$HIP_PATH/lib64/.hipInfo") {
+        $LIB = "lib64";
+    } else {
+        $LIB = "lib";
+    }
+    $HIP_INFO_PATH = "$HIP_PATH/$LIB/.hipInfo";
+}
+if (! -f $HIP_INFO_PATH) {
+    printf ("error: HIP_INFO_PATH does not exist ('$HIP_INFO_PATH')\n");
+    exit (-1);
 }
 #---
 #HIP_PLATFORM controls whether to use nvidia or amd platform:
