@@ -65,7 +65,7 @@ TEST_CASE("Unit_hipMemPoolApi_Basic") {
 
   hipStream_t stream;
   HIP_CHECK(hipStreamCreate(&stream));
-  HIP_CHECK(hipMallocAsync(&A, numElements * sizeof(float), stream));
+  HIP_CHECK(hipMallocAsync(reinterpret_cast<void**>(&A), numElements * sizeof(float), stream));
   INFO("hipMallocAsync result: " << A);
 
   HIP_CHECK(hipFreeAsync(A, stream));
@@ -84,16 +84,25 @@ TEST_CASE("Unit_hipMemPoolApi_Basic") {
 
   HIP_CHECK(hipMemPoolGetAttribute(mem_pool, attr, &value));
 
-  hipMemAccessDesc desc_list = {};
+  hipMemAccessDesc desc_list = {
+    {
+      hipMemLocationTypeDevice,
+      0
+    },
+    hipMemAccessFlagsProtReadWrite
+  };
   int count = 1;
   HIP_CHECK(hipMemPoolSetAccess(mem_pool, &desc_list, count));
 
   hipMemAccessFlags flags = hipMemAccessFlagsProtNone;
-  hipMemLocation location = {};
+  hipMemLocation location = {
+    hipMemLocationTypeDevice,
+    0
+  };
   HIP_CHECK(hipMemPoolGetAccess(&flags, mem_pool, &location));
 
   HIP_CHECK(hipMemPoolCreate(&mem_pool, &kPoolProps));
-  HIP_CHECK(hipMallocFromPoolAsync(&B, numElements * sizeof(float), mem_pool, stream));
+  HIP_CHECK(hipMallocFromPoolAsync(reinterpret_cast<void**>(&B), numElements * sizeof(float), mem_pool, stream));
   HIP_CHECK(hipMemPoolDestroy(mem_pool));
 
   HIP_CHECK(hipStreamDestroy(stream));
@@ -527,8 +536,8 @@ TEST_CASE("Unit_hipMemPoolApi_Default") {
   std::uint64_t value64 = 0;
   attr = hipMemPoolAttrReservedMemCurrent;
   HIP_CHECK(hipMemPoolGetAttribute(mem_pool, attr, &value64));
-  // Make sure the current reserved just 4KB alloc
-  REQUIRE(sizeof(float) * 1024 == value64);
+  // Make sure the current reserved is at least allocation size of buffer C (4KB)
+  REQUIRE(sizeof(float) * 1024 <= value64);
 
   attr = hipMemPoolAttrUsedMemHigh;
   HIP_CHECK(hipMemPoolGetAttribute(mem_pool, attr, &value64));
