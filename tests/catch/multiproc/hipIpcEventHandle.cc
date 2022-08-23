@@ -321,6 +321,10 @@ TEST_CASE("Unit_hipIpcEventHandle_ParameterValidation") {
     REQUIRE(ret == hipErrorInvalidValue);
   }
 
+  SECTION("Get event handle with handle == nullptr and event == nullptr") {
+    HIP_CHECK_ERROR(hipIpcGetEventHandle(nullptr, nullptr), hipErrorInvalidValue);
+  }
+
   SECTION("Get event handle with invalid event object") {
     hipEvent_t eventUninit{};
     ret = hipIpcGetEventHandle(&eventHandle, eventUninit);
@@ -353,6 +357,23 @@ TEST_CASE("Unit_hipIpcEventHandle_ParameterValidation") {
       INFO("Error returned : " << ret);
       REQUIRE(false);
     }
+  }
+
+  SECTION("Open handle in process that created it") {
+    hipIpcEventHandle_t event_handle;
+    hipEvent_t event1, event2;
+    HIP_CHECK(hipEventCreateWithFlags(&event1, hipEventDisableTiming | hipEventInterprocess));
+    HIP_CHECK(hipIpcGetEventHandle(&event_handle, event1));
+    HIP_CHECK_ERROR(hipIpcOpenEventHandle(&event2, event_handle), hipErrorInvalidContext);
+  }
+
+  SECTION("Event created with no flags") {
+    hipEvent_t event;
+    hipIpcEventHandle_t event_handle;
+
+    HIP_CHECK(hipEventCreate(&event));
+    ret = hipIpcGetEventHandle(&event_handle, event);
+    REQUIRE((ret == hipErrorInvalidResourceHandle || ret == hipErrorInvalidContext));
   }
 }
 
