@@ -23,6 +23,7 @@ THE SOFTWARE.
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+
 #include <hip_test_common.hh>
 #include <hip/hip_runtime_api.h>
 
