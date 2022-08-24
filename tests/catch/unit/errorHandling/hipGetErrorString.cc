@@ -20,9 +20,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#include "errorEnumerators.h"
 #include <hip_test_common.hh>
 #include <hip/hip_runtime_api.h>
-#include "errorEnumerators.h"
 
 TEST_CASE("Unit_hipGetErrorString_Positive_Basic") {
   const char* error_string = nullptr;
