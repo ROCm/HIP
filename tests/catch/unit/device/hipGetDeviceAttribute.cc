@@ -21,13 +21,15 @@ THE SOFTWARE.
 */
 // Test the device info API extensions for HIP
 
-#include <array>
-#include <iostream>
-#include <hip_test_common.hh>
 #include <string.h>
 #ifdef __linux__
 #include <unistd.h>
 #endif
+
+#include <array>
+#include <iostream>
+
+#include <hip_test_common.hh>
 
 static hipError_t test_hipDeviceGetAttribute(int deviceId,
                                       hipDeviceAttribute_t attr,
