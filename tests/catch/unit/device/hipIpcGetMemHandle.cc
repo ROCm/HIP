@@ -23,6 +23,7 @@ THE SOFTWARE.
 #ifdef __linux__
 
 #include <cstring>
+
 #include <hip_test_common.hh>
 #include <hip/hip_runtime_api.h>
 
