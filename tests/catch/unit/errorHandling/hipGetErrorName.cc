@@ -42,7 +42,6 @@ TEST_CASE("Unit_hipGetErrorName_Negative_Parameters") {
 #if HT_NVIDIA
   REQUIRE_THAT(error_string, Catch::Equals("cudaErrorUnknown"));
 #elif HT_AMD
-  // TODO
-  REQUIRE_THAT(error_string, Catch::Equals("TODO"));
+  REQUIRE_THAT(error_string, Catch::Equals("hipErrorUnknown"));
 #endif
 }
