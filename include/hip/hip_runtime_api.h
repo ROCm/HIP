@@ -4483,6 +4483,8 @@ hipError_t hipDevicePrimaryCtxSetFlags(hipDevice_t dev, unsigned int flags);
  * @param [in] fname
  * @param [out] module
  *
+ * @warning File/memory resources allocated in this function are released only in hipModuleUnload.
+ *
  * @returns hipSuccess, hipErrorInvalidValue, hipErrorInvalidContext, hipErrorFileNotFound,
  * hipErrorOutOfMemory, hipErrorSharedObjectInitFailed, hipErrorNotInitialized
  *
