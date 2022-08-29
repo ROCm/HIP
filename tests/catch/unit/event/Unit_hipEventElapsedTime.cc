@@ -24,10 +24,13 @@ Testcase Scenarios :
 Unit_hipEventElapsedTime_NullCheck - Test unsuccessful hipEventElapsedTime when either event passed as nullptr
 Unit_hipEventElapsedTime_DisableTiming - Test unsuccessful hipEventElapsedTime when events are created with hipEventDisableTiming flag
 Unit_hipEventElapsedTime_DifferentDevices - Test unsuccessful hipEventElapsedTime when events are recorded on different devices
+Unit_hipEventElapsedTime_NotReady_Negative - Test unsuccessful hipEventElapsedTime when an event has not been completed
 Unit_hipEventElapsedTime - Test time elapsed between two recorded events with hipEventElapsedTime api
 */
 
 #include <hip_test_common.hh>
+
+#include <hip_test_checkers.hh>
 
 #include <iostream>
 
@@ -80,6 +83,33 @@ TEST_CASE("Unit_hipEventElapsedTime_DifferentDevices") {
     HIP_CHECK(hipEventDestroy(stop));
   }
 }
+
+
+#if HT_AMD /* Disabled because frequency based wait is timing out on nvidia platforms */
+TEST_CASE("Unit_hipEventElapsedTime_NotReady_Negative") {
+  hipEvent_t start;
+  HIP_CHECK(hipEventCreate(&start));
+
+  hipEvent_t stop;
+  HIP_CHECK(hipEventCreate(&stop));
+
+  // Record start event
+  HIP_CHECK(hipEventRecord(start, nullptr));
+
+  HipTest::runKernelForDuration(std::chrono::milliseconds(1000));
+
+  // Record stop event
+  HIP_CHECK(hipEventRecord(stop, nullptr));
+
+  // stop event has not been completed
+  float tElapsed = 1.0f;
+  HIP_CHECK_ERROR(hipEventQuery(stop), hipErrorNotReady);
+  HIP_ASSERT(hipEventElapsedTime(&tElapsed,start,stop) == hipErrorNotReady);
+
+  HIP_CHECK(hipEventDestroy(start));
+  HIP_CHECK(hipEventDestroy(stop));
+}
+#endif // HT_AMD
 
 TEST_CASE("Unit_hipEventElapsedTime") {
   hipEvent_t start;
