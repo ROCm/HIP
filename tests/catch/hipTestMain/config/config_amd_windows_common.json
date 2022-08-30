@@ -71,6 +71,8 @@
 	   "Unit_hipStreamSynchronize_FinishWork",
 	   "Unit_hipStreamSynchronize_NullStreamAndStreamPerThread",
 	   "Unit_hipMultiThreadDevice_NearZero",
-	   "Unit_hipStreamPerThread_DeviceReset_1"
+	   "Unit_hipStreamPerThread_DeviceReset_1",
+	   "Unit_hipStreamCreateWithPriority_ValidateWithEvents",
+	   "Unit_hipStreamPerThread_StrmWaitEvt"
 	]
 }
