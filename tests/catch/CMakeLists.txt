@@ -150,6 +150,8 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.21.0)
 endif()
 message(STATUS "CMAKE HIP ARCHITECTURES: ${CMAKE_HIP_ARCHITECTURES}")
 
+# Note to pass arch use format like -DOFFLOAD_ARCH_STR="--offload-arch=gfx900  --offload-arch=gfx906"
+# having space at the start/end of OFFLOAD_ARCH_STR can cause build failures
 # Identify the GPU Targets.
 # This is done due to limitation of rocm_agent_enumerator
 # While building test parallelly, rocm_agent_enumerator can fail and give out an empty target
@@ -174,7 +176,7 @@ if(NOT DEFINED OFFLOAD_ARCH_STR
             string(REGEX REPLACE "\n" ";" HIP_GPU_ARCH_LIST "${HIP_GPU_ARCH}")
             set(OFFLOAD_ARCH_STR "")
             foreach(_hip_gpu_arch ${HIP_GPU_ARCH_LIST})
-                set(OFFLOAD_ARCH_STR " ${OFFLOAD_ARCH_STR} --offload-arch=${_hip_gpu_arch} ")
+                set(OFFLOAD_ARCH_STR "--offload-arch=${_hip_gpu_arch} ${OFFLOAD_ARCH_STR}")
             endforeach()
         endif()
     else()
