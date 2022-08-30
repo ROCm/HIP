@@ -33,8 +33,8 @@ TEMPLATE_TEST_CASE("ABM_AddKernel_MultiTypeMultiSize", "", int, long, float, lon
   res = hipMemcpy(a.data(), d_c, sizeof(TestType) * size, hipMemcpyDeviceToHost);
   REQUIRE(res == hipSuccess);
 
-  hipFree(d_a);
-  hipFree(d_b);
-  hipFree(d_c);
+  HIP_CHECK(hipFree(d_a));
+  HIP_CHECK(hipFree(d_b));
+  HIP_CHECK(hipFree(d_c));
   REQUIRE(a == c);
 }

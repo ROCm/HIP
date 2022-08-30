@@ -347,7 +347,7 @@ TEST_CASE("Unit_hipGraphRemoveDependencies_ChangeComputeFunc") {
   kernelNodeParams.extra = nullptr;
   HIP_CHECK(hipGraphAddKernelNode(&kernel_square, graph, nullptr, 0,
                                                         &kernelNodeParams));
-  hipGraphRemoveDependencies(graph, &memcpyH2D_B, &kernel_vecAdd, 1);
+  HIP_CHECK(hipGraphRemoveDependencies(graph, &memcpyH2D_B, &kernel_vecAdd, 1));
   // Add new dependencies
   HIP_CHECK(hipGraphAddDependencies(graph, &memcpyH2D_B, &kernel_square, 1));
   HIP_CHECK(hipGraphAddDependencies(graph, &kernel_square,

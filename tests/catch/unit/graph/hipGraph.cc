@@ -316,7 +316,7 @@ TEST_CASE("Unit_hipGraph_BasicFunctional") {
   INFO("Elements : " << size << " ThreadsPerBlock : " << THREADS_PER_BLOCK);
   INFO("Graph Launch iterations = " << GRAPH_LAUNCH_ITERATIONS);
 
-  hipSetDevice(0);
+  HIP_CHECK(hipSetDevice(0));
   inputVec_h = reinterpret_cast<float*>(malloc(sizeof(float) * size));
   REQUIRE(inputVec_h != nullptr);
   HIP_CHECK(hipMalloc(&inputVec_d, sizeof(float) * size));

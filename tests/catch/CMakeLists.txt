@@ -63,7 +63,8 @@ else()
                     OUTPUT_VARIABLE HIP_VERSION
                     OUTPUT_STRIP_TRAILING_WHITESPACE)
 endif()
-
+# enforce c++17 for all tests
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++17")
 
 string(REPLACE "." ";" VERSION_LIST ${HIP_VERSION})
 list(GET VERSION_LIST 0 HIP_VERSION_MAJOR)

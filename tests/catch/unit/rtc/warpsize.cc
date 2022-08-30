@@ -50,7 +50,7 @@ TEST_CASE("Unit_hiprtc_warpsize") {
 
   hipDeviceProp_t props;
   int device = 0;
-  hipGetDeviceProperties(&props, device);
+  HIP_CHECK(hipGetDeviceProperties(&props, device));
 #ifdef __HIP_PLATFORM_AMD__
   std::string sarg = std::string("--gpu-architecture=") + props.gcnArchName;
 #else
