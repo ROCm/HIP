@@ -16,7 +16,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-
+/*
+Testcase Scenarios :
+Unit_hipStreamWaitEvent_Negative - Test unsuccessful hipStreamWaitEvent when either event or flags are invalid
+Unit_hipStreamWaitEvent_UninitializedStream_Negative - Test unsuccessful hipStreamWaitEvent when stream is uninitialized
+Unit_hipStreamWaitEvent_Default - Test simple waiting for an event with hipStreamWaitEvent api
+Unit_hipStreamWaitEvent_DifferentStreams - Test waiting for an event on a different stream with hipStreamWaitEvent api
+*/
 
 #include <hip_test_common.hh>
 
@@ -59,6 +65,19 @@ TEST_CASE("Unit_hipStreamWaitEvent_Negative") {
   }
 }
 
+#if !HT_NVIDIA
+TEST_CASE("Unit_hipStreamWaitEvent_UninitializedStream_Negative") {
+  hipStream_t stream{reinterpret_cast<hipStream_t>(0xFFFF)};
+  hipEvent_t event{nullptr};
+
+  HIP_CHECK(hipEventCreate(&event));
+
+  HIP_CHECK_ERROR(hipStreamWaitEvent(stream, event, 0), hipErrorInvalidHandle);
+
+  HIP_CHECK(hipEventDestroy(event));
+}
+#endif
+
 // Since we can not use atomic*_system on every gpu, we will use wait based on clock rate.
 // This wont be accurate since clock rate of a GPU varies depending on many variables including
 // thermals, load, utilization
@@ -72,6 +91,35 @@ __global__ void waitKernel(int clockRate, int seconds) {
       return;
     }
   }
+}
+
+TEST_CASE("Unit_hipStreamWaitEvent_Default") {
+  hipStream_t stream{nullptr};
+  hipEvent_t waitEvent{nullptr};
+
+  HIP_CHECK(hipStreamCreate(&stream));
+  HIP_CHECK(hipEventCreate(&waitEvent));
+
+  REQUIRE(stream != nullptr);
+  REQUIRE(waitEvent != nullptr);
+
+  hipDeviceProp_t prop{};
+  HIP_CHECK(hipGetDeviceProperties(&prop, 0));
+  auto clockRate = prop.clockRate;
+
+  waitKernel<<<1, 1, 0, stream>>>(clockRate, 2);  // Wait for 2 seconds
+
+  HIP_CHECK(hipEventRecord(waitEvent, stream));
+
+  // Make sure stream is waiting for data to be set
+  HIP_CHECK_ERROR(hipEventQuery(waitEvent), hipErrorNotReady);
+
+  HIP_CHECK(hipStreamWaitEvent(stream, waitEvent, 0));
+
+  HIP_CHECK(hipStreamSynchronize(stream));
+
+  HIP_CHECK(hipStreamDestroy(stream));
+  HIP_CHECK(hipEventDestroy(waitEvent));
 }
 
 TEST_CASE("Unit_hipStreamWaitEvent_DifferentStreams") {
@@ -92,7 +140,7 @@ TEST_CASE("Unit_hipStreamWaitEvent_DifferentStreams") {
   auto clockRate = prop.clockRate;
 
   waitKernel<<<1, 1, 0, blockedStreamA>>>(clockRate,
-                                          3);  // wait for 5 seconds
+                                          3);  // wait for 3 seconds
   HIP_CHECK(hipEventRecord(waitEvent, blockedStreamA));
 
   // Make sure stream is waiting for data to be set
@@ -102,12 +150,12 @@ TEST_CASE("Unit_hipStreamWaitEvent_DifferentStreams") {
 
   waitKernel<<<1, 1, 0, streamBlockedOnStreamA>>>(clockRate, 2);  // Wait for 2 seconds
 
-  // Make sure stream is waiting for event on blockedStreamA
-  HIP_CHECK_ERROR(hipStreamQuery(streamBlockedOnStreamA), hipErrorNotReady);
-
   HIP_CHECK(hipStreamSynchronize(unblockingStream));
 
   HIP_CHECK(hipStreamSynchronize(blockedStreamA));
+
+  // Make sure streamBlockedOnStreamA waited for event on blockedStreamA
+  HIP_CHECK_ERROR(hipStreamQuery(streamBlockedOnStreamA), hipErrorNotReady);
   HIP_CHECK(hipStreamSynchronize(streamBlockedOnStreamA));
 
   // Check that both streams have finished
