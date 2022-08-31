@@ -26,8 +26,6 @@ Unit_hipDeviceGetStreamPriorityRange_Default - Check if device stream piority ra
 
 #include <hip_test_common.hh>
 
-namespace hipDeviceGetStreamPriorityRangeTests {
-
 TEST_CASE("Unit_hipDeviceGetStreamPriorityRange_Default") {
   int priority_low = 0;
   int priority_high = 0;
@@ -37,5 +35,3 @@ TEST_CASE("Unit_hipDeviceGetStreamPriorityRange_Default") {
 
   REQUIRE(priority_low >= priority_high);
 }
-
-} // namespace hipDeviceGetStreamPriorityRangeTests
