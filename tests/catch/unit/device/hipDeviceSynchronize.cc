@@ -44,6 +44,10 @@ static __global__ void Iter(int* Ad, int num) {
 }
 
 TEST_CASE("Unit_hipDeviceSynchronize_Positive_Empty_Streams") {
+  const auto device = GENERATE(range(0, HipTest::getDeviceCount()));
+  HIP_CHECK(hipSetDevice(device));
+  INFO("Current device: " << device);
+
   hipStream_t stream;
   HIP_CHECK(hipStreamCreate(&stream));
   HIP_CHECK(hipDeviceSynchronize());
@@ -52,6 +56,10 @@ TEST_CASE("Unit_hipDeviceSynchronize_Positive_Empty_Streams") {
 }
 
 TEST_CASE("Unit_hipDeviceSynchronize_Positive_Nullstream") {
+  const auto device = GENERATE(range(0, HipTest::getDeviceCount()));
+  HIP_CHECK(hipSetDevice(device));
+  INFO("Current device: " << device);
+
   int *A_h = nullptr, *A_d = nullptr;
   HIP_CHECK(hipHostMalloc(reinterpret_cast<void**>(&A_h), _SIZE, hipHostMallocDefault));
   A_h[0] = 1;
