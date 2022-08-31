@@ -27,16 +27,18 @@ THE SOFTWARE.
 TEST_CASE("Unit_hipExtGetLinkTypeAndHopCount_Positive_Basic") {
   const auto device1 = GENERATE(range(0, HipTest::getDeviceCount()));
   const auto device2 = GENERATE(range(0, HipTest::getDeviceCount()));
+
+  if (device1 == device2) {
+    return;
+  }
+
   uint32_t link_type1 = -1, hop_count1 = -1;
   uint32_t link_type2 = -1, hop_count2 = -1;
 
   HIP_CHECK(hipExtGetLinkTypeAndHopCount(device1, device2, &link_type1, &hop_count1));
   HIP_CHECK(hipExtGetLinkTypeAndHopCount(device2, device1, &link_type2, &hop_count2));
 
-  if (device1 == device2)
-    REQUIRE(hop_count1 == 0);
-  else
-    REQUIRE(hop_count1 >= 0);
+  REQUIRE(hop_count1 > 0);
 
   REQUIRE(hop_count1 == hop_count2);
   REQUIRE(link_type1 == link_type2);
@@ -44,6 +46,11 @@ TEST_CASE("Unit_hipExtGetLinkTypeAndHopCount_Positive_Basic") {
 
 TEST_CASE("Unit_hipExtGetLinkTypeAndHopCount_Negative_Parameters") {
   uint32_t link_type, hop_count;
+  SECTION("same device") {
+    HIP_CHECK_ERROR(hipExtGetLinkTypeAndHopCount(0, 0, &link_type, &hop_count),
+                    hipErrorInvalidValue);
+  }
+
   SECTION("device ordinance 1 too large") {
     HIP_CHECK_ERROR(
         hipExtGetLinkTypeAndHopCount(HipTest::getDeviceCount(), 0, &link_type, &hop_count),
@@ -57,36 +64,37 @@ TEST_CASE("Unit_hipExtGetLinkTypeAndHopCount_Negative_Parameters") {
   }
 
   SECTION("device ordinances too large") {
-    HIP_CHECK_ERROR(hipExtGetLinkTypeAndHopCount(HipTest::getDeviceCount(),
-                                                 HipTest::getDeviceCount(), &link_type, &hop_count),
-                    hipErrorInvalidDevice);
+    HIP_CHECK_ERROR(
+        hipExtGetLinkTypeAndHopCount(HipTest::getDeviceCount(), HipTest::getDeviceCount() + 1,
+                                     &link_type, &hop_count),
+        hipErrorInvalidDevice);
   }
 
   SECTION("device 1 < 0") {
     HIP_CHECK_ERROR(hipExtGetLinkTypeAndHopCount(-1, 0, &link_type, &hop_count),
-                    hipErrorInvalidDevice);
+                    hipErrorInvalidValue);
   }
 
   SECTION("device 2 < 0") {
     HIP_CHECK_ERROR(hipExtGetLinkTypeAndHopCount(0, -1, &link_type, &hop_count),
-                    hipErrorInvalidDevice);
+                    hipErrorInvalidValue);
   }
 
   SECTION("both devices < 0") {
-    HIP_CHECK_ERROR(hipExtGetLinkTypeAndHopCount(-1, -1, &link_type, &hop_count),
-                    hipErrorInvalidDevice);
+    HIP_CHECK_ERROR(hipExtGetLinkTypeAndHopCount(-1, -2, &link_type, &hop_count),
+                    hipErrorInvalidValue);
   }
 
   SECTION("linktype == nullptr") {
-    HIP_CHECK_ERROR(hipExtGetLinkTypeAndHopCount(0, 0, nullptr, &hop_count), hipErrorInvalidValue);
+    HIP_CHECK_ERROR(hipExtGetLinkTypeAndHopCount(0, 1, nullptr, &hop_count), hipErrorInvalidValue);
   }
 
   SECTION("hopcount == nullptr") {
-    HIP_CHECK_ERROR(hipExtGetLinkTypeAndHopCount(0, 0, &link_type, nullptr), hipErrorInvalidValue);
+    HIP_CHECK_ERROR(hipExtGetLinkTypeAndHopCount(0, 1, &link_type, nullptr), hipErrorInvalidValue);
   }
 
   SECTION("linktype and hopcount == nullptr") {
-    HIP_CHECK_ERROR(hipExtGetLinkTypeAndHopCount(0, 0, nullptr, nullptr), hipErrorInvalidValue);
+    HIP_CHECK_ERROR(hipExtGetLinkTypeAndHopCount(0, 1, nullptr, nullptr), hipErrorInvalidValue);
   }
 }
 #endif
