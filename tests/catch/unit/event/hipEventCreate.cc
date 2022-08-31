@@ -26,8 +26,6 @@ Unit_hipEventCreate_Positive - Test simple event creation with hipEventCreate ap
 
 #include <hip_test_common.hh>
 
-namespace hipEventCreateTests {
-
 TEST_CASE("Unit_hipEventCreate_Positive") {
   int id = GENERATE(range(0, HipTest::getDeviceCount()));
   HIP_CHECK(hipSetDevice(id));
@@ -38,6 +36,3 @@ TEST_CASE("Unit_hipEventCreate_Positive") {
 
   HIP_CHECK(hipEventDestroy(event));
 }
-
-}  // namespace hipEventCreateTests
-
