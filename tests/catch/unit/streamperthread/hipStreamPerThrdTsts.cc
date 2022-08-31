@@ -495,10 +495,10 @@ TEST_CASE("Unit_hipStreamPerThread_CoopLaunchMDev") {
 
     // Calculate the device occupancy to know how many blocks can be
     // run concurrently
-    hipGetDeviceProperties(&deviceProp[i], 0);
+    HIP_CHECK(hipGetDeviceProperties(&deviceProp[i], 0));
     if (!deviceProp[i].cooperativeMultiDeviceLaunch) {
       WARN("Device doesn't support cooperative launch!");
-      SUCCEED("");
+      return;
     }
     size_t SIZE = copySizeInDwords * sizeof(uint);
 
@@ -511,7 +511,7 @@ TEST_CASE("Unit_hipStreamPerThread_CoopLaunchMDev") {
     }
     HIPCHECK(hipMemcpy(dA[i], &init[i * copySizeInDwords] , SIZE,
              hipMemcpyHostToDevice));
-    hipDeviceSynchronize();
+    HIP_CHECK(hipDeviceSynchronize());
   }
 
   dim3 dimBlock;
@@ -560,7 +560,7 @@ TEST_CASE("Unit_hipStreamPerThread_CoopLaunchMDev") {
     }
 
     system_clock::time_point start = system_clock::now();
-    hipLaunchCooperativeKernelMultiDevice(launchParamsList, nGpu, 0);
+    HIP_CHECK(hipLaunchCooperativeKernelMultiDevice(launchParamsList, nGpu, 0));
     for (int i = 0; i < nGpu; i++) {
       HIP_CHECK(hipSetDevice(i));
       HIP_CHECK(hipDeviceSynchronize());
@@ -586,11 +586,11 @@ TEST_CASE("Unit_hipStreamPerThread_CoopLaunchMDev") {
   WARN("finished computation at " << std::ctime(&end_time));
   WARN("elapsed time: " << time << "s\n");
 
-  hipSetDevice(0);
-  hipFree(dC);
+  HIP_CHECK(hipSetDevice(0));
+  HIP_CHECK(hipFree(dC));
   for (int i = 0; i < nGpu; i++) {
-    hipFree(dA[i]);
-    hipFree(dB[i]);
+    HIP_CHECK(hipFree(dA[i]));
+    HIP_CHECK(hipFree(dB[i]));
   }
   delete [] init;
 }

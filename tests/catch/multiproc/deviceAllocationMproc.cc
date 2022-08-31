@@ -246,7 +246,7 @@ static bool testDeviceMemMulProc(bool testmalloc) {
     }
     // close the read-descriptor
     close(fd[0]);
-    hipFree(result_d);
+    HIP_CHECK(hipFree(result_d));
     free(result_h);
     // wait for child exit
     wait(NULL);
@@ -279,7 +279,7 @@ static bool testDeviceMemMulProc(bool testmalloc) {
     write(fd[1], result_h, sizeof(int));
     // close the write descriptor:
     close(fd[1]);
-    hipFree(result_d);
+    HIP_CHECK(hipFree(result_d));
     free(result_h);
     exit(0);
   }

@@ -93,7 +93,7 @@ void runTest(const int width, const int height, const int depth, const float off
   hipTextureObject_t textureObject = 0;
   hipError_t res = hipCreateTextureObject(&textureObject, &resDesc, &texDesc, NULL);
   if (res != hipSuccess) {
-    hipFreeArray(arr);
+    HIP_CHECK(hipFreeArray(arr));
     free(hData);
     if (res == hipErrorNotSupported && isGfx90a) {
       printf("gfx90a doesn't support 3D linear filter! Skipped!\n");
@@ -105,8 +105,8 @@ void runTest(const int width, const int height, const int depth, const float off
   }
 
   float *dData = nullptr;
-  hipMalloc((void**) &dData, size);
-  hipMemset(dData, 0, size);
+  HIP_CHECK(hipMalloc((void**) &dData, size));
+  HIP_CHECK(hipMemset(dData, 0, size));
   dim3 dimBlock(8, 8, 8); // 512 threads
   dim3 dimGrid((width + dimBlock.x - 1) / dimBlock.x, (height + dimBlock.y -1)/ dimBlock.y,
                (depth + dimBlock.z - 1) / dimBlock.z);
@@ -114,11 +114,11 @@ void runTest(const int width, const int height, const int depth, const float off
   hipLaunchKernelGGL(tex3DKernel<normalizedCoords>, dimGrid, dimBlock, 0, 0, dData,
                      textureObject, width, height, depth, offsetX, offsetY, offsetZ);
 
-  hipDeviceSynchronize();
+  HIP_CHECK(hipDeviceSynchronize());
 
   float *hOutputData = (float*) malloc(size);
   memset(hOutputData, 0, size);
-  hipMemcpy(hOutputData, dData, size, hipMemcpyDeviceToHost);
+  HIP_CHECK(hipMemcpy(hOutputData, dData, size, hipMemcpyDeviceToHost));
 
   for (int i = 0; i < depth; i++) {
     for (int j = 0; j < height; j++) {
@@ -137,10 +137,10 @@ void runTest(const int width, const int height, const int depth, const float off
     }
   }
 line1:
-  hipDestroyTextureObject(textureObject);
+  HIP_CHECK(hipDestroyTextureObject(textureObject));
   free(hOutputData);
-  hipFree(dData);
-  hipFreeArray(arr);
+  HIP_CHECK(hipFree(dData));
+  HIP_CHECK(hipFreeArray(arr));
   free(hData);
   REQUIRE(result);
 

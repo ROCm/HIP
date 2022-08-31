@@ -161,12 +161,12 @@ TEST_CASE("Unit_hipGraphAddMemcpyNode_Negative") {
     myparams.dstArray = devArray2;
     ret = hipGraphAddMemcpyNode(&memcpyNode, graph, nullptr, 0, &myparams);
     REQUIRE(hipErrorInvalidValue == ret);
-    hipFreeArray(devArray2);
+    HIP_CHECK(hipFreeArray(devArray2));
   }
 
   HIP_CHECK(hipGraphDestroy(graph));
   HIP_CHECK(hipStreamDestroy(streamForGraph));
-  hipFreeArray(devArray1);
+  HIP_CHECK(hipFreeArray(devArray1));
   free(hData);
   free(hOutputData);
 }
@@ -268,8 +268,8 @@ static void validateMemcpyNode3DArray(bool peerAccess = false) {
   HIP_CHECK(hipGraphExecDestroy(graphExec));
   HIP_CHECK(hipGraphDestroy(graph));
   HIP_CHECK(hipStreamDestroy(streamForGraph));
-  hipFreeArray(devArray1);
-  hipFreeArray(devArray2);
+  HIP_CHECK(hipFreeArray(devArray1));
+  HIP_CHECK(hipFreeArray(devArray2));
   free(hData);
   free(hOutputData);
 }
@@ -369,8 +369,8 @@ static void validateMemcpyNode2DArray(bool peerAccess = false) {
   HIP_CHECK(hipGraphExecDestroy(graphExec));
   HIP_CHECK(hipGraphDestroy(graph));
   HIP_CHECK(hipStreamDestroy(streamForGraph));
-  hipFreeArray(devArray1);
-  hipFreeArray(devArray2);
+  HIP_CHECK(hipFreeArray(devArray1));
+  HIP_CHECK(hipFreeArray(devArray2));
 }
 
 static void validateMemcpyNode1DArray(bool peerAccess = false) {
@@ -464,8 +464,8 @@ static void validateMemcpyNode1DArray(bool peerAccess = false) {
   HIP_CHECK(hipGraphExecDestroy(graphExec));
   HIP_CHECK(hipGraphDestroy(graph));
   HIP_CHECK(hipStreamDestroy(streamForGraph));
-  hipFreeArray(devArray1);
-  hipFreeArray(devArray2);
+  HIP_CHECK(hipFreeArray(devArray1));
+  HIP_CHECK(hipFreeArray(devArray2));
 }
 
 /**

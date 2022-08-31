@@ -98,13 +98,13 @@ TEST_CASE("Unit_hiprtc_saxpy") {
   void* config[] = {HIP_LAUNCH_PARAM_BUFFER_POINTER, &args, HIP_LAUNCH_PARAM_BUFFER_SIZE, &size,
                     HIP_LAUNCH_PARAM_END};
 
-  hipModuleLaunchKernel(kernel, NUM_BLOCKS, 1, 1, NUM_THREADS, 1, 1, 0, nullptr, nullptr, config);
+  HIP_CHECK(hipModuleLaunchKernel(kernel, NUM_BLOCKS, 1, 1, NUM_THREADS, 1, 1, 0, nullptr, nullptr, config));
 
   HIP_CHECK(hipMemcpy(hOut.get(), dOut, bufferSize, hipMemcpyDeviceToHost));
 
-  hipFree(dX);
-  hipFree(dY);
-  hipFree(dOut);
+  HIP_CHECK(hipFree(dX));
+  HIP_CHECK(hipFree(dY));
+  HIP_CHECK(hipFree(dOut));
 
   HIP_CHECK(hipModuleUnload(module));
 

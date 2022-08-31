@@ -93,6 +93,6 @@ TEMPLATE_TEST_CASE("Unit_hipTexObjPitch_texture2D", "", float, int,
   HipTest::checkArray(A, B, SIZE_H, SIZE_W);
   delete []A;
   delete []B;
-  hipFree(devPtrA);
-  hipFree(devPtrB);
+  HIP_CHECK(hipFree(devPtrA));
+  HIP_CHECK(hipFree(devPtrB));
 }
