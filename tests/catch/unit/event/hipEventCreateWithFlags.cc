@@ -26,8 +26,6 @@ Unit_hipEventCreateWithFlags_Positive - Test simple event creation with hipEvent
 
 #include <hip_test_common.hh>
 
-namespace hipEventCreateWithFlagsTests {
-
 TEST_CASE("Unit_hipEventCreateWithFlags_Positive") {
 
 #if HT_AMD
@@ -44,6 +42,3 @@ TEST_CASE("Unit_hipEventCreateWithFlags_Positive") {
 
   HIP_CHECK(hipEventDestroy(event));
 }
-
-}  // namespace hipEventCreateWithFlagsTests
-
