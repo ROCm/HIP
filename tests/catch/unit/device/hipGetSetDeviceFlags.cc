@@ -151,7 +151,7 @@ TEST_CASE("Unit_hipGetDeviceFlags_Positive_Context") {
   const unsigned int flags =
       GENERATE_COPY(from_range(std::begin(validFlags), std::end(validFlags)));
 
-  hipInit(0);
+  HIP_CHECK(hipInit(0));
 
   hipCtx_t ctx;
   HIP_CHECK(hipCtxCreate(&ctx, flags, 0));
@@ -161,6 +161,6 @@ TEST_CASE("Unit_hipGetDeviceFlags_Positive_Context") {
 
   REQUIRE(actual_flags == flags);
 
-  hipCtxPopCurrent(&ctx);
-  hipCtxDestroy(ctx);
+  HIP_CHECK(hipCtxPopCurrent(&ctx));
+  HIP_CHECK(hipCtxDestroy(ctx));
 }
