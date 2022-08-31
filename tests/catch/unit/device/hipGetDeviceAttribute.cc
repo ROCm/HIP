@@ -369,10 +369,13 @@ TEST_CASE("Unit_hipDeviceGetAttribute_NegTst") {
                                 device));
   }
 }
+
 template <size_t n>
 using AttributeToStringMap = std::array<std::pair<hipDeviceAttribute_t, const char*>, n>;
 
-static constexpr AttributeToStringMap<55> kCommonAttributes{{
+namespace {
+
+constexpr AttributeToStringMap<55> kCommonAttributes{{
     {hipDeviceAttributeEccEnabled, "hipDeviceAttributeEccEnabled"},
     {hipDeviceAttributeCanMapHostMemory, "hipDeviceAttributeCanMapHostMemory"},
     {hipDeviceAttributeClockRate, "hipDeviceAttributeClockRate"},
@@ -439,7 +442,7 @@ static constexpr AttributeToStringMap<55> kCommonAttributes{{
 }};
 
 #if HT_NVIDIA
-static constexpr AttributeToStringMap<34> kCudaOnlyAttributes{
+constexpr AttributeToStringMap<34> kCudaOnlyAttributes{
     {{hipDeviceAttributeAccessPolicyMaxWindowSize, "hipDeviceAttributeAccessPolicyMaxWindowSize"},
      {hipDeviceAttributeAsyncEngineCount, "hipDeviceAttributeAsyncEngineCount"},
      {hipDeviceAttributeCanUseHostPointerForRegisteredMem,
@@ -479,41 +482,44 @@ static constexpr AttributeToStringMap<34> kCudaOnlyAttributes{
 #endif
 
 #if HT_AMD
-static constexpr AttributeToStringMap<24> kAmdOnlyAttributes{
-    {{hipDeviceAttributeClockInstructionRate, "hipDeviceAttributeClockInstructionRate"},
-     {hipDeviceAttributeArch, "hipDeviceAttributeArch"},
-     {hipDeviceAttributeMaxSharedMemoryPerMultiprocessor,
-      "hipDeviceAttributeMaxSharedMemoryPerMultiprocessor"},
-     {hipDeviceAttributeGcnArch, "hipDeviceAttributeGcnArch"},
-     {hipDeviceAttributeGcnArchName, "hipDeviceAttributeGcnArchName"},
-     {hipDeviceAttributeHdpMemFlushCntl, "hipDeviceAttributeHdpMemFlushCntl"},
-     {hipDeviceAttributeHdpRegFlushCntl, "hipDeviceAttributeHdpRegFlushCntl"},
-     {hipDeviceAttributeCooperativeMultiDeviceUnmatchedFunc,
-      "hipDeviceAttributeCooperativeMultiDeviceUnmatchedFunc"},
-     {hipDeviceAttributeCooperativeMultiDeviceUnmatchedGridDim,
-      "hipDeviceAttributeCooperativeMultiDeviceUnmatchedGridDim"},
-     {hipDeviceAttributeCooperativeMultiDeviceUnmatchedBlockDim,
-      "hipDeviceAttributeCooperativeMultiDeviceUnmatchedBlockDim"},
-     {hipDeviceAttributeCooperativeMultiDeviceUnmatchedSharedMem,
-      "hipDeviceAttributeCooperativeMultiDeviceUnmatchedSharedMem"},
-     {hipDeviceAttributeIsLargeBar, "hipDeviceAttributeIsLargeBar"},
-     {hipDeviceAttributeAsicRevision, "hipDeviceAttributeAsicRevision"},
-     {hipDeviceAttributeCanUseStreamWaitValue, "hipDeviceAttributeCanUseStreamWaitValue"},
-     {hipDeviceAttributeImageSupport, "hipDeviceAttributeImageSupport"},
-     {hipDeviceAttributePhysicalMultiProcessorCount,
-      "hipDeviceAttributePhysicalMultiProcessorCount"},
-     {hipDeviceAttributeFineGrainSupport, "hipDeviceAttributeFineGrainSupport"},
-     {hipDeviceAttributeWallClockRate, "hipDeviceAttributeWallClockRate"}}};
+constexpr AttributeToStringMap<17> kAmdOnlyAttributes{{
+    {hipDeviceAttributeClockInstructionRate, "hipDeviceAttributeClockInstructionRate"},
+    {hipDeviceAttributeArch, "hipDeviceAttributeArch"},
+    {hipDeviceAttributeMaxSharedMemoryPerMultiprocessor,
+     "hipDeviceAttributeMaxSharedMemoryPerMultiprocessor"},
+    {hipDeviceAttributeGcnArch, "hipDeviceAttributeGcnArch"},
+    {hipDeviceAttributeGcnArchName, "hipDeviceAttributeGcnArchName"},
+    {hipDeviceAttributeHdpMemFlushCntl, "hipDeviceAttributeHdpMemFlushCntl"},
+    {hipDeviceAttributeHdpRegFlushCntl, "hipDeviceAttributeHdpRegFlushCntl"},
+    {hipDeviceAttributeCooperativeMultiDeviceUnmatchedFunc,
+     "hipDeviceAttributeCooperativeMultiDeviceUnmatchedFunc"},
+    {hipDeviceAttributeCooperativeMultiDeviceUnmatchedGridDim,
+     "hipDeviceAttributeCooperativeMultiDeviceUnmatchedGridDim"},
+    {hipDeviceAttributeCooperativeMultiDeviceUnmatchedBlockDim,
+     "hipDeviceAttributeCooperativeMultiDeviceUnmatchedBlockDim"},
+    {hipDeviceAttributeCooperativeMultiDeviceUnmatchedSharedMem,
+     "hipDeviceAttributeCooperativeMultiDeviceUnmatchedSharedMem"},
+    {hipDeviceAttributeIsLargeBar, "hipDeviceAttributeIsLargeBar"},
+    {hipDeviceAttributeAsicRevision, "hipDeviceAttributeAsicRevision"},
+    {hipDeviceAttributeCanUseStreamWaitValue, "hipDeviceAttributeCanUseStreamWaitValue"},
+    {hipDeviceAttributeImageSupport, "hipDeviceAttributeImageSupport"},
+    {hipDeviceAttributePhysicalMultiProcessorCount,
+     "hipDeviceAttributePhysicalMultiProcessorCount"},
+    {hipDeviceAttributeFineGrainSupport, "hipDeviceAttributeFineGrainSupport"}
+    // {hipDeviceAttributeWallClockRate, "hipDeviceAttributeWallClockRate"}
+}};
 #endif
 
-static constexpr int w = 60;
+constexpr int kW = 60;
+
+}  // anonymous namespace
 
 template <size_t n> void printAttributes(const AttributeToStringMap<n>& attributes) {
   int attribute_value;
   hipError_t ret_val;
-  for (const auto& attribute : attributes) {
-    ret_val = hipDeviceGetAttribute(&attribute_value, attribute.first, 0);
-    std::cout << std::setw(w) << std::string(attribute.second).append(": ");
+  for (const auto& [attribute, name] : attributes) {
+    ret_val = hipDeviceGetAttribute(&attribute_value, attribute, 0);
+    std::cout << std::setw(kW) << std::string(name).append(": ");
     if (ret_val == hipSuccess)
       std::cout << attribute_value << "\n";
     else
@@ -528,8 +534,8 @@ TEST_CASE("Print_Out_Attributes") {
   HIP_CHECK(hipGetDeviceProperties(&properties, device));
 
   std::cout << std::left;
-  std::cout << std::setw(w) << "device#: " << device << "\n";
-  std::cout << std::setw(w) << "name: " << properties.name << "\n";
+  std::cout << std::setw(kW) << "device#: " << device << "\n";
+  std::cout << std::setw(kW) << "name: " << properties.name << "\n";
 
   printAttributes(kCommonAttributes);
 
@@ -543,7 +549,7 @@ TEST_CASE("Print_Out_Attributes") {
 
 #if HT_AMD
   std::cout << "\nAMD only\n";
-  std::cout << std::setw(w)
+  std::cout << std::setw(kW)
             << "--------------------------------------------------------------------------------"
             << "\n";
   printAttributes(kAmdOnlyAttributes);
