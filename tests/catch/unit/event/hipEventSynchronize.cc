@@ -30,8 +30,6 @@ Unit_hipEventSynchronize_NoEventRecord_Positive - Test synchronization of an eve
 #include <kernels.hh>
 #include <hip_test_checkers.hh>
 
-namespace hipEventSynchronizeTests {
-
 TEST_CASE("Unit_hipEventSynchronize_Default_Positive") {
   constexpr size_t N = 1024;
 
@@ -110,6 +108,3 @@ TEST_CASE("Unit_hipEventSynchronize_NoEventRecord_Positive") {
   HipTest::checkVectorADD(A_h, B_h, C_h, N, true);
   HipTest::freeArrays(A_d, B_d, C_d, A_h, B_h, C_h, false);
 }
-
-}  // namespace hipEventSynchronizeTests
-
