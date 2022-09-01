@@ -372,8 +372,7 @@ TEST_CASE("Unit_hipIpcEventHandle_ParameterValidation") {
     hipIpcEventHandle_t event_handle;
 
     HIP_CHECK(hipEventCreate(&event));
-    ret = hipIpcGetEventHandle(&event_handle, event);
-    REQUIRE((ret == hipErrorInvalidResourceHandle || ret == hipErrorInvalidContext));
+    HIP_CHECK_ERROR(hipIpcGetEventHandle(&event_handle, event), hipErrorInvalidResourceHandle);
   }
 }
 
