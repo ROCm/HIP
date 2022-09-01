@@ -48,6 +48,8 @@ TEST_CASE("Unit_hipIpcCloseMemHandle_Positive_Reference_Counting") {
     HIP_CHECK(hipIpcOpenMemHandle(&child_ptr1, handle, hipIpcMemLazyEnablePeerAccess));
     HIP_CHECK(hipIpcOpenMemHandle(&child_ptr2, handle, hipIpcMemLazyEnablePeerAccess));
 
+    REQUIRE(child_ptr1 == child_ptr2);
+
     HIP_CHECK(hipIpcCloseMemHandle(child_ptr1));
     hipPointerAttribute_t attributes;
     HIP_CHECK(hipPointerGetAttributes(&attributes, child_ptr1));
