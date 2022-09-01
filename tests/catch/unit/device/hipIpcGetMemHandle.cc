@@ -61,7 +61,7 @@ TEST_CASE("Unit_hipIpcGetMemHandle_Negative_Handle_For_Freed_Memory") {
   hipIpcMemHandle_t handle;
   HIP_CHECK(hipMalloc(&ptr, 1024));
   HIP_CHECK(hipFree(ptr));
-  HIP_CHECK_ERROR(hipIpcGetMemHandle(&handle, ptr), hipErrorInvalidValue);
+  HIP_CHECK_ERROR(hipIpcGetMemHandle(&handle, ptr), hipErrorInvalidDevicePointer);
 }
 
 TEST_CASE("Unit_hipIpcGetMemHandle_Negative_Out_Of_Bound_Pointer") {
@@ -69,7 +69,8 @@ TEST_CASE("Unit_hipIpcGetMemHandle_Negative_Out_Of_Bound_Pointer") {
   constexpr size_t n = 1024;
   hipIpcMemHandle_t handle;
   HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&ptr), n * sizeof(*ptr)));
-  CHECK(hipIpcGetMemHandle(&handle, reinterpret_cast<void*>(ptr + n)) == hipErrorInvalidValue);
+  HIP_CHECK_ERROR(hipIpcGetMemHandle(&handle, reinterpret_cast<void*>(ptr + n)),
+                  hipErrorInvalidDevicePointer);
   HIP_CHECK(hipFree(reinterpret_cast<void*>(ptr)));
 }
 
