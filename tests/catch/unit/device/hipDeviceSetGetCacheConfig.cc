@@ -1,45 +1,100 @@
 /*
-Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2022 Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
+
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANNTY OF ANY KIND, EXPRESS OR
-IMPLIED, INNCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANNY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER INN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR INN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
+#include <array>
+
 #include <hip_test_common.hh>
-/**
- * hipDeviceGetCacheConfig tests
- * Scenario1: Validates if pConfig = nullptr returns hip error code.
- * Scenario2: Validates if the value returned by hipDeviceGetCacheConfig is valid.
- */
-TEST_CASE("Unit_hipDeviceGetCacheConfig_NegTst") {
-  // Scenario1
-  REQUIRE_FALSE(hipSuccess == hipDeviceGetCacheConfig(nullptr));
+#include <threaded_zig_zag_test.hh>
+
+namespace {
+constexpr std::array<hipFuncCache_t, 4> kCacheConfigs{
+    hipFuncCachePreferNone, hipFuncCachePreferShared, hipFuncCachePreferL1,
+    hipFuncCachePreferEqual};
+}  // anonymous namespace
+
+
+TEST_CASE("Unit_hipDeviceSetCacheConfig_Positive_Basic") {
+  const auto cache_config =
+      GENERATE(from_range(std::begin(kCacheConfigs), std::end(kCacheConfigs)));
+  HIP_CHECK(hipDeviceSetCacheConfig(cache_config));
 }
 
-TEST_CASE("Unit_hipDeviceGetCacheConfig_FuncTst") {
-  hipFuncCache_t cacheConfig;
-  // Scenario2
-  HIP_CHECK(hipDeviceGetCacheConfig(&cacheConfig));
-  REQUIRE_FALSE(((cacheConfig != hipFuncCachePreferNone) &&
-                (cacheConfig != hipFuncCachePreferShared) &&
-                (cacheConfig != hipFuncCachePreferL1) &&
-                (cacheConfig != hipFuncCachePreferEqual)));
-  // This code exists to test the dummy implementation of
-  // hipDeviceSetCacheConfig.
-#if HT_NVIDIA
-  HIP_CHECK(hipDeviceSetCacheConfig(cacheConfig));
-#else
-  REQUIRE_FALSE(hipSuccess == hipDeviceSetCacheConfig(cacheConfig));
+TEST_CASE("Unit_hipDeviceGetCacheConfig_Positive_Default") {
+  hipFuncCache_t cache_config;
+  HIP_CHECK(hipDeviceGetCacheConfig(&cache_config));
+  REQUIRE(cache_config == hipFuncCachePreferNone);
+}
+
+TEST_CASE("Unit_hipDeviceGetCacheConfig_Positive_Basic") {
+  const auto cache_config =
+      GENERATE(from_range(std::begin(kCacheConfigs), std::end(kCacheConfigs)));
+
+  HIP_CHECK(hipDeviceSetCacheConfig(cache_config));
+  hipFuncCache_t returned_cache_config;
+  HIP_CHECK(hipDeviceGetCacheConfig(&returned_cache_config));
+
+#if HT_AMD
+  REQUIRE(returned_cache_config == hipFuncCachePreferNone);
+#elif HT_NVIDIA
+  REQUIRE(returned_cache_config == cache_config);
 #endif
+}
+
+TEST_CASE("Unit_hipDeviceGetCacheConfig_Positive_Threaded") {
+  class HipDeviceSetGetCacheConfigTest : public ThreadedZigZagTest<HipDeviceSetGetCacheConfigTest> {
+   public:
+    HipDeviceSetGetCacheConfigTest(const hipFuncCache_t cache_config)
+        : cache_config_{cache_config} {}
+
+    void TestPart2() { HIP_CHECK_THREAD(hipDeviceSetCacheConfig(cache_config_)); }
+
+    void TestPart3() {
+      hipFuncCache_t returned_cache_config;
+      HIP_CHECK(hipDeviceGetCacheConfig(&returned_cache_config));
+#if HT_AMD
+      REQUIRE(returned_cache_config == hipFuncCachePreferNone);
+#elif HT_NVIDIA
+      REQUIRE(returned_cache_config == cache_config_);
+#endif
+    }
+
+   private:
+    const hipFuncCache_t cache_config_;
+  };
+
+  const auto cache_config =
+      GENERATE(from_range(std::begin(kCacheConfigs), std::end(kCacheConfigs)));
+
+  HipDeviceSetGetCacheConfigTest test(cache_config);
+  test.run();
+}
+
+TEST_CASE("Unit_hipDeviceSetCacheConfig_Negative_Parameters") {
+#if HT_AMD
+  HIP_CHECK(hipDeviceSetCacheConfig(static_cast<hipFuncCache_t>(-1)));
+#elif HT_NVIDIA
+  HIP_CHECK_ERROR(hipDeviceSetCacheConfig(static_cast<hipFuncCache_t>(-1)), hipErrorInvalidValue);
+#endif
+}
+
+TEST_CASE("Unit_HipDeviceGetCacheConfig_Negative_Parameters") {
+  HIP_CHECK_ERROR(hipDeviceGetCacheConfig(nullptr), hipErrorInvalidValue);
 }
