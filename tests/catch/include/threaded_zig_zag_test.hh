@@ -98,6 +98,11 @@ template <typename T> class ThreadedZigZagTest {
     HIP_CHECK_THREAD_FINALIZE();
   }
 
+  void TestPart1() const {}
+  void TestPart2() const {}
+  void TestPart3() const {}
+  void TestPart4() const {}
+
  private:
   std::mutex mtx_;
   std::condition_variable cv_;
