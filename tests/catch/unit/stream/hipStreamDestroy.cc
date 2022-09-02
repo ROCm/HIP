@@ -27,12 +27,14 @@ TEST_CASE("Unit_hipStreamDestroy_Default") {
   HIP_CHECK(hipStreamDestroy(stream));
 }
 
+#if !HT_NVIDIA
 TEST_CASE("Unit_hipStreamDestroy_Negative_DoubleDestroy") {
   hipStream_t stream{};
   HIP_CHECK(hipStreamCreate(&stream));
   HIP_CHECK(hipStreamDestroy(stream));
   HIP_CHECK_ERROR(hipStreamDestroy(stream), hipErrorContextIsDestroyed);
 }
+#endif
 
 TEST_CASE("Unit_hipStreamDestroy_Negative_NullStream") {
   HIP_CHECK_ERROR(hipStreamDestroy(nullptr), hipErrorInvalidResourceHandle);
