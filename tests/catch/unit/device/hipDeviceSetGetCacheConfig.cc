@@ -41,6 +41,14 @@ TEST_CASE("Unit_hipDeviceSetCacheConfig_Positive_Basic") {
   HIP_CHECK(hipDeviceSetCacheConfig(cache_config));
 }
 
+TEST_CASE("Unit_hipDeviceSetCacheConfig_Negative_Parameters") {
+#if HT_AMD
+  HIP_CHECK(hipDeviceSetCacheConfig(static_cast<hipFuncCache_t>(-1)));
+#elif HT_NVIDIA
+  HIP_CHECK_ERROR(hipDeviceSetCacheConfig(static_cast<hipFuncCache_t>(-1)), hipErrorInvalidValue);
+#endif
+}
+
 TEST_CASE("Unit_hipDeviceGetCacheConfig_Positive_Default") {
   const auto device = GENERATE(range(0, HipTest::getDeviceCount()));
   HIP_CHECK(hipSetDevice(device));
@@ -55,7 +63,7 @@ TEST_CASE("Unit_hipDeviceGetCacheConfig_Positive_Basic") {
   const auto device = GENERATE(range(0, HipTest::getDeviceCount()));
   HIP_CHECK(hipSetDevice(device));
   INFO("Current device is: " << device);
-  
+
   const auto cache_config =
       GENERATE(from_range(std::begin(kCacheConfigs), std::end(kCacheConfigs)));
 
@@ -97,14 +105,6 @@ TEST_CASE("Unit_hipDeviceGetCacheConfig_Positive_Threaded") {
 
   HipDeviceSetGetCacheConfigTest test(cache_config);
   test.run();
-}
-
-TEST_CASE("Unit_hipDeviceSetCacheConfig_Negative_Parameters") {
-#if HT_AMD
-  HIP_CHECK(hipDeviceSetCacheConfig(static_cast<hipFuncCache_t>(-1)));
-#elif HT_NVIDIA
-  HIP_CHECK_ERROR(hipDeviceSetCacheConfig(static_cast<hipFuncCache_t>(-1)), hipErrorInvalidValue);
-#endif
 }
 
 TEST_CASE("Unit_HipDeviceGetCacheConfig_Negative_Parameters") {
