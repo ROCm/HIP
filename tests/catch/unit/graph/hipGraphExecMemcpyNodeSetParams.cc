@@ -144,8 +144,8 @@ TEST_CASE("Unit_hipGraphExecMemcpyNodeSetParams_Negative") {
   }
   HIP_CHECK(hipGraphExecDestroy(graphExec));
   HIP_CHECK(hipGraphDestroy(graph));
-  hipFreeArray(devArray);
-  hipFreeArray(devArray2);
+  HIP_CHECK(hipFreeArray(devArray));
+  HIP_CHECK(hipFreeArray(devArray2));
   free(hData);
 }
 
@@ -254,6 +254,6 @@ TEST_CASE("Unit_hipGraphExecMemcpyNodeSetParams_Functional") {
   HIP_CHECK(hipGraphExecDestroy(graphExec));
   HIP_CHECK(hipGraphDestroy(graph));
   HIP_CHECK(hipStreamDestroy(streamForGraph));
-  hipFreeArray(devArray1);
-  hipFreeArray(devArray2);
+  HIP_CHECK(hipFreeArray(devArray1));
+  HIP_CHECK(hipFreeArray(devArray2));
 }
