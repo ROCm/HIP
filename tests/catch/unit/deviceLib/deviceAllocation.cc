@@ -411,7 +411,7 @@ static bool TestAllocInAllThread(int test_type,
       break;
     }
   }
-  hipFree(outputVec_d);
+  HIP_CHECK(hipFree(outputVec_d));
   free(outputVec_h);
   return bPassed;
 }
@@ -443,7 +443,7 @@ static bool TestMemoryAccessInAllThread(int test_type, int thread_idx) {
       break;
     }
   }
-  hipFree(outputVec_d);
+  HIP_CHECK(hipFree(outputVec_d));
   free(outputVec_h);
   return bPassed;
 }
@@ -502,7 +502,7 @@ static bool TestMemoryAcrossMulKernels(int test_type,
       break;
     }
   }
-  hipFree(outputVec_d);
+  HIP_CHECK(hipFree(outputVec_d));
   free(outputVec_h);
   return bPassed;
 }
@@ -562,7 +562,7 @@ static bool TestDevMemAllocMulKerMulThrd(int test_type) {
       break;
     }
   }
-  hipFree(outputVec_d);
+  HIP_CHECK(hipFree(outputVec_d));
   free(outputVec_h);
   return bPassed;
 }
@@ -592,7 +592,7 @@ static bool TestMemoryAccessInAllThread_CmplxStr(int test_type) {
       break;
     }
   }
-  hipFree(result_d);
+  HIP_CHECK(hipFree(result_d));
   free(result_h);
   return bPassed;
 }
@@ -648,7 +648,7 @@ static bool TestMemoryAccessInAllThread_Union(int test_type) {
     }
     if (bPassed == false) break;
   }
-  hipFree(outputVec_d);
+  HIP_CHECK(hipFree(outputVec_d));
   free(outputVec_h);
   return bPassed;
 }
@@ -706,7 +706,7 @@ static bool TestAlloc_Load_SingleKer_AllocFree(int test_type,
   }
   HIP_CHECK(hipModuleUnload(Module));
   HIP_CHECK(hipStreamDestroy(stream));
-  hipFree(outputVec_d);
+  HIP_CHECK(hipFree(outputVec_d));
   free(outputVec_h);
   return bPassed;
 }
@@ -808,8 +808,8 @@ static bool TestAlloc_Load_MultKernels(int test_type,
   HIP_CHECK(hipModuleUnload(ModuleWrite));
   HIP_CHECK(hipModuleUnload(ModuleFree));
   HIP_CHECK(hipStreamDestroy(stream));
-  hipFree(dev_addr);
-  hipFree(outputVec_d);
+  HIP_CHECK(hipFree(dev_addr));
+  HIP_CHECK(hipFree(outputVec_d));
   free(outputVec_h);
   return bPassed;
 }
@@ -895,7 +895,7 @@ static bool TestMemoryAcrossMulKernelsUsingGraph(int test_type) {
   }
   HIP_CHECK(hipStreamDestroy(streamForGraph));
   HIP_CHECK(hipGraphExecDestroy(graphExec));
-  hipFree(outputVec_d);
+  HIP_CHECK(hipFree(outputVec_d));
   free(outputVec_h);
   return bPassed;
 }
@@ -924,7 +924,7 @@ static bool TestAllocInDeviceFunc(int test_type) {
       break;
     }
   }
-  hipFree(outputVec_d);
+  HIP_CHECK(hipFree(outputVec_d));
   free(outputVec_h);
   return bPassed;
 }
@@ -1367,7 +1367,7 @@ TEST_CASE("Unit_deviceAllocation_VirtualFunction") {
     }
   }
   REQUIRE(true == bPassed);
-  hipFree(outputVec_d);
+  HIP_CHECK(hipFree(outputVec_d));
   free(outputVec_h);
 }
 
