@@ -2391,9 +2391,9 @@ hipError_t hipEventElapsedTime(float* ms, hipEvent_t start, hipEvent_t stop);
  * @returns #hipSuccess, #hipErrorNotReady, #hipErrorInvalidHandle, #hipErrorInvalidValue,
  * #hipErrorNotInitialized, #hipErrorLaunchFailure
  *
- * Query the status of the specified event.  This function will return #hipErrorNotReady if all
+ * Query the status of the specified event.  This function will return #hipSuccess if all
  * commands in the appropriate stream (specified to hipEventRecord()) have completed.  If that work
- * has not completed, or if hipEventRecord() was not called on the event, then #hipSuccess is
+ * has not completed, or if hipEventRecord() was not called on the event, then #hipErrorNotReady is
  * returned.
  *
  * @see hipEventCreate, hipEventCreateWithFlags, hipEventRecord, hipEventDestroy,
@@ -4957,7 +4957,10 @@ hipError_t hipBindTextureToMipmappedArray(
  * @param [in] pTexDesc  pointer to texture descriptor
  * @param [in] pResViewDesc  pointer to resource view descriptor
  *
- * @returns hipSuccess, hipErrorInvalidValue
+ * @returns hipSuccess, hipErrorInvalidValue, hipErrorNotSupported, hipErrorOutOfMemory
+ *
+ * @note 3D liner filter isn't supported on GFX90A boards, on which the API @p hipCreateTextureObject will
+ * return hipErrorNotSupported.
  *
  */
 hipError_t hipCreateTextureObject(
