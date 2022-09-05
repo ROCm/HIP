@@ -22,51 +22,47 @@ THE SOFTWARE.
 
 #include <hip_test_common.hh>
 #include <hip/hip_runtime_api.h>
+#include <threaded_zig_zag_test.hh>
+
+#if HT_AMD
+
+static inline bool CheckMemPoolSupport(const int device) {
+  int mem_pool_support = 0;
+  HIP_CHECK(
+      hipDeviceGetAttribute(&mem_pool_support, hipDeviceAttributeMemoryPoolsSupported, device));
+  if (!mem_pool_support) {
+    HipTest::HIP_SKIP_TEST("Test only runs on devices with memory pool support");
+    return false;
+  }
+  return true;
+}
+
+static inline hipMemPool_t CreateMemPool(const int device) {
+  hipMemPoolProps kPoolProps;
+  kPoolProps.allocType = hipMemAllocationTypePinned;
+  kPoolProps.handleTypes = hipMemHandleTypeNone;
+  kPoolProps.location.type = hipMemLocationTypeDevice;
+  kPoolProps.location.id = device;
+  kPoolProps.win32SecurityAttributes = nullptr;
+  memset(kPoolProps.reserved, 0, sizeof(kPoolProps.reserved));
+
+  hipMemPool_t mem_pool;
+  HIP_CHECK(hipMemPoolCreate(&mem_pool, &kPoolProps));
+
+  return mem_pool;
+}
 
 TEST_CASE("Unit_hipDeviceSetMemPool_Positive_Basic") {
   const int device = GENERATE(range(0, HipTest::getDeviceCount()));
 
-  int mem_pool_support = 0;
-  HIP_CHECK(
-      hipDeviceGetAttribute(&mem_pool_support, hipDeviceAttributeMemoryPoolsSupported, device));
-  if (!mem_pool_support) {
-    HipTest::HIP_SKIP_TEST("Test only runs on devices with memory pool support");
+  if (!CheckMemPoolSupport(device)) {
     return;
   }
 
-#if HT_NVIDIA
-  hipMemPool_t mem_pool;
-  HIP_CHECK(hipDeviceGetDefaultMemPool(&mem_pool, device));
+  hipMemPool_t mem_pool = CreateMemPool(device);
   HIP_CHECK(hipDeviceSetMemPool(device, mem_pool));
-#endif
 
-#if HT_AMD
-// TODO
-#endif
-}
-
-TEST_CASE("Unit_hipDeviceGetMemPool_Positive_Basic") {
-  const int device = GENERATE(range(0, HipTest::getDeviceCount()));
-
-  int mem_pool_support = 0;
-  HIP_CHECK(
-      hipDeviceGetAttribute(&mem_pool_support, hipDeviceAttributeMemoryPoolsSupported, device));
-  if (!mem_pool_support) {
-    HipTest::HIP_SKIP_TEST("Test only runs on devices with memory pool support");
-    return;
-  }
-
-#if HT_NVIDIA
-  hipMemPool_t mem_pool;
-  HIP_CHECK(hipDeviceGetMemPool(&mem_pool, device));
-  REQUIRE(mem_pool != nullptr);
-#endif
-
-#if HT_AMD
-// TODO
-// Mempool management APIs seem to still be unsupported on NVIDIA platforms in ROCm 5.2.3 despite
-// appearances
-#endif
+  HIP_CHECK(hipMemPoolDestroy(mem_pool));
 }
 
 TEST_CASE("Unit_hipDeviceSetMemPool_Negative_Parameters") {
@@ -86,6 +82,69 @@ TEST_CASE("Unit_hipDeviceSetMemPool_Negative_Parameters") {
   }
 }
 
+TEST_CASE("Unit_hipDeviceGetMemPool_Positive_Default") {
+  const int device = GENERATE(range(0, HipTest::getDeviceCount()));
+
+  if (!CheckMemPoolSupport(device)) {
+    return;
+  }
+
+  hipMemPool_t default_mem_pool;
+  HIP_CHECK(hipDeviceGetDefaultMemPool(&default_mem_pool, device));
+
+  hipMemPool_t mem_pool;
+  HIP_CHECK(hipDeviceGetMemPool(&mem_pool, device));
+
+  REQUIRE(mem_pool == default_mem_pool);
+}
+
+TEST_CASE("Unit_hipDeviceGetMemPool_Positive_Basic") {
+  const int device = GENERATE(range(0, HipTest::getDeviceCount()));
+
+  if (!CheckMemPoolSupport(device)) {
+    return;
+  }
+
+  hipMemPool_t mem_pool = CreateMemPool(device);
+  HIP_CHECK(hipDeviceSetMemPool(device, mem_pool));
+
+  hipMemPool_t returned_mem_pool;
+  HIP_CHECK(hipDeviceGetMemPool(&returned_mem_pool, device));
+
+  REQUIRE(returned_mem_pool == mem_pool);
+
+  HIP_CHECK(hipMemPoolDestroy(mem_pool));
+}
+
+TEST_CASE("Unit_hipDeviceGetMemPool_Positive_Threaded") {
+  class HipDeviceGetMemPoolTest : public ThreadedZigZagTest<HipDeviceGetMemPoolTest> {
+   public:
+    void TestPart2() {
+      mem_pool_ = CreateMemPool(0);
+      HIP_CHECK_THREAD(hipDeviceSetMemPool(0, mem_pool_));
+    }
+
+    void TestPart3() {
+      hipMemPool_t returned_mem_pool;
+      HIP_CHECK(hipDeviceGetMemPool(&returned_mem_pool, 0));
+
+      REQUIRE(returned_mem_pool == mem_pool_);
+    }
+
+    void TestPart4() { HIP_CHECK_THREAD(hipMemPoolDestroy(mem_pool_)); }
+
+   private:
+    hipMemPool_t mem_pool_;
+  };
+
+  if (!CheckMemPoolSupport(0)) {
+    return;
+  }
+
+  HipDeviceGetMemPoolTest test;
+  test.run();
+}
+
 TEST_CASE("Unit_hipDeviceGetMemPool_Negative_Parameters") {
   hipMemPool_t mem_pool;
 
@@ -102,3 +161,5 @@ TEST_CASE("Unit_hipDeviceGetMemPool_Negative_Parameters") {
                     hipErrorInvalidValue);
   }
 }
+
+#endif
