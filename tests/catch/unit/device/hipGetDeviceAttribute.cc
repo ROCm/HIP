@@ -514,12 +514,12 @@ constexpr int kW = 60;
 
 }  // anonymous namespace
 
-template <size_t n> void printAttributes(const AttributeToStringMap<n>& attributes) {
+template <size_t n> void printAttributes(const AttributeToStringMap<n>& attributes, const int device) {
   int attribute_value;
   hipError_t ret_val;
-  for (const auto& [attribute, name] : attributes) {
-    ret_val = hipDeviceGetAttribute(&attribute_value, attribute, 0);
-    std::cout << std::setw(kW) << std::string(name).append(": ");
+  for (const auto& attribute : attributes) {
+    ret_val = hipDeviceGetAttribute(&attribute_value, attribute.first, device);
+    std::cout << std::setw(kW) << std::string(attribute.second).append(": ");
     if (ret_val == hipSuccess)
       std::cout << attribute_value << "\n";
     else
@@ -537,14 +537,14 @@ TEST_CASE("Print_Out_Attributes") {
   std::cout << std::setw(kW) << "device#: " << device << "\n";
   std::cout << std::setw(kW) << "name: " << properties.name << "\n";
 
-  printAttributes(kCommonAttributes);
+  printAttributes(kCommonAttributes, device);
 
 #if HT_NVIDIA
   std::cout << "\nCUDA only\n";
-  std::cout << std::setw(w)
+  std::cout << std::setw(kW)
             << "--------------------------------------------------------------------------------"
             << "\n";
-  printAttributes(kCudaOnlyAttributes);
+  printAttributes(kCudaOnlyAttributes, device);
 #endif
 
 #if HT_AMD
@@ -552,7 +552,7 @@ TEST_CASE("Print_Out_Attributes") {
   std::cout << std::setw(kW)
             << "--------------------------------------------------------------------------------"
             << "\n";
-  printAttributes(kAmdOnlyAttributes);
+  printAttributes(kAmdOnlyAttributes, device);
 #endif
 
   std::flush(std::cout);
