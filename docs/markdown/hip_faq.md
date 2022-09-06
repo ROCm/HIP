@@ -33,6 +33,7 @@
 - [Why _OpenMP is undefined when compiling with -fopenmp?](#why-_openmp-is-undefined-when-compiling-with--fopenmp)
 - [Does the HIP-Clang compiler support extern shared declarations?](#does-the-hip-clang-compiler-support-extern-shared-declarations)
 - [I have multiple HIP enabled devices and I am getting an error message hipErrorNoBinaryForGpu: Unable to find code object for all current devices?](#i-have-multiple-hip-enabled-devices-and-i-am-getting-an-error-message-hipErrorNoBinaryForGpu-unable-to-find-code-object-for-all-current-devices)
+- [How to use per-thread default stream in HIP?](#how-to-use-per-thread-default-stream-in-hip)
 - [How can I know the version of HIP?](#how-can-I-know-the-version-of-hip)
 <!-- tocstop -->
 
@@ -94,7 +95,7 @@ However, we can provide a rough summary of the features included in each CUDA SD
 - CUDA 6.5 :
     - __shfl intriniscs (supported)
 - CUDA 7.0 :
-    - Per-thread-streams (under development)
+    - Per-thread default streams (supported)
     - C++11 (Hip-Clang supports all of C++11, all of C++14 and some C++17 features)
 - CUDA 7.5 :
     - float16 (supported)
@@ -259,6 +260,18 @@ If you have a precompiled application/library (like rocblas, tensorflow etc) whi
 
  - The application/library does not ship code object bundles for *all* of your device(s): in this case you need to recompile the application/library yourself with correct `--offload-arch`.
  - The application/library does not ship code object bundles for *some* of your device(s), for example you have a system with an APU + GPU and the library does not ship code objects for your APU. For this you can set the environment variable `HIP_VISIBLE_DEVICES` to only enable GPUs for which code object is available. This will limit the GPUs visible to your application and allow it to run.
+
+### How to use per-thread default stream in HIP?
+
+The per-thread default stream is an implicit stream local to both the thread and the current device. It does not do any implicit synchronization with other streams (like explicitly created streams), or default per-thread stream on other threads.
+
+The per-thread default stream is a blocking stream and will synchronize with the default null stream if both are used in a program.
+
+In ROCm, a compilation option should be added in order to compile the translation unit with per-thread default stream enabled.
+“-fgpu-default-stream=per-thread”.
+Once source is compiled with per-thread default stream enabled, all APIs will be executed on per thread default stream, hence there will not be any implicit synchronization with other streams.
+
+Besides, per-thread default stream be enabled per translation unit, users can compile some files with feature enabled and some with feature disabled. Feature enabled translation unit will have default stream as per thread and there will not be any implicit synchronization done but other modules will have legacy default stream which will do implicit synchronization.
 
 ### How can I know the version of HIP?
 

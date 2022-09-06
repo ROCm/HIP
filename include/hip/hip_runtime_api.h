@@ -1246,7 +1246,7 @@ hipError_t hipInit(unsigned int flags);
  *
  * @param [out] driverVersion
  *
- * @returns #hipSuccess, #hipErrorInavlidValue
+ * @returns #hipSuccess, #hipErrorInvalidValue
  *
  * @warning The HIP feature set does not correspond to an exact CUDA SDK driver revision.
  * This function always set *driverVersion to 4 as an approximation though HIP supports
@@ -1262,7 +1262,8 @@ hipError_t hipDriverGetVersion(int* driverVersion);
  *
  * @param [out] runtimeVersion
  *
- * @returns #hipSuccess, #hipErrorInavlidValue
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
  *
  * @warning The version definition of HIP runtime is different from CUDA.
  * On AMD platform, the function returns HIP runtime version,
@@ -1277,7 +1278,7 @@ hipError_t hipRuntimeGetVersion(int* runtimeVersion);
  * @param [out] device
  * @param [in] ordinal
  *
- * @returns #hipSuccess, #hipErrorInavlidDevice
+ * @returns #hipSuccess, #hipErrorInvalidDevice
  */
 hipError_t hipDeviceGet(hipDevice_t* device, int ordinal);
 
@@ -1287,7 +1288,7 @@ hipError_t hipDeviceGet(hipDevice_t* device, int ordinal);
  * @param [out] minor
  * @param [in] device
  *
- * @returns #hipSuccess, #hipErrorInavlidDevice
+ * @returns #hipSuccess, #hipErrorInvalidDevice
  */
 hipError_t hipDeviceComputeCapability(int* major, int* minor, hipDevice_t device);
 /**
@@ -1296,7 +1297,7 @@ hipError_t hipDeviceComputeCapability(int* major, int* minor, hipDevice_t device
  * @param [in] len
  * @param [in] device
  *
- * @returns #hipSuccess, #hipErrorInavlidDevice
+ * @returns #hipSuccess, #hipErrorInvalidDevice
  */
 hipError_t hipDeviceGetName(char* name, int len, hipDevice_t device);
 /**
@@ -1318,7 +1319,7 @@ hipError_t hipDeviceGetUuid(hipUUID* uuid, hipDevice_t device);
  * @param [in] srcDevice
  * @param [in] dstDevice
  *
- * @returns #hipSuccess, #hipErrorInavlidDevice
+ * @returns #hipSuccess, #hipErrorInvalidDevice
  */
 hipError_t hipDeviceGetP2PAttribute(int* value, hipDeviceP2PAttr attr,
                                     int srcDevice, int dstDevice);
@@ -1328,7 +1329,7 @@ hipError_t hipDeviceGetP2PAttribute(int* value, hipDeviceP2PAttr attr,
  * @param [in] len
  * @param [in] device
  *
- * @returns #hipSuccess, #hipErrorInavlidDevice
+ * @returns #hipSuccess, #hipErrorInvalidDevice
  */
 hipError_t hipDeviceGetPCIBusId(char* pciBusId, int len, int device);
 /**
@@ -1336,7 +1337,7 @@ hipError_t hipDeviceGetPCIBusId(char* pciBusId, int len, int device);
  * @param [out] device handle
  * @param [in] PCI Bus ID
  *
- * @returns #hipSuccess, #hipErrorInavlidDevice, #hipErrorInvalidValue
+ * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
  */
 hipError_t hipDeviceGetByPCIBusId(int* device, const char* pciBusId);
 /**
@@ -1344,7 +1345,7 @@ hipError_t hipDeviceGetByPCIBusId(int* device, const char* pciBusId);
  * @param [out] bytes
  * @param [in] device
  *
- * @returns #hipSuccess, #hipErrorInavlidDevice
+ * @returns #hipSuccess, #hipErrorInvalidDevice
  */
 hipError_t hipDeviceTotalMem(size_t* bytes, hipDevice_t device);
 // doxygen end initialization
