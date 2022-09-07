@@ -91,6 +91,7 @@ constexpr size_t ChannelToRead = 1;
 template <typename T>
 __global__ void readFromTexture(T* output, hipTextureObject_t texObj, size_t width, size_t height,
                                 bool textureGather) {
+  #if !defined(__HIP_NO_IMAGE_SUPPORT) || !__HIP_NO_IMAGE_SUPPORT
   // Calculate normalized texture coordinates
   const unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
   const unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -101,9 +102,18 @@ __global__ void readFromTexture(T* output, hipTextureObject_t texObj, size_t wid
     output[x] = tex1D<T>(texObj, u);
   } else {
     const float v = y / (float)height;
-    output[y * width + x] =
-        textureGather ? tex2Dgather<T>(texObj, u, v, ChannelToRead) : tex2D<T>(texObj, u, v);
+    if (textureGather) {
+      // tex2Dgather not supported on __gfx90a__
+      #if !defined(__gfx90a__)
+      output[y * width + x] = tex2Dgather<T>(texObj, u, v, ChannelToRead);
+      #else
+      #warning("tex2Dgather not supported on gfx90a");
+      #endif
+    } else {
+      output[y * width + x] = tex2D<T>(texObj, u, v);
+    }
   }
+  #endif
 }
 
 template <typename T> void checkDataIsAscending(const std::vector<T>& hostData) {
