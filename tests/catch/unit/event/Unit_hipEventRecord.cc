@@ -135,7 +135,7 @@ TEST_CASE("Unit_hipEventRecord_Negative") {
       HIP_CHECK(hipSetDevice(1));
       HIP_CHECK_ERROR(hipEventRecord(start, nullptr), hipErrorInvalidHandle)
 	  
-	  HIP_CHECK(hipEventDestroy(start));
+      HIP_CHECK(hipEventDestroy(start));
     }
   }
 }
