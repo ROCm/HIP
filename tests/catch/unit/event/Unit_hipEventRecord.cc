@@ -134,6 +134,8 @@ TEST_CASE("Unit_hipEventRecord_Negative") {
       // start on device 0 but null stream on device 1
       HIP_CHECK(hipSetDevice(1));
       HIP_CHECK_ERROR(hipEventRecord(start, nullptr), hipErrorInvalidHandle)
+	  
+	  HIP_CHECK(hipEventDestroy(start));
     }
   }
 }
