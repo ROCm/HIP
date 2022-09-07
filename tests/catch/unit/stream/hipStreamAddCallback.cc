@@ -220,6 +220,7 @@ TEST_CASE("Unit_hipStreamAddCallback_ParamTst_Negative") {
     REQUIRE_FALSE(hipSuccess == hipStreamAddCallback(0, Callback,
                                          nullptr, 10));
   }
+  HIP_CHECK(hipStreamDestroy(mystream));
 }
 
 /*
