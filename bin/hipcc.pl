@@ -321,6 +321,9 @@ foreach $arg (@ARGV)
     # Check target selection option: --offload-arch= and --amdgpu-target=...
     foreach my $targetOpt (@targetOpts) {
         if (substr($arg, 0, length($targetOpt)) eq $targetOpt) {
+             if ($targetOpt eq '--amdgpu-target=') {
+                print "Warning: The --amdgpu-target option has been deprecated and will be removed in the future.  Use --offload-arch instead.\n";
+             }
              # If targets string is not empty, add a comma before adding new target option value.
              $targetsStr .= ($targetsStr ? ',' : '');
              $targetsStr .=  substr($arg, length($targetOpt));
@@ -376,6 +379,7 @@ foreach $arg (@ARGV)
     }
     if($arg =~ '--amdhsa-code-object-version=')
     {
+        print "Warning: The --amdhsa-code-object-version option has been deprecated and will be removed in the future.  Use -mllvm -mcode-object-version instead.\n";
         $arg =~ s/--amdhsa-code-object-version=//;
         $hsacoVersion = $arg;
         $swallowArg = 1;
@@ -534,12 +538,11 @@ foreach $arg (@ARGV)
         # Process HIPCC options here:
         if ($arg =~ m/^--hipcc/) {
             $swallowArg = 1;
-            #if $arg eq "--hipcc_profile") {  # Example argument here, hipcc
-            #
-            #}
             if ($arg eq "--hipcc-func-supp") {
+              print "Warning: The --hipcc-func-supp option has been deprecated and will be removed in the future.\n";
               $funcSupp = 1;
             } elsif ($arg eq "--hipcc-no-func-supp") {
+              print "Warning: The --hipcc-no-func-supp option has been deprecated and will be removed in the future.\n";
               $funcSupp = 0;
             }
         } else {
