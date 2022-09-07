@@ -355,10 +355,6 @@ foreach $arg (@ARGV)
         $compileOnly = 1;
         $buildDeps = 1;
     }
-    if($trimarg eq '-use_fast_math') {
-        $HIPCXXFLAGS .= " -DHIP_FAST_MATH ";
-        $HIPCFLAGS .= " -DHIP_FAST_MATH ";
-    }
     if(($trimarg eq '-use-staticlib') and ($setLinkType eq 0))
     {
         $linkType = 0;
