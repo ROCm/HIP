@@ -12,12 +12,13 @@ set(LINUX_TEST_SRC
     hipHostMallocTestsMproc.cc
     hipMallocConcurrencyMproc.cc
     hipMemCoherencyTstMProc.cc
+    hipIpcEventHandle.cc
+    hipIpcMemAccessTest.cc
+    deviceAllocationMproc.cc
 )
 
-if(UNIX)
-  # the last argument linker libraries is required for this test but optional to the function
-  hip_add_exe_to_target(NAME MultiProc
-                        TEST_SRC ${LINUX_TEST_SRC}
-                        TEST_TARGET_NAME build_tests
-                        LINKER_LIBS ${CMAKE_DL_LIBS})
-endif()
+# the last argument linker libraries is required for this test but optional to the function
+hip_add_exe_to_target(NAME MultiProc
+                      TEST_SRC ${LINUX_TEST_SRC}
+                      TEST_TARGET_NAME build_tests
+                      LINKER_LIBS ${CMAKE_DL_LIBS})

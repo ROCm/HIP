@@ -19,7 +19,7 @@ THE SOFTWARE.
 
 /* HIT_START
  * BUILD: %t %s ../test_common.cpp
- * TEST: %t
+ * TEST: %t --N 4
  * HIT_END
  */
 

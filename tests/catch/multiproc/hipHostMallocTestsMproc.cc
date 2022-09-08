@@ -41,7 +41,7 @@ Testcase Scenarios :
  * Defines
  */
 #define LIB_ROCMSMI "librocm_smi64.so"
-#define ALLOC_SIZE (1*1024*1024)
+#define ALLOC_SIZE (30*1024*1024)
 
 /**
  * Global variables
@@ -190,7 +190,7 @@ static bool validatePageTableAllocations(const char *devList, int visDevCnt) {
     setenv("HIP_VISIBLE_DEVICES", devList, 1);
 
     // First Call to initialize hip api
-    hipGetDeviceCount(&tmpdev);
+    HIP_CHECK(hipGetDeviceCount(&tmpdev));
 
 
     // Get memory snapshot before hostmalloc
@@ -214,14 +214,18 @@ static bool validatePageTableAllocations(const char *devList, int visDevCnt) {
         printf("Error while running rsmi_dev_memory_usage_get func\n");
         dlclose(rocm_smi_h);
         rsmi_shut_down_fp();
-        hipHostFree(ptr);
+        HIP_CHECK(hipHostFree(ptr));
         return false;
       }
       current.push_back(used);
     }
 
     for (indx = 0; indx < numdev; indx++) {
-      if (current[indx] - prev[indx])
+      // For visible hip devices, there should be increase in VRAM usage
+      // due to page table allocations
+      // For NON visible hip devices, there can be reduction in VRAM usage
+      // due to removal of page tables from them
+      if (current[indx] > prev[indx])
         changeCnt++;
     }
 
@@ -232,7 +236,7 @@ static bool validatePageTableAllocations(const char *devList, int visDevCnt) {
       testPassed = false;
     }
 
-    hipHostFree(ptr);
+    HIP_CHECK(hipHostFree(ptr));
 
     // writing only, no need for read-descriptor
     close(fd[0]);

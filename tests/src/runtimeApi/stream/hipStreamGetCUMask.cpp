@@ -83,12 +83,12 @@ int main(int argc, char* argv[]) {
     defaultCUMask.push_back(temp);
   }
 
-  str_out = hipGetErrorString(hipExtStreamGetCUMask(0, cuMask.size(), 0));
+  str_out = hipGetErrorName(hipExtStreamGetCUMask(0, cuMask.size(), 0));
   if ((str_err.compare(str_out)) != 0) {
     failed("hipExtStreamGetCUMask returned wrong error code!");
   }
 
-  str_out = hipGetErrorString(hipExtStreamGetCUMask(0, 0, &cuMask[0]));
+  str_out = hipGetErrorName(hipExtStreamGetCUMask(0, 0, &cuMask[0]));
   if ((str_err.compare(str_out)) != 0) {
     failed("hipExtStreamGetCUMask returned wrong error code!");
   }

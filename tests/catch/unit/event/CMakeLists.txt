@@ -3,13 +3,17 @@ set(TEST_SRC
     Unit_hipEvent_Negative.cc
     Unit_hipEvent.cc
     Unit_hipEventElapsedTime.cc
+    Unit_hipEventRecord.cc
+    Unit_hipEventIpc.cc
+    hipEventDestroy.cc
 )
 
-# skipped for windows due to duplicate symbols
-if(UNIX)
-    set(TEST_SRC ${TEST_SRC}
-                 Unit_hipEventRecord.cc
-                 Unit_hipEventIpc.cc)
+# The test used wait mechanism and doesnt play well with all arch of nvidia
+if(HIP_PLATFORM MATCHES "amd")
+  set(AMD_SRC
+      Unit_hipEventQuery.cc
+  )
+  set(TEST_SRC ${TEST_SRC} ${AMD_SRC})
 endif()
 
 hip_add_exe_to_target(NAME EventTest

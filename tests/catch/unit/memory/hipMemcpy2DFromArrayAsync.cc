@@ -62,10 +62,18 @@ TEST_CASE("Unit_hipMemcpy2DFromArrayAsync_Basic") {
   HIP_CHECK(hipMemcpy2DToArray(A_d, 0, 0, hData, width,
                                     width, NUM_H,
                                     hipMemcpyHostToDevice));
-  HIP_CHECK(hipMemcpy2DFromArrayAsync(A_h, width, A_d,
-                                 0, 0, width, NUM_H,
-                                 hipMemcpyDeviceToHost, stream));
-  HIP_CHECK(hipStreamSynchronize(stream));
+  SECTION("Calling hipMemcpy2DFromArrayAsync() with user declared stream obj") {
+    HIP_CHECK(hipMemcpy2DFromArrayAsync(A_h, width, A_d,
+                                   0, 0, width, NUM_H,
+                                   hipMemcpyDeviceToHost, stream));
+    HIP_CHECK(hipStreamSynchronize(stream));
+  }
+  SECTION("Calling hipMemcpy2DFromArrayAsync() with hipStreamPerThread") {
+    HIP_CHECK(hipMemcpy2DFromArrayAsync(A_h, width, A_d,
+                                   0, 0, width, NUM_H,
+                                   hipMemcpyDeviceToHost, hipStreamPerThread));
+    HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
+  }
   REQUIRE(HipTest::checkArray(A_h, hData, NUM_W, NUM_H) == true);
 
   // Cleaning the memory

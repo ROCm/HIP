@@ -7,8 +7,9 @@
 #include <typeinfo>
 
 #include <hip/hip_runtime.h>
-
-#include <sys/time.h>
+#ifndef _WIN32
+ #include <sys/time.h>
+#endif
 
 #include "ResultDatabase.h"
 #include "nullkernel.hip.cpp"
@@ -134,9 +135,15 @@ int parseStandardArguments(int argc, char* argv[]) {
 
 // Returns the current system time in microseconds
 inline long long get_time() {
+#ifdef _WIN32
+    struct timespec ts;
+    timespec_get(&ts, TIME_UTC);
+    return (ts.tv_sec * 1000000) + (ts.tv_nsec/1000);
+#else
     struct timeval tv;
     gettimeofday(&tv, 0);
     return (tv.tv_sec * 1000000) + tv.tv_usec;
+#endif
 }
 
 
@@ -282,7 +289,7 @@ class Command {
 // HCC optimizes away fully NULL kernel calls, so run one that is nearly null:
 class ModuleKernelCommand : public Command {
    public:
-    ModuleKernelCommand(CommandStream* cmdStream, const std::vector<std::string> args)
+    ModuleKernelCommand(CommandStream* cmdStream, const std::vector<std::string>& args)
         : Command(cmdStream, args), _stream(cmdStream->currentStream()) {
         hipModule_t module;
         HIPCHECK(hipModuleLoad(&module, FILENAME));
@@ -316,7 +323,7 @@ class ModuleKernelCommand : public Command {
 class KernelCommand : public Command {
    public:
     enum Type { Null, VectorAdd };
-    KernelCommand(CommandStream* cmdStream, const std::vector<std::string> args, Type kind)
+    KernelCommand(CommandStream* cmdStream, const std::vector<std::string>& args, Type kind)
         : Command(cmdStream, args), _kind(kind), _stream(cmdStream->currentStream()){};
     ~KernelCommand(){};
 
@@ -390,7 +397,7 @@ class CopyCommand : public Command {
     };
 
 
-    void dealloc(void* p, MemType memType) {
+    static void dealloc(void* p, MemType memType) {
         if (memType == Device) {
             HIPCHECK(hipFree(p));
         } else if (memType == PinnedHost) {
@@ -433,7 +440,7 @@ class StreamSyncCommand : public Command {
     StreamSyncCommand(CommandStream* cmdStream, const std::vector<std::string>& args)
         : Command(cmdStream, args), _stream(cmdStream->currentStream()){};
 
-    const char* help() { return "synchronizes the current stream"; };
+    static const char* help() { return "synchronizes the current stream"; };
 
 
     void run() override { HIPCHECK(hipStreamSynchronize(_stream)); };
@@ -537,8 +544,8 @@ CopyCommand::CopyCommand(CommandStream* cmdStream, const std::vector<std::string
                          hipMemcpyKind kind, bool isAsync, bool isPinnedHost)
     : Command(cmdStream, args),
       _isAsync(isAsync),
-      _kind(kind),
-      _stream(cmdStream->currentStream()) {
+      _stream(cmdStream->currentStream()),
+      _kind(kind) {
     switch (kind) {
         case hipMemcpyDeviceToHost:
             _srcType = Device;
@@ -815,8 +822,11 @@ int main(int argc, char* argv[]) {
     if (p_blockingSync) {
 #ifdef __HIP_PLATFORM_AMD__
         printf("setting BlockingSync for AMD\n");
-        setenv("HIP_BLOCKING_SYNC", "1", 1);
-
+        #ifdef _WIN32
+	 _putenv_s("HIP_BLOCKING_SYNC", "1");
+	#else
+	 setenv("HIP_BLOCKING_SYNC", "1", 1);
+	#endif
 #endif
 #ifdef __HIP_PLATFORM_NVIDIA__
         printf("setting cudaDeviceBlockingSync\n");

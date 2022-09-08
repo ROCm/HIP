@@ -50,8 +50,8 @@ mark_as_advanced(HIP_HOST_COMPILATION_CPP)
 
 get_filename_component(_IMPORT_PREFIX "${CMAKE_CURRENT_LIST_DIR}/../" REALPATH)
 
-# HIP is supported on Linux only
-if(UNIX AND NOT APPLE AND NOT CYGWIN)
+# HIP is currently not supported for apple
+if(NOT APPLE)
     # Search for HIP installation
     if(NOT HIP_ROOT_DIR)
         # Search in user specified path first
@@ -59,10 +59,10 @@ if(UNIX AND NOT APPLE AND NOT CYGWIN)
             HIP_ROOT_DIR
             NAMES bin/hipconfig
             PATHS
+            "$ENV{ROCM_PATH}"
             "$ENV{ROCM_PATH}/hip"
             ENV HIP_PATH
             ${_IMPORT_PREFIX}
-            /opt/rocm/hip
             DOC "HIP installed location"
             NO_DEFAULT_PATH
             )
@@ -85,8 +85,6 @@ if(UNIX AND NOT APPLE AND NOT CYGWIN)
         "${HIP_ROOT_DIR}"
         ENV ROCM_PATH
         ENV HIP_PATH
-        /opt/rocm
-        /opt/rocm/hip
         PATH_SUFFIXES bin
         NO_DEFAULT_PATH
         )
@@ -94,7 +92,6 @@ if(UNIX AND NOT APPLE AND NOT CYGWIN)
         # Now search in default paths
         find_program(HIP_HIPCC_EXECUTABLE hipcc)
     endif()
-    mark_as_advanced(HIP_HIPCC_EXECUTABLE)
 
     # Find HIPCONFIG executable
     find_program(
@@ -104,8 +101,6 @@ if(UNIX AND NOT APPLE AND NOT CYGWIN)
         "${HIP_ROOT_DIR}"
         ENV ROCM_PATH
         ENV HIP_PATH
-        /opt/rocm
-        /opt/rocm/hip
         PATH_SUFFIXES bin
         NO_DEFAULT_PATH
         )
@@ -113,7 +108,12 @@ if(UNIX AND NOT APPLE AND NOT CYGWIN)
         # Now search in default paths
         find_program(HIP_HIPCONFIG_EXECUTABLE hipconfig)
     endif()
+    if(NOT UNIX)
+        set(HIP_HIPCONFIG_EXECUTABLE "${HIP_HIPCONFIG_EXECUTABLE}.bat")
+        set(HIP_HIPCC_EXECUTABLE "${HIP_HIPCC_EXECUTABLE}.bat")
+    endif()
     mark_as_advanced(HIP_HIPCONFIG_EXECUTABLE)
+    mark_as_advanced(HIP_HIPCC_EXECUTABLE)
 
     # Find HIPCC_CMAKE_LINKER_HELPER executable
     find_program(
@@ -123,8 +123,6 @@ if(UNIX AND NOT APPLE AND NOT CYGWIN)
         "${HIP_ROOT_DIR}"
         ENV ROCM_PATH
         ENV HIP_PATH
-        /opt/rocm
-        /opt/rocm/hip
         PATH_SUFFIXES bin
         NO_DEFAULT_PATH
         )
@@ -237,11 +235,22 @@ elseif("${HIP_COMPILER}" STREQUAL "clang")
         elseif(DEFINED ENV{ROCM_PATH})
             set(HIP_CLANG_PATH "$ENV{ROCM_PATH}/llvm/bin")
         elseif(DEFINED ENV{HIP_PATH})
-            set(HIP_CLANG_PATH "$ENV{HIP_PATH}/../llvm/bin")
+            if(EXISTS "$ENV{HIP_PATH}/llvm/bin") #File Reorg backward compatibility
+                set(HIP_CLANG_PATH "$ENV{HIP_PATH}/llvm/bin")
+            else()
+                set(HIP_CLANG_PATH "$ENV{HIP_PATH}/../llvm/bin")
+            endif()
         elseif(DEFINED HIP_PATH)
-            set(HIP_CLANG_PATH "${HIP_PATH}/../llvm/bin")
+            if(EXISTS "${HIP_PATH}/llvm/bin") #File Reorg backward compatibility
+                set(HIP_CLANG_PATH "${HIP_PATH}/llvm/bin")
+            else()
+                set(HIP_CLANG_PATH "${HIP_PATH}/../llvm/bin")
+            endif()
+        # Handle the case where ROCM_PATH is defined and not set in ENV
+        elseif(DEFINED ROCM_PATH)
+            set(HIP_CLANG_PATH "${ROCM_PATH}/llvm/bin")
         else()
-            set(HIP_CLANG_PATH "/opt/rocm/llvm/bin")
+            message(FATAL_ERROR "Unable to find the clang compiler path. Set ROCM_PATH or HIP_PATH in env ")
         endif()
     endif()
     #Number of parallel jobs by default is 1
@@ -656,11 +665,22 @@ macro(HIP_ADD_EXECUTABLE hip_target)
             elseif(DEFINED ENV{ROCM_PATH})
                 set(HIP_CLANG_PATH "$ENV{ROCM_PATH}/llvm/bin")
             elseif(DEFINED ENV{HIP_PATH})
-                set(HIP_CLANG_PATH "$ENV{HIP_PATH}/../llvm/bin")
+                if(EXISTS "$ENV{HIP_PATH}/llvm/bin") #file reorg backward compatibility
+                    set(HIP_CLANG_PATH "$ENV{HIP_PATH}/llvm/bin")
+                else()
+                    set(HIP_CLANG_PATH "$ENV{HIP_PATH}/../llvm/bin")
+                endif()
             elseif(DEFINED HIP_PATH)
-                set(HIP_CLANG_PATH "${HIP_PATH}/../llvm/bin")
+                if(EXISTS "${HIP_PATH}/llvm/bin") #file reorg backward compatibility
+                    set(HIP_CLANG_PATH "${HIP_PATH}/llvm/bin")
+                else()
+                    set(HIP_CLANG_PATH "${HIP_PATH}/../llvm/bin")
+                endif()
+            # Handle  the case where ROCM_PATH is defined and not set in ENV
+            elseif(DEFINED ROCM_PATH)
+                set(HIP_CLANG_PATH "${ROCM_PATH}/llvm/bin")
             else()
-                set(HIP_CLANG_PATH "/opt/rocm/llvm/bin")
+                message(FATAL_ERROR "Unable to find the clang compiler path. Set ROCM_PATH or HIP_PATH in env")
             endif()
         endif()
         set(CMAKE_HIP_LINK_EXECUTABLE "${HIP_HIPCC_CMAKE_LINKER_HELPER} ${HIP_CLANG_PATH} ${HIP_CLANG_PARALLEL_BUILD_LINK_OPTIONS} <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")

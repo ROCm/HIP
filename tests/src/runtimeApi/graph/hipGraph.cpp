@@ -36,7 +36,6 @@ __global__ void reduce(float* d_in, double* d_out, size_t inputSize, size_t outp
     __syncthreads();
   }
   if (tid == 0) {
-    int blkx = blockIdx.x;
     d_out[blockIdx.x] = d_in[myId];
   }
 }
@@ -103,6 +102,25 @@ bool hipWithoutGraphs(float* inputVec_h, float* inputVec_d, double* outputVec_d,
     return false;
   }
   return true;
+}
+
+typedef struct callBackData {
+  const char* fn_name;
+  double* data;
+} callBackData_t;
+double result_gpu = 0.0;
+void myHostNodeCallback(void* data) {
+  static int iter = 0;
+  iter++;
+  // Check status of GPU after stream operations are done
+  callBackData_t* tmp = (callBackData_t*)(data);
+  // checkCudaErrors(tmp->status);
+  double* result = (double*)(tmp->data);
+  char* function = (char*)(tmp->fn_name);
+  if (iter == GRAPH_LAUNCH_ITERATIONS)
+    printf("[%s] Host callback final reduced sum = %lf\n", function, *result);
+  result_gpu = *result;
+  *result = 0.0;  // reset the result
 }
 
 bool hipGraphsUsingStreamCapture(float* inputVec_h, float* inputVec_d, double* outputVec_d,
@@ -236,7 +254,18 @@ bool hipGraphsManual(float* inputVec_h, float* inputVec_d, double* outputVec_d, 
                                    hipMemcpyDeviceToHost));
   nodeDependencies.clear();
   nodeDependencies.push_back(memcpyNode);
+
   hipGraphNode_t hostNode;
+  hipHostNodeParams hostParams = {0};
+  hostParams.fn = myHostNodeCallback;
+  callBackData_t hostFnData;
+  hostFnData.data = &result_h;
+  hostFnData.fn_name = "hipGraphsManual";
+  hostParams.userData = &hostFnData;
+
+  HIPCHECK(hipGraphAddHostNode(&hostNode, graph, nodeDependencies.data(), nodeDependencies.size(),
+                               &hostParams));
+
   hipGraphExec_t graphExec;
   hipGraphNode_t* nodes = NULL;
   size_t numNodes = 0;
@@ -245,6 +274,13 @@ bool hipGraphsManual(float* inputVec_h, float* inputVec_d, double* outputVec_d, 
   HIPCHECK(hipGraphGetRootNodes(graph, nodes, &numNodes));
   printf("Num of root nodes in the graph created using hipGraphsManual API = %zu\n", numNodes);
   HIPCHECK(hipGraphInstantiate(&graphExec, graph, NULL, NULL, 0));
+
+  hipGraph_t clonedGraph;
+  hipGraphExec_t clonedGraphExec;
+  HIPCHECK(hipGraphClone(&clonedGraph, graph));
+
+  HIPCHECK(hipGraphInstantiate(&clonedGraphExec, clonedGraph, NULL, NULL, 0));
+
   auto start1 = std::chrono::high_resolution_clock::now();
   for (int i = 0; i < GRAPH_LAUNCH_ITERATIONS; i++) {
     HIPCHECK(hipGraphLaunch(graphExec, streamForGraph));
@@ -259,6 +295,22 @@ bool hipGraphsManual(float* inputVec_h, float* inputVec_d, double* outputVec_d, 
             << std::chrono::duration_cast<std::chrono::milliseconds>(resultWithoutInit).count()
             << " milliseconds " << std::endl;
 
+  printf("\n\nCloned Graph Output.. \n");
+
+  hipGraphNode_t clonedNode;
+  hipGraphNodeFindInClone(&clonedNode, memcpyNode, clonedGraph);
+
+  hipGraphNodeType clonedNodeType, origNodeType;
+  hipGraphNodeGetType(clonedNode, &clonedNodeType);
+  hipGraphNodeGetType(memcpyNode, &origNodeType);
+
+  std::cout << "Original node type:" << origNodeType << " cloned node type:" << clonedNodeType
+            << std::endl;
+
+  for (int i = 0; i < GRAPH_LAUNCH_ITERATIONS; i++) {
+    HIPCHECK(hipGraphLaunch(clonedGraphExec, streamForGraph));
+  }
+  HIPCHECK(hipStreamSynchronize(streamForGraph));
   HIPCHECK(hipGraphExecDestroy(graphExec));
   HIPCHECK(hipGraphDestroy(graph));
   HIPCHECK(hipStreamDestroy(streamForGraph));
@@ -266,8 +318,8 @@ bool hipGraphsManual(float* inputVec_h, float* inputVec_d, double* outputVec_d, 
   for (int i = 0; i < inputSize; i++) {
     result_h_cpu += inputVec_h[i];
   }
-  if (result_h_cpu != result_h) {
-    printf("Final reduced sum = %lf %lf\n", result_h_cpu, result_h);
+  if (result_h_cpu != result_gpu) {
+    printf("Final reduced sum = %lf %lf\n", result_h_cpu, result_gpu);
     return false;
   }
   return true;

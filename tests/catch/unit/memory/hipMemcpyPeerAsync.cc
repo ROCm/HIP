@@ -149,11 +149,20 @@ TEST_CASE("Unit_hipMemcpyPeerAsync_Basic") {
 
       // Copying data from GPU-0 to GPU-1 and performing vector addition
       HIP_CHECK(hipSetDevice(1));
-      HIP_CHECK(hipMemcpyPeerAsync(X_d, 1, A_d, 0, copy_bytes,
-                                   stream));
-      HIP_CHECK(hipMemcpyPeerAsync(Y_d, 1, B_d, 0, copy_bytes,
-                                   stream));
-      HIP_CHECK(hipStreamSynchronize(stream));
+      SECTION("Calling hipMemcpyPerAsync() using user defined stream obj") {
+        HIP_CHECK(hipMemcpyPeerAsync(X_d, 1, A_d, 0, copy_bytes,
+                                     stream));
+        HIP_CHECK(hipMemcpyPeerAsync(Y_d, 1, B_d, 0, copy_bytes,
+                                     stream));
+	HIP_CHECK(hipStreamSynchronize(stream));
+      }
+      SECTION("Calling hipMemcpyPerAsync() using hipStreamPerThread") {
+        HIP_CHECK(hipMemcpyPeerAsync(X_d, 1, A_d, 0, copy_bytes,
+                                     hipStreamPerThread));
+        HIP_CHECK(hipMemcpyPeerAsync(Y_d, 1, B_d, 0, copy_bytes,
+                                     hipStreamPerThread));
+	HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
+      }
       hipLaunchKernelGGL(HipTest::vectorADD, dim3(1), dim3(1),
           0, 0, static_cast<const int*>(X_d),
           static_cast<const int*>(Y_d), Z_d, numElements*sizeof(int));

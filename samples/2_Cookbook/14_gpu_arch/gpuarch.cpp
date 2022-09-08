@@ -36,7 +36,7 @@ THE SOFTWARE.
 // 'out'
 //              but it will update with "NOT_SUPPORTED" for any other gfx archs.
 __global__ void incrementKernel(int32_t* in, int32_t* out, int32_t value, size_t buffSize) {
-  int index = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
+  int index = blockDim.x * blockIdx.x + threadIdx.x;
   if (index < buffSize) {
 #if defined(__gfx908__)
     out[index] = in[index] + value;
@@ -48,17 +48,14 @@ __global__ void incrementKernel(int32_t* in, int32_t* out, int32_t value, size_t
 
 int main() {
   int32_t incrementValue = 10;
-  // Host pointers
-  int32_t* hInput = nullptr;
-  int32_t* hOutput = nullptr;
   // Device pointers
   int32_t* dInput = nullptr;
   int32_t* dOutput = nullptr;
 
   size_t NBytes = SIZE * sizeof(int32_t);
-
-  hInput = static_cast<int32_t*>(malloc(NBytes));
-  hOutput = static_cast<int32_t*>(malloc(NBytes));
+  // Host pointers
+  int32_t* hInput = static_cast<int32_t*>(malloc(NBytes));
+  int32_t* hOutput = static_cast<int32_t*>(malloc(NBytes));
 
   HIP_STATUS_CHECK(hipMalloc(&dInput, NBytes));
   HIP_STATUS_CHECK(hipMalloc(&dOutput, NBytes));

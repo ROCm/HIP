@@ -481,58 +481,64 @@ template <typename T>
 void Memcpy3DAsync<T>::D2D_SameDeviceMem_StreamDiffDevice() {
   HIP_CHECK(hipSetDevice(0));
   // Allocating the Memory
-  AllocateMemory();
-  HIP_CHECK(hipSetDevice(1));
-  HIP_CHECK(hipStreamCreate(&stream));
-  memset(&myparms, 0x0, sizeof(hipMemcpy3DParms));
-  SetDefaultData();
+  int peerAccess = 0;
+  HIP_CHECK(hipDeviceCanAccessPeer(&peerAccess, 0, 1));
+  if (peerAccess) {
+    AllocateMemory();
+    HIP_CHECK(hipSetDevice(1));
+    HIP_CHECK(hipStreamCreate(&stream));
+    memset(&myparms, 0x0, sizeof(hipMemcpy3DParms));
+    SetDefaultData();
 
-  // Host to Device
-  myparms.srcPtr = make_hipPitchedPtr(hData, width * sizeof(T), width, height);
-  myparms.dstArray = arr;
+    // Host to Device
+    myparms.srcPtr = make_hipPitchedPtr(hData, width * sizeof(T), width, height);
+    myparms.dstArray = arr;
 #ifdef __HIP_PLATFORM_NVCC__
-  myparms.kind = cudaMemcpyHostToDevice;
+    myparms.kind = cudaMemcpyHostToDevice;
 #else
-  myparms.kind = hipMemcpyHostToDevice;
+    myparms.kind = hipMemcpyHostToDevice;
 #endif
-  REQUIRE(hipMemcpy3DAsync(&myparms, stream) == hipSuccess);
-  HIP_CHECK(hipStreamSynchronize(stream));
+    REQUIRE(hipMemcpy3DAsync(&myparms, stream) == hipSuccess);
+    HIP_CHECK(hipStreamSynchronize(stream));
 
-  // Array to Array
-  memset(&myparms, 0x0, sizeof(hipMemcpy3DParms));
-  SetDefaultData();
-  myparms.srcArray = arr;
-  myparms.dstArray = arr1;
+    // Array to Array
+    memset(&myparms, 0x0, sizeof(hipMemcpy3DParms));
+    SetDefaultData();
+    myparms.srcArray = arr;
+    myparms.dstArray = arr1;
 #ifdef __HIP_PLATFORM_NVCC__
-  myparms.kind = cudaMemcpyDeviceToDevice;
+    myparms.kind = cudaMemcpyDeviceToDevice;
 #else
-  myparms.kind = hipMemcpyDeviceToDevice;
+    myparms.kind = hipMemcpyDeviceToDevice;
 #endif
-  REQUIRE(hipMemcpy3DAsync(&myparms, stream) == hipSuccess);
-  HIP_CHECK(hipStreamSynchronize(stream));
-  T *hOutputData = reinterpret_cast<T*>(malloc(size));
-  memset(hOutputData, 0,  size);
+    REQUIRE(hipMemcpy3DAsync(&myparms, stream) == hipSuccess);
+    HIP_CHECK(hipStreamSynchronize(stream));
+    T *hOutputData = reinterpret_cast<T*>(malloc(size));
+    memset(hOutputData, 0,  size);
 
-  // Device to host
-  memset(&myparms, 0x0, sizeof(hipMemcpy3DParms));
-  SetDefaultData();
-  myparms.dstPtr = make_hipPitchedPtr(hOutputData,
-                   width * sizeof(T), width, height);
-  myparms.srcArray = arr1;
+    // Device to host
+    memset(&myparms, 0x0, sizeof(hipMemcpy3DParms));
+    SetDefaultData();
+    myparms.dstPtr = make_hipPitchedPtr(hOutputData,
+        width * sizeof(T), width, height);
+    myparms.srcArray = arr1;
 #ifdef __HIP_PLATFORM_NVCC__
-  myparms.kind = cudaMemcpyDeviceToHost;
+    myparms.kind = cudaMemcpyDeviceToHost;
 #else
-  myparms.kind = hipMemcpyDeviceToHost;
+    myparms.kind = hipMemcpyDeviceToHost;
 #endif
-  REQUIRE(hipMemcpy3DAsync(&myparms, stream) == hipSuccess);
-  HIP_CHECK(hipStreamSynchronize(stream));
+    REQUIRE(hipMemcpy3DAsync(&myparms, stream) == hipSuccess);
+    HIP_CHECK(hipStreamSynchronize(stream));
 
-  // Validating the result
-  HipTest::checkArray(hData, hOutputData, width, height, depth);
+    // Validating the result
+    HipTest::checkArray(hData, hOutputData, width, height, depth);
 
-  // Deallocating the memory
-  free(hOutputData);
-  DeAllocateMemory();
+    // Deallocating the memory
+    free(hOutputData);
+    DeAllocateMemory();
+  } else {
+    SUCCEED("Skipped the test as there is no peer access");
+  }
 }
 
 /*
@@ -602,8 +608,14 @@ void Memcpy3DAsync<T>::simple_Memcpy3DAsync() {
 #else
   myparms.kind = hipMemcpyHostToDevice;
 #endif
-  REQUIRE(hipMemcpy3DAsync(&myparms, stream) == hipSuccess);
-  HIP_CHECK(hipStreamSynchronize(stream));
+  SECTION("Calling hipMemcpy3DAsync() using user declared stream obj") {
+    REQUIRE(hipMemcpy3DAsync(&myparms, stream) == hipSuccess);
+    HIP_CHECK(hipStreamSynchronize(stream));
+  }
+  SECTION("Calling hipMemcpy3DAsync() using hipStreamPerThread") {
+    REQUIRE(hipMemcpy3DAsync(&myparms, hipStreamPerThread) == hipSuccess);
+    HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
+  }
 
   // Array to Array
   memset(&myparms, 0x0, sizeof(hipMemcpy3DParms));
@@ -624,7 +636,7 @@ void Memcpy3DAsync<T>::simple_Memcpy3DAsync() {
   memset(&myparms, 0x0, sizeof(hipMemcpy3DParms));
   SetDefaultData();
   myparms.dstPtr = make_hipPitchedPtr(hOutputData,
-                   width * sizeof(T), width, height);
+      width * sizeof(T), width, height);
   myparms.srcArray = arr1;
 #ifdef __HIP_PLATFORM_NVCC__
   myparms.kind = cudaMemcpyDeviceToHost;
@@ -650,7 +662,11 @@ TEMPLATE_TEST_CASE("Unit_hipMemcpy3DAsync_Basic",
                    int, unsigned int, float) {
   int numDevices = 0;
   HIP_CHECK(hipGetDeviceCount(&numDevices));
-  auto i = GENERATE(10, 100, 1024, 10*1024);
+  int device = -1;
+  HIP_CHECK(hipGetDevice(&device));
+  hipDeviceProp_t prop;
+  HIP_CHECK(hipGetDeviceProperties(&prop,device));
+  auto i = GENERATE_COPY(10, 100, 1024, prop.maxTexture3D[0]);
   auto j = GENERATE(10, 100);
   if (numDevices > 1) {
       if (std::is_same<TestType, int>::value)  {
