@@ -123,14 +123,12 @@ TEST_CASE("Unit_hipDeviceGetMemPool_Positive_Threaded") {
       mem_pool_ = CreateMemPool(0);
       HIP_CHECK_THREAD(hipDeviceSetMemPool(0, mem_pool_));
     }
-
     void TestPart3() {
       hipMemPool_t returned_mem_pool;
       HIP_CHECK(hipDeviceGetMemPool(&returned_mem_pool, 0));
 
       REQUIRE(returned_mem_pool == mem_pool_);
     }
-
     void TestPart4() { HIP_CHECK_THREAD(hipMemPoolDestroy(mem_pool_)); }
 
    private:
