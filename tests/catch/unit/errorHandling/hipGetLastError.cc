@@ -34,12 +34,8 @@ TEST_CASE("Unit_hipGetLastError_Positive_Basic") {
 TEST_CASE("Unit_hipGetLastError_Positive_Threaded") {
   class HipGetLastErrorThreadedTest : public ThreadedZigZagTest<HipGetLastErrorThreadedTest> {
    public:
-    void TestPart1() {}
-
     void TestPart2() { REQUIRE_THREAD(hipMalloc(nullptr, 1) == hipErrorInvalidValue); }
-
     void TestPart3() { HIP_CHECK(hipGetLastError()); }
-
     void TestPart4() { REQUIRE_THREAD(hipGetLastError() == hipErrorInvalidValue); }
   };
 
