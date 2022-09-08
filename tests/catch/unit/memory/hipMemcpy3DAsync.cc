@@ -662,7 +662,11 @@ TEMPLATE_TEST_CASE("Unit_hipMemcpy3DAsync_Basic",
                    int, unsigned int, float) {
   int numDevices = 0;
   HIP_CHECK(hipGetDeviceCount(&numDevices));
-  auto i = GENERATE(10, 100, 1024, 10*1024);
+  int device = -1;
+  HIP_CHECK(hipGetDevice(&device));
+  hipDeviceProp_t prop;
+  HIP_CHECK(hipGetDeviceProperties(&prop,device));
+  auto i = GENERATE_COPY(10, 100, 1024, prop.maxTexture3D[0]);
   auto j = GENERATE(10, 100);
   if (numDevices > 1) {
       if (std::is_same<TestType, int>::value)  {
