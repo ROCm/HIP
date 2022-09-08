@@ -91,12 +91,10 @@ TEST_CASE("Unit_hipSetGetDevice_Positive_Threaded_Basic") {
   class HipSetGetDeviceThreadedTest : public ThreadedZigZagTest<HipSetGetDeviceThreadedTest> {
    public:
     void TestPart1() { HIP_CHECK(hipSetDevice(0)); }
-
     void TestPart2() {
       HIP_CHECK_THREAD(hipSetDevice(1));
       HIP_CHECK_THREAD(hipMalloc(&ptr, 2 * 1024 * 1024));
     }
-
     void TestPart3() {
       int device = -1;
       HIP_CHECK_THREAD(hipGetDevice(&device));
@@ -107,11 +105,11 @@ TEST_CASE("Unit_hipSetGetDevice_Positive_Threaded_Basic") {
                                               reinterpret_cast<hipDeviceptr_t>(ptr)));
       REQUIRE_THREAD(device == 1);
     }
-
     void TestPart4() {
       int device = -1;
       HIP_CHECK_THREAD(hipGetDevice(&device));
       REQUIRE_THREAD(device == 1);
+      HIP_CHECK_THREAD(hipFree(ptr));
     }
 
    private:
