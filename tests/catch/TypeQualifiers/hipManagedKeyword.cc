@@ -53,7 +53,7 @@ TEST_CASE("Unit_hipManagedKeyword_SingleGpu") {
   hipLaunchKernelGGL(add, dimGrid, dimBlock, 0, 0, static_cast<const float*>(A),
                      static_cast<float*>(B));
 
-  hipDeviceSynchronize();
+  HIP_CHECK(hipDeviceSynchronize());
 
   float maxError = 0.0f;
   for (int i = 0; i < N; i++)
@@ -64,12 +64,12 @@ TEST_CASE("Unit_hipManagedKeyword_SingleGpu") {
 
 TEST_CASE("Unit_hipManagedKeyword_MultiGpu") {
   int numDevices = 0;
-  hipGetDeviceCount(&numDevices);
+  HIP_CHECK(hipGetDeviceCount(&numDevices));
 
   for (int i = 0; i < numDevices; i++) {
-    hipSetDevice(i);
+    HIP_CHECK(hipSetDevice(i));
     GPU_func<<< 1, 1 >>>();
-    hipDeviceSynchronize();
+    HIP_CHECK(hipDeviceSynchronize());
   }
   REQUIRE(x == numDevices);
 }
