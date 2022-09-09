@@ -270,7 +270,7 @@ TEST_CASE("Unit_hipMemPoolExportPointer_Negative") {
 	
 	SECTION("Invalid exported data") {
 	    HIP_CHECK_ERROR(hipMemPoolExportPointer(nullptr, A), hipErrorInvalidValue);
-	
+	}
 
 	SECTION("Invalid device pointer") {
 	    HIP_CHECK_ERROR(hipMemPoolExportPointer(&exp_data, nullptr), hipErrorInvalidValue);
