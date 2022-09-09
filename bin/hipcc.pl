@@ -103,6 +103,7 @@ $CUDA_PATH      =   $hipvars::CUDA_PATH;
 $HIP_PATH       =   $hipvars::HIP_PATH;
 $ROCM_PATH      =   $hipvars::ROCM_PATH;
 $HIP_VERSION    =   $hipvars::HIP_VERSION;
+$HIP_VERSION_PATH = $hipvars::HIP_VERSION_PATH;
 $HSA_PATH       =   $hipvars::HSA_PATH;
 $HIP_ROCCLR_HOME =   $hipvars::HIP_ROCCLR_HOME;
 
@@ -204,6 +205,19 @@ if ($HIP_PLATFORM eq "amd") {
         $HIPCFLAGS .= " -isystem $HSA_PATH/include";
     }
 
+    # Clang requires the HIP version information, passed either via a
+    # commandline argument or by reading it from the .hipVersion file
+    # (see clang/lib/Driver/ToolChains/AMDGPU.cpp).  Since there is no FHS
+    # compliant location for .hipVersion where clang will still be able to find
+    # it, .hipVersion has been omitted in the downstream distribution packages
+    # (Debian/Fedora) and subsequently the hip version needs to be passed
+    # explicitly.  Subsequently, clang requires the ROCm path to be passed via
+    # the respective command line argument as well.
+    if (! -f $HIP_VERSION_PATH) {
+        my $v = (split('-', $HIP_VERSION))[0]; # Remove the git hash
+        $HIPCC_COMPILE_FLAGS_APPEND .= " --rocm-path=$ROCM_PATH --hip-version=$v";
+        $HIPCC_LINK_FLAGS_APPEND .= " --rocm-path=$ROCM_PATH --hip-version=$v";
+    }
 } elsif ($HIP_PLATFORM eq "nvidia") {
     $CUDA_PATH=$ENV{'CUDA_PATH'} // '/usr/local/cuda';
     $HIP_INCLUDE_PATH = "$HIP_PATH/include";
