@@ -36,7 +36,6 @@ TEST_CASE("Unit_hipMemPoolTrimTo_negative") {
     HIP_CHECK(hipSetDevice(0));
     int mem_pool_support = 0;
     HIP_CHECK(hipDeviceGetAttribute(&mem_pool_support, hipDeviceAttributeMemoryPoolsSupported, 0));
-	mem_pool_support = 1; /* Temporary workaround untill hipDeviceGetAttribute is fixed TODO: REMOVE BEFORE CREATING PR */
     if (!mem_pool_support) {
         SUCCEED("Runtime doesn't support Memory Pool. Skip the test case.");
         return;
