@@ -93,22 +93,19 @@ if ($isWindows) {
 # HIP_ROCCLR_HOME is used by Windows builds
 $HIP_ROCCLR_HOME=$ENV{'HIP_ROCCLR_HOME'};
 
-if (defined $HIP_ROCCLR_HOME) {
-    # Only used for Windows builds
+if ($isWindows) {
     $LIB = "lib";
-    $HIP_INFO_PATH = "$HIP_ROCCLR_HOME/lib/.hipInfo";
 } else {
-    # Detect lib directory (i.e. 'lib64' or 'lib')
-    if (-e "$HIP_PATH/lib64/.hipInfo") {
-        $LIB = "lib64";
-    } else {
-        $LIB = "lib";
-    }
-    $HIP_INFO_PATH = "$HIP_PATH/$LIB/.hipInfo";
+    # Look for the HSA runtime library to determine the lib directory name
+    $LIB = `find $HIP_PATH/lib $HIP_PATH/lib64 -name libhsa-runtime64* | grep -m1 -o '.*/lib.*/'`;
+    chomp($LIB); # Remove trailing newline characters
+    $LIB = basename($LIB); # Get the lib directory name
 }
-if (! -f $HIP_INFO_PATH) {
-    printf ("error: HIP_INFO_PATH does not exist ('$HIP_INFO_PATH')\n");
-    exit (-1);
+
+if (defined $HIP_ROCCLR_HOME) {
+    $HIP_INFO_PATH= "$HIP_ROCCLR_HOME/$LIB/.hipInfo";
+} else {
+    $HIP_INFO_PATH= "$HIP_PATH/$LIB/.hipInfo"; # use actual file
 }
 #---
 #HIP_PLATFORM controls whether to use nvidia or amd platform:
