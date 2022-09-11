@@ -168,7 +168,7 @@ if ($HIP_PLATFORM eq "amd") {
     $HIP_CLANG_TARGET = chomp($HIP_CLANG_TARGET);
 
     if (! defined $HIP_CLANG_INCLUDE_PATH) {
-        $HIP_CLANG_INCLUDE_PATH = abs_path("$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION/include");
+        $HIP_CLANG_INCLUDE_PATH = abs_path("$HIP_CLANG_PATH/../$LIB/clang/$HIP_CLANG_VERSION/include");
     }
     if (! defined $HIP_INCLUDE_PATH) {
         $HIP_INCLUDE_PATH = "$HIP_PATH/include";
@@ -711,11 +711,11 @@ if ($HIP_PLATFORM eq "amd") {
         $toolArgs = ${toolArgs} . " -Wl,--enable-new-dtags -Wl,-rpath=$HIP_LIB_PATH:$ROCM_PATH/$LIB -lamdhip64 ";
       }
       # To support __fp16 and _Float16, explicitly link with compiler-rt
-      $HIP_CLANG_BUILTIN_LIB="$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION/lib/$HIP_CLANG_TARGET/libclang_rt.builtins.a";
+      $HIP_CLANG_BUILTIN_LIB="$HIP_CLANG_PATH/../$LIB/clang/$HIP_CLANG_VERSION/lib/$HIP_CLANG_TARGET/libclang_rt.builtins.a";
       if (-e $HIP_CLANG_BUILTIN_LIB) {
-        $toolArgs .= " -L$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION/lib/$HIP_CLANG_TARGET -lclang_rt.builtins "
+        $toolArgs .= " -L$HIP_CLANG_PATH/../$LIB/clang/$HIP_CLANG_VERSION/lib/$HIP_CLANG_TARGET -lclang_rt.builtins "
       } else {
-        $toolArgs .= " -L$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION/lib/linux -lclang_rt.builtins-x86_64 "
+        $toolArgs .= " -L$HIP_CLANG_PATH/../$LIB/clang/$HIP_CLANG_VERSION/lib/linux -lclang_rt.builtins-x86_64 "
       }
     }
 }

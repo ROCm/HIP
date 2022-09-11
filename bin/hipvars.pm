@@ -97,10 +97,10 @@ if ($isWindows) {
     $LIB = "lib";
 } else {
     # Look for the AMD HIP library to determine the lib directory name
-    if (my @libs = glob("\E$HIP_PATH/lib*/*libamdhip64*.so*")) {
+    if (my @libs = glob("$HIP_PATH/lib*/libamdhip64*.so*")) {
         # Multi-lib layout (Fedora and others: /usr/lib64)
         $LIB = basename(dirname($libs[0]));
-    } elsif (my @libs = glob("\E$HIP_PATH/lib/*/*libamdhip64*.so*")) {
+    } elsif (@libs = glob("$HIP_PATH/lib/*/libamdhip64*.so*")) {
         # Multi-arch layout (Debian: /usr/lib/x86_64-linux-gnu)
         $LIB = "lib/" . basename(dirname($libs[0]));
     } else {
