@@ -96,10 +96,18 @@ $HIP_ROCCLR_HOME=$ENV{'HIP_ROCCLR_HOME'};
 if ($isWindows) {
     $LIB = "lib";
 } else {
-    # Look for the HSA runtime library to determine the lib directory name
-    $LIB = `find $HIP_PATH/lib $HIP_PATH/lib64 -name libhsa-runtime64* | grep -m1 -o '.*/lib.*/'`;
-    chomp($LIB); # Remove trailing newline characters
-    $LIB = basename($LIB); # Get the lib directory name
+    # Look for the AMD HIP library to determine the lib directory name
+    if (my @libs = glob("\E$HIP_PATH/lib*/*libamdhip64*.so*")) {
+        # Multi-lib layout (Fedora and others: /usr/lib64)
+        $LIB = basename(dirname($libs[0]));
+    } elsif (my @libs = glob("\E$HIP_PATH/lib/*/*libamdhip64*.so*")) {
+        # Multi-arch layout (Debian: /usr/lib/x86_64-linux-gnu)
+        $LIB = "lib/" . basename(dirname($libs[0]));
+    } else {
+        # Set to 'lib' for backwards compatibility with cases that are not
+        # caught in the above checks
+        $LIB = "lib";
+    }
 }
 
 if (defined $HIP_ROCCLR_HOME) {
