@@ -19,16 +19,25 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+/*
+Testcase Scenarios :
+Unit_hipEventCreate_NullCheck - Test unsuccessful event creation when event passed as nullptr
+Unit_hipEventCreateWithFlags_NullCheck - Test unsuccessful event creation with flags when event passed as nullptr
+Unit_hipEventSynchronize_NullCheck - Test unsuccessful event synchronization when event passed as nullptr
+Unit_hipEventQuery_NullCheck - Test unsuccessful event query when event passed as nullptr
+Unit_hipEventDestroy_NullCheck - Test unsuccessful event destruction when event passed as nullptr
+Unit_hipEventCreate_IncompatibleFlags - Test unsuccessful event creation when incompatible flags are passed
+*/
 
 #include <hip_test_common.hh>
 
 TEST_CASE("Unit_hipEventCreate_NullCheck") {
-  hipEvent_t start_event;
   auto res = hipEventCreate(nullptr);
   REQUIRE(res != hipSuccess);
-  res = hipEventCreateWithFlags(nullptr, 0);
-  REQUIRE(res != hipSuccess);
-  res = hipEventCreateWithFlags(&start_event, 10);
+}
+
+TEST_CASE("Unit_hipEventCreateWithFlags_NullCheck") {
+  auto res = hipEventCreateWithFlags(nullptr, 0);
   REQUIRE(res != hipSuccess);
 }
 
