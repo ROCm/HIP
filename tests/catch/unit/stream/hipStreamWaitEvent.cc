@@ -73,7 +73,7 @@ TEST_CASE("Unit_hipStreamWaitEvent_UninitializedStream_Negative") {
 
   HIP_CHECK(hipEventCreate(&event));
 
-  HIP_CHECK_ERROR(hipStreamWaitEvent(stream, event, 0), hipErrorInvalidHandle);
+  HIP_CHECK_ERROR(hipStreamWaitEvent(stream, event, 0), hipErrorContextIsDestroyed);
 
   HIP_CHECK(hipEventDestroy(event));
 }
