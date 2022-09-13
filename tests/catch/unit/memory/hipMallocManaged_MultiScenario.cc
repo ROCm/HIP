@@ -293,11 +293,6 @@ TEST_CASE("Unit_hipMallocManaged_Negative") {
     HIP_CHECK_ERROR(hipMallocManaged(&A, 1024, hipMemAttachGlobal | hipMemAttachHost),
                     hipErrorInvalidValue);
   }
-
-  SECTION("Max value to size") {
-    HIP_CHECK_ERROR(hipMallocManaged(&A, std::numeric_limits<size_t>::max(), hipMemAttachGlobal),
-                    hipErrorOutOfMemory);
-  }
 }
 
 // Allocate two pointers using hipMallocManaged(), initialize,
