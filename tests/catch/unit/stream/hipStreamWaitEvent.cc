@@ -65,6 +65,7 @@ TEST_CASE("Unit_hipStreamWaitEvent_Negative") {
   }
 }
 
+ /* Test removed for Nvidia devices because it returns unexpected error */
 #if !HT_NVIDIA
 TEST_CASE("Unit_hipStreamWaitEvent_UninitializedStream_Negative") {
   hipStream_t stream{reinterpret_cast<hipStream_t>(0xFFFF)};
@@ -103,8 +104,11 @@ TEST_CASE("Unit_hipStreamWaitEvent_Default") {
   REQUIRE(stream != nullptr);
   REQUIRE(waitEvent != nullptr);
 
+  int deviceId {};
+  HIP_CHECK(hipGetDevice(&deviceId));
+
   hipDeviceProp_t prop{};
-  HIP_CHECK(hipGetDeviceProperties(&prop, 0));
+  HIP_CHECK(hipGetDeviceProperties(&prop, deviceId));
   auto clockRate = prop.clockRate;
 
   waitKernel<<<1, 1, 0, stream>>>(clockRate, 2);  // Wait for 2 seconds
@@ -135,8 +139,11 @@ TEST_CASE("Unit_hipStreamWaitEvent_DifferentStreams") {
   REQUIRE(streamBlockedOnStreamA != nullptr);
   REQUIRE(waitEvent != nullptr);
 
+  int deviceId {};
+  HIP_CHECK(hipGetDevice(&deviceId));
+
   hipDeviceProp_t prop{};
-  HIP_CHECK(hipGetDeviceProperties(&prop, 0));
+  HIP_CHECK(hipGetDeviceProperties(&prop, deviceId));
   auto clockRate = prop.clockRate;
 
   waitKernel<<<1, 1, 0, blockedStreamA>>>(clockRate,
