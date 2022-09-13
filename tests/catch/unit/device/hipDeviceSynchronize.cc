@@ -51,7 +51,6 @@ TEST_CASE("Unit_hipDeviceSynchronize_Positive_Empty_Streams") {
   hipStream_t stream;
   HIP_CHECK(hipStreamCreate(&stream));
   HIP_CHECK(hipDeviceSynchronize());
-  REQUIRE(true);
   HIP_CHECK(hipStreamDestroy(stream));
 }
 
