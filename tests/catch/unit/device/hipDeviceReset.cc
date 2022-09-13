@@ -86,13 +86,13 @@ TEST_CASE("Unit_hipDeviceReset_Positive_Threaded") {
   }).join();
   HIP_CHECK_THREAD_FINALIZE();
 
-  CHECK(hipFree(ptr) == hipErrorInvalidValue);
-
-  CHECK(hipStreamDestroy(stream) == hipErrorContextIsDestroyed);
-
   unsigned int flags_after = 0u;
   CHECK(hipGetDeviceFlags(&flags_after) == hipSuccess);
   CHECK(flags_after == flags_before);
+
+  CHECK(hipFree(ptr) == hipErrorInvalidValue);
+
+  CHECK(hipStreamDestroy(stream) == hipErrorContextIsDestroyed);
 
   hipFuncCache_t cache_config;
   CHECK(hipDeviceGetCacheConfig(&cache_config) == hipSuccess);
