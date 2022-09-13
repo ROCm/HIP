@@ -34,6 +34,8 @@ TEST_CASE("Unit_hipDeviceReset_Positive_Basic") {
 
   void* ptr = nullptr;
   HIP_CHECK(hipMalloc(&ptr, 500));
+  hipStream_t stream = nullptr;
+  HIP_CHECK(hipStreamCreate(&stream));
   HIP_CHECK(hipDeviceSetCacheConfig(hipFuncCachePreferL1));
   HIP_CHECK(hipDeviceSetSharedMemConfig(mem_config_before == hipSharedMemBankSizeFourByte
                                             ? hipSharedMemBankSizeEightByte
@@ -42,9 +44,9 @@ TEST_CASE("Unit_hipDeviceReset_Positive_Basic") {
 
   HIP_CHECK(hipDeviceReset());
 
-  int val;
-  CHECK(hipPointerGetAttribute(&val, HIP_POINTER_ATTRIBUTE_IS_MANAGED,
-                               reinterpret_cast<hipDeviceptr_t>(ptr)) == hipErrorInvalidValue);
+  CHECK(hipFree(ptr) == hipErrorInvalidValue);
+
+  CHECK(hipStreamDestroy(stream) == hipErrorContextIsDestroyed);
 
   unsigned int flags_after = 0u;
   CHECK(hipGetDeviceFlags(&flags_after) == hipSuccess);
@@ -70,6 +72,8 @@ TEST_CASE("Unit_hipDeviceReset_Positive_Threaded") {
 
   void* ptr = nullptr;
   HIP_CHECK(hipMalloc(&ptr, 500));
+  hipStream_t stream = nullptr;
+  HIP_CHECK(hipStreamCreate(&stream));
   HIP_CHECK(hipDeviceSetCacheConfig(hipFuncCachePreferL1));
   HIP_CHECK(hipDeviceSetSharedMemConfig(mem_config_before == hipSharedMemBankSizeFourByte
                                             ? hipSharedMemBankSizeEightByte
@@ -82,10 +86,9 @@ TEST_CASE("Unit_hipDeviceReset_Positive_Threaded") {
   }).join();
   HIP_CHECK_THREAD_FINALIZE();
 
-  int val;
-  HIP_CHECK_ERROR(hipPointerGetAttribute(&val, HIP_POINTER_ATTRIBUTE_DEVICE_POINTER,
-                                         reinterpret_cast<hipDeviceptr_t>(ptr)),
-                  hipErrorInvalidValue);
+  CHECK(hipFree(ptr) == hipErrorInvalidValue);
+
+  CHECK(hipStreamDestroy(stream) == hipErrorContextIsDestroyed);
 
   unsigned int flags_after = 0u;
   CHECK(hipGetDeviceFlags(&flags_after) == hipSuccess);
