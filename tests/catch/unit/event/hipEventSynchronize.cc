@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 /*
 Testcase Scenarios :
-Unit_hipEventSynchronize_Default_Positive- Test synchronization of an event that is completed after a simple kernel launch
+Unit_hipEventSynchronize_Default_Positive- Test synchronization of an event that is completed after a simple kernel launch (on null/created stream)
 Unit_hipEventSynchronize_NoEventRecord_Positive - Test synchronization of an event that has not been recorded
 */
 
@@ -30,7 +30,8 @@ Unit_hipEventSynchronize_NoEventRecord_Positive - Test synchronization of an eve
 #include <kernels.hh>
 #include <hip_test_checkers.hh>
 
-TEST_CASE("Unit_hipEventSynchronize_Default_Positive") {
+void testSynchronize(hipStream_t stream) {
+
   constexpr size_t N = 1024;
 
   constexpr int blocks = 1024;
@@ -47,12 +48,17 @@ TEST_CASE("Unit_hipEventSynchronize_Default_Positive") {
   HIP_CHECK(hipMemcpy(A_d, A_h, Nbytes, hipMemcpyHostToDevice));
   HIP_CHECK(hipMemcpy(B_d, B_h, Nbytes, hipMemcpyHostToDevice));
 
-  HipTest::launchKernel<float>(HipTest::vectorADD<float>, blocks, 1, 0, 0,
+  HipTest::launchKernel<float>(HipTest::vectorADD<float>, blocks, 1, 0, stream,
                               static_cast<const float*>(A_d), static_cast<const float*>(B_d),
                               C_d, N);
 
+  if ( stream != nullptr )
+  {
+    HIP_CHECK(hipStreamSynchronize(stream));
+  }
+
   // Record the end_event
-  HIP_CHECK(hipEventRecord(end_event, NULL));
+  HIP_CHECK(hipEventRecord(end_event, nullptr));
   // Wait for the end_event to complete
   HIP_CHECK(hipEventSynchronize(end_event));
 
@@ -62,6 +68,20 @@ TEST_CASE("Unit_hipEventSynchronize_Default_Positive") {
 
   HipTest::checkVectorADD(A_h, B_h, C_h, N, true);
   HipTest::freeArrays(A_d, B_d, C_d, A_h, B_h, C_h, false);
+}
+
+TEST_CASE("Unit_hipEventSynchronize_Default_Positive") {
+  hipStream_t stream{nullptr};
+
+  SECTION("Kernel launched in null stream") {
+    testSynchronize(stream);
+  }
+
+  SECTION ("Kernel launched in created stream") {
+    HIP_CHECK(hipStreamCreate(&stream));
+    testSynchronize(stream);
+    HIP_CHECK(hipStreamDestroy(stream));
+  }
 }
 
 TEST_CASE("Unit_hipEventSynchronize_NoEventRecord_Positive") {
