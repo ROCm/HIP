@@ -551,13 +551,7 @@ TEMPLATE_TEST_CASE("Unit_hipStreamValue_Negative_InvalidFlag", "", uint32_t, uin
   // Set dummy data
   *hostPtr = 0x0;
 
-  SECTION("Invalid flag for hipStreamWriteValue") {
-    HIP_CHECK_ERROR(writeFunc<TestType>(stream, hostPtr.get(), 0, -1), hipErrorInvalidValue);
-  }
-
-  SECTION("Invalid flag for hipStreamWaitValue") {
-    HIP_CHECK_ERROR(waitFunc<TestType>(stream, hostPtr.get(), 0, -1), hipErrorInvalidValue);
-  }
+  HIP_CHECK_ERROR(waitFunc<TestType>(stream, hostPtr.get(), 0, -1), hipErrorInvalidValue);
 
   // Cleanup
   HIP_CHECK(hipHostUnregister(hostPtr.get()));
