@@ -375,7 +375,7 @@ using AttributeToStringMap = std::array<std::pair<hipDeviceAttribute_t, const ch
 
 namespace {
 
-constexpr AttributeToStringMap<55> kCommonAttributes{{
+constexpr AttributeToStringMap<56> kCommonAttributes{{
     {hipDeviceAttributeEccEnabled, "hipDeviceAttributeEccEnabled"},
     {hipDeviceAttributeCanMapHostMemory, "hipDeviceAttributeCanMapHostMemory"},
     {hipDeviceAttributeClockRate, "hipDeviceAttributeClockRate"},
@@ -435,10 +435,9 @@ constexpr AttributeToStringMap<55> kCommonAttributes{{
     {hipDeviceAttributeTotalConstantMemory, "hipDeviceAttributeTotalConstantMemory"},
     {hipDeviceAttributeTotalGlobalMem, "hipDeviceAttributeTotalGlobalMem"},
     {hipDeviceAttributeWarpSize, "hipDeviceAttributeWarpSize"},
-    {hipDeviceAttributeMemoryPoolsSupported, "hipDeviceAttributeMemoryPoolsSupported"}
-    //  {hipDeviceAttributeVirtualMemoryManagementSupported,
-    //   "hipDeviceAttributeVirtualMemoryManagementSupported"}
-    // Undefined in nvidia hip_runtime_api.h
+    {hipDeviceAttributeMemoryPoolsSupported, "hipDeviceAttributeMemoryPoolsSupported"},
+    {hipDeviceAttributeVirtualMemoryManagementSupported,
+     "hipDeviceAttributeVirtualMemoryManagementSupported"}
 }};
 
 #if HT_NVIDIA
