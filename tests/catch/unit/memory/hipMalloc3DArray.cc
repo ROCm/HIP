@@ -348,11 +348,6 @@ TEST_CASE("Unit_hipMalloc3DArray_Negative_InvalidFormat") {
 }
 
 TEST_CASE("Unit_hipMalloc3DArray_Negative_BadChannelLayout") {
-#if HT_AMD
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-129");
-  return;
-#endif
-
   const int bits = GENERATE(8, 16, 32);
   const hipChannelFormatKind formatKind =
       GENERATE(hipChannelFormatKindSigned, hipChannelFormatKindUnsigned, hipChannelFormatKindFloat);
@@ -382,11 +377,6 @@ TEST_CASE("Unit_hipMalloc3DArray_Negative_8BitFloat") {
 }
 
 TEST_CASE("Unit_hipMalloc3DArray_Negative_DifferentChannelSizes") {
-#if HT_AMD
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-129");
-  return;
-#endif
-
   const int bitsX = GENERATE(8, 16, 32);
   const int bitsY = GENERATE(8, 16, 32);
   const int bitsZ = GENERATE(8, 16, 32);

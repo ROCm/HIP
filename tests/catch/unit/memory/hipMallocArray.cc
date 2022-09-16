@@ -658,10 +658,6 @@ TEST_CASE("Unit_hipMallocArray_Negative_3ChannelElement") {
 
 // The bit channel description should not allow any channels after a zero channel
 TEST_CASE("Unit_hipMallocArray_Negative_ChannelAfterZeroChannel") {
-#if HT_AMD
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-129");
-  return;
-#endif
   const int bits = GENERATE(8, 16, 32);
   const hipChannelFormatKind formatKind =
       GENERATE(hipChannelFormatKindSigned, hipChannelFormatKindUnsigned, hipChannelFormatKindFloat);
