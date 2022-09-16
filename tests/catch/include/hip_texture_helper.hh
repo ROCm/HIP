@@ -1,4 +1,5 @@
 #pragma once
+#include <math.h>
 
 #define HIP_SAMPLING_VERIFY_EPSILON     0.00001
 // The internal precision varies by the GPU family and sometimes within the family.
@@ -6,15 +7,149 @@
 #define HIP_SAMPLING_VERIFY_RELATIVE_THRESHOLD  0.05  // 5% for filter mode
 #define HIP_SAMPLING_VERIFY_ABSOLUTE_THRESHOLD  0.1
 
-template<typename type, hipTextureFilterMode fMode = hipFilterModePoint>
-bool hipTextureSamplingVerify(const type outputData, const type expected) {
+#if HT_NVIDIA
+template<typename T>
+typename std::enable_if<sizeof(T) / sizeof(decltype(T::x)) == 4, T>::type
+inline __host__ __device__ operator+(const T &a, const T &b)
+{
+  return {a.x + b.x, a.y + b.y, a.z + b.z,  a.w + b.w};
+}
+
+template<typename T>
+typename std::enable_if<sizeof(T) / sizeof(decltype(T::x)) == 4, T>::type
+inline __host__ __device__ operator-(const T &a, const T &b)
+{
+  return {a.x - b.x, a.y - b.y, a.z - b.z,  a.w - b.w};
+}
+
+template<typename T>
+typename std::enable_if<sizeof(T) / sizeof(decltype(T::x)) == 4, bool>::type
+inline __host__ __device__ operator==(const T &a, const T &b)
+{
+  return a.x == b.x && a.y == b.y && a.z == b.z && a.w == b.w;
+}
+
+template<typename T>
+typename std::enable_if<sizeof(T) / sizeof(decltype(T::x)) == 4, T>::type
+inline __host__ __device__ operator*(const decltype(T::x) &a, const T &b)
+{
+  return {a * b.x, a * b.y, a * b.z, a * b.w};
+}
+
+template<typename T>
+typename std::enable_if<sizeof(T) / sizeof(decltype(T::x)) == 4, void>::type
+inline __host__ __device__ operator*=(T &a, const decltype(T::x) &b)
+{
+  a.x *= b;
+  a.y *= b;
+  a.z *= b;
+  a.w *= b;
+}
+#endif // HT_NVIDIA
+
+// See https://en.wikipedia.org/wiki/SRGB#Transformation
+// From CIE 1931 color space to sRGB
+inline float hipSRGBMap(float fc) {
+  double c = static_cast<double>(fc);
+
+#if !defined(_WIN32)
+  if (std::isnan(c))
+    c = 0.0;
+#else
+    if (_isnan(c)) c = 0.0;
+#endif
+
+  if (c > 1.0)
+    c = 1.0;
+  else if (c < 0.0)
+    c = 0.0;
+  else if (c < 0.0031308)
+    c = 12.92 * c;
+  else
+    c = 1.055 * pow(c, 5.0 / 12.0) - 0.055;
+
+  return static_cast<float>(c);
+}
+
+// From sRGB to CIE 1931 color space
+inline float hipSRGBUnmap(float fc) {
+  double c = static_cast<double>(fc);
+
+  if (c <= 0.04045)
+    c = c / 12.92;
+  else
+    c = pow((c + 0.055) / 1.055, 2.4);
+
+  return static_cast<float>(c);
+}
+
+inline float4 hipSRGBMap(float4 fc) {
+  fc.x = hipSRGBMap(fc.x);
+  fc.y = hipSRGBMap(fc.y);
+  fc.z = hipSRGBMap(fc.z);
+  // Alpha channel will keep unchanged
+  return fc;
+}
+
+inline float4 hipSRGBUnmap(float4 fc) {
+  fc.x = hipSRGBUnmap(fc.x);
+  fc.y = hipSRGBUnmap(fc.y);
+  fc.z = hipSRGBUnmap(fc.z);
+  // Alpha channel will keep unchanged
+  return fc;
+}
+
+template<typename T>
+typename std::enable_if<std::is_scalar<T>::value == true, double>::type
+hipFabs(const T &t) {
+  return fabs(t);
+}
+
+template<typename T>
+typename std::enable_if<sizeof(T) / sizeof(decltype(T::x)) == 1, double>::type
+hipFabs(const T &t) {
+  return fabs(t.x);
+}
+
+template<typename T>
+typename std::enable_if<sizeof(T) / sizeof(decltype(T::x)) == 2, double>::type
+hipFabs(const T &t) {
+  double x = static_cast<double>(t.x);
+  double y = static_cast<double>(t.y);
+  double s =  x * x +  y * y;
+  return sqrt(s);
+}
+
+template<typename T>
+typename std::enable_if<sizeof(T) / sizeof(decltype(T::x)) == 3, double>::type
+hipFabs(const T &t) {
+  double x = static_cast<double>(t.x);
+  double y = static_cast<double>(t.y);
+  double z = static_cast<double>(t.z);
+  double s =  x * x +  y * y + z * z;
+  return sqrt(s);
+}
+
+template<typename T>
+typename std::enable_if<sizeof(T) / sizeof(decltype(T::x)) == 4, double>::type
+hipFabs(const T &t) {
+  double x = static_cast<double>(t.x);
+  double y = static_cast<double>(t.y);
+  double z = static_cast<double>(t.z);
+  double w = static_cast<double>(t.w);
+  double s =  x * x +  y * y + z * z + w * w;
+  return sqrt(s);
+}
+
+template<typename T, hipTextureFilterMode fMode = hipFilterModePoint, bool sRGB = false>
+bool hipTextureSamplingVerify(T outputData, T expected) {
   bool testResult = false;
-  if (fMode == hipFilterModePoint) {
+  if (fMode == hipFilterModePoint && !sRGB) {
     testResult = outputData == expected;
-  } else if (fMode == hipFilterModeLinear) {
-    const type mean = (fabs(outputData) + fabs(expected)) / 2;
-    const type diff = fabs(outputData - expected);
-    const type ratio = diff / (mean + HIP_SAMPLING_VERIFY_EPSILON);
+  } else {
+    double mean = (hipFabs(outputData) + hipFabs(expected)) / 2;
+    double diff = hipFabs(outputData - expected);
+    double ratio = diff / (mean + HIP_SAMPLING_VERIFY_EPSILON);
     if (ratio <= HIP_SAMPLING_VERIFY_RELATIVE_THRESHOLD) {
       testResult = true;
     } else if (diff <= HIP_SAMPLING_VERIFY_ABSOLUTE_THRESHOLD) {
@@ -46,10 +181,11 @@ void hipTextureGetAddress(int &value, const int maxValue)
 
 // Simulate logics in CTS read_image_pixel_float().
 // x, y and z must be returned by hipTextureGetAddress()
-template<hipTextureAddressMode addressMode>
-float hipTextureGetValue(const float *data, const int x, const int width,
-         const int y = 0, const int height = 0,const int z = 0, const int depth = 0) {
-  float result = std::numeric_limits<float>::lowest();
+template<typename T, hipTextureAddressMode addressMode, bool sRGB = false>
+T hipTextureGetValue(const T *data, const int x, const int width,
+         const int y = 0, const int height = 0, const int z = 0, const int depth = 0) {
+  T result;
+  memset(&result, 0, sizeof(result));
   switch (addressMode) {
     case hipAddressModeClamp:
       if (width > 0) {
@@ -65,30 +201,35 @@ float hipTextureGetValue(const float *data, const int x, const int width,
     case hipAddressModeBorder:
       if (width > 0) {
         if (height == 0 && depth == 0) {
-          result = (x >= 0 && x < width) ? data[x] : 0;  // 1D
+          if (x >= 0 && x < width)
+            result = data[x];  // 1D
         } else if (depth == 0) {
-          result = (x >= 0 && x < width && y >= 0 && y < height) ?
-              data[y * width + x] : 0;  // 2D
+          if (x >= 0 && x < width && y >= 0 && y < height)
+              result = data[y * width + x];  // 2D
         } else {
-          result = (x >= 0 && x < width && y >= 0 && y < height && z >= 0 && z < depth) ?
-              data[z * width * height + y * width + x] : 0;  // 3D
+          if (x >= 0 && x < width && y >= 0 && y < height && z >= 0 && z < depth)
+              result = data[z * width * height + y * width + x];  // 3D
         }
       }
       break;
     default:
       break;
   }
+  if (sRGB && std::is_same<T, float4>::value) {
+    result = hipSRGBUnmap(result);
+  }
   return result;
 }
 
-template<hipTextureAddressMode addressMode, hipTextureFilterMode filterMode>
-float getExpectedValue(const int width, float x, const float *data) {
-  float result = std::numeric_limits<float>::lowest();
+template<typename T, hipTextureAddressMode addressMode, hipTextureFilterMode filterMode, bool sRGB = false>
+T getExpectedValue(const int width, float x, const T *data) {
+  T result;
+  memset(&result, 0, sizeof(result));
   switch (filterMode) {
     case hipFilterModePoint: {
       int i1 = static_cast<int>(floor(x));
       hipTextureGetAddress < addressMode > (i1, width);
-      result = hipTextureGetValue < addressMode > (data, i1, width);
+      result = hipTextureGetValue < T, addressMode, sRGB > (data, i1, width);
     }
       break;
     case hipFilterModeLinear: {
@@ -99,8 +240,8 @@ float getExpectedValue(const int width, float x, const float *data) {
       hipTextureGetAddress < addressMode > (i1, width);
       hipTextureGetAddress < addressMode > (i2, width);
 
-      float t1 = hipTextureGetValue < addressMode > (data, i1, width);
-      float t2 = hipTextureGetValue < addressMode > (data, i2, width);
+      T t1 = hipTextureGetValue < T, addressMode, sRGB> (data, i1, width);
+      T t2 = hipTextureGetValue < T, addressMode, sRGB > (data, i2, width);
 
       return (1 - a) * t1 + a * t2;
     }
@@ -109,16 +250,17 @@ float getExpectedValue(const int width, float x, const float *data) {
   return result;
 }
 
-template<hipTextureAddressMode addressMode, hipTextureFilterMode filterMode>
-float getExpectedValue(const int width, const int height, float x, float y, const float *data) {
-  float result = std::numeric_limits<float>::lowest();
+template<typename T, hipTextureAddressMode addressMode, hipTextureFilterMode filterMode, bool sRGB = false>
+T getExpectedValue(const int width, const int height, float x, float y, const T *data) {
+  T result;
+  memset(&result, 0, sizeof(result));
   switch (filterMode) {
     case hipFilterModePoint: {
       int i1 = static_cast<int>(floor(x));
       int j1 = static_cast<int>(floor(y));
       hipTextureGetAddress < addressMode > (i1, width);
       hipTextureGetAddress < addressMode > (j1, height);
-      result = hipTextureGetValue < addressMode > (data, i1, width, j1, height);
+      result = hipTextureGetValue < T, addressMode, sRGB > (data, i1, width, j1, height);
     }
       break;
     case hipFilterModeLinear: {
@@ -139,13 +281,13 @@ float getExpectedValue(const int width, const int height, float x, float y, cons
       hipTextureGetAddress < addressMode > (j1, height);
       hipTextureGetAddress < addressMode > (j2, height);
 
-      float t11 = hipTextureGetValue < addressMode
+      T t11 = hipTextureGetValue < T, addressMode, sRGB
           > (data, i1, width, j1, height);
-      float t21 = hipTextureGetValue < addressMode
+      T t21 = hipTextureGetValue < T, addressMode, sRGB
           > (data, i2, width, j1, height);
-      float t12 = hipTextureGetValue < addressMode
+      T t12 = hipTextureGetValue < T, addressMode, sRGB
           > (data, i1, width, j2, height);
-      float t22 = hipTextureGetValue < addressMode
+      T t22 = hipTextureGetValue < T, addressMode, sRGB
           > (data, i2, width, j2, height);
 
       result = (1 - a) * (1 - b) * t11 + a * (1 - b) * t21 + (1 - a) * b * t12
@@ -156,10 +298,11 @@ float getExpectedValue(const int width, const int height, float x, float y, cons
   return result;
 }
 
-template<hipTextureAddressMode addressMode, hipTextureFilterMode filterMode>
-float getExpectedValue(const int width, const int height, const int depth,
-                      float x, float y, float z, const float *data) {
-  float result = std::numeric_limits<float>::lowest();
+template<class T, hipTextureAddressMode addressMode, hipTextureFilterMode filterMode, bool sRGB = false>
+T getExpectedValue(const int width, const int height, const int depth,
+                      float x, float y, float z, const T *data) {
+  T result;
+  memset(&result, 0, sizeof(result));
   switch (filterMode) {
     case hipFilterModePoint: {
       int i1 = static_cast<int>(floor(x));
@@ -170,7 +313,7 @@ float getExpectedValue(const int width, const int height, const int depth,
       hipTextureGetAddress < addressMode > (j1, height);
       hipTextureGetAddress < addressMode > (k1, depth);
 
-      result = hipTextureGetValue < addressMode > (data, i1, width, j1, height, k1, depth);
+      result = hipTextureGetValue < T, addressMode, sRGB > (data, i1, width, j1, height, k1, depth);
     }
       break;
     case hipFilterModeLinear: {
@@ -197,21 +340,21 @@ float getExpectedValue(const int width, const int height, const int depth,
       hipTextureGetAddress < addressMode > (k1, depth);
       hipTextureGetAddress < addressMode > (k2, depth);
 
-      float t111 = hipTextureGetValue < addressMode
+      T t111 = hipTextureGetValue < T, addressMode, sRGB
           > (data, i1, width, j1, height, k1, depth);
-      float t211 = hipTextureGetValue < addressMode
+      T t211 = hipTextureGetValue < T, addressMode, sRGB
           > (data, i2, width, j1, height, k1, depth);
-      float t121 = hipTextureGetValue < addressMode
+      T t121 = hipTextureGetValue < T, addressMode, sRGB
           > (data, i1, width, j2, height, k1, depth);
-      float t112 = hipTextureGetValue < addressMode
+      T t112 = hipTextureGetValue < T, addressMode, sRGB
           > (data, i1, width, j1, height, k2, depth);
-      float t122 = hipTextureGetValue < addressMode
+      T t122 = hipTextureGetValue < T, addressMode, sRGB
           > (data, i1, width, j2, height, k2, depth);
-      float t212 = hipTextureGetValue < addressMode
+      T t212 = hipTextureGetValue < T, addressMode, sRGB
           > (data, i2, width, j1, height, k2, depth);
-      float t221 = hipTextureGetValue < addressMode
+      T t221 = hipTextureGetValue < T, addressMode, sRGB
           > (data, i2, width, j2, height, k1, depth);
-      float t222 = hipTextureGetValue < addressMode
+      T t222 = hipTextureGetValue < T, addressMode, sRGB
           > (data, i2, width, j2, height, k2, depth);
 
       result =
