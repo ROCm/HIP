@@ -87,11 +87,6 @@ TEMPLATE_TEST_CASE("Unit_hipArray3DCreate_happy", "", char, uchar2, uint2, int4,
 
 TEMPLATE_TEST_CASE("Unit_hipArray3DCreate_MaxTexture", "", int, uint4, short, ushort2,
                    unsigned char, float, float4) {
-#if HT_AMD
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-97");
-  return;
-#endif
-
   using vec_info = vector_info<TestType>;
   DriverContext ctx;
 
