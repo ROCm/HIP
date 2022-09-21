@@ -155,9 +155,7 @@ __global__ void test_gwsPerThrd(uint* buf, uint bufSize, int64_t* tmpBuf,
     }
 }
 #endif
-static const uint BufferSizeInDwords = 256 * 1024 * 1024;
-static constexpr uint NumKernelArgs = 4;
-static constexpr uint MaxGPUs = 8;
+
 // callback function
 static void HIPRT_CB CallBackFunctn(hipStream_t strm, hipError_t err,
                                     void *ChkVal) {
