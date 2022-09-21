@@ -243,10 +243,6 @@ TEMPLATE_TEST_CASE("Unit_hipStreamValue_Write", "", (TestParams<uint32_t, PtrTyp
                    (TestParams<uint64_t, PtrType::DevicePtr>),
                    (TestParams<uint64_t, PtrType::DevicePtrToHost>)) {
 #endif
-#if HT_AMD
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-126");
-  return;
-#endif
   if (!streamWaitValueSupported()) {
     HipTest::HIP_SKIP_TEST("hipStreamWaitValue not supported on this device.");
     return;
@@ -303,11 +299,6 @@ void testWait(TEST_WAIT<typename TestType::UIntType> tc) {
     HipTest::HIP_SKIP_TEST("hipStreamWaitValue not supported on this device.");
     return;
   }
-#if HT_AMD
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-128");
-  return;
-#endif
-
   using UIntT = typename TestType::UIntType;
   constexpr auto ptrType = TestType::ptrType;
   constexpr UIntT defaultMask = ~static_cast<UIntT>(0);
@@ -478,10 +469,6 @@ DEFINE_STREAM_WAIT_VAL_TEST_CASES_INT64("NoMask_Nor",
 
 // Negative Tests
 TEST_CASE("Unit_hipStreamValue_Negative_InvalidMemory") {
-#if HT_AMD
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-96");
-  return;
-#endif
   if (!streamWaitValueSupported()) {
     HipTest::HIP_SKIP_TEST("hipStreamWaitValue not supported on this device.");
     return;
@@ -513,10 +500,6 @@ TEST_CASE("Unit_hipStreamValue_Negative_InvalidMemory") {
 }
 
 TEMPLATE_TEST_CASE("Unit_hipStreamWaitValue_Negative_InvalidFlag", "", uint32_t, uint64_t) {
-#if HT_AMD
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-96");
-  return;
-#endif
   if (!streamWaitValueSupported()) {
     HipTest::HIP_SKIP_TEST("hipStreamWaitValue not supported on this device.");
     return;
