@@ -322,10 +322,6 @@ TEST_CASE("Unit_hipArrayCreate_ZeroWidth") {
 
 // HipArrayCreate will return an error when nullptr is used as the array argument
 TEST_CASE("Unit_hipArrayCreate_Nullptr") {
-#if HT_AMD
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-130");
-  return;
-#endif
   DriverContext ctx;
   SECTION("Null array") {
     HIP_ARRAY_DESCRIPTOR desc;
