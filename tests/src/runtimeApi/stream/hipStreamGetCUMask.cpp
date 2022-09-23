@@ -124,7 +124,13 @@ int main(int argc, char* argv[]) {
   cout << "info: CU mask for the default stream is: 0x" << ss.str().c_str() << endl;
 
   vector<uint32_t> cuMask1(defaultCUMask);
-  cuMask1[0] = 0xe;
+  if (props.major >= 10) {
+    // For gfx >= 10, one work group processor encompasses 2 CUs &
+    // hence the CUs need to be enabled in pair
+    cuMask1[0] = 0xc;
+  } else {
+    cuMask1[0] = 0xe;
+  }
 
   HIPCHECK(hipExtStreamCreateWithCUMask(&stream, cuMask1.size(), cuMask1.data()));
   ss.str("");

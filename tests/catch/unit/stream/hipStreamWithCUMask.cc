@@ -204,21 +204,27 @@ TEST_CASE("Unit_hipExtStreamCreateWithCUMask_Functionality") {
     hA[i] = CONSTANT + i;
   }
 
+  int cuCountPerGroup = 1;
+  if (props.major >= 10) {
+    cuCountPerGroup = 2; // For gfx >= 10, one work group processor encompasses 2 CUs
+  }
+
+  unsigned long mask = pow(2, cuCountPerGroup) - 1;
   for (int np = 0; np < KNumPartition; np++) {
     HIP_CHECK(hipMalloc(&dA[np], Nbytes));
     HIP_CHECK(hipMalloc(&dC[np], Nbytes));
     // make unique CU masks in the multiple of dwords for each stream
     uint32_t temp = 0;
-    uint32_t bit_index = np;
-    for (int i = np; i < props.multiProcessorCount; i = i + 4) {
-      temp |= 1UL << bit_index;
+    uint32_t bit_index = cuCountPerGroup * np;
+    for (int i = np; i < props.multiProcessorCount; i = i + cuCountPerGroup * 4) {
+      temp |= mask << bit_index;
       if (bit_index >= 32) {
         cuMasks[np].push_back(temp);
         temp = 0;
-        bit_index = np;
-        temp |= 1UL << bit_index;
+        bit_index = cuCountPerGroup * np;
+        temp |= mask << bit_index;
       }
-      bit_index += 4;
+      bit_index += cuCountPerGroup * 4;
     }
     if (bit_index != 0) {
       cuMasks[np].push_back(temp);
@@ -229,9 +235,9 @@ TEST_CASE("Unit_hipExtStreamCreateWithCUMask_Functionality") {
 
     HIP_CHECK(hipMemcpy(dA[np], hA, Nbytes, hipMemcpyHostToDevice));
 
-    ss[np] << std::hex;
+    ss[np] << std::hex << std::setfill('0');
     for (int i = cuMasks[np].size() - 1; i >= 0; i--) {
-      ss[np] << cuMasks[np][i];
+      ss[np] << std::setw(8) << cuMasks[np][i];
     }
   }
 
