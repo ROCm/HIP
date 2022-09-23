@@ -52,7 +52,7 @@ TEST_CASE("Unit_hiprtc_includepath") {
   // Need to find the header files from the include path
   // It is set to headers in the current directory here
   const char* options[] = {
-      sarg.c_str(), "-I    ./headers"
+      sarg.c_str(), "-I./headers"
   };
 
   hiprtcResult compileResult{hiprtcCompileProgram(prog, 2, options)};
