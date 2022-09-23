@@ -148,10 +148,6 @@ line1:
 
 TEST_CASE("Unit_hipTextureObj3DCheckModes") {
   CHECK_IMAGE_SUPPORT
-#ifdef _WIN32
-  INFO("Unit_hipTextureObj3DCheckModes skipped on Windows");
-  return;
-#endif
 
   int device = 0;
   hipDeviceProp_t props;

@@ -114,10 +114,6 @@ line1:
 TEST_CASE("Unit_hipTextureObj2DCheckModes") {
   CHECK_IMAGE_SUPPORT
 
-#ifdef _WIN32
-  INFO("Unit_hipTextureObj2DCheckModes skipped on Windows");
-  return;
-#endif
   SECTION("hipAddressModeClamp, hipFilterModePoint, regularCoords") {
     runTest<hipAddressModeClamp, hipFilterModePoint, false>(256, 256, -3.9, 6.1);
     runTest<hipAddressModeClamp, hipFilterModePoint, false>(256, 256, 4.4, -7.0);
