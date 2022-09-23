@@ -31,7 +31,7 @@ __global__ void tex1DKernel(float *outputData, hipTextureObject_t textureObject,
 }
 
 template<hipTextureAddressMode addressMode, hipTextureFilterMode filterMode, bool normalizedCoords>
-void runTest(const int width, const float offsetX) {
+static void runTest(const int width, const float offsetX) {
   //printf("%s(addressMode=%d, filterMode=%d, normalizedCoords=%d, width=%d, offsetX=%f)\n", __FUNCTION__,
   //       addressMode, filterMode, normalizedCoords, width, offsetX);
   unsigned int size = width * sizeof(float);
@@ -82,7 +82,7 @@ void runTest(const int width, const float offsetX) {
 
   bool result = true;
   for (int j = 0; j < width; j++) {
-    float expectedValue = getExpectedValue<addressMode, filterMode>(width, offsetX + j, hData);
+    float expectedValue = getExpectedValue<float, addressMode, filterMode>(width, offsetX + j, hData);
     if (!hipTextureSamplingVerify<float, filterMode>(hOutputData[j], expectedValue)) {
       INFO("Mismatch at " << offsetX + j << ":" << hOutputData[j] <<
            " expected:" << expectedValue);
@@ -102,10 +102,6 @@ void runTest(const int width, const float offsetX) {
 TEST_CASE("Unit_hipTextureObj1DCheckModes") {
   CHECK_IMAGE_SUPPORT
 
-#ifdef _WIN32
-  INFO("Unit_hipTextureObj1DCheckModes skipped on Windows");
-  return;
-#endif
   SECTION("hipAddressModeClamp, hipFilterModePoint, regularCoords") {
     runTest<hipAddressModeClamp, hipFilterModePoint, false>(256, -3);
     runTest<hipAddressModeClamp, hipFilterModePoint, false>(256, 4);
