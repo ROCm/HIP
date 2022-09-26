@@ -44,7 +44,7 @@ Negative/Argument Validation:
 
 
 #define BUF_SIZE        4096
-#define MAX_DEVICES     8
+#define MAX_DEVICES     16
 
 
 typedef struct ipcEventInfo {
@@ -250,7 +250,7 @@ TEST_CASE("Unit_hipIpcEventHandle_Functional") {
     return;
   }
 
-  g_processCnt = shmDevices->count;
+  g_processCnt = (shmDevices->count > MAX_DEVICES) ? MAX_DEVICES : shmDevices->count;
 
   // Barrier is used to synchronize processes created.
   g_Barrier = reinterpret_cast<ipcBarrier_t *> (mmap(NULL, sizeof(*g_Barrier),
