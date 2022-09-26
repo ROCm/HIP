@@ -159,12 +159,15 @@ void enablePeerFirst(bool useAsyncCopy) {
     HIPCHECK(hipSetDevice(g_currentDevice));
     HIPCHECK(hipMalloc(&A_d0, Nbytes));
     HIPCHECK(hipMemset(A_d0, memsetval, Nbytes));
+    // hipDeviceSynchronize as hipMemset is asynchronous when destination memory is device memory
+    HIPCHECK(hipDeviceSynchronize());
 
     // allocate and initialize memory on peer device
     HIPCHECK(hipSetDevice(g_peerDevice));
     HIPCHECK(hipMalloc(&A_d1, Nbytes));
     HIPCHECK(hipMemset(A_d1, 0x13, Nbytes));
-
+    // hipDeviceSynchronize as hipMemset is asynchronous when destination memory is device memory
+    HIPCHECK(hipDeviceSynchronize());
 
     // Device0 push to device1, using P2P:
     // NOTE : if p_mirrorPeers=0 and p_memcpyWithPeer=1, then peer device does not have mapping for
@@ -216,11 +219,15 @@ void allocMemoryFirst(bool useAsyncCopy) {
     HIPCHECK(hipSetDevice(g_currentDevice));
     HIPCHECK(hipMalloc(&A_d0, Nbytes));
     HIPCHECK(hipMemset(A_d0, memsetval, Nbytes));
+    // hipDeviceSynchronize as hipMemset is asynchronous when destination memory is device memory
+    HIPCHECK(hipDeviceSynchronize());
 
     // allocate and initialize memory on peer device
     HIPCHECK(hipSetDevice(g_peerDevice));
     HIPCHECK(hipMalloc(&A_d1, Nbytes));
     HIPCHECK(hipMemset(A_d1, 0x13, Nbytes));
+    // hipDeviceSynchronize as hipMemset is asynchronous when destination memory is device memory
+    HIPCHECK(hipDeviceSynchronize());
 
 
     //---
@@ -305,6 +312,8 @@ void testPeerHostToDevice(bool useAsyncCopy) {
     HIPCHECK(hipSetDevice(g_peerDevice));
     HIPCHECK(hipMalloc(&A_d1, Nbytes));
     HIPCHECK(hipMemset(A_d1, 0x13, Nbytes));
+    // hipDeviceSynchronize as hipMemset is asynchronous when destination memory is device memory
+    HIPCHECK(hipDeviceSynchronize());
 
     bool firstAsyncCopy = useAsyncCopy; /*TODO - should be useAsyncCopy*/
 

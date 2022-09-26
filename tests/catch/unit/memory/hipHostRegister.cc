@@ -162,11 +162,6 @@ template <typename T> __global__ void fill_kernel(T* dataPtr, T value) {
 }
 
 TEMPLATE_TEST_CASE("Unit_hipHostRegister_Flags", "", int, float, double) {
-#if HT_AMD
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-138");
-  return;
-#else
-
   size_t sizeBytes = 1 * sizeof(TestType);
   TestType* hostPtr = reinterpret_cast<TestType*>(malloc(sizeBytes));
 
@@ -193,7 +188,6 @@ TEMPLATE_TEST_CASE("Unit_hipHostRegister_Flags", "", int, float, double) {
   }
 
   free(hostPtr);
-#endif
 }
 
 TEMPLATE_TEST_CASE("Unit_hipHostRegister_Negative", "", int, float, double) {
@@ -216,7 +210,7 @@ TEMPLATE_TEST_CASE("Unit_hipHostRegister_Negative", "", int, float, double) {
   REQUIRE(devMemAvail > 0);
   REQUIRE(hostMemFree > 0);
 
-  size_t memFree = (std::min)(devMemFree, hostMemFree);  // which is the limiter cpu or gpu
+  size_t memFree = (std::max)(devMemFree, hostMemFree);  // which is the limiter cpu or gpu
 
   SECTION("hipHostRegister Negative Test - invalid memory size") {
     HIP_CHECK_ERROR(hipHostRegister(hostPtr, memFree, 0), hipErrorInvalidValue);

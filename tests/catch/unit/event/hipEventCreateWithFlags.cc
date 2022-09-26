@@ -19,46 +19,26 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-
 /*
- * Conformance test for checking functionality of
- * hipError_t hipGetDeviceCount(int* count);
- */
+Testcase Scenarios :
+Unit_hipEventCreateWithFlags_Positive - Test simple event creation with hipEventCreateWithFlags api for each flag
+*/
 
 #include <hip_test_common.hh>
-#include <hip_test_process.hh>
 
-/**
- * hipGetDeviceCount tests
- * Scenario: Validates if &numDevices = nullptr returns error code.
- */
-TEST_CASE("Unit_hipGetDeviceCount_NegTst") {
-  // Scenario1
-  REQUIRE_FALSE(hipGetDeviceCount(nullptr) == hipSuccess);
-}
+TEST_CASE("Unit_hipEventCreateWithFlags_Positive") {
 
-TEST_CASE("Unit_hipGetDeviceCount_HideDevices") {
-  int deviceCount = HipTest::getDeviceCount();
-  if (deviceCount < 2) {
-    HipTest::HIP_SKIP_TEST("This test requires more than 2 GPUs. Skipping.");
-    return;
-  }
+#if HT_AMD
+  // On AMD platform, hipEventInterprocess support is under development. Use of this flag will return an error. Omitted
+  const unsigned int flagUnderTest = GENERATE(hipEventDefault, hipEventBlockingSync, hipEventDisableTiming, hipEventReleaseToDevice, hipEventReleaseToSystem);
+#else
+  // On Non-AMD platforms hipEventReleaseToDevice / hipEventReleaseToSystem are not defined
+  const unsigned int flagUnderTest = GENERATE(hipEventDefault, hipEventBlockingSync, hipEventDisableTiming, hipEventInterprocess | hipEventDisableTiming);
+#endif
 
-  for (int i = deviceCount; i >= 1; i--) {
-    std::string visibleStr;
-    for (int j = 0; j < i; j++) {  // Generate a string which has first i devices
-      visibleStr += std::to_string(j);
-      if (j != (i - 1)) {
-        visibleStr += ",";
-      }
-    }
+  hipEvent_t event;
+  HIP_CHECK(hipEventCreateWithFlags(&event, flagUnderTest));
+  REQUIRE(event != nullptr);
 
-    hip::SpawnProc proc("getDeviceCount", true);
-    INFO("Output from process : " << proc.getOutput());
-    REQUIRE(proc.run(visibleStr) == i);
-  }
-}
-
-TEST_CASE("Print_Out_Device_Count") {
-  std::cout << "Device Count: " << HipTest::getDeviceCount() << std::endl;
+  HIP_CHECK(hipEventDestroy(event));
 }

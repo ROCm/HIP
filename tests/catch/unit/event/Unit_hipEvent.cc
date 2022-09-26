@@ -114,7 +114,8 @@ void test(unsigned testMask, int* C_d, int* C_h, int64_t numElements, hipStream_
     if (e == hipSuccess) assert(t == 0.0f);
 
     // stop usually ready unless we skipped the synchronization (syncNone)
-    HIP_ASSERT(hipEventElapsedTime(&t, stop, stop) == expectedStopError);
+    e = hipEventElapsedTime(&t, stop, stop);
+    HIP_ASSERT(e == expectedStopError);
     if (e == hipSuccess) assert(t == 0.0f);
 
     e = hipEventElapsedTime(&t, start, stop);
