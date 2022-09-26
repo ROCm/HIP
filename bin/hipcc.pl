@@ -199,10 +199,6 @@ if ($HIP_PLATFORM eq "amd") {
         print ("HIP_CLANG_TARGET=$HIP_CLANG_TARGET\n");
     }
 
-    $HIPLDFLAGS .= " -L\"$HIP_LIB_PATH\"";
-    if ($isWindows) {
-      $HIPLDFLAGS .= " -lamdhip64";
-    }
     if ($HIP_CLANG_HCC_COMPAT_MODE) {
         ## Allow __fp16 as function parameter and return type.
         $HIPCXXFLAGS .= " -Xclang -fallow-half-arguments-and-returns -D__HIP_HCC_COMPAT_MODE__=1";
@@ -245,8 +241,6 @@ my $printCXXFlags = 0;      # print HIPCXXFLAGS
 my $printLDFlags = 0;       # print HIPLDFLAGS
 my $runCmd = 1;
 my $buildDeps = 0;
-my $linkType = 1;
-my $setLinkType = 0;
 my $hsacoVersion = 0;
 my $funcSupp = 0;      # enable function support
 my $rdc = 0;           # whether -fgpu-rdc is on
@@ -361,16 +355,11 @@ foreach $arg (@ARGV)
         $compileOnly = 1;
         $buildDeps = 1;
     }
-    if(($trimarg eq '-use-staticlib') and ($setLinkType eq 0))
-    {
-        $linkType = 0;
-        $setLinkType = 1;
-        $swallowArg = 1;
+    if($trimarg eq '-use-staticlib') {
+        print "Warning: The -use-staticlib option has been deprecated and is no longer needed.\n"
     }
-    if(($trimarg eq '-use-sharedlib') and ($setLinkType eq 0))
-    {
-        $linkType = 1;
-        $setLinkType = 1;
+    if($trimarg eq '-use-sharedlib') {
+        print "Warning: The -use-sharedlib option has been deprecated and is no longer needed.\n"
     }
     if($arg =~ m/^-O/)
     {
@@ -558,12 +547,6 @@ if ($buildDeps and $HIP_PLATFORM eq 'amd') {
     $HIPCXXFLAGS .= " --cuda-host-only";
 }
 
-# Add --hip-link only if it is compile only and -fgpu-rdc is on.
-if ($rdc and !$compileOnly and $HIP_PLATFORM eq 'amd') {
-    $HIPLDFLAGS .= " --hip-link";
-    $HIPLDFLAGS .= $HIPLDARCHFLAGS;
-}
-
 # hipcc currrently requires separate compilation of source files, ie it is not possible to pass
 # CPP files combined with .O files
 # Reason is that NVCC uses the file extension to determine whether to compile in CUDA mode or
@@ -588,23 +571,21 @@ if ($HIP_PLATFORM eq "amd") {
             $HIPCXXFLAGS .= " --hip-device-lib-path=\"$DEVICE_LIB_PATH\"";
         }
     }
-    if (not $isWindows) {
-        $HIPLDFLAGS .= " -lgcc_s -lgcc -lpthread -lm -lrt";
-    }
 
-    if (not $isWindows  and not $compileOnly) {
-      if ($linkType eq 0) {
-        $toolArgs = " -L$HIP_LIB_PATH -lamdhip64 -L$ROCM_PATH/lib -lhsa-runtime64 -ldl -lnuma " . ${toolArgs};
-      } else {
-        $toolArgs = ${toolArgs} . " -Wl,-rpath=$HIP_LIB_PATH:$ROCM_PATH/lib -lamdhip64 ";
-      }
-      # To support __fp16 and _Float16, explicitly link with compiler-rt
-      $HIP_CLANG_BUILTIN_LIB="$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION/lib/$HIP_CLANG_TARGET/libclang_rt.builtins.a";
-      if (-e $HIP_CLANG_BUILTIN_LIB) {
-        $toolArgs .= " -L$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION/lib/$HIP_CLANG_TARGET -lclang_rt.builtins "
-      } else {
-        $toolArgs .= " -L$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION/lib/linux -lclang_rt.builtins-x86_64 "
-      }
+    if (!$compileOnly) {
+        $HIPLDFLAGS .= " --hip-link";
+        if ($rdc) {
+            $HIPLDFLAGS .= $HIPLDARCHFLAGS;
+        }
+        if (not $isWindows) {
+            # To support __fp16 and _Float16, explicitly link with compiler-rt
+            $HIP_CLANG_BUILTIN_LIB="$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION/lib/$HIP_CLANG_TARGET/libclang_rt.builtins.a";
+            if (-e $HIP_CLANG_BUILTIN_LIB) {
+                $toolArgs .= " -L$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION/lib/$HIP_CLANG_TARGET -lclang_rt.builtins "
+            } else {
+                $toolArgs .= " -L$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION/lib/linux -lclang_rt.builtins-x86_64 "
+            }
+        }
     }
 }
 
