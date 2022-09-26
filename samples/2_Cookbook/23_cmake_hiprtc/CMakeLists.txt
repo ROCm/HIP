@@ -1,4 +1,4 @@
-# Copyright (c) 2021 Advanced Micro Devices, Inc. All Rights Reserved.
+# Copyright (C) 2022 Advanced Micro Devices, Inc. All Rights Reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -18,34 +18,19 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-# Common Tests - Test independent of all platforms
-set(TEST_SRC
-    hipCreateTextureObject_ArgValidation.cc
-    hipCreateTextureObject_Linear.cc
-    hipCreateTextureObject_Pitch2D.cc
-    hipCreateTextureObject_Array.cc
-    hipTextureObjFetchVector.cc
-    hipNormalizedFloatValueTex.cc
-    hipTextureObj2D.cc
-    hipSimpleTexture3D.cc
-    hipTextureRef2D.cc
-    hipSimpleTexture2DLayered.cc
-    hipTextureMipmapObj2D.cc
-    hipBindTex2DPitch.cc
-    hipBindTexRef1DFetch.cc
-    hipTex1DFetchCheckModes.cc
-    hipGetChanDesc.cc
-    hipTexObjPitch.cc
-    hipTextureObj1DFetch.cc
-    hipBindTex2DPitch.cc
-    hipBindTexRef1DFetch.cc
-    hipTex1DFetchCheckModes.cc
-    hipTextureObj1DCheckModes.cc
-    hipTextureObj2DCheckModes.cc
-    hipTextureObj3DCheckModes.cc
-    hipTextureObj2DCheckSRGBModes.cc
-)
+project(cmake_hiprtc_test)
 
-hip_add_exe_to_target(NAME TextureTest
-                      TEST_SRC ${TEST_SRC}
-                      TEST_TARGET_NAME build_tests)
+cmake_minimum_required(VERSION 3.10.2)
+
+# Find hiprtc
+find_package(hiprtc REQUIRED)
+# Find hip
+find_package(hip REQUIRED)
+
+# Create the excutable
+add_executable(test saxpy.cpp)
+
+# Link with HIPRTC
+target_link_libraries(test hiprtc::hiprtc)
+# Link with HIP
+target_link_libraries(test hip::device)
