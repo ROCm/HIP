@@ -385,14 +385,8 @@ void testArrayAsSurface(hipArray_t arrayPtr, const size_t width, const size_t he
 // Selection of types chosen to reduce compile times
 TEMPLATE_TEST_CASE("Unit_hipMallocArray_happy", "", uint, int, int4, ushort, short2, char, uchar2,
                    char4, float, float2, float4) {
-#if HT_AMD
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-62");
-  return;
-#endif
 
   hipChannelFormatDesc desc = hipCreateChannelDesc<TestType>();
-
-  size_t init_free = getFreeMem();
 
   // pointer to the array in device memory
   hipArray_t arrayPtr{};
@@ -425,12 +419,6 @@ TEMPLATE_TEST_CASE("Unit_hipMallocArray_happy", "", uint, int, int4, ushort, sho
     testArrayAsTextureWithGather<TestType>(arrayPtr, width, height);
   }
 #endif
-
-  size_t final_free = getFreeMem();
-
-  const size_t alloc_size = getAllocSize<TestType>(width, height);
-  // alloc will be chunked, so this is not exact
-  REQUIRE(init_free - final_free >= alloc_size);
 
   HIP_CHECK(hipFreeArray(arrayPtr));
 }
