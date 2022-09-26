@@ -248,7 +248,8 @@ TEST_CASE("Unit_hipPointerGetAttribute_MappedMem") {
   }
   HIP_CHECK(hipMemcpy(A_d, A_h, Nbytes, hipMemcpyHostToDevice));
   int *ptr1 = 0, *ptr2 = 0;
-  unsigned int hostMalloc_mapped, mallocManaged;
+  unsigned int hostMalloc_mapped = 0;
+  unsigned int mallocManaged = 0;
   HIP_CHECK(hipHostMalloc(&ptr1, Nbytes, hipHostMallocMapped));
   HIP_CHECK(hipMallocManaged(&ptr2, Nbytes, hipMemAttachGlobal));
   HIP_CHECK(hipPointerGetAttribute(&hostMalloc_mapped,

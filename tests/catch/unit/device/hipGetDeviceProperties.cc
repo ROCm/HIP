@@ -199,3 +199,122 @@ TEST_CASE("Unit_hipGetDeviceProperties_NegTst") {
     REQUIRE_FALSE(hipSuccess == hipGetDeviceProperties(&prop, deviceCount));
   }
 }
+
+TEST_CASE("Print_Out_Properties") {
+  constexpr int w = 42;
+  const auto device = GENERATE(range(0, HipTest::getDeviceCount()));
+
+  hipDeviceProp_t properties;
+  HIP_CHECK(hipGetDeviceProperties(&properties, device));
+
+  std::cout << std::left;
+  std::cout << std::setw(w) << "device#: " << device << "\n";
+  std::cout << std::setw(w) << "name: " << std::string(properties.name, 256) << "\n";
+  std::cout << std::setw(w) << "totalGlobalMem: " << properties.totalGlobalMem << "\n";
+  std::cout << std::setw(w) << "sharedMemPerBlock: " << properties.sharedMemPerBlock << "\n";
+  std::cout << std::setw(w) << "regsPerBlock: " << properties.regsPerBlock << "\n";
+  std::cout << std::setw(w) << "warpSize: " << properties.warpSize << "\n";
+  std::cout << std::setw(w) << "maxThreadsPerBlock: " << properties.maxThreadsPerBlock << "\n";
+  std::cout << std::setw(w) << "maxThreadsDim.x: " << properties.maxThreadsDim[0] << "\n";
+  std::cout << std::setw(w) << "maxThreadsDim.y: " << properties.maxThreadsDim[1] << "\n";
+  std::cout << std::setw(w) << "maxThreadsDim.z: " << properties.maxThreadsDim[2] << "\n";
+  std::cout << std::setw(w) << "maxGridSize.x: " << properties.maxGridSize[0] << "\n";
+  std::cout << std::setw(w) << "maxGridSize.y: " << properties.maxGridSize[1] << "\n";
+  std::cout << std::setw(w) << "maxGridSize.z: " << properties.maxGridSize[2] << "\n";
+  std::cout << std::setw(w) << "clockRate: " << properties.clockRate << "\n";
+  std::cout << std::setw(w) << "memoryClockRate: " << properties.memoryClockRate << "\n";
+  std::cout << std::setw(w) << "memoryBusWidth: " << properties.memoryBusWidth << "\n";
+  std::cout << std::setw(w) << "totalConstMem: " << properties.totalConstMem << "\n";
+  std::cout << std::setw(w) << "major: " << properties.major << "\n";
+  std::cout << std::setw(w) << "minor: " << properties.minor << "\n";
+  std::cout << std::setw(w) << "multiProcessorCount: " << properties.multiProcessorCount << "\n";
+  std::cout << std::setw(w) << "l2CacheSize: " << properties.l2CacheSize << "\n";
+  std::cout << std::setw(w)
+            << "maxThreadsPerMultiProcessor: " << properties.maxThreadsPerMultiProcessor << "\n";
+  std::cout << std::setw(w) << "computeMode: " << properties.computeMode << "\n";
+  std::cout << std::setw(w) << "concurrentKernels: " << properties.concurrentKernels << "\n";
+  std::cout << std::setw(w) << "pciDomainID: " << properties.pciDomainID << "\n";
+  std::cout << std::setw(w) << "pciBusID: " << properties.pciBusID << "\n";
+  std::cout << std::setw(w) << "pciDeviceID: " << properties.pciDeviceID << "\n";
+  std::cout << std::setw(w) << "isMultiGpuBoard: " << properties.isMultiGpuBoard << "\n";
+  std::cout << std::setw(w) << "canMapHostMemory: " << properties.canMapHostMemory << "\n";
+  std::cout << std::setw(w) << "integrated: " << properties.integrated << "\n";
+  std::cout << std::setw(w) << "cooperativeLaunch: " << properties.cooperativeLaunch << "\n";
+  std::cout << std::setw(w)
+            << "cooperativeMultiDeviceLaunch: " << properties.cooperativeMultiDeviceLaunch << "\n";
+  std::cout << std::setw(w) << "maxTexture1DLinear: " << properties.maxTexture1DLinear << "\n";
+  std::cout << std::setw(w) << "maxTexture1D: " << properties.maxTexture1D << "\n";
+  std::cout << std::setw(w) << "maxTexture2D.width: " << properties.maxTexture2D[0] << "\n";
+  std::cout << std::setw(w) << "maxTexture2D.height: " << properties.maxTexture2D[1] << "\n";
+  std::cout << std::setw(w) << "maxTexture3D.width: " << properties.maxTexture3D[0] << "\n";
+  std::cout << std::setw(w) << "maxTexture3D.height: " << properties.maxTexture3D[1] << "\n";
+  std::cout << std::setw(w) << "maxTexture3D.depth: " << properties.maxTexture3D[2] << "\n";
+  std::cout << std::setw(w) << "memPitch: " << properties.memPitch << "\n";
+  std::cout << std::setw(w) << "textureAlignment: " << properties.textureAlignment << "\n";
+  std::cout << std::setw(w) << "texturePitchAlignment: " << properties.texturePitchAlignment
+            << "\n";
+  std::cout << std::setw(w) << "kernelExecTimeoutEnabled: " << properties.kernelExecTimeoutEnabled
+            << "\n";
+  std::cout << std::setw(w) << "ECCEnabled: " << properties.ECCEnabled << "\n";
+  std::cout << std::setw(w) << "tccDriver: " << properties.tccDriver << "\n";
+  std::cout << std::setw(w) << "managedMemory: " << properties.managedMemory << "\n";
+  std::cout << std::setw(w)
+            << "directManagedMemAccessFromHost: " << properties.directManagedMemAccessFromHost
+            << "\n";
+  std::cout << std::setw(w) << "concurrentManagedAccess: " << properties.concurrentManagedAccess
+            << "\n";
+  std::cout << std::setw(w) << "pageableMemoryAccess: " << properties.pageableMemoryAccess << "\n";
+  std::cout << std::setw(w) << "pageableMemoryAccessUsesHostPageTables: "
+            << properties.pageableMemoryAccessUsesHostPageTables << "\n";
+
+#if HT_AMD
+  std::cout << std::setw(w) << "gcnArch: " << properties.gcnArch << "\n";
+  std::cout << std::setw(w) << "gcnArchName: " << std::string(properties.gcnArchName, 256) << "\n";
+  std::cout << std::setw(w) << "asicRevision: " << properties.asicRevision << "\n";
+  std::cout << std::setw(w)
+            << "arch.hasGlobalInt32Atomics: " << properties.arch.hasGlobalInt32Atomics << "\n";
+  std::cout << std::setw(w)
+            << "arch.hasGlobalFloatAtomicExch: " << properties.arch.hasGlobalFloatAtomicExch
+            << "\n";
+  std::cout << std::setw(w)
+            << "arch.hasSharedInt32Atomics: " << properties.arch.hasSharedInt32Atomics << "\n";
+  std::cout << std::setw(w)
+            << "arch.hasSharedFloatAtomicExch: " << properties.arch.hasSharedFloatAtomicExch
+            << "\n";
+  std::cout << std::setw(w) << "arch.hasFloatAtomicAdd: " << properties.arch.hasFloatAtomicAdd
+            << "\n";
+  std::cout << std::setw(w)
+            << "arch.hasGlobalInt64Atomics: " << properties.arch.hasGlobalInt64Atomics << "\n";
+  std::cout << std::setw(w)
+            << "arch.hasSharedInt64Atomics: " << properties.arch.hasSharedInt64Atomics << "\n";
+  std::cout << std::setw(w) << "arch.hasDoubles: " << properties.arch.hasDoubles << "\n";
+  std::cout << std::setw(w) << "arch.hasWarpVote: " << properties.arch.hasWarpVote << "\n";
+  std::cout << std::setw(w) << "arch.hasWarpBallot: " << properties.arch.hasWarpBallot << "\n";
+  std::cout << std::setw(w) << "arch.hasWarpShuffle: " << properties.arch.hasWarpShuffle << "\n";
+  std::cout << std::setw(w) << "arch.hasFunnelShift: " << properties.arch.hasFunnelShift << "\n";
+  std::cout << std::setw(w) << "arch.hasThreadFenceSystem: " << properties.arch.hasThreadFenceSystem
+            << "\n";
+  std::cout << std::setw(w) << "arch.hasSyncThreadsExt: " << properties.arch.hasSyncThreadsExt
+            << "\n";
+  std::cout << std::setw(w) << "arch.hasSurfaceFuncs: " << properties.arch.hasSurfaceFuncs << "\n";
+  std::cout << std::setw(w) << "arch.has3dGrid: " << properties.arch.has3dGrid << "\n";
+  std::cout << std::setw(w)
+            << "arch.hasDynamicParallelism: " << properties.arch.hasDynamicParallelism << "\n";
+  std::cout << std::setw(w) << "isLargeBar: " << properties.isLargeBar << "\n";
+  std::cout << std::setw(w)
+            << "maxSharedMemoryPerMultiProcessor: " << properties.maxSharedMemoryPerMultiProcessor
+            << "\n";
+  std::cout << std::setw(w) << "hdpMemFlushCntl: " << properties.hdpMemFlushCntl << "\n";
+  std::cout << std::setw(w) << "hdpRegFlushCntl: " << properties.hdpRegFlushCntl << "\n";
+  std::cout << std::setw(w) << "clockInstructionRate: " << properties.clockInstructionRate << "\n";
+  std::cout << std::setw(w) << "cooperativeMultiDeviceUnmatchedFunc: "
+            << properties.cooperativeMultiDeviceUnmatchedFunc << "\n";
+  std::cout << std::setw(w) << "cooperativeMultiDeviceUnmatchedGridDim: "
+            << properties.cooperativeMultiDeviceUnmatchedGridDim << "\n";
+  std::cout << std::setw(w) << "cooperativeMultiDeviceUnmatchedBlockDim: "
+            << properties.cooperativeMultiDeviceUnmatchedBlockDim << "\n";
+  std::cout << std::setw(w) << "cooperativeMultiDeviceUnmatchedSharedMem: "
+            << properties.cooperativeMultiDeviceUnmatchedSharedMem << "\n";
+#endif
+  std::flush(std::cout);
+}

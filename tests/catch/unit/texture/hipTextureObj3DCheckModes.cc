@@ -39,7 +39,7 @@ __global__ void tex3DKernel(float *outputData, hipTextureObject_t textureObject,
 }
 
 template<hipTextureAddressMode addressMode, hipTextureFilterMode filterMode, bool normalizedCoords>
-void runTest(const int width, const int height, const int depth, const float offsetX, const float offsetY,
+static void runTest(const int width, const int height, const int depth, const float offsetX, const float offsetY,
              const float offsetZ) {
   //printf("%s(addressMode=%d, filterMode=%d, normalizedCoords=%d, width=%d, height=%d, depth=%d, offsetX=%f, offsetY=%f, offsetZ=%f)\n",
   //    __FUNCTION__, addressMode, filterMode, normalizedCoords, width, height,
@@ -93,7 +93,7 @@ void runTest(const int width, const int height, const int depth, const float off
   hipTextureObject_t textureObject = 0;
   hipError_t res = hipCreateTextureObject(&textureObject, &resDesc, &texDesc, NULL);
   if (res != hipSuccess) {
-    hipFreeArray(arr);
+    HIP_CHECK(hipFreeArray(arr));
     free(hData);
     if (res == hipErrorNotSupported && isGfx90a) {
       printf("gfx90a doesn't support 3D linear filter! Skipped!\n");
@@ -105,8 +105,8 @@ void runTest(const int width, const int height, const int depth, const float off
   }
 
   float *dData = nullptr;
-  hipMalloc((void**) &dData, size);
-  hipMemset(dData, 0, size);
+  HIP_CHECK(hipMalloc((void**) &dData, size));
+  HIP_CHECK(hipMemset(dData, 0, size));
   dim3 dimBlock(8, 8, 8); // 512 threads
   dim3 dimGrid((width + dimBlock.x - 1) / dimBlock.x, (height + dimBlock.y -1)/ dimBlock.y,
                (depth + dimBlock.z - 1) / dimBlock.z);
@@ -114,17 +114,17 @@ void runTest(const int width, const int height, const int depth, const float off
   hipLaunchKernelGGL(tex3DKernel<normalizedCoords>, dimGrid, dimBlock, 0, 0, dData,
                      textureObject, width, height, depth, offsetX, offsetY, offsetZ);
 
-  hipDeviceSynchronize();
+  HIP_CHECK(hipDeviceSynchronize());
 
   float *hOutputData = (float*) malloc(size);
   memset(hOutputData, 0, size);
-  hipMemcpy(hOutputData, dData, size, hipMemcpyDeviceToHost);
+  HIP_CHECK(hipMemcpy(hOutputData, dData, size, hipMemcpyDeviceToHost));
 
   for (int i = 0; i < depth; i++) {
     for (int j = 0; j < height; j++) {
       for (int k = 0; k < width; k++) {
         int index = i * width * height + j * width + k;
-        float expectedValue = getExpectedValue<addressMode, filterMode>(
+        float expectedValue = getExpectedValue<float, addressMode, filterMode>(
             width, height, depth, offsetX + k, offsetY + j, offsetZ + i, hData);
 
         if (!hipTextureSamplingVerify<float, filterMode>(hOutputData[index], expectedValue)) {
@@ -137,10 +137,10 @@ void runTest(const int width, const int height, const int depth, const float off
     }
   }
 line1:
-  hipDestroyTextureObject(textureObject);
+  HIP_CHECK(hipDestroyTextureObject(textureObject));
   free(hOutputData);
-  hipFree(dData);
-  hipFreeArray(arr);
+  HIP_CHECK(hipFree(dData));
+  HIP_CHECK(hipFreeArray(arr));
   free(hData);
   REQUIRE(result);
 
@@ -148,10 +148,6 @@ line1:
 
 TEST_CASE("Unit_hipTextureObj3DCheckModes") {
   CHECK_IMAGE_SUPPORT
-#ifdef _WIN32
-  INFO("Unit_hipTextureObj3DCheckModes skipped on Windows");
-  return;
-#endif
 
   int device = 0;
   hipDeviceProp_t props;
