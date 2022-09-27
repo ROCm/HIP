@@ -161,16 +161,52 @@ using hipStreaAddCallbackTest::Callback_ChkStreamValue;
 /*
  * Validates parameter list of hipStreamAddCallback.
  */
-TEST_CASE("Unit_hipStreamAddCallback_ParamTst") {
+TEST_CASE("Unit_hipStreamAddCallback_ParamTst_Positive") {
   hipStream_t mystream;
   HIP_CHECK(hipStreamCreate(&mystream));
+
   // Scenario1
-  SECTION("callback is nullptr") {
+  SECTION("userData pointer value validation") {
+    gstream = mystream;
+    gusrptr = ptr0xff;
+    gPassed = true;
+    gcbDone = false;
+    HIP_CHECK(hipStreamAddCallback(mystream, Callback_ChkUsrdataPtr,
+                                  gusrptr, 0));
+    while (!gcbDone) {
+      std::this_thread::sleep_for(std::chrono::microseconds(100000));  // Sleep for 100 ms
+    }
+    REQUIRE(gPassed);
+  }
+  // Scenario2
+  SECTION("stream value validation") {
+    gstream = mystream;
+    gPassed = true;
+    gcbDone = false;
+    HIP_CHECK(hipStreamAddCallback(mystream, Callback_ChkStreamValue,
+                                  nullptr, 0));
+    while (!gcbDone) {
+      std::this_thread::sleep_for(std::chrono::microseconds(100000));  // Sleep for 100 ms
+    }
+    REQUIRE(gPassed);
+  }
+  HIP_CHECK(hipStreamDestroy(mystream));
+}
+
+/*
+ * Negative tests for validation of hipStreamAddCallback parameter list.
+ */
+TEST_CASE("Unit_hipStreamAddCallback_ParamTst_Negative") {
+  hipStream_t mystream;
+  HIP_CHECK(hipStreamCreate(&mystream));
+
+  // Scenario1
+  SECTION("callback is nullptr for non-default stream") {
     REQUIRE_FALSE(hipSuccess == hipStreamAddCallback(mystream, nullptr,
                                          nullptr, 0));
   }
   // Scenario2
-  SECTION("stream is default") {
+  SECTION("callback is nullptr for default stream") {
     REQUIRE_FALSE(hipSuccess == hipStreamAddCallback(0, nullptr,
                                          nullptr, 0));
   }
@@ -183,31 +219,6 @@ TEST_CASE("Unit_hipStreamAddCallback_ParamTst") {
   SECTION("flag is nonzero for default stream") {
     REQUIRE_FALSE(hipSuccess == hipStreamAddCallback(0, Callback,
                                          nullptr, 10));
-  }
-  // Scenario5
-  SECTION("userData pointer value validation") {
-    gstream = mystream;
-    gusrptr = ptr0xff;
-    gPassed = true;
-    gcbDone = false;
-    HIP_CHECK(hipStreamAddCallback(mystream, Callback_ChkUsrdataPtr,
-                                  gusrptr, 0));
-    while (!gcbDone) {
-      std::this_thread::sleep_for(std::chrono::microseconds(100000));  // Sleep for 100 ms
-    }
-    REQUIRE_FALSE(!gPassed);
-  }
-  // Scenario6
-  SECTION("stream value validation") {
-    gstream = mystream;
-    gPassed = true;
-    gcbDone = false;
-    HIP_CHECK(hipStreamAddCallback(mystream, Callback_ChkStreamValue,
-                                  nullptr, 0));
-    while (!gcbDone) {
-      std::this_thread::sleep_for(std::chrono::microseconds(100000));  // Sleep for 100 ms
-    }
-    REQUIRE_FALSE(!gPassed);
   }
   HIP_CHECK(hipStreamDestroy(mystream));
 }

@@ -139,6 +139,15 @@ This implementation does not require the use of `hipDeviceSetLimit(hipLimitMallo
 
 The test codes in the link (https://github.com/ROCm-Developer-Tools/HIP/blob/develop/tests/src/deviceLib/hipDeviceMalloc.cpp) show how to implement application using malloc and free functions in device kernels.
 
+## Use of Per-thread default stream
+
+The per-thread default stream is supported in HIP. It is an implicit stream local to both the thread and the current device. This means that the command issued to the per-thread default stream by the thread does not implicitly synchronize with other streams (like explicitly created streams), or default per-thread stream on other threads.
+The per-thread default stream is a blocking stream and will synchronize with the default null stream if both are used in a program.
+The per-thread default stream can be enabled via adding a compilation option,
+“-fgpu-default-stream=per-thread”.
+
+And users can explicitly use "hipStreamPerThread" as per-thread default stream handle as input in API commands. There are test codes as examples in the link (https://github.com/ROCm-Developer-Tools/HIP/tree/develop/tests/catch/unit/streamperthread).
+
 ## Use of Long Double Type
 
 In HIP-Clang, long double type is 80-bit extended precision format for x86_64, which is not supported by AMDGPU.  HIP-Clang treats long double type as IEEE double type for AMDGPU. Using long double type in HIP source code will not cause issue as long as data of long double type is not transferred between host and device. However, long double type should not be used as kernel argument type.

@@ -39,7 +39,7 @@ __global__ void tex3DKernel(float *outputData, hipTextureObject_t textureObject,
 }
 
 template<hipTextureAddressMode addressMode, hipTextureFilterMode filterMode, bool normalizedCoords>
-void runTest(const int width, const int height, const int depth, const float offsetX, const float offsetY,
+static void runTest(const int width, const int height, const int depth, const float offsetX, const float offsetY,
              const float offsetZ) {
   //printf("%s(addressMode=%d, filterMode=%d, normalizedCoords=%d, width=%d, height=%d, depth=%d, offsetX=%f, offsetY=%f, offsetZ=%f)\n",
   //    __FUNCTION__, addressMode, filterMode, normalizedCoords, width, height,
@@ -124,7 +124,7 @@ void runTest(const int width, const int height, const int depth, const float off
     for (int j = 0; j < height; j++) {
       for (int k = 0; k < width; k++) {
         int index = i * width * height + j * width + k;
-        float expectedValue = getExpectedValue<addressMode, filterMode>(
+        float expectedValue = getExpectedValue<float, addressMode, filterMode>(
             width, height, depth, offsetX + k, offsetY + j, offsetZ + i, hData);
 
         if (!hipTextureSamplingVerify<float, filterMode>(hOutputData[index], expectedValue)) {
@@ -148,10 +148,6 @@ line1:
 
 TEST_CASE("Unit_hipTextureObj3DCheckModes") {
   CHECK_IMAGE_SUPPORT
-#ifdef _WIN32
-  INFO("Unit_hipTextureObj3DCheckModes skipped on Windows");
-  return;
-#endif
 
   int device = 0;
   hipDeviceProp_t props;
