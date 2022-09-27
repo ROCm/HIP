@@ -105,6 +105,7 @@ $ROCM_PATH      =   $hipvars::ROCM_PATH;
 $HIP_VERSION    =   $hipvars::HIP_VERSION;
 $HSA_PATH       =   $hipvars::HSA_PATH;
 $HIP_ROCCLR_HOME =   $hipvars::HIP_ROCCLR_HOME;
+$LIB            =   $hipvars::LIB;
 
 if ($HIP_PLATFORM eq "amd") {
   # If using ROCclr runtime, need to find HIP_ROCCLR_HOME
@@ -113,14 +114,15 @@ if ($HIP_PLATFORM eq "amd") {
   }
   $HIP_INCLUDE_PATH = "$HIP_ROCCLR_HOME/include";
   if (!defined $HIP_LIB_PATH) {
-    $HIP_LIB_PATH = "$HIP_ROCCLR_HOME/lib";
+    $HIP_LIB_PATH = "$HIP_ROCCLR_HOME/$LIB";
   }
 
   if (!defined $DEVICE_LIB_PATH) {
     if (-e "$ROCM_PATH/amdgcn/bitcode") {
       $DEVICE_LIB_PATH = "$ROCM_PATH/amdgcn/bitcode";
-    }
-    else {
+    } elsif (-e "$ROCM_PATH/$LIB/amdgcn/bitcode") {
+      $DEVICE_LIB_PATH = "$ROCM_PATH/$LIB/amdgcn/bitcode";
+    } else {
       # This path is to support an older build of the device library
       # TODO: To be removed in the future.
       $DEVICE_LIB_PATH = "$ROCM_PATH/lib";
@@ -166,13 +168,13 @@ if ($HIP_PLATFORM eq "amd") {
     $HIP_CLANG_TARGET = chomp($HIP_CLANG_TARGET);
 
     if (! defined $HIP_CLANG_INCLUDE_PATH) {
-        $HIP_CLANG_INCLUDE_PATH = abs_path("$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION/include");
+        $HIP_CLANG_INCLUDE_PATH = abs_path("$HIP_CLANG_PATH/../$LIB/clang/$HIP_CLANG_VERSION/include");
     }
     if (! defined $HIP_INCLUDE_PATH) {
         $HIP_INCLUDE_PATH = "$HIP_PATH/include";
     }
     if (! defined $HIP_LIB_PATH) {
-        $HIP_LIB_PATH = "$HIP_PATH/lib";
+        $HIP_LIB_PATH = "$HIP_PATH/$LIB";
     }
     if ($verbose & 0x2) {
         print ("ROCM_PATH=$ROCM_PATH\n");
@@ -199,13 +201,11 @@ if ($HIP_PLATFORM eq "amd") {
     }
 
     if (not $isWindows) {
-        $HSA_PATH=$ENV{'HSA_PATH'} // "$ROCM_PATH/hsa";
         $HIPCXXFLAGS .= " -isystem $HSA_PATH/include";
         $HIPCFLAGS .= " -isystem $HSA_PATH/include";
     }
 
 } elsif ($HIP_PLATFORM eq "nvidia") {
-    $CUDA_PATH=$ENV{'CUDA_PATH'} // '/usr/local/cuda';
     $HIP_INCLUDE_PATH = "$HIP_PATH/include";
     if ($verbose & 0x2) {
         print ("CUDA_PATH=$CUDA_PATH\n");
@@ -709,16 +709,16 @@ if ($HIP_PLATFORM eq "amd") {
 
     if (not $isWindows  and not $compileOnly) {
       if ($linkType eq 0) {
-        $toolArgs = " -L$HIP_LIB_PATH -lamdhip64 -L$ROCM_PATH/lib -lhsa-runtime64 -ldl -lnuma " . ${toolArgs};
+        $toolArgs = " -L$HIP_LIB_PATH -lamdhip64 -L$ROCM_PATH/$LIB -lhsa-runtime64 -ldl -lnuma " . ${toolArgs};
       } else {
-        $toolArgs = ${toolArgs} . " -Wl,--enable-new-dtags -Wl,-rpath=$HIP_LIB_PATH:$ROCM_PATH/lib -lamdhip64 ";
+        $toolArgs = ${toolArgs} . " -Wl,--enable-new-dtags -Wl,-rpath=$HIP_LIB_PATH:$ROCM_PATH/$LIB -lamdhip64 ";
       }
       # To support __fp16 and _Float16, explicitly link with compiler-rt
-      $HIP_CLANG_BUILTIN_LIB="$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION/lib/$HIP_CLANG_TARGET/libclang_rt.builtins.a";
+      $HIP_CLANG_BUILTIN_LIB="$HIP_CLANG_PATH/../$LIB/clang/$HIP_CLANG_VERSION/lib/$HIP_CLANG_TARGET/libclang_rt.builtins.a";
       if (-e $HIP_CLANG_BUILTIN_LIB) {
-        $toolArgs .= " -L$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION/lib/$HIP_CLANG_TARGET -lclang_rt.builtins "
+        $toolArgs .= " -L$HIP_CLANG_PATH/../$LIB/clang/$HIP_CLANG_VERSION/lib/$HIP_CLANG_TARGET -lclang_rt.builtins "
       } else {
-        $toolArgs .= " -L$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION/lib/linux -lclang_rt.builtins-x86_64 "
+        $toolArgs .= " -L$HIP_CLANG_PATH/../$LIB/clang/$HIP_CLANG_VERSION/lib/linux -lclang_rt.builtins-x86_64 "
       }
     }
 }

@@ -93,10 +93,27 @@ if ($isWindows) {
 # HIP_ROCCLR_HOME is used by Windows builds
 $HIP_ROCCLR_HOME=$ENV{'HIP_ROCCLR_HOME'};
 
-if (defined $HIP_ROCCLR_HOME) {
-    $HIP_INFO_PATH= "$HIP_ROCCLR_HOME/lib/.hipInfo";
+if ($isWindows) {
+    $LIB = "lib";
 } else {
-    $HIP_INFO_PATH= "$HIP_PATH/lib/.hipInfo"; # use actual file
+    # Look for the AMD HIP library to determine the lib directory name
+    if (my @libs = glob("$HIP_PATH/lib*/libamdhip64*.so*")) {
+        # Multi-lib layout (Fedora and others: /usr/lib64)
+        $LIB = basename(dirname($libs[0]));
+    } elsif (@libs = glob("$HIP_PATH/lib/*/libamdhip64*.so*")) {
+        # Multi-arch layout (Debian: /usr/lib/x86_64-linux-gnu)
+        $LIB = "lib/" . basename(dirname($libs[0]));
+    } else {
+        # Set to 'lib' for backwards compatibility with cases that are not
+        # caught in the above checks
+        $LIB = "lib";
+    }
+}
+
+if (defined $HIP_ROCCLR_HOME) {
+    $HIP_INFO_PATH= "$HIP_ROCCLR_HOME/$LIB/.hipInfo";
+} else {
+    $HIP_INFO_PATH= "$HIP_PATH/$LIB/.hipInfo"; # use actual file
 }
 #---
 #HIP_PLATFORM controls whether to use nvidia or amd platform:
