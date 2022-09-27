@@ -20,6 +20,8 @@ set(TEST_SRC
     hipDeviceGetDefaultMemPool.cc
     hipExtGetLinkTypeAndHopCount.cc
     hipDeviceSetLimit.cc
+    hipInit.cc
+    hipDriverGetVersion.cc
 )
 
 set_source_files_properties(hipGetDeviceCount.cc PROPERTIES COMPILE_FLAGS -std=c++17)
