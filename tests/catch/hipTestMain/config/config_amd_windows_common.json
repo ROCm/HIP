@@ -70,7 +70,9 @@
 	   "Unit_hipGraphHostNodeGetParams_SetParams",
 	   "Unit_hipGraphExecChildGraphNodeSetParams_BasicFunc",
 	   "Unit_hipGraphExecChildGraphNodeSetParams_ChildTopology",
-       "Unit_hipGraphDestroy_Negative",
-       "Unit_hipGraphExecDestroy_Sequence"
+	   "Unit_hipGraphMemcpyNodeSetParams1D_Functional",
+	   "Unit_hipGraphMemcpyNodeSetParamsToSymbol_Functional",
+	   "Unit_hipGraphDestroy_Negative",
+	   "Unit_hipGraphExecDestroy_Sequence"
 	]
 }
