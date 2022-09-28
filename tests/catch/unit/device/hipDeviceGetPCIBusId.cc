@@ -71,6 +71,30 @@ TEST_CASE("Unit_hipDeviceGetPCIBusId_Check_PciBusID_WithAttr") {
          " hipDeviceGetAttribute matched for all gpus\n");
 }
 
+TEST_CASE("Unit_hipDeviceGetPCIBusId_PartialFill") {
+  std::array<char, MAX_DEVICE_LENGTH> busID;
+
+  const int device = GENERATE(range(0, HipTest::getDeviceCount()));
+
+  HIP_CHECK(hipDeviceGetPCIBusId(busID.data(), busID.size(), device));
+
+  auto start = std::begin(busID);
+  auto end = std::end(busID);
+  const auto len = std::distance(start, std::find(start, end, 0));
+
+  // fill up only half of the length
+  const auto fillLen = len / 2;
+  constexpr char fillValue = 1;
+  std::fill(start, end, fillValue);
+
+  HIP_CHECK(hipDeviceGetPCIBusId(busID.data(), fillLen, device));
+
+  const auto strEnd = start + fillLen - 1;
+  REQUIRE(std::all_of(start, strEnd, [](char& c) { return c != 0; }));
+  REQUIRE(*strEnd == 0);
+  REQUIRE(std::all_of(strEnd+1, end, [](char& c) { return c == fillValue; }));
+}
+
 
 /**
  * Validates negative scenarios for hipDeviceGetPCIBusId
@@ -107,7 +131,7 @@ TEST_CASE("Unit_hipDeviceGetPCIBusId_NegTst") {
                   == hipSuccess);
   }
   // device = Non Existing Device
-  SECTION("device is -1") {
+  SECTION("device is out of bounds") {
     int deviceCount = 0;
     HIP_CHECK(hipGetDeviceCount(&deviceCount));
     REQUIRE_FALSE(deviceCount == 0);

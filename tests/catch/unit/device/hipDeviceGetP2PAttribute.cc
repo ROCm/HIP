@@ -96,11 +96,27 @@ TEST_CASE("Unit_hipDeviceGetP2PAttribute_Negative") {
                     hipErrorInvalidValue);
   }
 
-  SECTION("Invalid device") {
+  SECTION("Device is -1") {
     int invalidDevice = -1;
     HIP_CHECK_ERROR(hipDeviceGetP2PAttribute(&value, validAttr, invalidDevice, validDstDevice),
                     hipErrorInvalidDevice);
     HIP_CHECK_ERROR(hipDeviceGetP2PAttribute(&value, validAttr, validSrcDevice, invalidDevice),
+                    hipErrorInvalidDevice);
+  }
+
+  SECTION("Device is out of bounds") {
+    int deviceCount = 0;
+    HIP_CHECK(hipGetDeviceCount(&deviceCount));
+    REQUIRE_FALSE(deviceCount == 0);
+
+    HIP_CHECK_ERROR(hipDeviceGetP2PAttribute(&value, validAttr, deviceCount, validDstDevice),
+                    hipErrorInvalidDevice);
+    HIP_CHECK_ERROR(hipDeviceGetP2PAttribute(&value, validAttr, validSrcDevice, deviceCount),
+                    hipErrorInvalidDevice);
+  }
+
+  SECTION("Source and destination devices are the same") {
+    HIP_CHECK_ERROR(hipDeviceGetP2PAttribute(&value, validAttr, validSrcDevice, validSrcDevice),
                     hipErrorInvalidDevice);
   }
 
