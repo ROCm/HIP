@@ -36,7 +36,9 @@ TEST_CASE("Unit_hipDeviceReset_Positive_Basic") {
   HIP_CHECK(hipMalloc(&ptr, 500));
   hipStream_t stream = nullptr;
   HIP_CHECK(hipStreamCreate(&stream));
+#if HT_NVIDIA
   HIP_CHECK(hipDeviceSetCacheConfig(hipFuncCachePreferL1));
+#endif
   HIP_CHECK(hipDeviceSetSharedMemConfig(mem_config_before == hipSharedMemBankSizeFourByte
                                             ? hipSharedMemBankSizeEightByte
                                             : hipSharedMemBankSizeFourByte));
@@ -52,9 +54,11 @@ TEST_CASE("Unit_hipDeviceReset_Positive_Basic") {
 
   CHECK(hipStreamDestroy(stream) == hipErrorInvalidHandle);
 
+#if HT_NVIDIA
   hipFuncCache_t cache_config;
   CHECK(hipDeviceGetCacheConfig(&cache_config) == hipSuccess);
   CHECK(cache_config == hipFuncCachePreferNone);
+#endif
 
   hipSharedMemConfig mem_config_after;
   CHECK(hipDeviceGetSharedMemConfig(&mem_config_after) == hipSuccess);
@@ -74,7 +78,9 @@ TEST_CASE("Unit_hipDeviceReset_Positive_Threaded") {
   HIP_CHECK(hipMalloc(&ptr, 500));
   hipStream_t stream = nullptr;
   HIP_CHECK(hipStreamCreate(&stream));
+#if HT_NVIDIA
   HIP_CHECK(hipDeviceSetCacheConfig(hipFuncCachePreferL1));
+#endif
   HIP_CHECK(hipDeviceSetSharedMemConfig(mem_config_before == hipSharedMemBankSizeFourByte
                                             ? hipSharedMemBankSizeEightByte
                                             : hipSharedMemBankSizeFourByte));
@@ -94,9 +100,11 @@ TEST_CASE("Unit_hipDeviceReset_Positive_Threaded") {
 
   CHECK(hipStreamDestroy(stream) == hipErrorContextIsDestroyed);
 
+#if HT_NVIDIA
   hipFuncCache_t cache_config;
   CHECK(hipDeviceGetCacheConfig(&cache_config) == hipSuccess);
   CHECK(cache_config == hipFuncCachePreferNone);
+#endif
 
   hipSharedMemConfig mem_config_after;
   CHECK(hipDeviceGetSharedMemConfig(&mem_config_after) == hipSuccess);
