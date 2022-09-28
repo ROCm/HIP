@@ -97,6 +97,7 @@ set(TEST_SRC
     hipMemsetSync.cc
     hipMemsetAsync.cc
     hipMemAdvise.cc
+    hipModuleGetGlobal.cc
 )
 else()
 set(TEST_SRC
@@ -170,6 +171,7 @@ set(TEST_SRC
     hipMemsetSync.cc
     hipMemsetAsync.cc
     hipMemAdvise.cc
+    hipModuleGetGlobal.cc
 )
 endif()
 
