@@ -54,10 +54,24 @@ template <typename T, size_t N> static void HipModuleGetGlobalTest(hipModule_t m
   REQUIRE(global != nullptr);
   REQUIRE(size == global_size);
 
+  hipFunction_t kernel = nullptr;
+  const auto kernel_name = global_name + "_address_validation_kernel";
+  HIP_CHECK(hipModuleGetFunction(&kernel, module, kernel_name.c_str()));
+  bool* equal_addresses;
+  HIP_CHECK(hipMalloc(&equal_addresses, sizeof(*equal_addresses)));
+  HIP_CHECK(hipMemset(equal_addresses, false, sizeof(*equal_addresses)));
+  void* kernel_args[2] = {&global, &equal_addresses};
+  HIP_CHECK(hipModuleLaunchKernel(kernel, 1, 1, 1, 1, 1, 1, 0, nullptr, kernel_args, nullptr));
+  HIP_CHECK(hipStreamSynchronize(nullptr));
+  bool ok;
+  HIP_CHECK(hipMemcpy(&ok, equal_addresses, sizeof(ok), hipMemcpyDeviceToHost));
+  REQUIRE(ok);
+
   constexpr T expected_value = 42;
   std::array<T, N> fill_buffer;
   std::fill_n(fill_buffer.begin(), N, expected_value);
   HIP_CHECK(hipMemcpyHtoD(global, fill_buffer.data(), size));
+
 
   std::array<T, N> read_buffer;
   HIP_CHECK(hipMemcpyDtoH(read_buffer.data(), global, size));
