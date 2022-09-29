@@ -24,7 +24,6 @@ THE SOFTWARE.
 
 #include <stddef.h>
 
-template<typename T>
-constexpr T expected_value = T(42);
-
-constexpr size_t array_size = 5;
+namespace {
+constexpr size_t kArraySize = 5;
+}  // anonymous namespace

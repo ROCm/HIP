@@ -20,18 +20,17 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-
 #include "hip/hip_runtime.h"
 #include "hip/hip_runtime_api.h"
 
 #include "hipModuleGetGlobal.hh"
 
-#define DEFINE_DEVICE_GLOBALS(type)                                                                 \
-  __device__ type type##_var = expected_value<type>;                                               \
-  __device__ type type##_arr[array_size] = {expected_value<type>, expected_value<type>,            \
-                                            expected_value<type>, expected_value<type>,            \
-                                            expected_value<type>};
+#define HIP_MODULE_GET_GLOBAL_TEST_DEFINE_DEVICE_GLOBALS(type)                                     \
+  __device__ type type##_var = 0;                                                                  \
+  __device__ type type##_arr[kArraySize] = {};
 
 
-DEFINE_DEVICE_GLOBALS(int)
-DEFINE_DEVICE_GLOBALS(float)
+HIP_MODULE_GET_GLOBAL_TEST_DEFINE_DEVICE_GLOBALS(int)
+HIP_MODULE_GET_GLOBAL_TEST_DEFINE_DEVICE_GLOBALS(float)
+HIP_MODULE_GET_GLOBAL_TEST_DEFINE_DEVICE_GLOBALS(char)
+HIP_MODULE_GET_GLOBAL_TEST_DEFINE_DEVICE_GLOBALS(double)
