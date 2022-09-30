@@ -71,7 +71,7 @@ TEST_CASE("Unit_hipDeviceGetPCIBusId_Check_PciBusID_WithAttr") {
          " hipDeviceGetAttribute matched for all gpus\n");
 }
 
-TEST_CASE("Unit_hipDeviceGetPCIBusId_PartialFill") {
+TEST_CASE("Unit_hipDeviceGetPCIBusId_Negative_PartialFill") {
   std::array<char, MAX_DEVICE_LENGTH> busID;
 
   const int device = GENERATE(range(0, HipTest::getDeviceCount()));
@@ -87,7 +87,7 @@ TEST_CASE("Unit_hipDeviceGetPCIBusId_PartialFill") {
   constexpr char fillValue = 1;
   std::fill(start, end, fillValue);
 
-  HIP_CHECK(hipDeviceGetPCIBusId(busID.data(), fillLen, device));
+  REQUIRE_FALSE(hipDeviceGetPCIBusId(busID.data(), fillLen, device) == hipSuccess);
 
   const auto strEnd = start + fillLen - 1;
   REQUIRE(std::all_of(start, strEnd, [](char& c) { return c != 0; }));

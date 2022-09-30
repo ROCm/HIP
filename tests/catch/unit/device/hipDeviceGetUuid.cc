@@ -35,7 +35,6 @@ Unit_hipDeviceGetUuid_Negative - Test unsuccessful execution of hipDeviceGetUuid
  * Scenario1: Validates the returned UUID
  */
 TEST_CASE("Unit_hipDeviceGetUuid_Positive") {
-  int numDevices = 0;
   hipDevice_t device;
   hipUUID uuid;
 
