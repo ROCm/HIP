@@ -29,13 +29,14 @@ TEST_CASE("Unit_hipInit_Positive") {
   HIP_CHECK(hipInit(0));
 
   // Verify that HIP runtime is successfully initialized by calling a HIP API
-  int count = 0;
+  int count = -1;
   auto res = hipGetDeviceCount(&count);
   REQUIRE(count >= 0);
 }
 
-TEST_CASE("Unit_hipInit_Negative_InvalidFlag") {
+TEST_CASE("Unit_hipInit_Negative") {
   // If initialization is attempted with invalid flag, error shall be reported
-  HIP_CHECK_ERROR(hipInit(-1), hipErrorInvalidValue);
+  unsigned int invalid_flag = 1;
+  HIP_CHECK_ERROR(hipInit(invalid_flag), hipErrorInvalidValue);
 }
 
