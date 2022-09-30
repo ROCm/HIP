@@ -138,7 +138,7 @@ void test(unsigned testMask, int* C_d, int* C_h, int64_t numElements, hipStream_
         HIP_ASSERT(hipEventElapsedTime(&t, start, neverCreated) == hipErrorInvalidHandle);
 
         HIP_ASSERT(hipEventElapsedTime(&t, neverRecorded, stop) == hipErrorInvalidHandle);
-        HIP_ASSERT(hipEventElapsedTime(&t, start, neverRecorded) == hipErrorInvalidHandle);
+        HIP_ASSERT(hipGetLastError() == hipErrorInvalidHandle);
     }
 
     HIP_CHECK(hipEventDestroy(neverRecorded));
