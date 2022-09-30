@@ -244,6 +244,7 @@ static void test_active_threads_grouping() {
 
   // Launch Kernel
     hipLaunchKernelGGL(kernel_coalesced_active_groups, blockSize, threadsPerBlock, 0, 0);
+    HIP_CHECK(hipGetLastError()); 
 
     err = hipDeviceSynchronize();
     if (err != hipSuccess) {
@@ -308,6 +309,7 @@ static void test_group_partition(unsigned int tileSz, bool useGlobalMem) {
     if (useGlobalMem) {
       hipLaunchKernelGGL(kernel_cg_coalesced_group_partition, blockSize, threadsPerBlock, 0, 0, tileSz,
                          dResult, useGlobalMem, globalMem, i);
+      HIP_CHECK(hipGetLastError()); 
 
       err = hipDeviceSynchronize();
       if (err != hipSuccess) {
@@ -316,6 +318,7 @@ static void test_group_partition(unsigned int tileSz, bool useGlobalMem) {
     } else {
       hipLaunchKernelGGL(kernel_cg_coalesced_group_partition, blockSize, threadsPerBlock,
                          threadsPerBlock * sizeof(int), 0, tileSz, dResult, useGlobalMem, globalMem, i);
+      HIP_CHECK(hipGetLastError()); 
 
       err = hipDeviceSynchronize();
       if (err != hipSuccess) {
@@ -390,6 +393,7 @@ static void test_shfl_any_to_any() {
     // Launch Kernel
     hipLaunchKernelGGL(kernel_shfl_any_to_any, blockSize, threadsPerBlock,
                        threadsPerBlock * sizeof(int), 0 , dPtr, dsrcArr, dResults, i);
+    HIP_CHECK(hipGetLastError()); 
     hipMemcpy(hPtr, dResults, group_size_in_bytes, hipMemcpyDeviceToHost);
     err = hipDeviceSynchronize();
     if (err != hipSuccess) {
@@ -459,6 +463,7 @@ static void test_shfl_broadcast() {
     // Launch Kernel
     hipLaunchKernelGGL(kernel_shfl, blockSize, threadsPerBlock,
                        threadsPerBlock * sizeof(int), 0, dPtr, dResults, srcLane, i);
+    HIP_CHECK(hipGetLastError()); 
     hipMemcpy(hPtr, dResults, group_size_in_bytes, hipMemcpyDeviceToHost);
     err = hipDeviceSynchronize();
     if (err != hipSuccess) {

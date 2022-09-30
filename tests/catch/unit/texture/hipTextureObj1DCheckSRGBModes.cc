@@ -113,9 +113,11 @@ static void runTest(const int width, const float offsetX = 0) {
   if (resType == hipResourceTypeArray) {
     hipLaunchKernelGGL(tex1DRGBAKernel<normalizedCoords>, dimGrid, dimBlock,
                        0, 0, dData, textureObject, width, offsetX);
+    HIP_CHECK(hipGetLastError()); 
   } else {
     hipLaunchKernelGGL(tex1DRGBAKernelFetch, dimGrid, dimBlock,
                        0, 0, dData, textureObject, offsetX);
+    HIP_CHECK(hipGetLastError()); 
   }
 
   HIP_CHECK(hipDeviceSynchronize());

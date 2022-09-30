@@ -163,6 +163,7 @@ TEST_CASE("Unit_hipGetDeviceProperties_ArchPropertiesTst") {
             hipMemcpyHostToDevice));
     hipLaunchKernelGGL(mykernel, dim3(1), dim3(1),
                        0, 0, archProp_d);
+    HIP_CHECK(hipGetLastError());
     HIP_CHECK(hipMemcpy(archProp_h, archProp_d,
             NUM_OF_ARCHPROP*sizeof(int), hipMemcpyDeviceToHost));
     // Validate the host architecture property with device

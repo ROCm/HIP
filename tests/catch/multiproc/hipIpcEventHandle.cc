@@ -221,6 +221,7 @@ void runMultiProcKernel(ipcEventInfo_t *shmEventInfo, int index) {
     const dim3 blocks(BUF_SIZE / threads.x, 1);
     hipLaunchKernelGGL(computeKernel, dim3(blocks), dim3(threads), 0, 0,
                                     d_ptr + index *BUF_SIZE, d_ptr, index + 1);
+    HIP_CHECK(hipGetLastError());
     HIP_CHECK(hipEventRecord(event));
 
     // Barrier 2 : Signals that event is recorded

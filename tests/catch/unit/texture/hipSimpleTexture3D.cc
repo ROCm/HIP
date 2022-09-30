@@ -92,6 +92,7 @@ static void runSimpleTexture3D_Check(int width, int height, int depth,
 
   hipLaunchKernelGGL(simpleKernel3DArray, dim3(1, 1, 1), dim3(1, 1, 1),
                      0, 0, dData, width, height, depth);
+  HIP_CHECK(hipGetLastError()); 
   HIP_CHECK(hipDeviceSynchronize());
 
   // Allocate mem for the result on host side

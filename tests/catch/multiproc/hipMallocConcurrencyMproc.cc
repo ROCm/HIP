@@ -120,7 +120,7 @@ static bool validateMemoryOnGPU(int gpu, bool concurOnOneGPU = false) {
   hipLaunchKernelGGL(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock),
                      0, 0, static_cast<const int*>(A_d),
                      static_cast<const int*>(B_d), C_d, N);
-
+  HIP_CHECK(hipGetLastError());
   HIP_CHECK(hipMemcpy(C_h, C_d, Nbytes, hipMemcpyDeviceToHost));
 
   if (!HipTest::checkVectorADD(A_h, B_h, C_h, N)) {

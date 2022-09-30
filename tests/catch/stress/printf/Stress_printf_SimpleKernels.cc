@@ -246,6 +246,7 @@ bool test_printf_conststr(uint32_t num_blocks, uint32_t threads_per_block,
     hipLaunchKernelGGL(kernel_printf_conststr, dim3(num_blocks, 1, 1),
                        dim3(threads_per_block, 1, 1),
                        0, 0, iterCount);
+    HIP_CHECK(hipGetLastError());
     HIP_CHECK(hipStreamSynchronize(0));
     std::ifstream CapturedData = captured.getCapturedData();
     char *buffer = new char[CHUNK_SIZE];
@@ -308,6 +309,7 @@ bool test_printf_two_conditionalstr(uint32_t num_blocks,
                        dim3(num_blocks, 1, 1),
                        dim3(threads_per_block, 1, 1),
                        0, 0, iterCount);
+    HIP_CHECK(hipGetLastError());
     HIP_CHECK(hipStreamSynchronize(0));
     std::ifstream CapturedData = captured.getCapturedData();
     char *buffer = new char[CHUNK_SIZE];
@@ -370,6 +372,7 @@ bool test_printf_single_conditionalstr(uint32_t num_blocks,
                        dim3(num_blocks, 1, 1),
                        dim3(threads_per_block, 1, 1),
                        0, 0, iterCount);
+    HIP_CHECK(hipGetLastError());
     HIP_CHECK(hipStreamSynchronize(0));
     std::ifstream CapturedData = captured.getCapturedData();
     char *buffer = new char[CHUNK_SIZE];
@@ -427,6 +430,7 @@ bool test_variable_str(uint32_t print_limit,
     hipLaunchKernelGGL(func, dim3(num_blocks, 1, 1),
                        dim3(threads_per_block, 1, 1),
                        0, 0, iterCount, Ad);
+    HIP_CHECK(hipGetLastError());
     HIP_CHECK(hipStreamSynchronize(0));
     HIP_CHECK(hipMemcpy(Ah, Ad, buffsize*sizeof(int32_t),
              hipMemcpyDeviceToHost));
@@ -483,6 +487,7 @@ bool test_decimal_str(uint32_t num_blocks, uint32_t threads_per_block,
     hipLaunchKernelGGL(kernel_decimal_calculation, dim3(num_blocks, 1, 1),
                        dim3(threads_per_block, 1, 1),
                        0, 0, iterCount, maxPrecision);
+    HIP_CHECK(hipGetLastError());
     HIP_CHECK(hipStreamSynchronize(0));
     std::ifstream CapturedData = captured.getCapturedData();
     char *buffer = new char[CHUNK_SIZE];

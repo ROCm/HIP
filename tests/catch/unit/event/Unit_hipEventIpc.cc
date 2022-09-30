@@ -65,7 +65,7 @@ TEST_CASE("Unit_hipEventIpc") {
 
         hipLaunchKernelGGL(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock), 0, 0,
                         static_cast<const float*>(A_d), static_cast<const float*>(B_d), C_d, N);
-
+        HIP_CHECK(hipGetLastError());
 
         HIP_CHECK(hipEventRecord(stop, NULL));
         HIP_CHECK(hipEventSynchronize(stop));

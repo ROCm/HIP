@@ -66,6 +66,7 @@ TEMPLATE_TEST_CASE("Unit_hipMemcpyDtoD_Basic", "",
                          dim3(1), 0, 0,
                          static_cast<const TestType *>(A_d),
                          static_cast<const TestType *>(B_d), C_d, NUM_ELM);
+      HIP_CHECK(hipGetLastError());
       HIP_CHECK(hipMemcpy(C_h, C_d, Nbytes, hipMemcpyDeviceToHost));
       HIP_CHECK(hipDeviceSynchronize());
       HipTest::checkVectorADD<TestType>(A_h, B_h, C_h, NUM_ELM);
@@ -80,6 +81,7 @@ TEMPLATE_TEST_CASE("Unit_hipMemcpyDtoD_Basic", "",
                          dim3(1), 0, 0,
                          static_cast<const TestType*>(X_d),
                          static_cast<const TestType*>(Y_d), Z_d, NUM_ELM);
+      HIP_CHECK(hipGetLastError());
       HIP_CHECK(hipMemcpyDtoH(C_h, (hipDeviceptr_t)Z_d, Nbytes));
       HIP_CHECK(hipDeviceSynchronize());
       HipTest::checkVectorADD<TestType>(A_h, B_h, C_h, NUM_ELM);

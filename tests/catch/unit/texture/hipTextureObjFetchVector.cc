@@ -178,6 +178,7 @@ bool runTest() {
 
   hipLaunchKernelGGL(tex1dKernelFetch<T>, dimGrid, dimBlock, 0, 0, texBufOut,
                      texObj, N);
+  HIP_CHECK(hipGetLastError()); 
   HIP_CHECK(hipDeviceSynchronize());
 
   HIP_CHECK(hipMemcpy(output, texBufOut, N * sizeof(T), hipMemcpyDeviceToHost));

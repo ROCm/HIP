@@ -26,7 +26,7 @@ THE SOFTWARE.
 #include <fstream>
 #include <regex>
 #include <type_traits>
-
+#define TOL 0.001
 #define guarantee(cond, str)                                                                       \
   {                                                                                                \
     if (!(cond)) {                                                                                 \
@@ -45,7 +45,7 @@ size_t checkVectors(T* A, T* B, T* Out, size_t N, T (*F)(T a, T b), bool expectM
   size_t mismatchesToPrint = 10;
   for (size_t i = 0; i < N; i++) {
     T expected = F(A[i], B[i]);
-    if (Out[i] != expected) {
+    if (std::fabs(Out[i] - expected) > TOL) {
       if (mismatchCount == 0) {
         firstMismatch = i;
       }

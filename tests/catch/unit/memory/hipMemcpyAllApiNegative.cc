@@ -319,6 +319,7 @@ TEST_CASE("Unit_hipMemcpy_HalfMemCopy") {
     HIP_CHECK(hipMemcpyAsync(B_h, A_d,
                              (NUM_ELM/2)*sizeof(float),
                              hipMemcpyDeviceToHost, stream));
+    HIP_CHECK(hipDeviceSynchronize());
     HipTest::checkTest(A_h, B_h, NUM_ELM/2);
   }
   HipTest::freeArrays<float>(A_d, B_d, C_d, A_h, B_h, C_h, false);

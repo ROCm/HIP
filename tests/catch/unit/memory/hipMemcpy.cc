@@ -241,6 +241,7 @@ void memcpytest2(DeviceMemory<T>* dmem, HostMemory<T>* hmem,
   hipLaunchKernelGGL(HipTest::vectorADD, dim3(1), dim3(1), 0, 0,
       static_cast<const T*>(dmem->A_d()), static_cast<const T*>(dmem->B_d()),
       dmem->C_d(), numElements);
+  HIP_CHECK(hipGetLastError());
 
   if (useDeviceToDevice) {
     // Do an extra device-to-device copy here to mix things up:
@@ -402,7 +403,7 @@ TEMPLATE_TEST_CASE("Unit_hipMemcpy_KernelLaunch", "", int, float,
   hipLaunchKernelGGL(HipTest::vectorADD, dim3(1), dim3(1), 0, 0,
                      static_cast<const TestType*>(A_d),
                      static_cast<const TestType*>(B_d), C_d, NUM_ELM);
-
+  HIP_CHECK(hipGetLastError());
   HIP_CHECK(hipMemcpy(C_h, C_d, Nbytes, hipMemcpyDeviceToHost));
 
   HIP_CHECK(hipDeviceSynchronize());
@@ -567,7 +568,7 @@ TEMPLATE_TEST_CASE("Unit_hipMemcpy_PinnedRegMemWithKernelLaunch",
     hipLaunchKernelGGL(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock),
                        0, 0, static_cast<const TestType*>(A_d),
                        static_cast<const TestType*>(B_d), C_d, NUM_ELM);
-
+    HIP_CHECK(hipGetLastError());
     HIP_CHECK(hipMemcpy(C_h, C_d, Nbytes, hipMemcpyDeviceToHost));
     HipTest::checkVectorADD(A_h, B_h, C_h, NUM_ELM);
 
@@ -595,7 +596,7 @@ TEMPLATE_TEST_CASE("Unit_hipMemcpy_PinnedRegMemWithKernelLaunch",
     hipLaunchKernelGGL(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock),
                        0, 0, static_cast<const TestType*>(X_d),
                        static_cast<const TestType*>(Y_d), Z_d, NUM_ELM);
-
+    HIP_CHECK(hipGetLastError());
     HIP_CHECK(hipMemcpy(C_h, Z_d, Nbytes, hipMemcpyDeviceToHost));
 
     HipTest::checkVectorADD(A_h, B_h, C_h, NUM_ELM);

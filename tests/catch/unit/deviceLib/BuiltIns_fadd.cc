@@ -76,6 +76,7 @@ TEST_CASE("Unit_BuiltInAtomicAdd_CoherentGlobalMem") {
       hipLaunchKernelGGL(AtomicAdd_GlobalMem, dim3(1), dim3(1),
                          0, 0, A_d,
                          result);
+      HIP_CHECK(hipGetLastError()); 
        std::cout << "test 1" << std::endl;
       HIP_CHECK(hipDeviceSynchronize());
       REQUIRE(A_h[0] == INITIAL_VAL);
@@ -118,6 +119,7 @@ TEST_CASE("Unit_BuiltInAtomicAdd_NonCoherentGlobalMem") {
       hipLaunchKernelGGL(AtomicAdd_GlobalMem, dim3(1), dim3(1),
                          0, 0, static_cast<double* >(A_d),
                          static_cast<double* >(result));
+      HIP_CHECK(hipGetLastError()); 
       HIP_CHECK(hipDeviceSynchronize());
       HIP_CHECK(hipMemcpy(B_h, result, sizeof(double), hipMemcpyDeviceToHost));
       REQUIRE(A_h[0] == INITIAL_VAL + INC_VAL);

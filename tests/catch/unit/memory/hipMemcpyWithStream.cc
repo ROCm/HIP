@@ -99,6 +99,7 @@ void TestwithOnestream(void) {
   hipLaunchKernelGGL(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock),
                      0, stream, static_cast<const int*>(A_d),
                      static_cast<const int*>(B_d), C_d, N);
+  HIP_CHECK(hipGetLastError());
   HIP_CHECK(hipStreamSynchronize(stream));
   HIP_CHECK(hipMemcpy(C_h, C_d, Nbytes, hipMemcpyDeviceToHost));
   HipTest::checkVectorADD(A_h, B_h, C_h, N);
@@ -136,6 +137,7 @@ void TestwithTwoStream(void) {
     hipLaunchKernelGGL(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock),
                        0, stream[i], static_cast<const int*>(A_d[i]),
                        static_cast<const int*>(B_d[i]), C_d[i], N);
+    HIP_CHECK(hipGetLastError());
   }
 
   for (int i=0; i < NUM_STREAMS; ++i) {
@@ -191,6 +193,7 @@ void TestDtoDonSameDevice(void) {
     hipLaunchKernelGGL(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock),
                        0, stream[i], static_cast<const int*>(A_d[i]),
                        static_cast<const int*>(B_d[i]), C_d[i], N);
+    HIP_CHECK(hipGetLastError());
   }
 
   for (int i=0; i < NUM_STREAMS; ++i) {
@@ -262,6 +265,7 @@ void TestOnMultiGPUwithOneStream(void) {
                          dim3(threadsPerBlock), 0, stream[i],
                          static_cast<const int*>(A_d[i]),
                          static_cast<const int*>(B_d[i]), C_d[i], N);
+      HIP_CHECK(hipGetLastError());
     }
 
     for (int i=0; i < NumDevices; ++i) {
@@ -298,6 +302,7 @@ void TestkindDtoH(void) {
   hipLaunchKernelGGL(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock),
                      0, stream, static_cast<const int*>(A_d),
                      static_cast<const int*>(B_d), C_d, N);
+  HIP_CHECK(hipGetLastError());
   HIP_CHECK(hipStreamSynchronize(stream));
   HIP_CHECK(hipMemcpyWithStream(C_h, C_d, Nbytes,
                                hipMemcpyDeviceToHost, stream));
@@ -365,6 +370,7 @@ void TestkindDtoD(void) {
                          dim3(threadsPerBlock),
                          0, stream[i], static_cast<const int*>(A_d[i]),
                          static_cast<const int*>(B_d[i]), C_d[i], N);
+      HIP_CHECK(hipGetLastError());
     }
 
     for (int i=0; i < NumDevices; ++i) {
@@ -411,6 +417,7 @@ void TestkindDefault(void) {
   hipLaunchKernelGGL(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock),
                      0, stream, static_cast<const int*>(A_d),
                      static_cast<const int*>(B_d), C_d, N);
+  HIP_CHECK(hipGetLastError());
   HIP_CHECK(hipStreamSynchronize(stream));
   HIP_CHECK(hipMemcpyWithStream(C_h, C_d, Nbytes, hipMemcpyDefault, stream));
   HipTest::checkVectorADD(A_h, B_h, C_h, N);
@@ -472,6 +479,7 @@ void TestkindDefaultForDtoD(void) {
                          dim3(threadsPerBlock),
                          0, stream[i], static_cast<const int*>(A_d[i]),
                          static_cast<const int*>(B_d[i]), C_d[i], N);
+      HIP_CHECK(hipGetLastError());
     }
 
     for (int i=0; i < NumDevices; ++i) {

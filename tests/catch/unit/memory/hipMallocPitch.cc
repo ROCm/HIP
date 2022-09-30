@@ -536,6 +536,7 @@ TEMPLATE_TEST_CASE("Unit_hipMallocPitch_KernelLaunch", ""
   hipLaunchKernelGGL(copy_var<TestType>, dim3(1), dim3(1),
           0, 0, static_cast<TestType*>(A_d),
           static_cast<TestType*>(B_d), ROWS, pitch_A);
+  HIP_CHECK(hipGetLastError()); 
 
 
   // hipMemcpy2D Device to Host

@@ -92,6 +92,7 @@ TEST_CASE("Unit_threadfence_system") {
       HIP_CHECK(hipSetDevice(next_id - 1));
       hipLaunchKernelGGL(gpu_round_robin, dim_grid, dim_block, 0, 0x0, next_id, num_dev, num_iter,
                          data, flag);
+      HIP_CHECK(hipGetLastError());
       HIP_CHECK(hipDeviceSynchronize());
     }));
   }

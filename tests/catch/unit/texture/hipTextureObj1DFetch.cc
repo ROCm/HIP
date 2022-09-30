@@ -69,6 +69,7 @@ TEST_CASE("Unit_hipCreateTextureObject_tex1DfetchVerification") {
 
   hipLaunchKernelGGL(tex1dKernel, dim3(dimGrid), dim3(dimBlock), 0, 0,
                      texBufOut, texObj);
+  HIP_CHECK(hipGetLastError()); 
   HIP_CHECK(hipDeviceSynchronize());
 
   HIP_CHECK(hipMemcpy(output, texBufOut, N * sizeof(float),
