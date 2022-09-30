@@ -112,6 +112,7 @@ TEST_CASE("Unit_BuiltinAtomics_fminCoherentGlobalMem") {
       HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&result), sizeof(double)));
       hipLaunchKernelGGL(unsafeAtomicMin_GlobalMem, dim3(1), dim3(1),
                          0, 0, static_cast<double* >(A_d), result);
+      HIP_CHECK(hipGetLastError()); 
       HIP_CHECK(hipDeviceSynchronize());
       HIP_CHECK(hipMemcpy(B_h, result, sizeof(double), hipMemcpyDeviceToHost));
       REQUIRE(*B_h == 0);
