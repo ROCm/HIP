@@ -89,6 +89,7 @@ TEST_CASE("Unit_hipSimpleTexture2DLayered_Check") {
   for (unsigned int layer = 0; layer < num_layers; layer++)
     hipLaunchKernelGGL(simpleKernelLayeredArray, dimGrid, dimBlock, 0, 0,
                        dData, width, height, layer);
+  HIP_CHECK(hipGetLastError()); 
   HIP_CHECK(hipDeviceSynchronize());
 
   // Allocate mem for the result on host side
