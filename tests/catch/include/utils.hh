@@ -1,0 +1,87 @@
+/*
+Copyright (c) 2022 Advanced Micro Devices, Inc. All rights reserved.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+
+#pragma once
+
+#include <chrono>
+
+#include <hip_test_common.hh>
+#include <hip/hip_runtime_api.h>
+
+namespace {
+inline constexpr size_t kPageSize = 4096;
+}  // anonymous namespace
+
+template <typename T>
+void MemcpyArrayCompare(T* const expected, T* const actual, const size_t num_elements) {
+  const auto ret = std::mismatch(expected, expected + num_elements, actual);
+  if (ret.first != expected + num_elements) {
+    const auto idx = std::distance(expected, ret.first);
+    INFO("Value mismatch at index: " << idx);
+    REQUIRE(expected[idx] == actual[idx]);
+  }
+}
+
+template <typename T>
+void ArrayFindIfNot(T* const array, const T expected_value, const size_t num_elements) {
+  const auto it = std::find_if_not(array, array + num_elements, [expected_value](const int elem) {
+    return expected_value == elem;
+  });
+
+  if (it != array + num_elements) {
+    const auto idx = std::distance(array, it);
+    INFO("Value mismatch at index " << idx);
+    REQUIRE(expected_value == array[idx]);
+  }
+}
+
+template <typename T>
+__global__ void VectorIncrement(T* const vec, const T increment_value, size_t N) {
+  size_t offset = (blockIdx.x * blockDim.x + threadIdx.x);
+  size_t stride = blockDim.x * gridDim.x;
+
+  for (size_t i = offset; i < N; i += stride) {
+    vec[i] += increment_value;
+  }
+}
+
+template <typename T> __global__ void VectorSet(T* const vec, const T value, size_t N) {
+  size_t offset = (blockIdx.x * blockDim.x + threadIdx.x);
+  size_t stride = blockDim.x * gridDim.x;
+
+  for (size_t i = offset; i < N; i += stride) {
+    vec[i] = value;
+  }
+}
+
+// Will execute for atleast interval milliseconds
+static __global__ void Delay(uint32_t interval, const uint32_t ticks_per_ms) {
+  while (interval--) {
+    uint64_t start = clock();
+    while (clock() - start < ticks_per_ms) {
+    }
+  }
+}
+
+inline void LaunchDelayKernel(const std::chrono::milliseconds interval, const hipStream_t stream) {
+  int ticks_per_ms = 0;
+  // Clock rate is in kHz => number of clock ticks in a millisecond
+  HIP_CHECK(hipDeviceGetAttribute(&ticks_per_ms, hipDeviceAttributeClockRate, 0));
+  Delay<<<1, 1, 0, stream>>>(interval.count(), ticks_per_ms);
+}
