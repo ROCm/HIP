@@ -20,22 +20,21 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#ifndef HIP_INCLUDE_HIP_HIP_COMMON_H
-#define HIP_INCLUDE_HIP_HIP_COMMON_H
+#pragma once
 
 // Common code included at start of every hip file.
 // Auto enable __HIP_PLATFORM_AMD__ if compiling on AMD platform
 // Other compiler (GCC,ICC,etc) need to set one of these macros explicitly
-#if defined(__clang__) && defined(__HIP__)
-// The following macro will be removed after upstream updation
-#ifndef __HIP_PLATFORM_HCC__
-#define __HIP_PLATFORM_HCC__
-#endif
+// #if defined(__clang__) && defined(__HIP__)
+// // The following macro will be removed after upstream updation
+// #ifndef __HIP_PLATFORM_HCC__
+// #define __HIP_PLATFORM_HCC__
+// #endif
 
-#ifndef __HIP_PLATFORM_AMD__
-#define __HIP_PLATFORM_AMD__
-#endif
-#endif  // defined(__clang__) && defined(__HIP__)
+// #ifndef __HIP_PLATFORM_AMD__
+// #define __HIP_PLATFORM_AMD__
+// #endif
+// #endif  // defined(__clang__) && defined(__HIP__)
 
 // Auto enable __HIP_PLATFORM_NVIDIA__ if compiling with NVIDIA platform
 #if defined(__NVCC__) || (defined(__clang__) && defined(__CUDA__) && !defined(__HIP__))
@@ -54,9 +53,13 @@ THE SOFTWARE.
 
 #endif  //__NVCC__
 
-// Auto enable __HIP_DEVICE_COMPILE__ if compiled in HCC or NVCC device path
-#if (defined(__HCC_ACCELERATOR__) && __HCC_ACCELERATOR__ != 0) ||                                  \
-    (defined(__CUDA_ARCH__) && __CUDA_ARCH__ != 0)
+// // Auto enable __HIP_DEVICE_COMPILE__ if compiled in HCC or NVCC device path
+// #if (defined(__HCC_ACCELERATOR__) && __HCC_ACCELERATOR__ != 0) || \
+//     (defined(__CUDA_ARCH__) && __CUDA_ARCH__ != 0)
+// #define __HIP_DEVICE_COMPILE__ 1
+// #endif
+// TODO
+#if (defined(__clang__) && defined(__HIP_DEVICE_COMPILE__))
 #define __HIP_DEVICE_COMPILE__ 1
 #endif
 
@@ -97,6 +100,4 @@ THE SOFTWARE.
 #define __HIP_ARCH_HAS_SURFACE_FUNCS__ (0)
 #define __HIP_ARCH_HAS_3DGRID__ (0)
 #define __HIP_ARCH_HAS_DYNAMIC_PARALLEL__ (0)
-#endif
-
 #endif

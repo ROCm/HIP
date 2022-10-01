@@ -27,8 +27,7 @@ THE SOFTWARE.
  * This file can be compiled with a standard compiler.
  */
 
-#ifndef HIP_INCLUDE_HIP_HIP_RUNTIME_API_H
-#define HIP_INCLUDE_HIP_HIP_RUNTIME_API_H
+#pragma once
 
 
 #include <string.h>  // for getDeviceProp
@@ -78,7 +77,7 @@ typedef struct hipUUID_t {
 } hipUUID;
 
 //---
-// Common headers for both NVCC and HCC paths:
+// Common headers for SPIRV, NVCC and HCC paths:
 
 /**
  * hipDeviceProp
@@ -470,14 +469,35 @@ enum hipComputeMode {
  * @}
  */
 
-#if (defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) && !(defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__))
+#if (defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) &&                            \
+    !(defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__)) &&                       \
+    !(defined(__HIP_PLATFORM_CLANG__) || defined(__HIP_PLATFORM_SPIRV__))
+#define _USE_HIPCOMMON_RUNTIME_API_
+#include <hip/amd_detail/host_defines.h>
+
+#elif (defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__)) &&                      \
+    !(defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) &&                           \
+    !(defined(__HIP_PLATFORM_CLANG__) || defined(__HIP_PLATFORM_SPIRV__))
+#include "hip/nvidia_detail/nvidia_hip_runtime_api.h"
+
+#elif (defined(__HIP_PLATFORM_CLANG__) || defined(__HIP_PLATFORM_SPIRV__)) &&                      \
+    !(defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) &&                           \
+    !(defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__))
+#define _USE_HIPCOMMON_RUNTIME_API_
+#include "hip/hip_to_chip.hh"
+#include <hip/spirv_hip.hh>
+
+#else
+#error("Must define exactly one of __HIP_PLATFORM_AMD__, __HIP_PLATFORM_NVIDIA__ or __HIP_PLATFORM_SPIRV__");
+#endif // HIP PLATFORM SELECTION
+
+#ifdef _USE_HIPCOMMON_RUNTIME_API_
 
 #include <stdint.h>
 #include <stddef.h>
 #ifndef GENERIC_GRID_LAUNCH
 #define GENERIC_GRID_LAUNCH 1
-#endif
-#include <hip/amd_detail/host_defines.h>
+#endif // GENERIC_GRID_LAUNCH
 #include <hip/driver_types.h>
 #include <hip/texture_types.h>
 #include <hip/surface_types.h>
@@ -510,7 +530,6 @@ extern "C" {
 #endif
 //---
 // API-visible structures
-typedef struct ihipCtx_t* hipCtx_t;
 // Note many APIs also use integer deviceIds as an alternative to the device pointer:
 typedef int hipDevice_t;
 typedef enum hipDeviceP2PAttr {
@@ -519,7 +538,6 @@ typedef enum hipDeviceP2PAttr {
   hipDevP2PAttrNativeAtomicSupported,
   hipDevP2PAttrHipArrayAccessSupported
 } hipDeviceP2PAttr;
-typedef struct ihipStream_t* hipStream_t;
 #define hipIpcMemLazyEnablePeerAccess 0
 #define HIP_IPC_HANDLE_SIZE 64
 typedef struct hipIpcMemHandle_st {
@@ -528,8 +546,6 @@ typedef struct hipIpcMemHandle_st {
 typedef struct hipIpcEventHandle_st {
     char reserved[HIP_IPC_HANDLE_SIZE];
 } hipIpcEventHandle_t;
-typedef struct ihipModule_t* hipModule_t;
-typedef struct ihipModuleSymbol_t* hipFunction_t;
 /**
  * HIP memory pool
  */
@@ -547,13 +563,24 @@ typedef struct hipFuncAttributes {
     int ptxVersion;
     size_t sharedSizeBytes;
 } hipFuncAttributes;
-typedef struct ihipEvent_t* hipEvent_t;
 enum hipLimit_t {
     hipLimitStackSize = 0x0,        // limit device stack size
     hipLimitPrintfFifoSize = 0x01,  // limit printf fifo size
     hipLimitMallocHeapSize = 0x02,  // limit heap size
     hipLimitRange                   // supported limit range
 };
+
+#if (defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) &&                            \
+    !(defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__)) &&                       \
+    (defined(__HIP_PLATFORM_CLANG__) || defined(__HIP_PLATFORM_SPIRV__))
+typedef struct ihipEvent_t* hipEvent_t;
+typedef int hipDevice_t;
+typedef struct ihipCtx_t* hipCtx_t;
+typedef struct ihipStream_t* hipStream_t;
+typedef struct ihipModule_t* hipModule_t;
+typedef struct ihipModuleSymbol_t* hipFunction_t;
+#endif
+
 /**
  * @addtogroup GlobalDefs More
  * @{
@@ -681,6 +708,7 @@ enum hipLimit_t {
 // Stream per thread
 /** Implicit stream per application thread.*/
 #define hipStreamPerThread ((hipStream_t)2)
+#define hipStreamLegacy ((hipStream_t)3)
 /*
  * @brief HIP Memory Advise values
  * @enum
@@ -6927,12 +6955,8 @@ static inline hipError_t hipMallocFromPoolAsync(
  *   @}
  */
 
-#elif !(defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) && (defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__))
-#include "hip/nvidia_detail/nvidia_hip_runtime_api.h"
-#else
-#error("Must define exactly one of __HIP_PLATFORM_AMD__ or __HIP_PLATFORM_NVIDIA__");
-#endif
 
+#endif  //_USE_HIPCOMMON_RUNTIME_API_
 
 /**
  * @brief: C++ wrapper for hipMalloc
@@ -6965,10 +6989,11 @@ static inline hipError_t hipMallocManaged(T** devPtr, size_t size,
     return hipMallocManaged((void**)devPtr, size, flags);
 }
 
-#endif
-#endif
+#endif // __cplusplus
 
+#if (defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) && !(defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__))
 #include <hip/amd_detail/amd_hip_runtime_pt_api.h>
+#endif // TODO
 
 #if USE_PROF_API
 #include <hip/amd_detail/hip_prof_str.h>

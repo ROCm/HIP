@@ -34,8 +34,7 @@ THE SOFTWARE.
 //! macros. hip_runtime_api.h : Defines HIP API.  This is a C header file and does not use any C++
 //! features.
 
-#ifndef HIP_INCLUDE_HIP_HIP_RUNTIME_H
-#define HIP_INCLUDE_HIP_HIP_RUNTIME_H
+#pragma once
 
 #if (__gfx1010__ || __gfx1011__ || __gfx1012__ || __gfx1030__ || __gfx1031__) && __AMDGCN_WAVEFRONT_SIZE == 64
 #error HIP is not supported on GFX10 with wavefront size 64
@@ -58,13 +57,23 @@ THE SOFTWARE.
 #include <hip/hip_version.h>
 #include <hip/hip_common.h>
 
-#if (defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) && !(defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__))
+#if (defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) &&                            \
+    !(defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__)) &&                       \
+    !(defined(__HIP_PLATFORM_CLANG__) || defined(__HIP_PLATFORM_SPIRV__))
 #include <hip/amd_detail/amd_hip_runtime.h>
-#elif !(defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) && (defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__))
+#elif (defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__)) &&                      \
+    !(defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) &&                           \
+    !(defined(__HIP_PLATFORM_CLANG__) || defined(__HIP_PLATFORM_SPIRV__))
 #include <hip/nvidia_detail/nvidia_hip_runtime.h>
+
+#elif (defined(__HIP_PLATFORM_CLANG__) || defined(__HIP_PLATFORM_SPIRV__)) &&                      \
+    !(defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) &&                           \
+    !(defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__))
+#include <hip/spirv_hip_runtime.h>
+
 #else
-#error("Must define exactly one of __HIP_PLATFORM_AMD__ or __HIP_PLATFORM_NVIDIA__");
-#endif
+#error("Must define exactly one of __HIP_PLATFORM_AMD__, __HIP_PLATFORM_NVIDIA__ or __HIP_PLATFORM_SPIRV__");
+#endif // HIP PLATFORM SELECTION
 
 // The following are deprecation notices.
 // They will be removed after upstream updation
@@ -114,5 +123,3 @@ THE SOFTWARE.
 #include <hip/library_types.h>
 #endif // !defined(__HIPCC_RTC__)
 #include <hip/hip_vector_types.h>
-
-#endif

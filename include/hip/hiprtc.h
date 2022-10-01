@@ -23,9 +23,13 @@ THE SOFTWARE.
 
 #include <hip/hip_common.h>
 
-#if !(defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) && (defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__))
-    #include <hip/nvidia_detail/nvidia_hiprtc.h>
-#elif (defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) && !(defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__))
+#if (defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__)) &&                        \
+    !(defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__))
+#include <hip/nvidia_detail/nvidia_hiprtc.h>
+
+#elif ((defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) ||                         \
+       (defined(__HIP_PLATFORM_CLANG__) || defined(__HIP_PLATFORM_SPIRV__))) &&                    \
+    !(defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__))
 
 /**
  *  @addtogroup Runtime Runtime Compilation
@@ -40,7 +44,7 @@ extern "C" {
 #include <stdlib.h>
 
 #if !defined(_WIN32)
-#pragma GCC visibility push (default)
+#pragma GCC visibility push(default)
 #endif
 
 /**
@@ -381,5 +385,5 @@ hiprtcResult hiprtcLinkDestroy(hiprtcLinkState hip_link_state);
  * @}
  */
 #else
-#error("Must define exactly one of __HIP_PLATFORM_AMD__ or __HIP_PLATFORM_NVIDIA__");
-#endif
+#error("Must define exactly one of __HIP_PLATFORM_AMD__, __HIP_PLATFORM_NVIDIA__ or __HIP_PLATFORM_SPIRV__");
+#endif // HIP PLATFORM SELECTION
