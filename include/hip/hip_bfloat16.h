@@ -46,7 +46,7 @@ typedef struct
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
-#include <hip/hip_runtime.h>
+#include "hip/hip_runtime.h"
 #include <ostream>
 #include <type_traits>
 

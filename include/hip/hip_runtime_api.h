@@ -31,8 +31,8 @@ THE SOFTWARE.
 
 
 #include <string.h>  // for getDeviceProp
-#include <hip/hip_version.h>
-#include <hip/hip_common.h>
+#include "hip/hip_version.h"
+#include "hip/hip_common.h"
 
 enum {
     HIP_SUCCESS = 0,
@@ -473,7 +473,7 @@ enum hipComputeMode {
     !(defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__)) &&                       \
     !(defined(__HIP_PLATFORM_CLANG__) || defined(__HIP_PLATFORM_SPIRV__))
 #define _USE_HIPCOMMON_RUNTIME_API_
-#include <hip/amd_detail/host_defines.h>
+#include "hip/amd_detail/host_defines.h"
 
 #elif (defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__)) &&                      \
     !(defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) &&                           \
@@ -485,7 +485,7 @@ enum hipComputeMode {
     !(defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__))
 #define _USE_HIPCOMMON_RUNTIME_API_
 #include "hip/hip_to_chip.hh"
-#include <hip/spirv_hip.hh>
+#include "hip/spirv_hip.hh"
 
 #else
 #error("Must define exactly one of __HIP_PLATFORM_AMD__, __HIP_PLATFORM_NVIDIA__ or __HIP_PLATFORM_SPIRV__");
@@ -498,9 +498,9 @@ enum hipComputeMode {
 #ifndef GENERIC_GRID_LAUNCH
 #define GENERIC_GRID_LAUNCH 1
 #endif // GENERIC_GRID_LAUNCH
-#include <hip/driver_types.h>
-#include <hip/texture_types.h>
-#include <hip/surface_types.h>
+#include "hip/driver_types.h"
+#include "hip/texture_types.h"
+#include "hip/surface_types.h"
 #if defined(_MSC_VER)
 #define DEPRECATED(msg) __declspec(deprecated(msg))
 #else // !defined(_MSC_VER)
@@ -6992,9 +6992,9 @@ static inline hipError_t hipMallocManaged(T** devPtr, size_t size,
 #endif // __cplusplus
 
 #if (defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) && !(defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__))
-#include <hip/amd_detail/amd_hip_runtime_pt_api.h>
+#include "hip/amd_detail/amd_hip_runtime_pt_api.h"
 #endif // TODO
 
 #if USE_PROF_API
-#include <hip/amd_detail/hip_prof_str.h>
+#include "hip/amd_detail/hip_prof_str.h"
 #endif

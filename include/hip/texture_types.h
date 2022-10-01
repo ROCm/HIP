@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 #pragma once
 
-#include <hip/hip_common.h>
+#include "hip/hip_common.h"
 
 #if (defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) &&                            \
     !(defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__)) &&                       \
@@ -51,10 +51,10 @@ THE SOFTWARE.
  *******************************************************************************/
 #if !defined(__HIPCC_RTC__)
 #include <limits.h>
-#include <hip/channel_descriptor.h>
+#include "hip/channel_descriptor.h"
 #endif // !defined(__HIPCC_RTC__)
 
-#include <hip/driver_types.h>
+#include "hip/driver_types.h"
 
 #define hipTextureType1D 0x01
 #define hipTextureType2D 0x02

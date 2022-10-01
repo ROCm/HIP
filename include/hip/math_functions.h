@@ -26,17 +26,17 @@ THE SOFTWARE.
 // paths to provide a consistent include env and avoid "missing symbol" errors that only appears
 // on NVCC path:
 
-#include <hip/hip_common.h>
+#include "hip/hip_common.h"
 
 #if (defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) &&                            \
     !(defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__)) &&                       \
     !(defined(__HIP_PLATFORM_CLANG__) || defined(__HIP_PLATFORM_SPIRV__))
-#include <hip/amd_detail/amd_math_functions.h>
+#include "hip/amd_detail/amd_math_functions.h"
 
 #elif (defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__)) &&                      \
     !(defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) &&                           \
     !(defined(__HIP_PLATFORM_CLANG__) || defined(__HIP_PLATFORM_SPIRV__))
-//#include <hip/nvidia_detail/math_functions.h>
+//#include "hip/nvidia_detail/math_functions.h"
 
 #elif (defined(__HIP_PLATFORM_CLANG__) || defined(__HIP_PLATFORM_SPIRV__)) &&                      \
     !(defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) &&                           \
