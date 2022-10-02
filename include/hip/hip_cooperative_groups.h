@@ -30,17 +30,25 @@ THE SOFTWARE.
 #ifndef  HIP_INCLUDE_HIP_HIP_COOPERATIVE_GROUP_H
 #define  HIP_INCLUDE_HIP_HIP_COOPERATIVE_GROUP_H
 
-#include <hip/hip_version.h>
-#include <hip/hip_common.h>
+#include "hip/hip_version.h"
+#include "hip/hip_common.h"
 
-#if (defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) && !(defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__))
-#if __cplusplus && defined(__clang__) && defined(__HIP__)
-#include <hip/amd_detail/amd_hip_cooperative_groups.h>
-#endif
-#elif !(defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) && (defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__))
-#include <hip/nvidia_detail/nvidia_hip_cooperative_groups.h>
+#if (defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) &&                            \
+    !(defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__)) &&                       \
+    !(defined(__HIP_PLATFORM_CLANG__) || defined(__HIP_PLATFORM_SPIRV__))
+#include "hip/amd_detail/amd_hip_cooperative_groups.h"
+
+#elif (defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__)) &&                      \
+    !(defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) &&                           \
+    !(defined(__HIP_PLATFORM_CLANG__) || defined(__HIP_PLATFORM_SPIRV__))
+#include "hip/nvidia_detail/nvidia_hip_cooperative_groups.h"
+
+#elif (defined(__HIP_PLATFORM_CLANG__) || defined(__HIP_PLATFORM_SPIRV__)) &&                      \
+    !(defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) &&                           \
+    !(defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__))
+#include "spirv_hip_cooperative_groups.h"
+
 #else
-#error("Must define exactly one of __HIP_PLATFORM_AMD__ or __HIP_PLATFORM_NVIDIA__");
-#endif
-
+#error("Must define exactly one of __HIP_PLATFORM_AMD__, __HIP_PLATFORM_NVIDIA__ or __HIP_PLATFORM_SPIRV__");
+#endif // HIP PLATFORM SELECTION
 #endif // HIP_INCLUDE_HIP_HIP_COOPERATIVE_GROUP_H

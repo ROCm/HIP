@@ -55,16 +55,26 @@ THE SOFTWARE.
 #endif
 #endif // !defined(__HIPCC_RTC__)
 
-#include <hip/hip_version.h>
-#include <hip/hip_common.h>
+#include "hip/hip_version.h"
+#include "hip/hip_common.h"
 
-#if (defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) && !(defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__))
-#include <hip/amd_detail/amd_hip_runtime.h>
-#elif !(defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) && (defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__))
-#include <hip/nvidia_detail/nvidia_hip_runtime.h>
+#if (defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) &&                            \
+    !(defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__)) &&                       \
+    !(defined(__HIP_PLATFORM_CLANG__) || defined(__HIP_PLATFORM_SPIRV__))
+#include "hip/amd_detail/amd_hip_runtime.h"
+#elif (defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__)) &&                      \
+    !(defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) &&                           \
+    !(defined(__HIP_PLATFORM_CLANG__) || defined(__HIP_PLATFORM_SPIRV__))
+#include "hip/nvidia_detail/nvidia_hip_runtime.h"
+
+#elif (defined(__HIP_PLATFORM_CLANG__) || defined(__HIP_PLATFORM_SPIRV__)) &&                      \
+    !(defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) &&                           \
+    !(defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__))
+#include "hip/spirv_hip_runtime.h"
+
 #else
-#error("Must define exactly one of __HIP_PLATFORM_AMD__ or __HIP_PLATFORM_NVIDIA__");
-#endif
+#error("Must define exactly one of __HIP_PLATFORM_AMD__, __HIP_PLATFORM_NVIDIA__ or __HIP_PLATFORM_SPIRV__");
+#endif // HIP PLATFORM SELECTION
 
 // The following are deprecation notices.
 // They will be removed after upstream updation
@@ -110,9 +120,8 @@ THE SOFTWARE.
 #endif
 
 #if !defined(__HIPCC_RTC__)
-#include <hip/hip_runtime_api.h>
-#include <hip/library_types.h>
+#include "hip/hip_runtime_api.h"
+#include "hip/library_types.h"
 #endif // !defined(__HIPCC_RTC__)
-#include <hip/hip_vector_types.h>
-
-#endif
+#include "hip/hip_vector_types.h"
+#endif // HIP_INCLUDE_HIP_HIP_RUNTIME_H

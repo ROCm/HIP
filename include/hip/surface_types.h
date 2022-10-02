@@ -25,7 +25,7 @@ THE SOFTWARE.
 #ifndef HIP_INCLUDE_HIP_SURFACE_TYPES_H
 #define HIP_INCLUDE_HIP_SURFACE_TYPES_H
 
-#include <hip/driver_types.h>
+#include "hip/driver_types.h"
 
 /**
  * An opaque value that represents a hip surface object

@@ -24,6 +24,6 @@ THE SOFTWARE.
 #ifndef HIP_INCLUDE_HIP_HIP_TEXTURE_TYPES_H
 #define HIP_INCLUDE_HIP_HIP_TEXTURE_TYPES_H
 
-#include <hip/texture_types.h>
+#include "hip/texture_types.h"
 
 #endif
