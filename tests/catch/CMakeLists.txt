@@ -49,25 +49,25 @@ file(TO_CMAKE_PATH "${ROCM_PATH}" ROCM_PATH)
 message(STATUS "ROCM Path: ${ROCM_PATH}")
 
 
-# if(UNIX)
-#     set(CMAKE_CXX_COMPILER "${HIP_PATH}/bin/hipcc")
-#     set(CMAKE_C_COMPILER "${HIP_PATH}/bin/hipcc")
-#     set(HIPCONFIG_EXECUTABLE "${HIP_PATH}/bin/hipconfig")
-#     execute_process(COMMAND ${HIPCONFIG_EXECUTABLE} --version
-#                     OUTPUT_VARIABLE HIP_VERSION
-#                     OUTPUT_STRIP_TRAILING_WHITESPACE)
-#     message("hipcc: HIP_VERSION ${HIP_VERSION}")
-# else()
-#     # using cmake_path as it handles path correctly.
-#     # Set both compilers else windows cmake complains of mismatch
-#     cmake_path(SET CMAKE_CXX_COMPILER "${HIP_PATH}/bin/hipcc.bat")
-#     cmake_path(SET CMAKE_C_COMPILER "${HIP_PATH}/bin/hipcc.bat")
-#     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --rocm-path=${ROCM_PATH}")
-#     set(HIPCONFIG_EXECUTABLE "${HIP_PATH}/bin/hipconfig.bat")
-#     execute_process(COMMAND ${HIPCONFIG_EXECUTABLE} --version
-#                     OUTPUT_VARIABLE HIP_VERSION
-#                     OUTPUT_STRIP_TRAILING_WHITESPACE)
-# endif()
+if(UNIX)
+    set(CMAKE_CXX_COMPILER "${HIP_PATH}/bin/hipcc.bin")
+    set(CMAKE_C_COMPILER "${HIP_PATH}/bin/hipcc.bin")
+    set(HIPCONFIG_EXECUTABLE "${HIP_PATH}/bin/hipconfig.bin")
+    # execute_process(COMMAND ${HIPCONFIG_EXECUTABLE} --version
+    #                 OUTPUT_VARIABLE HIP_VERSION
+    #                 OUTPUT_STRIP_TRAILING_WHITESPACE)
+    # message("hipcc: HIP_VERSION ${HIP_VERSION}")
+else()
+    # # using cmake_path as it handles path correctly.
+    # # Set both compilers else windows cmake complains of mismatch
+    # cmake_path(SET CMAKE_CXX_COMPILER "${HIP_PATH}/bin/hipcc.bat")
+    # cmake_path(SET CMAKE_C_COMPILER "${HIP_PATH}/bin/hipcc.bat")
+    # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --rocm-path=${ROCM_PATH}")
+    # set(HIPCONFIG_EXECUTABLE "${HIP_PATH}/bin/hipconfig.bat")
+    # execute_process(COMMAND ${HIPCONFIG_EXECUTABLE} --version
+    #                 OUTPUT_VARIABLE HIP_VERSION
+    #                 OUTPUT_STRIP_TRAILING_WHITESPACE)
+endif()
 # enforce c++17 for all tests
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++17")
 
@@ -115,8 +115,6 @@ include_directories(
     "./kernels"
     ${HIP_PATH}/include
     ${JSON_PARSER}
-    ${CHIP_DIR_}/HIP/include  #TODO
-    ${CHIP_DIR_}/include # TODO
 )
 
 option(RTC_TESTING "Run tests using HIP RTC to compile the kernels" OFF)
