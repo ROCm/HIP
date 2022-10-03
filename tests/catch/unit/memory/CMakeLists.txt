@@ -74,6 +74,8 @@ set(TEST_SRC
     hipMemcpyDtoD_old.cc
     hipMemcpyDtoDAsync.cc
     hipHostMalloc.cc
+    hipMemcpy.cc
+    hipMemcpy_derivatives.cc
     hipMemcpy_old.cc
     hipMemcpyAsync.cc
     hipMemsetFunctional.cc
@@ -97,8 +99,6 @@ set(TEST_SRC
     hipMemsetSync.cc
     hipMemsetAsync.cc
     hipMemAdvise.cc
-    hipMemcpy.cc
-    hipMemcpy_derivatives.cc
 )
 else()
 set(TEST_SRC
@@ -149,10 +149,12 @@ set(TEST_SRC
     hipMemset2DAsyncMultiThreadAndKernel.cc
     hipMallocManaged.cc
     hipMallocConcurrency.cc
-    hipMemcpyDtoD.cc
+    hipMemcpyDtoD_old.cc
     hipMemcpyDtoDAsync.cc
     hipHostMalloc.cc
     hipMemcpy.cc
+    hipMemcpy_derivatives.cc
+    hipMemcpy_old.cc
     hipMemcpyAsync.cc
     hipMemsetFunctional.cc
     hipMallocPitch.cc
