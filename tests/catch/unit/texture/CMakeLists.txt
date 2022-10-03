@@ -25,27 +25,30 @@ set(TEST_SRC
     hipCreateTextureObject_Pitch2D.cc
     hipCreateTextureObject_Array.cc
     hipTextureObjFetchVector.cc
-    hipNormalizedFloatValueTex.cc
     hipTextureObj2D.cc
-    hipSimpleTexture3D.cc
-    hipTextureRef2D.cc
-    hipSimpleTexture2DLayered.cc
     hipTextureMipmapObj2D.cc
-    hipBindTex2DPitch.cc
-    hipBindTexRef1DFetch.cc
     hipTex1DFetchCheckModes.cc
     hipGetChanDesc.cc
     hipTexObjPitch.cc
     hipTextureObj1DFetch.cc
-    hipBindTex2DPitch.cc
-    hipBindTexRef1DFetch.cc
     hipTex1DFetchCheckModes.cc
     hipTextureObj1DCheckModes.cc
     hipTextureObj2DCheckModes.cc
-    hipTextureObj3DCheckModes.cc
     hipTextureObj1DCheckSRGBModes.cc
     hipTextureObj2DCheckSRGBModes.cc
 )
+
+if(NOT HIP_PLATFORM MATCHES "spirv")
+    set(TEST_SRC ${TEST_SRC}
+    hipNormalizedFloatValueTex.cc
+    hipSimpleTexture3D.cc
+    hipTextureRef2D.cc
+    hipSimpleTexture2DLayered.cc
+    hipBindTex2DPitch.cc
+    hipBindTexRef1DFetch.cc
+    hipTextureObj3DCheckModes.cc
+    )
+endif()
 
 hip_add_exe_to_target(NAME TextureTest
                       TEST_SRC ${TEST_SRC}
