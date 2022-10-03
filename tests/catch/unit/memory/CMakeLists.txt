@@ -74,7 +74,7 @@ set(TEST_SRC
     hipMemcpyDtoD.cc
     hipMemcpyDtoDAsync.cc
     hipHostMalloc.cc
-    hipMemcpy.cc
+    hipMemcpy_old.cc
     hipMemcpyAsync.cc
     hipMemsetFunctional.cc
     hipMallocPitch.cc
@@ -97,6 +97,7 @@ set(TEST_SRC
     hipMemsetSync.cc
     hipMemsetAsync.cc
     hipMemAdvise.cc
+    hipMemcpy.cc
 )
 else()
 set(TEST_SRC
