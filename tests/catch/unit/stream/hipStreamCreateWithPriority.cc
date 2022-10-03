@@ -146,6 +146,7 @@ void funcTestsForAllPriorityLevelsWrtNullStrm(unsigned int flags,
     hipLaunchKernelGGL((HipTest::vector_square), dim3(GRIDSIZE),
                         dim3(BLOCKSIZE), 0, stream[idx], A_d[idx],
                         C_d[idx], MEMCPYSIZE2);
+    HIP_CHECK(hipGetLastError());
     HIP_CHECK(hipMemcpyAsync(C_h[idx], C_d[idx], size,
             hipMemcpyDeviceToHost, stream[idx]));
   }
@@ -227,6 +228,7 @@ void queueTasksInStreams(std::vector<hipStream_t> *stream,
     hipLaunchKernelGGL((HipTest::vector_square), dim3(GRIDSIZE),
                         dim3(BLOCKSIZE), 0, (*stream)[idx], A_d[idx],
                         C_d[idx], MEMCPYSIZE2);
+    HIP_CHECK(hipGetLastError());
     HIPCHECK(hipMemcpyAsync(C_h[idx], C_d[idx], size,
              hipMemcpyDeviceToHost, (*stream)[idx]));
   }
@@ -426,6 +428,7 @@ bool validateStreamPrioritiesWithEvents() {
         hipLaunchKernelGGL((memcpy_kernel<T>), dim3(GRIDSIZE), \
         dim3(BLOCKSIZE), 0, stream_##x, dst_d_##x + j, src_d_##x + j, \
         (MEMCPYSIZE / sizeof(T))); \
+        HIP_CHECK(hipGetLastError()); \
       }
     OP(low)
     OP(normal)
