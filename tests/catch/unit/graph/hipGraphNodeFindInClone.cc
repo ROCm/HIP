@@ -42,7 +42,7 @@ Functional:
 
 */
 
-#include<hip/hip_runtime_api.h>
+// #include<hip/hip_runtime_api.h>
 #include <hip_test_common.hh>
 #include <hip_test_checkers.hh>
 #include <hip_test_kernels.hh>
