@@ -284,7 +284,7 @@ TEST_CASE("Unit_hipPointerGetAttribute_Negative") {
         == hipErrorInvalidValue);
   }
   SECTION("Pass nullptr to device attribute") {
-#if HT_AMD
+#if defined(HT_AMD) || defined(HT_SPIRV)
     REQUIRE(hipPointerGetAttribute(&data, HIP_POINTER_ATTRIBUTE_DEVICE_POINTER,
             nullptr) == hipErrorInvalidValue);
 #else

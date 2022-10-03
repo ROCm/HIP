@@ -48,14 +48,14 @@ TEST_CASE("Unit_hipEventRecord") {
     WithFlags_Default = hipEventDefault,
     WithFlags_Blocking = hipEventBlockingSync,
     WithFlags_DisableTiming = hipEventDisableTiming,
-#if HT_AMD
+#if defined(HT_AMD) || defined(HT_SPIRV)
     WithFlags_ReleaseToDevice = hipEventReleaseToDevice,
     WithFlags_ReleaseToSystem = hipEventReleaseToSystem,
 #endif
     WithoutFlags
   };
 
-#if HT_AMD
+#if defined(HT_AMD) || defined(HT_SPIRV)
   auto flags = GENERATE(WithFlags_Default, WithFlags_Blocking, WithFlags_DisableTiming,
                         WithFlags_ReleaseToDevice, WithFlags_ReleaseToSystem, WithoutFlags);
 #endif

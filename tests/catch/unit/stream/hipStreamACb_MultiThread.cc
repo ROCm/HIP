@@ -32,7 +32,7 @@ static std::atomic<int> Cb_count{0}, Data_mismatch{0};
 static hipStream_t mystream;
 static float *A1_h, *C1_h;
 
-#if HT_AMD
+#if defined(HT_AMD) || defined(HT_SPIRV)
 #define HIPRT_CB
 #endif
 

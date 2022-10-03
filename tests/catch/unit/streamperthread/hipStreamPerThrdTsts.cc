@@ -47,12 +47,12 @@ THE SOFTWARE.
 #endif
 
 #include <hip_test_common.hh>
-#ifdef HT_AMD
+#if defined(HT_AMD) || defined(HT_SPIRV)
   #include "hip/hip_cooperative_groups.h"
 #endif
 using namespace std::chrono;
 using namespace cooperative_groups;
-#if HT_AMD
+#if defined(HT_AMD) || defined(HT_SPIRV)
 #define HIPRT_CB
 #endif
 

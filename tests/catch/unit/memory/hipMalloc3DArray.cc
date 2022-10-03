@@ -106,7 +106,7 @@ namespace {
 void checkArrayIsExpected(hipArray_t array, const hipChannelFormatDesc& expected_desc,
                           const hipExtent& expected_extent, const unsigned int expected_flags) {
 // hipArrayGetInfo doesn't currently exist (EXSWCPHIPT-87)
-#if HT_AMD
+#if defined(HT_AMD) || defined(HT_SPIRV)
   std::ignore = array;
   std::ignore = expected_desc;
   std::ignore = expected_extent;

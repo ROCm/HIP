@@ -25,7 +25,7 @@ THE SOFTWARE.
 namespace {
 void checkArrayIsExpected(const hiparray array, const HIP_ARRAY3D_DESCRIPTOR& expected_desc) {
 // hipArray3DGetDescriptor doesn't currently exist (EXSWCPHIPT-87)
-#if HT_AMD
+#if defined(HT_AMD) || defined(HT_SPIRV)
   std::ignore = array;
   std::ignore = expected_desc;
 #else
