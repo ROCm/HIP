@@ -20,8 +20,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#ifdef __linux__
-
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -91,5 +89,3 @@ TEST_CASE("Unit_hipIpcCloseMemHandle_Negative_Close_In_Originating_Process") {
   HIP_CHECK_ERROR(hipIpcCloseMemHandle(ptr), hipErrorInvalidValue);
   HIP_CHECK(hipFree(ptr));
 }
-
-#endif
