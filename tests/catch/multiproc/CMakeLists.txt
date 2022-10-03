@@ -14,8 +14,11 @@ set(LINUX_TEST_SRC
     hipMemCoherencyTstMProc.cc
     hipIpcEventHandle.cc
     hipIpcMemAccessTest.cc
-    deviceAllocationMproc.cc
 )
+
+if(HIP_PLATFORM MATCHES "amd" OR HIP_PLATFORM MATCHES "nvidia")
+    set(LINUX_TEST_SRC ${LINUX_TEST_SRC} deviceAllocationMproc.cc)
+endif()
 
 # the last argument linker libraries is required for this test but optional to the function
 hip_add_exe_to_target(NAME MultiProc

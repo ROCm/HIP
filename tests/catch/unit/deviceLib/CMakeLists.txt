@@ -50,7 +50,7 @@ set(AMD_ARCH_SPEC_TEST_SRC
 
 # Note to pass arch use format like -DOFFLOAD_ARCH_STR="--offload-arch=gfx900  --offload-arch=gfx906"
 # having space at the start/end of OFFLOAD_ARCH_STR can cause build failures
-if(UNIX)
+if(UNIX AND (NOT HIP_PLATFORM MATCHES "spirv"))
     add_custom_target(kerDevAllocMultCO.code COMMAND ${CMAKE_CXX_COMPILER} --genco ${OFFLOAD_ARCH_STR} ${CMAKE_CURRENT_SOURCE_DIR}/kerDevAllocMultCO.cc -o ${CMAKE_CURRENT_BINARY_DIR}/../../unit/deviceLib/kerDevAllocMultCO.code -I${CMAKE_CURRENT_SOURCE_DIR}/../../../../include/ -I${CMAKE_CURRENT_SOURCE_DIR}/../../include)
     add_custom_target(kerDevWriteMultCO.code COMMAND ${CMAKE_CXX_COMPILER} --genco ${OFFLOAD_ARCH_STR} ${CMAKE_CURRENT_SOURCE_DIR}/kerDevWriteMultCO.cc -o ${CMAKE_CURRENT_BINARY_DIR}/../../unit/deviceLib/kerDevWriteMultCO.code -I${CMAKE_CURRENT_SOURCE_DIR}/../../../../include/ -I${CMAKE_CURRENT_SOURCE_DIR}/../../include)
     add_custom_target(kerDevFreeMultCO.code COMMAND ${CMAKE_CXX_COMPILER} --genco ${OFFLOAD_ARCH_STR} ${CMAKE_CURRENT_SOURCE_DIR}/kerDevFreeMultCO.cc -o ${CMAKE_CURRENT_BINARY_DIR}/../../unit/deviceLib/kerDevFreeMultCO.code -I${CMAKE_CURRENT_SOURCE_DIR}/../../../../include/ -I${CMAKE_CURRENT_SOURCE_DIR}/../../include)
@@ -93,6 +93,6 @@ elseif(HIP_PLATFORM MATCHES "nvidia")
                       COMPILE_OPTIONS --Wno-deprecated-declarations)
 endif()
 
-if(UNIX)
+if(UNIX AND (NOT HIP_PLATFORM MATCHES "spirv"))
     add_dependencies(build_tests kerDevAllocMultCO.code kerDevWriteMultCO.code kerDevFreeMultCO.code kerDevAllocSingleKer.code)
 endif()
