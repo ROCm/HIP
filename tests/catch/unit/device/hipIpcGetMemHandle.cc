@@ -20,8 +20,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#ifdef __linux__
-
 #include <cstring>
 
 #include <hip_test_common.hh>
@@ -73,5 +71,3 @@ TEST_CASE("Unit_hipIpcGetMemHandle_Negative_Out_Of_Bound_Pointer") {
                   hipErrorInvalidDevicePointer);
   HIP_CHECK(hipFree(reinterpret_cast<void*>(ptr)));
 }
-
-#endif
