@@ -224,6 +224,7 @@ template <typename V> bool run_CheckSharedVectorType() {
   if (hipMalloc(&ptr, sizeof(bool)) != HIP_SUCCESS) return false;
   unique_ptr<bool, decltype(hipFree)*> correct{ptr, hipFree};
   hipLaunchKernelGGL((CheckSharedVectorType<V>), dim3(1, 1, 1), dim3(1, 1, 1), 0, 0, correct.get());
+  HIP_CHECK(hipGetLastError());
   bool passed = true;
   if (hipMemcpyDtoH(&passed, correct.get(), sizeof(bool)) != HIP_SUCCESS) {
     return false;
@@ -252,7 +253,7 @@ TEST_CASE("Unit_vectorTypes_CompileTest") {
 
   unique_ptr<bool, decltype(hipFree)*> correct{ptr, hipFree};
   hipLaunchKernelGGL(CheckVectorTypes, dim3(1, 1, 1), dim3(1, 1, 1), 0, 0, correct.get());
-
+  HIP_CHECK(hipGetLastError());
   bool passed = true;
   res = hipMemcpyDtoH(&passed, correct.get(), sizeof(bool));
   REQUIRE(res == hipSuccess);
