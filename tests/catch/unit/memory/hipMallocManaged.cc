@@ -114,6 +114,7 @@ TEST_CASE("Unit_hipMallocManaged_Advanced") {
   HIP_CHECK(hipEventRecord(event0, 0));
   hipLaunchKernelGGL(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock), 0, 0,
                      static_cast<const float*>(A), static_cast<const float*>(B), C, numElements);
+  HIP_CHECK(hipGetLastError());
   HIP_CHECK(hipEventRecord(event1, 0));
   HIP_CHECK(hipDeviceSynchronize());
   float time = 0.0f;
