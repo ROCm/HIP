@@ -88,6 +88,7 @@ struct vector_info<uchar4>
 
 // read from a texture using normalized coordinates
 constexpr size_t ChannelToRead = 1;
+#if !defined(__HIP_PLATFORM_SPIRV__)
 template <typename T>
 __global__ void readFromTexture(T* output, hipTextureObject_t texObj, size_t width, size_t height,
                                 bool textureGather) {
@@ -104,10 +105,10 @@ __global__ void readFromTexture(T* output, hipTextureObject_t texObj, size_t wid
     const float v = y / (float)height;
     if (textureGather) {
       // tex2Dgather not supported on __gfx90a__
-      #if !defined(__gfx90a__)
+      #if !defined(__gfx90a__) && !(defined(__HIP_PLATFORM_SPIRV__))
       output[y * width + x] = tex2Dgather<T>(texObj, u, v, ChannelToRead);
       #else
-      #warning("tex2Dgather not supported on gfx90a");
+      #warning("tex2Dgather not supported on gfx90a or CHIP-SPV");
       #endif
     } else {
       output[y * width + x] = tex2D<T>(texObj, u, v);
@@ -115,6 +116,9 @@ __global__ void readFromTexture(T* output, hipTextureObject_t texObj, size_t wid
   }
   #endif
 }
+#else
+#warning("Skipping compilation. CHIP-SPV bug: https://github.com/CHIP-SPV/chip-spv/issues/177");
+#endif
 
 template <typename T> void checkDataIsAscending(const std::vector<T>& hostData) {
   bool allMatch = true;

@@ -210,6 +210,7 @@ void testArrayAsTexture(hiparray array, const size_t width, const size_t height)
 
 // Selection of types chosen since trying all types would be slow to compile
 // Test the happy path of the hipArrayCreate
+#if !defined(__HIP_PLATFORM_SPIRV__)
 TEMPLATE_TEST_CASE("Unit_hipArrayCreate_happy", "", uint, int, int4, ushort, short2, char, uchar2,
                    char4, float, float2, float4) {
   using vec_info = vector_info<TestType>;
@@ -230,7 +231,9 @@ TEMPLATE_TEST_CASE("Unit_hipArrayCreate_happy", "", uint, int, int4, ushort, sho
 
   HIP_CHECK(hipArrayDestroy(array));
 }
-
+#else
+#warning("Skipping compilation. CHIP-SPV bug: https://github.com/CHIP-SPV/chip-spv/issues/177");
+#endif
 
 // Only widths and Heights up to the maxTexture size is supported
 TEMPLATE_TEST_CASE("Unit_hipArrayCreate_maxTexture", "", uint, int, int4, ushort, short2, char,

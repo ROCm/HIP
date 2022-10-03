@@ -141,6 +141,7 @@ template <typename T> size_t getAllocSize(const size_t width, const size_t heigh
 
 // Test the default array by generating a texture from it then reading from that texture.
 // Textures are read-only so write to the array then copy from the texture into normal device memory
+#if !defined(__HIP_PLATFORM_SPIRV__)
 template <typename T>
 void testArrayAsTexture(hipArray_t arrayPtr, const size_t width, const size_t height) {
   using scalar_type = typename vector_info<T>::type;
@@ -196,6 +197,10 @@ void testArrayAsTexture(hipArray_t arrayPtr, const size_t width, const size_t he
   HIP_CHECK(hipDestroyTextureObject(textObj));
   HIP_CHECK(hipFree(device_data));
 }
+#else
+#warning("Skipping compilation. CHIP-SPV bug: https://github.com/CHIP-SPV/chip-spv/issues/177");
+#endif
+
 
 // Test an array created with the TextureGather flag.
 // First generating a texture from the array then reading from that texture.
@@ -216,6 +221,7 @@ void testArrayAsTexture(hipArray_t arrayPtr, const size_t width, const size_t he
 // B=(5,6,7,8), C=(9,a,b,c) D=(d,e,f,0) then the output of the sample would be (3,7,b,f) (assuming
 // the points are chosen in that order)
 // when the channel queried doesn't exist, the value 0 should be returned.
+#if !defined(__HIP_PLATFORM_SPIRV__)
 template <typename T>
 void testArrayAsTextureWithGather(hipArray_t arrayPtr, const size_t width, const size_t height) {
   REQUIRE(height != 0);  // 1D TextureGather isn't allowed
@@ -325,6 +331,10 @@ void testArrayAsTextureWithGather(hipArray_t arrayPtr, const size_t width, const
   HIP_CHECK(hipDestroyTextureObject(textObj));
   HIP_CHECK(hipFree(device_data));
 }
+#else
+#warning("Skipping compilation. CHIP-SPV bug: https://github.com/CHIP-SPV/chip-spv/issues/177");
+#endif
+
 
 // Test the an array created with the SurfaceLoadStore flag by generating a surface and reading from
 // it and writing to it.
@@ -383,6 +393,7 @@ void testArrayAsSurface(hipArray_t arrayPtr, const size_t width, const size_t he
 
 // The happy path of a default array and a SurfaceLoadStore array should work
 // Selection of types chosen to reduce compile times
+#if !defined(__HIP_PLATFORM_SPIRV__)
 TEMPLATE_TEST_CASE("Unit_hipMallocArray_happy", "", uint, int, int4, ushort, short2, char, uchar2,
                    char4, float, float2, float4) {
 
@@ -422,6 +433,9 @@ TEMPLATE_TEST_CASE("Unit_hipMallocArray_happy", "", uint, int, int4, ushort, sho
 
   HIP_CHECK(hipFreeArray(arrayPtr));
 }
+#else
+#warning("Skipping compilation. CHIP-SPV bug: https://github.com/CHIP-SPV/chip-spv/issues/177");
+#endif
 
 // Arrays can be up to the size of maxTexture* but no bigger
 // EXSWCPHIPT-71 - no equivalent value for maxSurface and maxTexture2DGather.
