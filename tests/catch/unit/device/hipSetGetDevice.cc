@@ -1,29 +1,33 @@
 /*
- * Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
+Copyright (c) 2022 Advanced Micro Devices, Inc. All rights reserved.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
 
 /*
  * Verifies functionality of hipSetDevice/hipGetDevice api.
  * -- Basic Test to set and get valid device numbers.
  */
 
-#include <hip_test_common.hh>
 #include <thread>
+
+#include <hip_test_common.hh>
+#include <threaded_zig_zag_test.hh>
 
 TEST_CASE("Unit_hipSetDevice_BasicSetGet") {
   int numDevices = 0;
@@ -81,6 +85,44 @@ TEST_CASE("Unit_hipGetSetDevice_MultiThreaded") {
   }
 
   HIP_CHECK_THREAD_FINALIZE();
+}
+
+TEST_CASE("Unit_hipSetGetDevice_Positive_Threaded_Basic") {
+  class HipSetGetDeviceThreadedTest : public ThreadedZigZagTest<HipSetGetDeviceThreadedTest> {
+   public:
+    void TestPart1() { HIP_CHECK(hipSetDevice(0)); }
+    void TestPart2() {
+      HIP_CHECK_THREAD(hipSetDevice(1));
+      HIP_CHECK_THREAD(hipMalloc(&ptr, 2 * 1024 * 1024));
+    }
+    void TestPart3() {
+      int device = -1;
+      HIP_CHECK_THREAD(hipGetDevice(&device));
+      REQUIRE_THREAD(device == 0);
+      device = -1;
+      // To check if set device worked properly, outside of hipGetDevice
+      HIP_CHECK_THREAD(hipPointerGetAttribute(&device, HIP_POINTER_ATTRIBUTE_DEVICE_ORDINAL,
+                                              reinterpret_cast<hipDeviceptr_t>(ptr)));
+      REQUIRE_THREAD(device == 1);
+    }
+    void TestPart4() {
+      int device = -1;
+      HIP_CHECK_THREAD(hipGetDevice(&device));
+      REQUIRE_THREAD(device == 1);
+      HIP_CHECK_THREAD(hipFree(ptr));
+    }
+
+   private:
+    void* ptr = nullptr;
+  };
+
+  if (HipTest::getDeviceCount() < 2) {
+    HipTest::HIP_SKIP_TEST("This rest requires 2 GPUs. Skipping test");
+    return;
+  }
+
+  HipSetGetDeviceThreadedTest test;
+  test.run();
 }
 
 TEST_CASE("Unit_hipSetGetDevice_Negative") {

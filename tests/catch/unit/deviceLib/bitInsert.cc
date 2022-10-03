@@ -158,6 +158,7 @@ TEST_CASE("Unit_bitInsert") {
   hipLaunchKernelGGL(HIP_kernel, dim3(num_blocks), dim3(num_threads_per_block), 0, 0, deviceOut32,
                      deviceSrc032, deviceSrc132, deviceSrc232, deviceSrc332, deviceOut64,
                      deviceSrc064, deviceSrc164, deviceSrc264, deviceSrc364);
+  HIP_CHECK(hipGetLastError());
 
 
   HIP_CHECK(hipMemcpy(hostOut32, deviceOut32, NUM * sizeof(unsigned int), hipMemcpyDeviceToHost));

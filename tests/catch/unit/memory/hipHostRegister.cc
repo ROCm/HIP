@@ -101,7 +101,8 @@ TEMPLATE_TEST_CASE("Unit_hipHostRegister_ReferenceFromKernelandhipMemset", "", i
   // Reference the registered device pointer Ad from inside the kernel:
   for (int i = 0; i < num_devices; i++) {
     HIP_CHECK(hipSetDevice(i));
-    hipLaunchKernelGGL(Inc, dim3(LEN / 512), dim3(512), 0, 0, Ad[i]);
+    hipLaunchKernelGGL(Inc, dim3(LEN / 32), dim3(32), 0, 0, Ad[i]);
+    HIP_CHECK(hipGetLastError());
     HIP_CHECK(hipDeviceSynchronize());
   }
   REQUIRE(A[10] == 1 + static_cast<TestType>(num_devices));
@@ -162,11 +163,6 @@ template <typename T> __global__ void fill_kernel(T* dataPtr, T value) {
 }
 
 TEMPLATE_TEST_CASE("Unit_hipHostRegister_Flags", "", int, float, double) {
-#if HT_AMD
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-138");
-  return;
-#else
-
   size_t sizeBytes = 1 * sizeof(TestType);
   TestType* hostPtr = reinterpret_cast<TestType*>(malloc(sizeBytes));
 
@@ -193,7 +189,6 @@ TEMPLATE_TEST_CASE("Unit_hipHostRegister_Flags", "", int, float, double) {
   }
 
   free(hostPtr);
-#endif
 }
 
 TEMPLATE_TEST_CASE("Unit_hipHostRegister_Negative", "", int, float, double) {
@@ -216,7 +211,7 @@ TEMPLATE_TEST_CASE("Unit_hipHostRegister_Negative", "", int, float, double) {
   REQUIRE(devMemAvail > 0);
   REQUIRE(hostMemFree > 0);
 
-  size_t memFree = (std::min)(devMemFree, hostMemFree);  // which is the limiter cpu or gpu
+  size_t memFree = (std::max)(devMemFree, hostMemFree);  // which is the limiter cpu or gpu
 
   SECTION("hipHostRegister Negative Test - invalid memory size") {
     HIP_CHECK_ERROR(hipHostRegister(hostPtr, memFree, 0), hipErrorInvalidValue);
