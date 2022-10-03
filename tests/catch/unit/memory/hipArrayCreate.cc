@@ -157,6 +157,7 @@ void copyToArray(hiparray dst, const std::vector<T>& src, const size_t height) {
 
 // Test the allocated array by generating a texture from it then reading from that texture.
 // Textures are read-only, so write to the array then copy that into normal device memory.
+#if !defined(__HIP_PLATFORM_SPIRV__)
 template <typename T>
 void testArrayAsTexture(hiparray array, const size_t width, const size_t height) {
   using vec_info = vector_info<T>;
@@ -207,6 +208,9 @@ void testArrayAsTexture(hiparray array, const size_t width, const size_t height)
   HIP_CHECK(hipTexObjectDestroy(textObj));
   HIP_CHECK(hipFree(device_data));
 }
+#else
+#warning("Skipping compilation. CHIP-SPV bug: https://github.com/CHIP-SPV/chip-spv/issues/177");
+#endif
 
 // Selection of types chosen since trying all types would be slow to compile
 // Test the happy path of the hipArrayCreate
