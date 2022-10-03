@@ -38,9 +38,4 @@ TEST_CASE("Unit_hipGetErrorString_Positive_Basic") {
 TEST_CASE("Unit_hipGetErrorString_Negative_Parameters") {
   const char* error_string = hipGetErrorString(static_cast<hipError_t>(-1));
   REQUIRE(error_string != nullptr);
-#if HT_NVIDIA
-  REQUIRE_THAT(error_string, Catch::Equals("unknown error"));
-#elif HT_AMD
-  REQUIRE_THAT(error_string, Catch::Equals("hipErrorUnknown"));
-#endif
 }
