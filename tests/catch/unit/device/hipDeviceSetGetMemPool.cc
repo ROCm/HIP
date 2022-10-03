@@ -24,8 +24,6 @@ THE SOFTWARE.
 #include <hip/hip_runtime_api.h>
 #include <threaded_zig_zag_test.hh>
 
-#if HT_AMD
-
 static inline bool CheckMemPoolSupport(const int device) {
   int mem_pool_support = 0;
   HIP_CHECK(
@@ -159,5 +157,3 @@ TEST_CASE("Unit_hipDeviceGetMemPool_Negative_Parameters") {
                     hipErrorInvalidValue);
   }
 }
-
-#endif
