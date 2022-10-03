@@ -76,6 +76,8 @@ set(TEST_SRC
     hipHostMalloc.cc
     hipMemcpy.cc
     hipMemcpyAsync.cc
+    hipMemcpyAsync_derivatives.cc
+    hipMemcpyAsync_old.cc
     hipMemsetFunctional.cc
     hipMallocPitch.cc
     hipMallocArray.cc
@@ -152,6 +154,8 @@ set(TEST_SRC
     hipHostMalloc.cc
     hipMemcpy.cc
     hipMemcpyAsync.cc
+    hipMemcpyAsync_derivatives.cc
+    hipMemcpyAsync_old.cc
     hipMemsetFunctional.cc
     hipMallocPitch.cc
     hipMallocArray.cc
