@@ -200,7 +200,7 @@ TEST_CASE("Unit_hipIpcMemAccess_ParameterValidation") {
   SECTION("Open mem handle with handle as un-initialized") {
     ret = hipIpcOpenMemHandle(&Ad2, MemHandleUninit,
                                            hipIpcMemLazyEnablePeerAccess);
-    REQUIRE(ret == hipErrorInvalidValue);
+    REQUIRE((ret == hipErrorInvalidValue || ret == hipErrorInvalidDevicePointer));
   }
 #if HT_AMD
   // Test is disabled for nvidia as api not returning expected value.

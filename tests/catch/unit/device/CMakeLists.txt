@@ -17,6 +17,8 @@ set(TEST_SRC
     hipSetGetDevice.cc
     hipDeviceGetUuid.cc
     hipDeviceGetP2PAttribute.cc
+    hipExtGetLinkTypeAndHopCount.cc
+    hipDeviceSetLimit.cc
 )
 
 if(UNIX)

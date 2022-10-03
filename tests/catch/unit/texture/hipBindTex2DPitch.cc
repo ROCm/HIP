@@ -66,6 +66,7 @@ TEST_CASE("Unit_hipBindTexture2D_Pitch") {
 
   hipLaunchKernelGGL(texture2dCopyKernel, dim3(4, 4, 1), dim3(32, 32, 1),
                                                                0, 0, devPtrB);
+  HIP_CHECK(hipGetLastError()); 
   HIP_CHECK(hipDeviceSynchronize());
   HIP_CHECK(hipMemcpy2D(B, SIZE_W*sizeof(TYPE_t), devPtrB,
                                  SIZE_W*sizeof(TYPE_t), SIZE_W*sizeof(TYPE_t),
