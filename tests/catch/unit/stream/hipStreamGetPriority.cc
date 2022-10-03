@@ -30,16 +30,6 @@ priority should be clamped to the priority range.
 #include <hip_test_common.hh>
 
 /**
- * Check the error returned when an invalid pointer to a priority is used.
- */
-TEST_CASE("Unit_hipStreamGetPriority_InvalidPriorityPointer") {
-  hipStream_t stream{};
-  HIP_CHECK(hipStreamCreate(&stream));
-  HIP_CHECK_ERROR(hipStreamGetPriority(stream, nullptr), hipErrorInvalidValue);
-  HIP_CHECK(hipStreamDestroy(stream));
-}
-
-/**
  * Create stream and check priority.
  */
 TEST_CASE("Unit_hipStreamGetPriority_happy") {
@@ -145,7 +135,7 @@ TEST_CASE("Unit_hipStreamGetPriority_StreamsWithCUMask") {
   int priority_high = 0;
   // Test is to get the Stream Priority Range
   HIP_CHECK(hipDeviceGetStreamPriorityRange(&priority_low, &priority_high));
-  priority_normal = priority_low + priority_high;
+  priority_normal = (priority_low + priority_high) / 2;
   // Check if priorities are indeed supported
   REQUIRE_FALSE(priority_low == priority_high);
   // Creating a stream with hipExtStreamCreateWithCUMask and checking

@@ -138,6 +138,7 @@ TEST_CASE("Unit_hipPointerGetAttribute_KernelUpdation") {
                                    reinterpret_cast<hipDeviceptr_t>(A_d)));
   hipLaunchKernelGGL(var_update, dim3(1), dim3(1), 0, 0,
                      reinterpret_cast<int *>(data));
+  HIP_CHECK(hipGetLastError()); 
   HIP_CHECK(hipDeviceSynchronize());
   HIP_CHECK(hipMemcpy(A_h, A_d, Nbytes, hipMemcpyDeviceToHost));
   for (unsigned int i = 0; i < N; i++) {
@@ -248,7 +249,8 @@ TEST_CASE("Unit_hipPointerGetAttribute_MappedMem") {
   }
   HIP_CHECK(hipMemcpy(A_d, A_h, Nbytes, hipMemcpyHostToDevice));
   int *ptr1 = 0, *ptr2 = 0;
-  unsigned int hostMalloc_mapped, mallocManaged;
+  unsigned int hostMalloc_mapped = 0;
+  unsigned int mallocManaged = 0;
   HIP_CHECK(hipHostMalloc(&ptr1, Nbytes, hipHostMallocMapped));
   HIP_CHECK(hipMallocManaged(&ptr2, Nbytes, hipMemAttachGlobal));
   HIP_CHECK(hipPointerGetAttribute(&hostMalloc_mapped,

@@ -212,13 +212,6 @@ void testArrayAsTexture(hiparray array, const size_t width, const size_t height)
 // Test the happy path of the hipArrayCreate
 TEMPLATE_TEST_CASE("Unit_hipArrayCreate_happy", "", uint, int, int4, ushort, short2, char, uchar2,
                    char4, float, float2, float4) {
-#if HT_AMD
-  if (std::is_same<uint, TestType>::value || std::is_same<ushort, TestType>::value ||
-      std::is_same<uchar2, TestType>::value) {
-    HipTest::HIP_SKIP_TEST("Probably EXSWCPHIPT-62");
-    return;
-  }
-#endif
   using vec_info = vector_info<TestType>;
   DriverContext ctx;
 
@@ -228,20 +221,12 @@ TEMPLATE_TEST_CASE("Unit_hipArrayCreate_happy", "", uint, int, int4, ushort, sho
   desc.Width = 1024;
   desc.Height = GENERATE(0, 1024);
 
-  size_t initFree = getFreeMem();
-
   // pointer to the array in device memory
   hiparray array{};
 
   HIP_CHECK(hipArrayCreate(&array, &desc));
 
   testArrayAsTexture<TestType>(array, desc.Width, desc.Height);
-
-  size_t finalFree = getFreeMem();
-
-  const size_t allocSize = sizeof(TestType) * desc.Width * (desc.Height ? desc.Height : 1);
-  // will be aligned to some size, so this is not exact
-  REQUIRE(initFree - finalFree >= allocSize);
 
   HIP_CHECK(hipArrayDestroy(array));
 }
@@ -322,10 +307,6 @@ TEST_CASE("Unit_hipArrayCreate_ZeroWidth") {
 
 // HipArrayCreate will return an error when nullptr is used as the array argument
 TEST_CASE("Unit_hipArrayCreate_Nullptr") {
-#if HT_AMD
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-130");
-  return;
-#endif
   DriverContext ctx;
   SECTION("Null array") {
     HIP_ARRAY_DESCRIPTOR desc;

@@ -18,6 +18,8 @@ set(TEST_SRC
     hipDeviceGetUuid.cc
     hipDeviceGetP2PAttribute.cc
     hipDeviceGetDefaultMemPool.cc
+    hipExtGetLinkTypeAndHopCount.cc
+    hipDeviceSetLimit.cc
 )
 
 set_source_files_properties(hipGetDeviceCount.cc PROPERTIES COMPILE_FLAGS -std=c++17)

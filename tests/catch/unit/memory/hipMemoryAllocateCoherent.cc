@@ -53,6 +53,7 @@ TEST_CASE("Unit_hipHostMalloc_CoherentAccess") {
   std::cout << clkRate << std::endl;
   hipLaunchKernelGGL(HIP_KERNEL_NAME(Kernel), dim3(1), dim3(blocks),
                      0, 0, hostRes, clkRate);
+  HIP_CHECK(hipGetLastError());
   int eleCounter = 0;
   while (eleCounter < blocks) {
     // blocks until the value changes

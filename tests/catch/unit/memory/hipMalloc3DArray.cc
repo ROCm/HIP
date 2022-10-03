@@ -163,11 +163,6 @@ TEMPLATE_TEST_CASE("Unit_hipMalloc3DArray_happy", "", char, uchar2, uint2, int4,
 
 TEMPLATE_TEST_CASE("Unit_hipMalloc3DArray_MaxTexture", "", int, uint4, short, ushort2,
                    unsigned char, float, float4) {
-#if HT_AMD
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-97");
-  return;
-#endif
-
   hipArray_t array;
   const hipChannelFormatDesc desc = hipCreateChannelDesc<TestType>();
 #if HT_AMD
@@ -348,11 +343,6 @@ TEST_CASE("Unit_hipMalloc3DArray_Negative_InvalidFormat") {
 }
 
 TEST_CASE("Unit_hipMalloc3DArray_Negative_BadChannelLayout") {
-#if HT_AMD
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-129");
-  return;
-#endif
-
   const int bits = GENERATE(8, 16, 32);
   const hipChannelFormatKind formatKind =
       GENERATE(hipChannelFormatKindSigned, hipChannelFormatKindUnsigned, hipChannelFormatKindFloat);
@@ -382,11 +372,6 @@ TEST_CASE("Unit_hipMalloc3DArray_Negative_8BitFloat") {
 }
 
 TEST_CASE("Unit_hipMalloc3DArray_Negative_DifferentChannelSizes") {
-#if HT_AMD
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-129");
-  return;
-#endif
-
   const int bitsX = GENERATE(8, 16, 32);
   const int bitsY = GENERATE(8, 16, 32);
   const int bitsZ = GENERATE(8, 16, 32);

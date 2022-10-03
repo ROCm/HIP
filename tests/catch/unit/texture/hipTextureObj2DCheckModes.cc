@@ -35,7 +35,7 @@ __global__ void tex2DKernel(float *outputData, hipTextureObject_t textureObject,
 }
 
 template<hipTextureAddressMode addressMode, hipTextureFilterMode filterMode, bool normalizedCoords>
-void runTest(const int width, const int height, const float offsetX, const float offsetY) {
+static void runTest(const int width, const int height, const float offsetX, const float offsetY) {
   //printf("%s(addressMode=%d, filterMode=%d, normalizedCoords=%d, width=%d, height=%d, offsetX=%f, offsetY=%f)\n",
   //     __FUNCTION__, addressMode, filterMode, normalizedCoords, width, height, offsetX, offsetY);
   unsigned int size = width * height * sizeof(float);
@@ -81,6 +81,7 @@ void runTest(const int width, const int height, const float offsetX, const float
 
   hipLaunchKernelGGL(tex2DKernel<normalizedCoords>, dimGrid, dimBlock, 0, 0, dData,
                      textureObject, width, height, offsetX, offsetY);
+  HIP_CHECK(hipGetLastError()); 
 
   HIP_CHECK(hipDeviceSynchronize());
 
@@ -92,7 +93,7 @@ void runTest(const int width, const int height, const float offsetX, const float
   for (int i = 0; i < height; i++) {
     for (int j = 0; j < width; j++) {
       int index = i * width + j;
-      float expectedValue = getExpectedValue<addressMode, filterMode>(width, height,
+      float expectedValue = getExpectedValue<float, addressMode, filterMode>(width, height,
                                                     offsetX + j, offsetY + i, hData);
       if (!hipTextureSamplingVerify<float, filterMode>(hOutputData[index], expectedValue)) {
         INFO("Mismatch at (" << offsetX + j << ", " << offsetY + i << "):" <<
@@ -114,10 +115,6 @@ line1:
 TEST_CASE("Unit_hipTextureObj2DCheckModes") {
   CHECK_IMAGE_SUPPORT
 
-#ifdef _WIN32
-  INFO("Unit_hipTextureObj2DCheckModes skipped on Windows");
-  return;
-#endif
   SECTION("hipAddressModeClamp, hipFilterModePoint, regularCoords") {
     runTest<hipAddressModeClamp, hipFilterModePoint, false>(256, 256, -3.9, 6.1);
     runTest<hipAddressModeClamp, hipFilterModePoint, false>(256, 256, 4.4, -7.0);
@@ -128,7 +125,7 @@ TEST_CASE("Unit_hipTextureObj2DCheckModes") {
     runTest<hipAddressModeBorder, hipFilterModePoint, false>(256, 256, 12.5, 6.7);
   }
 
-  SECTION("hipAddressModeClamp, hipFilterModePoint, regularCoords") {
+  SECTION("hipAddressModeClamp, hipFilterModeLinear, regularCoords") {
     runTest<hipAddressModeClamp, hipFilterModeLinear, false>(256, 256, -0.4, -0.4);
     runTest<hipAddressModeClamp, hipFilterModeLinear, false>(256, 256, 4, 14.6);
   }

@@ -129,6 +129,7 @@ template <typename T, typename D> void testType(int msize) {
 
   auto kernel = testOperationsGPU<T, D>;
   hipLaunchKernelGGL(kernel, 1, msize, 0, 0, d_fa, d_fb, msize);
+  HIP_CHECK(hipGetLastError());
 
   HIP_CHECK(hipMemcpy(fc, d_fa, sizeof(T) * msize, hipMemcpyDeviceToHost));
 

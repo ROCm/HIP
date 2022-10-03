@@ -86,7 +86,7 @@ void getDeviceCount(int *numDevices) {
 #endif
 }
 
-#define MAX_SIZE 30
+#define MAX_SIZE 1024
 
 // Pass either -1 in deviceNumber or invalid device number
 bool testInvalidDevice(int numDevices, bool useRocrEnv, int deviceNumber) {
