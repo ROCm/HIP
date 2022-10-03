@@ -4483,6 +4483,8 @@ hipError_t hipDevicePrimaryCtxSetFlags(hipDevice_t dev, unsigned int flags);
  * @param [in] fname
  * @param [out] module
  *
+ * @warning File/memory resources allocated in this function are released only in hipModuleUnload.
+ *
  * @returns hipSuccess, hipErrorInvalidValue, hipErrorInvalidContext, hipErrorFileNotFound,
  * hipErrorOutOfMemory, hipErrorSharedObjectInitFailed, hipErrorNotInitialized
  *
@@ -5305,10 +5307,6 @@ hipError_t hipMipmappedArrayGetLevel(
  *  @{
  *  This section describes the callback/Activity of HIP runtime API.
  */
-hipError_t hipRegisterApiCallback(uint32_t id, void* fun, void* arg);
-hipError_t hipRemoveApiCallback(uint32_t id);
-hipError_t hipRegisterActivityCallback(uint32_t id, void* fun, void* arg);
-hipError_t hipRemoveActivityCallback(uint32_t id);
 const char* hipApiName(uint32_t id);
 const char* hipKernelNameRef(const hipFunction_t f);
 const char* hipKernelNameRefByPtr(const void* hostFunction, hipStream_t stream);
@@ -6351,7 +6349,7 @@ hipError_t hipUserObjectCreate(hipUserObject_t* object_out, void* ptr, hipHostFn
  * @warning : This API is marked as beta, meaning, while this is feature complete,
  * it is still open to changes and may have outstanding issues.
  */
-hipError_t hipUserObjectRelease(hipUserObject_t object, unsigned int count);
+hipError_t hipUserObjectRelease(hipUserObject_t object, unsigned int count __dparm(1));
 
 /**
  * @brief Retain number of references to resource.
@@ -6362,7 +6360,7 @@ hipError_t hipUserObjectRelease(hipUserObject_t object, unsigned int count);
  * @warning : This API is marked as beta, meaning, while this is feature complete,
  * it is still open to changes and may have outstanding issues.
  */
-hipError_t hipUserObjectRetain(hipUserObject_t object, unsigned int count);
+hipError_t hipUserObjectRetain(hipUserObject_t object, unsigned int count __dparm(1));
 
 /**
  * @brief Retain user object for graphs.
@@ -6375,7 +6373,7 @@ hipError_t hipUserObjectRetain(hipUserObject_t object, unsigned int count);
  * @warning : This API is marked as beta, meaning, while this is feature complete,
  * it is still open to changes and may have outstanding issues.
  */
-hipError_t hipGraphRetainUserObject(hipGraph_t graph, hipUserObject_t object, unsigned int count, unsigned int flags);
+hipError_t hipGraphRetainUserObject(hipGraph_t graph, hipUserObject_t object, unsigned int count __dparm(1), unsigned int flags __dparm(0));
 
 /**
  * @brief Release user object from graphs.
