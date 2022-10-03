@@ -88,7 +88,7 @@ static void test_syncthreads_or(int blockSize) {
   // Launch Kernel
   hipLaunchKernelGGL(kernel_syncthreads_or, 2, blockSize, 0, 0, syncTestD, allThreadsZeroD,
                      allThreadsOneD, oneThreadOneD, allThreadsMinusOneD);
-
+  HIP_CHECK(hipGetLastError());
   // Copy result from device to host
   HIP_CHECK(hipMemcpy(syncTestH, syncTestD, nBytes, hipMemcpyDeviceToHost));
   HIP_CHECK(hipMemcpy(allThreadsZeroH, allThreadsZeroD, nBytes, hipMemcpyDeviceToHost));

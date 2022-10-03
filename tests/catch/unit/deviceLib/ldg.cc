@@ -100,6 +100,7 @@ template <typename T, typename U> int dataTypesRun() {
                      dim3(WIDTH / THREADS_PER_BLOCK_X, HEIGHT / THREADS_PER_BLOCK_Y),
                      dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y), 0, 0, deviceA,
                      static_cast<const T*>(deviceB), WIDTH, HEIGHT);
+  HIP_CHECK(hipGetLastError());
 
 
   HIP_CHECK(hipMemcpy(hostA, deviceA, NUM * sizeof(T), hipMemcpyDeviceToHost));
@@ -148,7 +149,7 @@ template <typename T, typename U> int dataTypesRun2() {
                      dim3(WIDTH / THREADS_PER_BLOCK_X, HEIGHT / THREADS_PER_BLOCK_Y),
                      dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y), 0, 0, deviceA,
                      static_cast<const T*>(deviceB), WIDTH, HEIGHT);
-
+  HIP_CHECK(hipGetLastError());
 
   HIP_CHECK(hipMemcpy(hostA, deviceA, NUM * sizeof(T), hipMemcpyDeviceToHost));
 
@@ -198,7 +199,7 @@ template <typename T, typename U> int dataTypesRun4() {
                      dim3(WIDTH / THREADS_PER_BLOCK_X, HEIGHT / THREADS_PER_BLOCK_Y),
                      dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y), 0, 0, deviceA,
                      static_cast<const T*>(deviceB), WIDTH, HEIGHT);
-
+  HIP_CHECK(hipGetLastError());
 
   HIP_CHECK(hipMemcpy(hostA, deviceA, NUM * sizeof(T), hipMemcpyDeviceToHost));
 
