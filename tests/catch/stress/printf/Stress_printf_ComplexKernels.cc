@@ -276,12 +276,15 @@ bool test_printf_multistream(uint32_t num_blocks,
       hipLaunchKernelGGL(kernel_complex_opX, dim3(num_blocks, 1, 1),
                          dim3(threads_per_block, 1, 1),
                          0, stream[i], Ad, Bd, iterCount);
+      HIP_CHECK(hipGetLastError());
       hipLaunchKernelGGL(kernel_complex_opY, dim3(1, num_blocks, 1),
                          dim3(1, threads_per_block, 1),
                          0, stream[i], Ad, Bd, iterCount);
+      HIP_CHECK(hipGetLastError());
       hipLaunchKernelGGL(kernel_complex_opZ, dim3(1, 1, num_blocks),
                          dim3(1, 1, threads_per_block),
                          0, stream[i], Ad, Bd, iterCount);
+      HIP_CHECK(hipGetLastError());
     }
     HIP_CHECK(hipDeviceSynchronize());
     for (int i = 0; i < NUM_STREAM; i++) {
@@ -368,12 +371,15 @@ bool test_printf_multigpu(int gpu,
     hipLaunchKernelGGL(kernel_complex_opX, dim3(num_blocks, 1, 1),
                        dim3(threads_per_block, 1, 1),
                        0, 0, Ad, Bd, iterCount);
+    HIP_CHECK(hipGetLastError());
     hipLaunchKernelGGL(kernel_complex_opY, dim3(1, num_blocks, 1),
                        dim3(1, threads_per_block, 1),
                        0, 0, Ad, Bd, iterCount);
+    HIP_CHECK(hipGetLastError());
     hipLaunchKernelGGL(kernel_complex_opZ, dim3(1, 1, num_blocks),
                        dim3(1, 1, threads_per_block),
                        0, 0, Ad, Bd, iterCount);
+    HIP_CHECK(hipGetLastError());
     HIP_CHECK(hipDeviceSynchronize());
     std::ifstream CapturedData = captured.getCapturedData();
     char *buffer = new char[CHUNK_SIZE];
