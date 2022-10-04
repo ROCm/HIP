@@ -19,6 +19,7 @@ set(TEST_SRC
     hipStreamWaitEvent.cc
     hipDeviceGetStreamPriorityRange.cc
     hipStreamACb_StrmSyncTiming.cc
+    hipLaunchHostFunc.cc
     )
 else()
 set(TEST_SRC
@@ -40,6 +41,7 @@ set(TEST_SRC
     hipStreamQuery.cc
     hipDeviceGetStreamPriorityRange.cc
     hipStreamACb_StrmSyncTiming.cc
+    hipLaunchHostFunc.cc
     )
 
     # set_source_files_properties(hipStreamAttachMemAsync.cc PROPERTIES COMPILE_FLAGS -std=c++17)

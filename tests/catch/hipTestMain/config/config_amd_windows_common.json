@@ -56,6 +56,7 @@
 	   "Unit_hipStreamWaitEvent_DifferentStreams",
 	   "Unit_hipStreamQuery_WithFinishedWork",
 	   "Unit_hipDeviceGetCacheConfig_Positive_Basic",
+       "Unit_hipDeviceGetCacheConfig_Positive_Basic",
 	   "Unit_hipDeviceGetCacheConfig_Positive_Threaded",
 	   "Unit_hipStreamValue_Wait32_Blocking_Mask_Gte",
 	   "Unit_hipStreamValue_Wait32_Blocking_Mask_Eq_1",
@@ -91,6 +92,13 @@
 	   "Note: needs to be enabled when streamPerThread issues are fixed",
 	   "Unit_hipStreamSynchronize_NullStreamAndStreamPerThread",
 	   "Note: intermittent Seg fault failure ",
-	   "Unit_hipGraphAddEventRecordNode_Functional_WithoutFlags"
+	   "Unit_hipGraphAddEventRecordNode_Functional_WithoutFlags",
+	   "Unit_hipGraphAddEventRecordNode_Functional_WithoutFlags",
+	   "Unit_hipGraphAddEventRecordNode_MultipleRun",
+	   "Unit_hipDeviceGetPCIBusId_Negative_PartialFill",
+	   "Unit_hipStreamValue_Wait64_Blocking_NoMask_Nor",
+ 	   "Unit_hipStreamQuery_WithFinishedWork",
+	   "Unit_hipLaunchHostFunc_Graph",
+	   "Unit_hipLaunchHostFunc_KernelHost"
 	]
 }
