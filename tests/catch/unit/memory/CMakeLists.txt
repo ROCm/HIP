@@ -69,7 +69,6 @@ set(TEST_SRC
     hipMemcpyWithStreamMultiThread.cc
     hipMemsetAsyncAndKernel.cc
     hipMemset2DAsyncMultiThreadAndKernel.cc
-    hipMallocManaged.cc
     hipMallocConcurrency.cc
     hipMemcpyDtoD.cc
     hipMemcpyDtoDAsync.cc
@@ -77,7 +76,6 @@ set(TEST_SRC
     hipMemcpy.cc
     hipMemcpyAsync.cc
     hipMemsetFunctional.cc
-    hipMallocPitch.cc
     hipMallocArray.cc
     hipMalloc3D.cc
     hipMalloc3DArray.cc
@@ -134,7 +132,6 @@ set(TEST_SRC
     hipMallocManagedFlagsTst.cc
     hipMemPrefetchAsyncExtTsts.cc
     hipMemAdviseMmap.cc
-    hipMallocManaged.cc
     hipMemRangeGetAttribute.cc
     hipMemcpyFromSymbol.cc
     hipPtrGetAttribute.cc
@@ -153,7 +150,6 @@ set(TEST_SRC
     hipMemcpy.cc
     hipMemcpyAsync.cc
     hipMemsetFunctional.cc
-    hipMallocPitch.cc
     hipMallocArray.cc
     hipMalloc3D.cc
     hipMalloc3DArray.cc

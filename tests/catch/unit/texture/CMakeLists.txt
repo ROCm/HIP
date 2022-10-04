@@ -27,7 +27,6 @@ set(TEST_SRC
     hipTextureObjFetchVector.cc
     hipTextureObj2D.cc
     hipTextureMipmapObj2D.cc
-    hipTex1DFetchCheckModes.cc
     hipGetChanDesc.cc
     hipTexObjPitch.cc
     hipTextureObj1DFetch.cc
