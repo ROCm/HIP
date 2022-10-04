@@ -74,7 +74,7 @@ TEST_CASE("Unit_hipMemAdvise_Set_Unset_Basic") {
 
   const auto SetUnset = [=](const hipMemoryAdvise advice) {
     LinearAllocGuard<uint8_t> alloc(LinearAllocs::hipMallocManaged, kPageSize);
-    int32_t attribute = 0u;
+    int32_t attribute = 0;
     HIP_CHECK(hipMemAdvise(alloc.ptr(), kPageSize, advice, device));
     HIP_CHECK(hipMemRangeGetAttribute(&attribute, sizeof(attribute), GetMemAdviceAttr(advice),
                                       alloc.ptr(), kPageSize));
@@ -110,7 +110,7 @@ TEST_CASE("Unit_hipMemAdvise_No_Flag_Interference") {
     }
 
     for (const auto a : advice) {
-      auto attribute = 0u;
+      int32_t attribute = 0;
       HIP_CHECK(hipMemRangeGetAttribute(&attribute, sizeof(attribute), GetMemAdviceAttr(a),
                                         alloc.ptr(), kPageSize));
       REQUIRE((a == hipMemAdviseSetReadMostly ? 1 : device) == attribute);
@@ -158,8 +158,8 @@ TEST_CASE("Unit_hipMemAdvise_Flags_Do_Not_Cause_Prefetch") {
 
   const auto Test = [](const int device, const hipMemoryAdvise advice) {
     LinearAllocGuard<void> alloc(LinearAllocs::hipMallocManaged, kPageSize);
-    HIP_CHECK(hipMemAdvise(alloc.ptr(), kPageSize, hipMemAdviseSetPreferredLocation, device));
-    int32_t attribute = 0u;
+    HIP_CHECK(hipMemAdvise(alloc.ptr(), kPageSize, advice, device));
+    int32_t attribute = 0;
     HIP_CHECK(hipMemRangeGetAttribute(&attribute, sizeof(attribute),
                                       hipMemRangeAttributeLastPrefetchLocation, alloc.ptr(),
                                       kPageSize));
@@ -193,7 +193,7 @@ TEST_CASE("Unit_hipMemAdvise_Read_Write_After_Advise") {
       ArrayFindIfNot(alloc.ptr(), i, count);
     }
 
-    int32_t attribute = 0u;
+    int32_t attribute = 0;
     HIP_CHECK(hipMemRangeGetAttribute(&attribute, sizeof(attribute), GetMemAdviceAttr(advice),
                                       alloc.ptr(), kPageSize));
     REQUIRE((advice == hipMemAdviseSetReadMostly ? 1 : device) == attribute);
