@@ -270,6 +270,12 @@ TEST_CASE("Unit_hipMemAdvise_Negative_Parameters") {
   }
   const auto advice = GENERATE(hipMemAdviseSetAccessedBy, hipMemAdviseSetReadMostly,
                                hipMemAdviseSetPreferredLocation);
+  SECTION("count == 0") {
+    HIP_CHECK_ERROR(hipMemAdvise(alloc.ptr(), 0, advice, device), hipErrorInvalidValue);
+  }
+  SECTION("count larger than allocation size") {
+    HIP_CHECK_ERROR(hipMemAdvise(alloc.ptr(), kPageSize + 1, advice, device), hipErrorInvalidValue);
+  }
   SECTION("dev_ptr == nullptr") {
     HIP_CHECK_ERROR(hipMemAdvise(nullptr, kPageSize, advice, device), hipErrorInvalidValue);
   }
