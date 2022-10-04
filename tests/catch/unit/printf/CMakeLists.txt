@@ -22,9 +22,10 @@ hip_add_exe_to_target(NAME printfTests
                   PROPERTY CXX_STANDARD 17)
 endif()
 
-# Standalone exes
-add_executable(printfFlags EXCLUDE_FROM_ALL printfFlags_exe.cc)
-add_executable(printfSpecifiers EXCLUDE_FROM_ALL printfSpecifiers_exe.cc)
+if(NOT STANDALONE_TESTS)
+  add_executable(printfFlags EXCLUDE_FROM_ALL printfFlags_exe.cc)
+  add_executable(printfSpecifiers EXCLUDE_FROM_ALL printfSpecifiers_exe.cc)
 
-add_dependencies(printfTests printfFlags)
-add_dependencies(printfTests printfSpecifiers)
+  add_dependencies(printfTests printfFlags)
+  add_dependencies(printfTests printfSpecifiers)
+endif()

@@ -202,6 +202,14 @@ function(hip_add_exe_to_target)
     "${args}"
     "${list_args}"
   )
+  list(LENGTH TEST_SRC LEN)
+  MATH(EXPR LEN "${LEN}-1")
+  if(STANDALONE_TESTS) # Create separate exe for each test
+    foreach(X RANGE ${LEN})
+      list(GET TEST_SRC ${X} SRC_NAME)
+      catch_executable("${SRC_NAME}")
+    endforeach()
+  else() # STANDALONE_TESTS
   # Create shared lib of all tests
   if(NOT RTC_TESTING)
     add_executable(${_NAME} EXCLUDE_FROM_ALL ${_TEST_SRC} $<TARGET_OBJECTS:Main_Object> $<TARGET_OBJECTS:KERNELS>)
@@ -244,6 +252,7 @@ function(hip_add_exe_to_target)
   foreach(arg IN LISTS _UNPARSED_ARGUMENTS)
       message(WARNING "Unparsed arguments: ${arg}")
   endforeach()
+endif() # STANDALONE_TESTS
 endfunction()
 
 
