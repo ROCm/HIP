@@ -29,7 +29,7 @@ inline constexpr size_t kPageSize = 4096;
 }  // anonymous namespace
 
 template <typename T>
-void MemcpyArrayCompare(T* const expected, T* const actual, const size_t num_elements) {
+void ArrayMismatch(T* const expected, T* const actual, const size_t num_elements) {
   const auto ret = std::mismatch(expected, expected + num_elements, actual);
   if (ret.first != expected + num_elements) {
     const auto idx = std::distance(expected, ret.first);
@@ -84,4 +84,15 @@ inline void LaunchDelayKernel(const std::chrono::milliseconds interval, const hi
   // Clock rate is in kHz => number of clock ticks in a millisecond
   HIP_CHECK(hipDeviceGetAttribute(&ticks_per_ms, hipDeviceAttributeClockRate, 0));
   Delay<<<1, 1, 0, stream>>>(interval.count(), ticks_per_ms);
+}
+
+template <typename... Attributes>
+inline bool DeviceAttributesSupport(const int device, Attributes... attributes) {
+  constexpr auto DeviceAttributeSupport = [](const int device,
+                                             const hipDeviceAttribute_t attribute) {
+    int value = 0;
+    HIP_CHECK(hipDeviceGetAttribute(&value, attribute, device));
+    return value;
+  };
+  return (... && DeviceAttributeSupport(device, attributes));
 }
