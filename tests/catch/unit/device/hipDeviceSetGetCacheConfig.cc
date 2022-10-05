@@ -63,8 +63,6 @@ TEST_CASE("Unit_hipDeviceGetCacheConfig_Positive_Default") {
   REQUIRE(cache_config == hipFuncCachePreferNone);
 }
 
-#if HT_NVIDIA
-
 TEST_CASE("Unit_hipDeviceGetCacheConfig_Positive_Basic") {
   const auto device = GENERATE(range(0, HipTest::getDeviceCount()));
   HIP_CHECK(hipSetDevice(device));
@@ -104,8 +102,6 @@ TEST_CASE("Unit_hipDeviceGetCacheConfig_Positive_Threaded") {
   HipDeviceSetGetCacheConfigTest test(cache_config);
   test.run();
 }
-
-#endif
 
 TEST_CASE("Unit_HipDeviceGetCacheConfig_Negative_Parameters") {
   HIP_CHECK_ERROR(hipDeviceGetCacheConfig(nullptr), hipErrorInvalidValue);

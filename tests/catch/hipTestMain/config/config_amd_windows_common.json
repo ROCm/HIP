@@ -71,6 +71,8 @@
 	   "Unit_hipGraphExecChildGraphNodeSetParams_BasicFunc",
 	   "Unit_hipGraphExecChildGraphNodeSetParams_ChildTopology",
        "Unit_hipGraphMemcpyNodeSetParams1D_Functional",
-       "Unit_hipGraphMemcpyNodeSetParamsToSymbol_Functional"
+       "Unit_hipGraphMemcpyNodeSetParamsToSymbol_Functional",
+	   "Unit_hipDeviceGetCacheConfig_Positive_Basic",
+	   "Unit_hipDeviceGetCacheConfig_Positive_Threaded"
 	]
 }
