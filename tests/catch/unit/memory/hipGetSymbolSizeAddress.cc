@@ -32,13 +32,11 @@ constexpr size_t kArraySize = 5;
 #define HIP_GET_SYMBOL_SIZE_ADDRESS_DEFINE_GLOBALS(type)                                           \
   __device__ type type##_var = 0;                                                                  \
   __device__ type type##_arr[kArraySize] = {};                                                     \
-  extern "C" {                                                                                     \
   __global__ void type##_var_address_validation_kernel(void* ptr, bool* out) {                     \
     *out = static_cast<void*>(&type##_var) == ptr;                                                 \
   }                                                                                                \
   __global__ void type##_arr_address_validation_kernel(void* ptr, bool* out) {                     \
     *out = static_cast<void*>(type##_arr) == ptr;                                                  \
-  }                                                                                                \
   }
 
 HIP_GET_SYMBOL_SIZE_ADDRESS_DEFINE_GLOBALS(int)
@@ -46,59 +44,20 @@ HIP_GET_SYMBOL_SIZE_ADDRESS_DEFINE_GLOBALS(float)
 HIP_GET_SYMBOL_SIZE_ADDRESS_DEFINE_GLOBALS(char)
 HIP_GET_SYMBOL_SIZE_ADDRESS_DEFINE_GLOBALS(double)
 
-#define HIP_GET_SYMBOL_SIZE_ADDRESS_SYMBOLS(type) HIP_SYMBOL(type##_var), HIP_SYMBOL(type##_arr)
-
-template <typename T> struct ValidationKernel {
-  void (*kernel)(void*, bool*);
-};
-
-#define HIP_GET_SYMBOL_SIZE_VALIDATION_KERNELS(type)                                               \
-  ValidationKernel<type*>{type##_var_address_validation_kernel},                                   \
-      ValidationKernel<type(*)[kArraySize]> {                                                      \
-    type##_arr_address_validation_kernel                                                           \
-  }
-
-namespace {
-constexpr auto kTestSymbols = std::make_tuple(
-    HIP_GET_SYMBOL_SIZE_ADDRESS_SYMBOLS(int), HIP_GET_SYMBOL_SIZE_ADDRESS_SYMBOLS(float),
-    HIP_GET_SYMBOL_SIZE_ADDRESS_SYMBOLS(char), HIP_GET_SYMBOL_SIZE_ADDRESS_SYMBOLS(double));
-
-constexpr auto kValidationKernels = std::make_tuple(
-    HIP_GET_SYMBOL_SIZE_VALIDATION_KERNELS(int), HIP_GET_SYMBOL_SIZE_VALIDATION_KERNELS(float),
-    HIP_GET_SYMBOL_SIZE_VALIDATION_KERNELS(char), HIP_GET_SYMBOL_SIZE_VALIDATION_KERNELS(double));
-}  // anonymous namespace
-
-template <typename T, size_t N> constexpr const void* GetSymbol() {
-  if constexpr (N == 1) {
-    return std::get<T*>(kTestSymbols);
-  } else {
-    return std::get<T(*)[kArraySize]>(kTestSymbols);
-  }
-}
-
-template <typename T, size_t N> constexpr auto GetValidationKernel() {
-  if constexpr (N == 1) {
-    return std::get<ValidationKernel<T*>>(kValidationKernels).kernel;
-  } else {
-    return std::get<ValidationKernel<T(*)[kArraySize]>>(kValidationKernels).kernel;
-  }
-}
-
-template <typename T, size_t N> static void HipGetSymbolSizeAddressTest() {
+template <typename T, size_t N, void (*validation_kernel)(void*, bool*)>
+static void HipGetSymbolSizeAddressTest(const void *symbol) {
   constexpr auto size = N * sizeof(T);
 
   T* symbol_ptr = nullptr;
   size_t symbol_size = 0;
-  constexpr auto symbol = GetSymbol<T, N>();
   HIP_CHECK(hipGetSymbolAddress(reinterpret_cast<void**>(&symbol_ptr), symbol));
   HIP_CHECK(hipGetSymbolSize(&symbol_size, symbol));
-  REQUIRE(symbol_ptr != nullptr);
   REQUIRE(symbol_size == size);
+  REQUIRE(symbol_ptr != nullptr);
 
   LinearAllocGuard<bool> equal_addresses(LinearAllocs::hipMalloc, sizeof(bool));
   HIP_CHECK(hipMemset(equal_addresses.ptr(), false, sizeof(*equal_addresses.ptr())))
-  constexpr auto kernel = GetValidationKernel<T, N>();
-  kernel<<<1, 1>>>(symbol_ptr, equal_addresses.ptr());
+  validation_kernel<<<1, 1>>>(symbol_ptr, equal_addresses.ptr());
   HIP_CHECK(hipGetLastError());
   HIP_CHECK(hipStreamSynchronize(nullptr));
   bool ok = false;
@@ -106,13 +65,17 @@ template <typename T, size_t N> static void HipGetSymbolSizeAddressTest() {
   REQUIRE(ok);
 }
 
-template <typename T> static void HipGetSymbolSizeAddressTest() {
-  SECTION("scalar") { HipGetSymbolSizeAddressTest<T, 1>(); }
-  SECTION("array") { HipGetSymbolSizeAddressTest<T, kArraySize>(); }
-}
+#define HIP_GET_SYMBOL_SIZE_ADDRESS_TEST(type)                                                     \
+  HipGetSymbolSizeAddressTest<type, 1, type##_var_address_validation_kernel>(                      \
+      HIP_SYMBOL(type##_var));                                                                     \
+  HipGetSymbolSizeAddressTest<type, kArraySize, type##_arr_address_validation_kernel>(             \
+      HIP_SYMBOL(type##_arr));
 
-TEMPLATE_TEST_CASE("Unit_hipGetSymbolSizeAddress_Basic", "", int, float, char, double) {
-  HipGetSymbolSizeAddressTest<TestType>();
+TEST_CASE("Unit_hipGetSymbolAddress_Positive_Basic") {
+  SECTION("int") { HIP_GET_SYMBOL_SIZE_ADDRESS_TEST(int); }
+  SECTION("float") { HIP_GET_SYMBOL_SIZE_ADDRESS_TEST(float); }
+  SECTION("char") { HIP_GET_SYMBOL_SIZE_ADDRESS_TEST(char); }
+  SECTION("double") { HIP_GET_SYMBOL_SIZE_ADDRESS_TEST(double); }
 }
 
 TEST_CASE("Unit_hipGetSymbolAddress_Negative_Parameters") {
