@@ -71,6 +71,8 @@
 	   "Unit_hipGraphExecChildGraphNodeSetParams_BasicFunc",
 	   "Unit_hipGraphExecChildGraphNodeSetParams_ChildTopology",
        "Unit_hipGraphMemcpyNodeSetParams1D_Functional",
-       "Unit_hipGraphMemcpyNodeSetParamsToSymbol_Functional"
+       "Unit_hipGraphMemcpyNodeSetParamsToSymbol_Functional",
+	   "Unit_hipStreamQuery_WithPendingWork",
+	   "Unit_hipStreamWaitEvent_DifferentStreams"
 	]
 }
