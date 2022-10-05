@@ -29,6 +29,9 @@ THE SOFTWARE.
 
   Negative tests:
     - peerDeviceId is invalid
+    - flag value is invalid
+    - peer access is enabled/disabled twice
+    - peer access is disabled before being enabled
 */
 TEST_CASE("Unit_hipDeviceEnableDisablePeerAccess_positive") {
   int canAccessPeer = 0;
@@ -42,7 +45,7 @@ TEST_CASE("Unit_hipDeviceEnableDisablePeerAccess_positive") {
   int peerDev = GENERATE(range(0, HipTest::getGeviceCount()));
 
   if (dev != peerDev) {
-    hipSetDevice(dev);
+    HIP_CHECK(hipSetDevice(dev));
     REQUIRE(hipDeviceCanAccessPeer(&canAccessPeer, dev, peerDev) == hipSuccess);
     if (canAccessPeer == 0) {
       HipTest::HIP_SKIP_TEST("Skipping because no P2P support");
@@ -54,7 +57,7 @@ TEST_CASE("Unit_hipDeviceEnableDisablePeerAccess_positive") {
 }
 
 
-TEST_CASE("Unit_hipDeviceEnableDisablePeerAccess_negative") {
+TEST_CASE("Unit_hipDeviceEnablePeerAccess_negative") {
   int canAccessPeer = 0;
   int deviceCount = HipTest::getGeviceCount();
   if (deviceCount < 2) {
@@ -64,8 +67,40 @@ TEST_CASE("Unit_hipDeviceEnableDisablePeerAccess_negative") {
 
   SECTION("peerDeviceId is invalid") {
     REQUIRE(hipDeviceEnablePeerAccess(-1, 0) != hipSuccess);
-    REQUIRE(hipDeviceEnablePeerAccess(deviceCount + 1, 0) != hipSuccess);
+    REQUIRE(hipDeviceEnablePeerAccess(deviceCount, 0) != hipSuccess);
+  }
+  SECTION("Flag is invalid") {
+    HIP_CHECK(hipSetDevice(0));
+    REQUIRE(hipDeviceEnablePeerAccess(0, -1) == hipErrorInvalidValue);
+  }
+  SECTION("Peer Access already enabled") {
+    HIP_CHECK(hipSetDevice(0));
+    HIP_CHECK(hipDeviceEnablePeerAccess(1, 0));
+    REQUIRE(hipDeviceEnablePeerAccess(1, 0) == hipErrorPeerAccessAlreadyEnabled);
+    HIP_CHECK(hipDeviceDisablePeerAccess(1));
+  }
+}
+
+TEST_CASE("Unit_hipDeviceDisablePeerAccess_negative") {
+  int canAccessPeer = 0;
+  int deviceCount = HipTest::getGeviceCount();
+  if (deviceCount < 2) {
+    HipTest::HIP_SKIP_TEST("Skipping because devices < 2");
+    return;
+  }
+
+  SECTION("peerDeviceId is invalid") {
     REQUIRE(hipDeviceDisablePeerAccess(-1) != hipSuccess);
-    REQUIRE(hipDeviceDisablePeerAccess(deviceCount + 1) != hipSuccess);
+    REQUIRE(hipDeviceDisablePeerAccess(deviceCount) != hipSuccess);
+  }
+  SECTION("Peer Access not enabled") {
+    HIP_CHECK(hipSetDevice(0));
+    REQUIRE(hipDeviceDisablePeerAccess(1) == hipErrorPeerAccessNotEnabled);
+  }
+  SECTION("Peer Access disabled twice") {
+    HIP_CHECK(hipSetDevice(0));
+    HIP_CHECK(hipDeviceEnablePeerAccess(1, 0));
+    HIP_CHECK(hipDeviceDisablePeerAccess(1));
+    REQUIRE(hipDeviceDisablePeerAccess(1) == hipErrorPeerAccessNotEnabled);
   }
 }

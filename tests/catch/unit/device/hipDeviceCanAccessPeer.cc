@@ -44,8 +44,13 @@ TEST_CASE("Unit_hipDeviceCanAccessPeer_positive") {
   int dev = GENERATE(range(0, HipTest::getGeviceCount()));
   int peerDev = GENERATE(range(0, HipTest::getGeviceCount()));
 
+  HIP_CHECK(hipDeviceCanAccessPeer(&canAccessPeer, dev, peerDev));
   if (dev != peerDev) {
-    REQUIRE(hipDeviceCanAccessPeer(&canAccessPeer, dev, peerDev) == hipSuccess);
+    REQUIRE(canAccessPeer >= 0);
+  }
+  else
+  {
+    REQUIRE(canAccessPeer == 0);
   }
 }
 
@@ -64,11 +69,11 @@ TEST_CASE("Unit_hipDeviceCanAccessPeer_negative") {
 
   SECTION("deviceId is invalid") {
     REQUIRE(hipDeviceCanAccessPeer(&canAccessPeer, -1, 1) != hipSuccess);
-    REQUIRE(hipDeviceCanAccessPeer(&canAccessPeer, deviceCount + 1, 1) != hipSuccess);
+    REQUIRE(hipDeviceCanAccessPeer(&canAccessPeer, deviceCount, 1) != hipSuccess);
   }
 
   SECTION("peerDeviceId is invalid") {
     REQUIRE(hipDeviceCanAccessPeer(&canAccessPeer, 0, -1) != hipSuccess);
-    REQUIRE(hipDeviceCanAccessPeer(&canAccessPeer, 0, deviceCount + 1) != hipSuccess);
+    REQUIRE(hipDeviceCanAccessPeer(&canAccessPeer, 0, deviceCount) != hipSuccess);
   }
 }
