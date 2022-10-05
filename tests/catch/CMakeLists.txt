@@ -220,18 +220,12 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_custom_target(build_tests)
 
-# A kludge fix for tests that refer files relatively to
-# 'HIP/tests/catch' (=CMAKE_CURRENT_BINARY_DIR). The 'hipTestMain'
-# directory is added to the path because the test driver expects to be
-# run in there and puts '../' prefix to the paths.
-set(TEST_DRIVER_WORKING_DIR "${CMAKE_CURRENT_BINARY_DIR}/hipTestMain")
-
 function(catch_executable src)
     get_filename_component(barename ${src} NAME)
     string(REGEX REPLACE ".cc|.cpp" "" exec_name ${barename})
 
     message("Standalone Catch test: ${exec_name} ${src}")
-    add_executable(${exec_name} EXCLUDE_FROM_ALL  ${src} $<TARGET_OBJECTS:Main_Object>) 
+    add_executable(${exec_name} EXCLUDE_FROM_ALL  ${src} $<TARGET_OBJECTS:Main_Object_Standalone>) 
     target_link_libraries(${exec_name} PRIVATE stdc++fs -pthread)
 
     if(HIP_PLATFORM MATCHES "nvidia")
@@ -243,9 +237,7 @@ function(catch_executable src)
     add_dependencies(build_tests ${exec_name})
 
     target_include_directories(${exec_name} PRIVATE ${Catch2_SOURCE_DIR}/include)
-    catch_discover_tests(${exec_name} PROPERTIES
-      WORKING_DIRECTORY "${TEST_DRIVER_WORKING_DIR}"
-      SKIP_REGULAR_EXPRESSION "HIP_SKIP_THIS_TEST")
+    catch_discover_tests(${exec_name} PROPERTIES  SKIP_REGULAR_EXPRESSION "HIP_SKIP_THIS_TEST")
 endfunction()
 
 # Tests folder
