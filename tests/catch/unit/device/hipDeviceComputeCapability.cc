@@ -33,44 +33,37 @@ Unit_hipDeviceComputeCapability_Negative - Test unsuccessful execution of hipDev
  * hipDeviceComputeCapability negative tests
  * Scenario1: Validates if &major = nullptr returns error code
  * Scenario2: Validates if &minor = nullptr returns error code
- * Scenario3: Validates if device is invalid device returns error code
+ * Scenario3: Validates if device is -1
+ * Scenario4: Validates if device is out of bounds
  */
 TEST_CASE("Unit_hipDeviceComputeCapability_Negative") {
   int major, minor, numDevices;
+  hipDevice_t device;
 
   HIP_CHECK(hipGetDeviceCount(&numDevices));
-  std::vector<hipDevice_t> devices(numDevices);
-  for (int i = 0; i < numDevices; i++) {
-    HIP_CHECK(hipDeviceGet(&devices[i], i));
-  }
 
   if (numDevices > 0) {
+    HIP_CHECK(hipDeviceGet(&device, 0));
 
     // Scenario1
     SECTION("major is nullptr") {
-      REQUIRE_FALSE(hipDeviceComputeCapability(nullptr, &minor, devices[0])
+      REQUIRE_FALSE(hipDeviceComputeCapability(nullptr, &minor, device)
                           == hipSuccess);
     }
 
     // Scenario2
     SECTION("minor is nullptr") {
-      REQUIRE_FALSE(hipDeviceComputeCapability(&major, nullptr, devices[0])
+      REQUIRE_FALSE(hipDeviceComputeCapability(&major, nullptr, device)
                           == hipSuccess);
     }
-
     // Scenario3
-    SECTION("Invalid Device") {
-      hipDevice_t badDevice = devices.back() + 1;
-
-      constexpr size_t timeout = 100;
-      size_t timeoutCount = 0;
-      while (std::find(std::begin(devices), std::end(devices), badDevice) != std::end(devices)) {
-        badDevice += 1;
-        timeoutCount += 1;
-        REQUIRE(timeoutCount < timeout);  // give up after a while
-      }
-
-      REQUIRE_FALSE(hipDeviceComputeCapability(&major, &minor, badDevice)
+    SECTION("device is -1") {
+      REQUIRE_FALSE(hipDeviceComputeCapability(&major, &minor, -1)
+                          == hipSuccess);
+    }
+    // Scenario4
+    SECTION("device is out of bounds") {
+      REQUIRE_FALSE(hipDeviceComputeCapability(&major, &minor, numDevices)
                           == hipSuccess);
     }
   } else {
@@ -78,7 +71,7 @@ TEST_CASE("Unit_hipDeviceComputeCapability_Negative") {
   }
 }
 
-// Scenario 4 : Check whether major and minor version value is valid.
+// Scenario 5 : Check whether major and minor version value is valid.
 TEST_CASE("Unit_hipDeviceComputeCapability_ValidateVersion") {
   int major, minor;
   hipDevice_t device;

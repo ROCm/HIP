@@ -49,32 +49,22 @@ TEST_CASE("Unit_hipDeviceGetUuid_Positive") {
 /**
  * hipDeviceGetUuid negative tests
  * Scenario2: Validates returned error code for UUID = nullptr
- * Scenario3: Validates returned error code for invalid device
+ * Scenario3: Validates returned error code if device is -1
+ * Scenario4: Validates returned error code if device is out of bounds
  */
 TEST_CASE("Unit_hipDeviceGetUuid_Negative") {
   int numDevices = 0;
+  hipDevice_t device;
   hipUUID uuid;
   HIP_CHECK(hipGetDeviceCount(&numDevices));
 
-  std::vector<hipDevice_t> devices(numDevices);
-  for (int i = 0; i < numDevices; i++) {
-    HIP_CHECK(hipDeviceGet(&devices[i], i));
-  }
-
   if (numDevices > 0) {
+    HIP_CHECK(hipDeviceGet(&device, 0));
     // Scenario 2
-    REQUIRE_FALSE(hipSuccess == hipDeviceGetUuid(nullptr, devices[0]));
+    REQUIRE_FALSE(hipSuccess == hipDeviceGetUuid(nullptr, device));
     // Scenario 3
-    hipDevice_t badDevice = devices.back() + 1;
-
-    constexpr size_t timeout = 100;
-    size_t timeoutCount = 0;
-    while (std::find(std::begin(devices), std::end(devices), badDevice) != std::end(devices)) {
-      badDevice += 1;
-      timeoutCount += 1;
-      REQUIRE(timeoutCount < timeout);  // give up after a while
-    }
-
-    REQUIRE_FALSE(hipSuccess == hipDeviceGetUuid(&uuid, badDevice));
+    REQUIRE_FALSE(hipSuccess == hipDeviceGetUuid(&uuid, -1));
+    // Scenario 4
+    REQUIRE_FALSE(hipSuccess == hipDeviceGetUuid(&uuid, numDevices));
   }
 }

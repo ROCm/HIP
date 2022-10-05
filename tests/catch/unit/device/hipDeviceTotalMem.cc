@@ -27,43 +27,34 @@ THE SOFTWARE.
 /**
  * hipDeviceTotalMem tests
  * Scenario1: Validates if bytes = nullptr returns hip error code.
- * Scenario2: Validates if error code is returned for invalid device
- * Scenario3: Compare total memory size with hipDeviceProp_t.totalGlobalMem for each device.
+ * Scenario2: Validates if error code is returned for device = -1.
+ * Scenario3: Validates if error code is returned for device = deviceCount.
+ * Scenario4: Compare total memory size with hipDeviceProp_t.totalGlobalMem for each device.
  */
 TEST_CASE("Unit_hipDeviceTotalMem_NegTst") {
 #if HT_NVIDIA
   HIP_CHECK(hipInit(0));
 #endif
-  int numDevices = 0;
-  HIP_CHECK(hipGetDeviceCount(&numDevices));
-  std::vector<hipDevice_t> devices(numDevices);
-  for (int i = 0; i < numDevices; i++) {
-    HIP_CHECK(hipDeviceGet(&devices[i], i));
-  }
-
+  size_t totMem;
   // Scenario 1
   SECTION("bytes is nullptr") {
     HIP_CHECK_ERROR(hipDeviceTotalMem(nullptr, 0), hipErrorInvalidValue);
   }
 
-  size_t totMem;
   // Scenario 2
-  SECTION("device is invalid") {
-    hipDevice_t badDevice = devices.back() + 1;
+  SECTION("device is -1") {
+    HIP_CHECK_ERROR(hipDeviceTotalMem(&totMem, -1), hipErrorInvalidDevice);
+  }
 
-    constexpr size_t timeout = 100;
-    size_t timeoutCount = 0;
-    while (std::find(std::begin(devices), std::end(devices), badDevice) != std::end(devices)) {
-      badDevice += 1;
-      timeoutCount += 1;
-      REQUIRE(timeoutCount < timeout);  // give up after a while
-    }
-
-    HIP_CHECK_ERROR(hipDeviceTotalMem(&totMem, badDevice), hipErrorInvalidDevice);
+  // Scenario 3
+  SECTION("device is out of bounds") {
+    int numDevices;
+    HIP_CHECK(hipGetDeviceCount(&numDevices));
+    HIP_CHECK_ERROR(hipDeviceTotalMem(&totMem, numDevices), hipErrorInvalidDevice);
   }
 }
 
-// Scenario 3
+// Scenario 4
 TEST_CASE("Unit_hipDeviceTotalMem_ValidateTotalMem") {
   size_t totMem;
   int numDevices = 0;
