@@ -21,14 +21,14 @@ set(TEST_SRC
     )
 else()
 set(TEST_SRC
-    hipStreamCreate.cc
+    # hipStreamCreate.cc # requires streamCommon.cc
     hipStreamGetFlags.cc
     hipStreamGetPriority.cc
     hipMultiStream.cc
     hipStreamACb_MultiThread.cc
     hipStreamAddCallback.cc
-    hipStreamCreateWithFlags.cc
-    hipStreamCreateWithPriority.cc
+    # hipStreamCreateWithFlags.cc # requires streamCommon.cc
+    # hipStreamCreateWithPriority.cc
     hipStreamDestroy.cc
     hipAPIStreamDisable.cc
     # hipStreamAttachMemAsync.cc   # Disabling it on nvidia due to issue in function definition of hipStreamAttachMemAsync
@@ -36,7 +36,7 @@ set(TEST_SRC
     streamCommon.cc
     hipStreamValue.cc
     hipStreamSynchronize.cc
-    hipStreamQuery.cc
+    # hipStreamQuery.cc # required streamCommon.cc
     hipDeviceGetStreamPriorityRange.cc
     )
 

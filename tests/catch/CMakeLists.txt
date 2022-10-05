@@ -232,7 +232,7 @@ function(catch_executable src)
 
     message("Standalone Catch test: ${exec_name} ${src}")
     add_executable(${exec_name} EXCLUDE_FROM_ALL  ${src} $<TARGET_OBJECTS:Main_Object>) 
-    target_link_libraries(${exec_name} PRIVATE stdc++fs)
+    target_link_libraries(${exec_name} PRIVATE stdc++fs -pthread)
 
     if(HIP_PLATFORM MATCHES "nvidia")
          target_link_libraries(${exec_name} PRIVATE nvrtc)
@@ -253,14 +253,14 @@ add_subdirectory(unit ${CATCH_BUILD_DIR}/unit)
 add_subdirectory(ABM ${CATCH_BUILD_DIR}/ABM)
 add_subdirectory(kernels ${CATCH_BUILD_DIR}/kernels)
 add_subdirectory(hipTestMain ${CATCH_BUILD_DIR}/hipTestMain)
-add_subdirectory(stress ${CATCH_BUILD_DIR}/stress)
+# add_subdirectory(stress ${CATCH_BUILD_DIR}/stress)
 if(NOT HIP_PLATFORM STREQUAL "spirv")
     add_subdirectory(TypeQualifiers ${CATCH_BUILD_DIR}/TypeQualifiers)
 endif()
 
-if(UNIX)
-   add_subdirectory(multiproc ${CATCH_BUILD_DIR}/multiproc)
-endif()
+# if(UNIX)
+#    add_subdirectory(multiproc ${CATCH_BUILD_DIR}/multiproc)
+# endif()
 
 cmake_policy(POP)
 
