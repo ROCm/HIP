@@ -27,6 +27,7 @@ THE SOFTWARE.
 
 #define _SIZE sizeof(int) * 1024 * 1024
 #define NUM_STREAMS 2
+#define NUM_ITERS 1 << 30
 
 static __global__ void Iter(int* Ad, int num) {
     int tx = threadIdx.x + blockIdx.x * blockDim.x;
@@ -57,7 +58,8 @@ TEST_CASE("Unit_hipDeviceSynchronize_Functional") {
   }
   for (int i = 0; i < NUM_STREAMS; i++) {
       hipLaunchKernelGGL(HIP_KERNEL_NAME(Iter), dim3(1), dim3(1), 0,
-                                                stream[i], Ad[i], 1 << 30);
+                                                stream[i], Ad[i], NUM_ITERS);
+      HIP_CHECK(hipGetLastError());
   }
   for (int i = 0; i < NUM_STREAMS; i++) {
       HIP_CHECK(hipMemcpyAsync(A[i], Ad[i], _SIZE, hipMemcpyDeviceToHost,
@@ -71,7 +73,7 @@ TEST_CASE("Unit_hipDeviceSynchronize_Functional") {
   // Conservative implementations which synchronize the hipMemcpyAsync will
   // fail, ie if HIP_LAUNCH_BLOCKING=true.
 
-  CHECK(1 << 30 != A[NUM_STREAMS - 1][0] - 1);
+  CHECK(NUM_ITERS != A[NUM_STREAMS - 1][0] - 1);
   HIP_CHECK(hipDeviceSynchronize());
-  CHECK(1 << 30 == A[NUM_STREAMS - 1][0] - 1);
+  CHECK(NUM_ITERS == A[NUM_STREAMS - 1][0] - 1);
 }

@@ -67,15 +67,16 @@ template <typename T> class LinearAllocGuard {
         free(ptr_);
         break;
       case LinearAllocs::mallocAndRegister:
-        hipHostUnregister(host_ptr_);
+        // Cast to void to suppress nodiscard warnings
+        static_cast<void>(hipHostUnregister(host_ptr_));
         free(host_ptr_);
         break;
       case LinearAllocs::hipHostMalloc:
-        hipHostFree(ptr_);
+        static_cast<void>(hipHostFree(ptr_));
         break;
       case LinearAllocs::hipMalloc:
       case LinearAllocs::hipMallocManaged:
-        hipFree(ptr_);
+        static_cast<void>(hipFree(ptr_));
     }
   }
 
@@ -112,7 +113,7 @@ class StreamGuard {
 
   ~StreamGuard() {
     if (stream_type_ == Streams::created) {
-      hipStreamDestroy(stream_);
+      static_cast<void>(hipStreamDestroy(stream_));
     }
   }
 

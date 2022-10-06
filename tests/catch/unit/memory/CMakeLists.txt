@@ -66,6 +66,7 @@ set(TEST_SRC
     hipMemcpyPeer.cc
     hipMemcpyPeerAsync.cc
     hipMemcpyWithStream.cc
+    hipMemcpyWithStream_old.cc
     hipMemcpyWithStreamMultiThread.cc
     hipMemsetAsyncAndKernel.cc
     hipMemset2DAsyncMultiThreadAndKernel.cc
@@ -144,6 +145,7 @@ set(TEST_SRC
     hipMemcpyPeer.cc
     hipMemcpyPeerAsync.cc
     hipMemcpyWithStream.cc
+    hipMemcpyWithStream_old.cc
     hipMemcpyWithStreamMultiThread.cc
     hipMemsetAsyncAndKernel.cc
     hipMemset2DAsyncMultiThreadAndKernel.cc
