@@ -38,17 +38,20 @@ void ArrayMismatch(T* const expected, T* const actual, const size_t num_elements
   }
 }
 
+template <typename It, typename T> void ArrayFindIfNot(It begin, It end, const T expected_value) {
+  const auto it = std::find_if_not(
+      begin, end, [expected_value](const int elem) { return expected_value == elem; });
+
+  if (it != end) {
+    const auto idx = std::distance(begin, it);
+    INFO("Value mismatch at index " << idx);
+    REQUIRE(expected_value == *it);
+  }
+}
+
 template <typename T>
 void ArrayFindIfNot(T* const array, const T expected_value, const size_t num_elements) {
-  const auto it = std::find_if_not(array, array + num_elements, [expected_value](const int elem) {
-    return expected_value == elem;
-  });
-
-  if (it != array + num_elements) {
-    const auto idx = std::distance(array, it);
-    INFO("Value mismatch at index " << idx);
-    REQUIRE(expected_value == array[idx]);
-  }
+  ArrayFindIfNot(array, array + num_elements, expected_value);
 }
 
 template <typename T>
@@ -84,6 +87,7 @@ inline void LaunchDelayKernel(const std::chrono::milliseconds interval, const hi
   // Clock rate is in kHz => number of clock ticks in a millisecond
   HIP_CHECK(hipDeviceGetAttribute(&ticks_per_ms, hipDeviceAttributeClockRate, 0));
   Delay<<<1, 1, 0, stream>>>(interval.count(), ticks_per_ms);
+  HIP_CHECK(hipGetLastError());
 }
 
 template <typename... Attributes>
