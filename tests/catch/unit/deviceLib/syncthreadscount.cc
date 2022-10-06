@@ -95,7 +95,7 @@ void test_syncthreads_count(int blockSize) {
   // Launch Kernel
   hipLaunchKernelGGL(kernel_syncthreads_count, 2, blockSize, 0, 0, syncTestD, allThreadsZeroD,
                      allThreadsOneD, oddThreadsOneD, allThreadsMinusOneD, allThreadsIdD);
-
+  HIP_CHECK(hipGetLastError());
   // Copy result from device to host
   HIP_CHECK(hipMemcpy(syncTestH, syncTestD, nBytes, hipMemcpyDeviceToHost));
   HIP_CHECK(hipMemcpy(allThreadsZeroH, allThreadsZeroD, nBytes, hipMemcpyDeviceToHost));
