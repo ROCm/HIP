@@ -38,6 +38,7 @@ void ArrayMismatch(T* const expected, T* const actual, const size_t num_elements
   }
 }
 
+<<<<<<< HEAD
 template <typename T>
 void ArrayFindIfNot(T* const array, const T expected_value, const size_t num_elements) {
   const auto it = std::find_if_not(array, array + num_elements, [expected_value](const int elem) {
@@ -48,10 +49,28 @@ void ArrayFindIfNot(T* const array, const T expected_value, const size_t num_ele
     const auto idx = std::distance(array, it);
     INFO("Value mismatch at index " << idx);
     REQUIRE(expected_value == array[idx]);
+=======
+template <typename It, typename T> void ArrayFindIfNot(It begin, It end, const T expected_value) {
+  const auto it = std::find_if_not(
+      begin, end, [expected_value](const int elem) { return expected_value == elem; });
+
+  if (it != end) {
+    const auto idx = std::distance(begin, it);
+    INFO("Value mismatch at index " << idx);
+    REQUIRE(expected_value == *it);
+>>>>>>> utils
   }
 }
 
 template <typename T>
+<<<<<<< HEAD
+=======
+void ArrayFindIfNot(T* const array, const T expected_value, const size_t num_elements) {
+  ArrayFindIfNot(array, array + num_elements, expected_value);
+}
+
+template <typename T>
+>>>>>>> utils
 __global__ void VectorIncrement(T* const vec, const T increment_value, size_t N) {
   size_t offset = (blockIdx.x * blockDim.x + threadIdx.x);
   size_t stride = blockDim.x * gridDim.x;
