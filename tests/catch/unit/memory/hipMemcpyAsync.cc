@@ -50,6 +50,7 @@ void Thread_func(T *A_d, T *B_d, T* C_d, T* C_h, size_t Nbytes,
   hipLaunchKernelGGL(HipTest::vector_square, dim3(blocks),
                      dim3(threadsPerBlock), 0,
                      mystream, A_d, C_d, N_ELMTS);
+  HIP_CHECK(hipGetLastError());
   HIP_CHECK(hipMemcpyAsync(C_h, C_d, Nbytes, hipMemcpyDeviceToHost, mystream));
   // The following two MemcpyAsync calls are for sole
   // purpose of loading stream with multiple async calls
@@ -76,6 +77,7 @@ void Thread_func_MultiStream() {
   hipLaunchKernelGGL((HipTest::vector_square), dim3(blocks),
                      dim3(threadsPerBlock), 0,
                      mystream, A_d, C_d, N_ELMTS);
+  HIP_CHECK(hipGetLastError());
   HIP_CHECK(hipMemcpyAsync(C_h, C_d, Nbytes, hipMemcpyDeviceToHost, mystream));
   // The following hipMemcpyAsync() is called only to
   // load stream with multiple Async calls
@@ -121,7 +123,7 @@ TEMPLATE_TEST_CASE("Unit_hipMemcpyAsync_KernelLaunch", "", int, float,
   hipLaunchKernelGGL(HipTest::vectorADD, dim3(1), dim3(1), 0, 0,
                      static_cast<const TestType*>(A_d),
                      static_cast<const TestType*>(B_d), C_d, NUM_ELM);
-
+  HIP_CHECK(hipGetLastError());
   HIP_CHECK(hipMemcpyAsync(C_h, C_d, Nbytes, hipMemcpyDeviceToHost, stream));
   HIP_CHECK(hipStreamSynchronize(stream));
   HIP_CHECK(hipStreamDestroy(stream));
@@ -348,7 +350,7 @@ TEMPLATE_TEST_CASE("Unit_hipMemcpyAsync_PinnedRegMemWithKernelLaunch",
     hipLaunchKernelGGL(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock),
                        0, 0, static_cast<const TestType*>(A_d),
                        static_cast<const TestType*>(B_d), C_d, NUM_ELM);
-
+    HIP_CHECK(hipGetLastError());
     HIP_CHECK(hipMemcpy(C_h, C_d, Nbytes, hipMemcpyDeviceToHost));
     HipTest::checkVectorADD(A_h, B_h, C_h, NUM_ELM);
 
@@ -379,7 +381,7 @@ TEMPLATE_TEST_CASE("Unit_hipMemcpyAsync_PinnedRegMemWithKernelLaunch",
     hipLaunchKernelGGL(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock),
                        0, 0, static_cast<const TestType*>(X_d),
                        static_cast<const TestType*>(Y_d), Z_d, NUM_ELM);
-
+    HIP_CHECK(hipGetLastError());
     HIP_CHECK(hipMemcpyAsync(C_h, Z_d, Nbytes,
                              hipMemcpyDeviceToHost, gpu1Stream));
     HIP_CHECK(hipStreamSynchronize(gpu1Stream));

@@ -86,6 +86,7 @@ static void runTest(const int width, const int height, const float offsetX, cons
 
   hipLaunchKernelGGL(tex2DRGBAKernel<normalizedCoords>, dimGrid, dimBlock, 0, 0, dData,
                      textureObject, width, height, offsetX, offsetY);
+  HIP_CHECK(hipGetLastError()); 
 
   HIP_CHECK(hipDeviceSynchronize());
 

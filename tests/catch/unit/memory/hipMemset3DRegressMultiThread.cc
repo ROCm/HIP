@@ -84,6 +84,7 @@ static void threadFunc(hipStream_t stream, hipPitchedPtr devpPtr,
 
   hipLaunchKernelGGL(func_set_value, dim3(blocks), dim3(threadsPerBlock), 0,
                      stream, devpPtr, extent, memsetval);
+  HIP_CHECK(hipGetLastError());
   HIPCHECK(hipMemset3DAsync(devpPtr, testval, extent, stream));
   HIPCHECK(hipMemcpy3DAsync(&myparms, stream));
 }

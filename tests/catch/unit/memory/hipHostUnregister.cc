@@ -69,19 +69,11 @@ TEST_CASE("Unit_hipHostUnregister_NullPtr") {
 }
 
 TEST_CASE("Unit_hipHostUnregister_NotRegisteredPointer") {
-#if HT_AMD
-  HipTest::HIP_SKIP_TEST("TODO-MATCH-ERRORCODE");
-  return;
-#endif
   auto x = std::unique_ptr<int>(new int);
   HIP_CHECK_ERROR(hipHostUnregister(x.get()), hipErrorHostMemoryNotRegistered);
 }
 
 TEST_CASE("Unit_hipHostUnregister_AlreadyUnregisteredPointer") {
-#if HT_AMD
-  HipTest::HIP_SKIP_TEST("TODO-MATCH-ERRORCODE");
-  return;
-#endif
   if (!hipHostRegisterSupported()) {
     return;
   }

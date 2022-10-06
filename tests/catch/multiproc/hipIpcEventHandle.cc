@@ -44,7 +44,7 @@ Negative/Argument Validation:
 
 
 #define BUF_SIZE        4096
-#define MAX_DEVICES     8
+#define MAX_DEVICES     16
 
 
 typedef struct ipcEventInfo {
@@ -221,6 +221,7 @@ void runMultiProcKernel(ipcEventInfo_t *shmEventInfo, int index) {
     const dim3 blocks(BUF_SIZE / threads.x, 1);
     hipLaunchKernelGGL(computeKernel, dim3(blocks), dim3(threads), 0, 0,
                                     d_ptr + index *BUF_SIZE, d_ptr, index + 1);
+    HIP_CHECK(hipGetLastError());
     HIP_CHECK(hipEventRecord(event));
 
     // Barrier 2 : Signals that event is recorded
@@ -250,7 +251,7 @@ TEST_CASE("Unit_hipIpcEventHandle_Functional") {
     return;
   }
 
-  g_processCnt = shmDevices->count;
+  g_processCnt = (shmDevices->count > MAX_DEVICES) ? MAX_DEVICES : shmDevices->count;
 
   // Barrier is used to synchronize processes created.
   g_Barrier = reinterpret_cast<ipcBarrier_t *> (mmap(NULL, sizeof(*g_Barrier),

@@ -29,36 +29,21 @@ THE SOFTWARE.
 #include <limits>
 #include <hip_test_checkers.hh>
 #include <hip_test_kernels.hh>
+#ifdef __HIP_PLATFORM_NVIDIA__
+  #include "DriverContext.hh"
+#endif
 
 /**
  * @brief Test hipMalloc3D, hipMallocPitch and hipMemAllocPitch with multiple input values.
  *        Checks that the memory has been allocated with the specified pitch and extent sizes.
  */
 
-struct MemoryInfo {
-  size_t freeMem;
-  size_t totalMem;
-};
-
-inline static MemoryInfo createMemoryInfo() {
-  MemoryInfo memoryInfo{};
-  HIP_CHECK(hipMemGetInfo(&memoryInfo.freeMem, &memoryInfo.totalMem));
-  return memoryInfo;
-}
-
-static void validateMemory(void* devPtr, hipExtent extent, size_t pitch,
-                           MemoryInfo memBeforeAllocation) {
+static void validateMemory(void* devPtr, hipExtent extent, size_t pitch) {
   INFO("Width: " << extent.width << " Height: " << extent.height << " Depth: " << extent.depth);
 
-  MemoryInfo memAfterAllocation{createMemoryInfo()};
   const size_t theoreticalAllocatedMemory{pitch * extent.height * extent.depth};
-  const size_t allocatedMemory = memBeforeAllocation.freeMem - memAfterAllocation.freeMem;
-
   if (theoreticalAllocatedMemory == 0) {
-    REQUIRE(theoreticalAllocatedMemory == allocatedMemory);
     return; /* If there was no memory allocated then we don't need to do further checks. */
-  } else {
-    REQUIRE(theoreticalAllocatedMemory <= allocatedMemory);
   }
 
   std::unique_ptr<char[]> hostPtr{new char[theoreticalAllocatedMemory]};
@@ -149,40 +134,36 @@ TEST_CASE("Unit_hipMalloc3D_ValidatePitch") {
   hipPitchedPtr hipPitchedPtr;
   hipExtent validExtent{generateExtent(AllocationApi::hipMalloc3D)};
 
-  MemoryInfo memBeforeAllocation{createMemoryInfo()};
   HIP_CHECK(hipMalloc3D(&hipPitchedPtr, validExtent));
-  validateMemory(hipPitchedPtr.ptr, validExtent, hipPitchedPtr.pitch, memBeforeAllocation);
+  validateMemory(hipPitchedPtr.ptr, validExtent, hipPitchedPtr.pitch);
   HIP_CHECK(hipFree(hipPitchedPtr.ptr));
 }
 
 TEST_CASE("Unit_hipMemAllocPitch_ValidatePitch") {
-  size_t pitch;
+  size_t pitch = 0;
   hipDeviceptr_t ptr;
   hipExtent validExtent{generateExtent(AllocationApi::hipMemAllocPitch)};
-  MemoryInfo memBeforeAllocation{createMemoryInfo()};
   unsigned int elementSizeBytes = GENERATE(4, 8, 16);
 
   if (validExtent.width == 0 || validExtent.height == 0) {
     return;
   }
-
+  //hipMemAllocPitch is driver API hence explicit init is required on NVidia plaform.
+  #ifdef __HIP_PLATFORM_NVIDIA__
+    DriverContext ctx;
+  #endif
   HIP_CHECK(
       hipMemAllocPitch(&ptr, &pitch, validExtent.width, validExtent.height, elementSizeBytes));
-  validateMemory(reinterpret_cast<void*>(ptr), validExtent, pitch, memBeforeAllocation);
+  validateMemory(reinterpret_cast<void*>(ptr), validExtent, pitch);
   HIP_CHECK(hipFree(reinterpret_cast<void*>(ptr)));
 }
 
 TEST_CASE("Unit_hipMallocPitch_ValidatePitch") {
-#if HT_AMD
-  HipTest::HIP_SKIP_TEST("TODO-FIX-EXTENT-GENERATOR");
-  return;
-#endif
-  size_t pitch;
+  size_t pitch = 0;
   void* ptr;
   hipExtent validExtent{generateExtent(AllocationApi::hipMemAllocPitch)};
-  MemoryInfo memBeforeAllocation{createMemoryInfo()};
   HIP_CHECK(hipMallocPitch(&ptr, &pitch, validExtent.width, validExtent.height));
-  validateMemory(ptr, validExtent, pitch, memBeforeAllocation);
+  validateMemory(ptr, validExtent, pitch);
   HIP_CHECK(hipFree(ptr));
 }
 
@@ -223,7 +204,7 @@ TEST_CASE("Unit_hipMalloc3D_Negative") {
 }
 
 TEST_CASE("Unit_hipMallocPitch_Negative") {
-  size_t pitch;
+  size_t pitch = 0;
   void* ptr;
   constexpr size_t maxSizeT = std::numeric_limits<size_t>::max();
 
@@ -248,7 +229,7 @@ TEST_CASE("Unit_hipMallocPitch_Negative") {
 }
 
 TEST_CASE("Unit_hipMemAllocPitch_Negative") {
-  size_t pitch;
+  size_t pitch = 0;
   hipDeviceptr_t ptr{};
   unsigned int validElementSizeBytes{4};
   constexpr size_t maxSizeT = std::numeric_limits<size_t>::max();
@@ -358,7 +339,7 @@ static void MemoryAllocDiffSizes(int gpu) {
   array_size.push_back(LARGECHUNK_NUMH);
   for (auto &sizes : array_size) {
     T* A_d[CHUNK_LOOP];
-    size_t pitch_A;
+    size_t pitch_A = 0;
     size_t width;
     if (sizes == SMALLCHUNK_NUMH) {
       width = SMALLCHUNK_NUMW * sizeof(T);
@@ -391,7 +372,7 @@ static void threadFunc(int gpu) {
 #if 0 //TODO: Review, fix and re-enable test
 TEST_CASE("Unit_hipMallocPitch_Negative") {
   float* A_d;
-  size_t pitch_A;
+  size_t pitch_A = 0;
   size_t width{NUM_W * sizeof(float)};
 #if HT_NVIDIA
   SECTION("NullPtr to Pitched Ptr") {
@@ -429,7 +410,7 @@ TEST_CASE("Unit_hipMallocPitch_Negative") {
 TEMPLATE_TEST_CASE("Unit_hipMallocPitch_Basic",
     "[hipMallocPitch]", int, unsigned int, float) {
   TestType* A_d;
-  size_t pitch_A;
+  size_t pitch_A = 0;
   size_t width{NUM_W * sizeof(TestType)};
   REQUIRE(hipMallocPitch(reinterpret_cast<void**>(&A_d),
           &pitch_A, width, NUM_H) == hipSuccess);
@@ -454,7 +435,7 @@ TEMPLATE_TEST_CASE("Unit_hipMallocPitch_Memcpy2D", ""
   HIP_CHECK(hipSetDevice(0));
   TestType  *A_h{nullptr}, *B_h{nullptr}, *C_h{nullptr}, *A_d{nullptr},
             *B_d{nullptr};
-  size_t pitch_A, pitch_B;
+  size_t pitch_A = 0, pitch_B = 0;
   size_t width{NUM_W * sizeof(TestType)};
 
   // Allocating memory
@@ -536,7 +517,7 @@ TEMPLATE_TEST_CASE("Unit_hipMallocPitch_KernelLaunch", ""
   HIP_CHECK(hipSetDevice(0));
   TestType  *A_h{nullptr}, *B_h{nullptr}, *C_h{nullptr}, *A_d{nullptr},
             *B_d{nullptr};
-  size_t pitch_A, pitch_B;
+  size_t pitch_A = 0, pitch_B = 0;
   size_t width{NUM_W * sizeof(TestType)};
 
   // Allocating memory
@@ -555,6 +536,7 @@ TEMPLATE_TEST_CASE("Unit_hipMallocPitch_KernelLaunch", ""
   hipLaunchKernelGGL(copy_var<TestType>, dim3(1), dim3(1),
           0, 0, static_cast<TestType*>(A_d),
           static_cast<TestType*>(B_d), ROWS, pitch_A);
+  HIP_CHECK(hipGetLastError()); 
 
 
   // hipMemcpy2D Device to Host

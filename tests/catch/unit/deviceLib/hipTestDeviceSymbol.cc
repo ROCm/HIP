@@ -69,6 +69,7 @@ TEST_CASE("Unit_hipMemcpyToSymbolAsync_ToNFrom") {
         hipMemcpyToSymbolAsync(HIP_SYMBOL(globalIn), Am, SIZE, 0, hipMemcpyHostToDevice, stream));
     HIP_CHECK(hipStreamSynchronize(stream));
     hipLaunchKernelGGL(Assign, dim3(1, 1, 1), dim3(NUM, 1, 1), 0, 0, Ad);
+    HIP_CHECK(hipGetLastError()); 
     HIP_CHECK(hipMemcpy(B, Ad, SIZE, hipMemcpyDeviceToHost));
     HIP_CHECK(hipMemcpyFromSymbolAsync(Cm, HIP_SYMBOL(globalOut), SIZE, 0, hipMemcpyDeviceToHost,
                                        stream));
@@ -83,6 +84,7 @@ TEST_CASE("Unit_hipMemcpyToSymbolAsync_ToNFrom") {
   SECTION("Calling hipMemcpyTo/FromSymbol - validate value in host memory") {
     HIP_CHECK(hipMemcpyToSymbol(HIP_SYMBOL(globalIn), A, SIZE, 0, hipMemcpyHostToDevice));
     hipLaunchKernelGGL(Assign, dim3(1, 1, 1), dim3(NUM, 1, 1), 0, 0, Ad);
+    HIP_CHECK(hipGetLastError()); 
     HIP_CHECK(hipMemcpy(B, Ad, SIZE, hipMemcpyDeviceToHost));
     HIP_CHECK(hipMemcpyFromSymbol(C, HIP_SYMBOL(globalOut), SIZE, 0, hipMemcpyDeviceToHost));
 
@@ -99,6 +101,7 @@ TEST_CASE("Unit_hipMemcpyToSymbolAsync_ToNFrom") {
         hipMemcpyToSymbolAsync(HIP_SYMBOL(globalIn), A, SIZE, 0, hipMemcpyHostToDevice, stream));
     HIP_CHECK(hipStreamSynchronize(stream));
     hipLaunchKernelGGL(Assign, dim3(1, 1, 1), dim3(NUM, 1, 1), 0, 0, Ad);
+    HIP_CHECK(hipGetLastError()); 
     HIP_CHECK(hipMemcpy(B, Ad, SIZE, hipMemcpyDeviceToHost));
     HIP_CHECK(
         hipMemcpyFromSymbolAsync(C, HIP_SYMBOL(globalOut), SIZE, 0, hipMemcpyDeviceToHost, stream));
@@ -116,6 +119,7 @@ TEST_CASE("Unit_hipMemcpyToSymbolAsync_ToNFrom") {
                                      hipStreamPerThread));
     HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
     hipLaunchKernelGGL(Assign, dim3(1, 1, 1), dim3(NUM, 1, 1), 0, 0, Ad);
+    HIP_CHECK(hipGetLastError()); 
     HIP_CHECK(hipMemcpy(B, Ad, SIZE, hipMemcpyDeviceToHost));
     HIP_CHECK(hipMemcpyFromSymbolAsync(C, HIP_SYMBOL(globalOut), SIZE, 0, hipMemcpyDeviceToHost,
                                        hipStreamPerThread));
@@ -139,6 +143,7 @@ TEST_CASE("Unit_hipMemcpyToSymbolAsync_ToNFrom") {
     HIP_CHECK(hipGetSymbolAddress((void**)&symbolAddress, HIP_SYMBOL(globalConst)));
     HIP_CHECK(hipMalloc((void**)&checkOkD, sizeof(bool)));
     hipLaunchKernelGGL(checkAddress, dim3(1, 1, 1), dim3(1, 1, 1), 0, 0, symbolAddress, checkOkD);
+    HIP_CHECK(hipGetLastError()); 
     HIP_CHECK(hipMemcpy(&checkOk, checkOkD, sizeof(bool), hipMemcpyDeviceToHost));
     HIP_CHECK(hipFree(checkOkD));
     HIP_ASSERT(checkOk);
@@ -171,6 +176,7 @@ TEST_CASE("Unit_hipGetSymbolAddressAndSize_Validation") {
     HIP_CHECK(hipMalloc(&checkOkD, sizeof(bool)));
     hipLaunchKernelGGL(checkGlobalConstAddress, dim3(1, 1, 1), dim3(1, 1, 1), 0, 0,
                        symbolArrAddress, checkOkD);
+    HIP_CHECK(hipGetLastError()); 
     HIP_CHECK(hipMemcpy(&checkOk, checkOkD, sizeof(bool), hipMemcpyDeviceToHost));
     HIP_CHECK(hipFree(checkOkD));
     HIP_ASSERT(checkOk);
@@ -184,6 +190,7 @@ TEST_CASE("Unit_hipGetSymbolAddressAndSize_Validation") {
     HIP_CHECK(hipMalloc(&checkOkD, sizeof(bool)));
     hipLaunchKernelGGL(checkStaticConstVarAddress, dim3(1, 1, 1), dim3(1, 1, 1), 0, 0,
                        symbolVarAddress, checkOkD);
+    HIP_CHECK(hipGetLastError()); 
     HIP_CHECK(hipMemcpy(&checkOk, checkOkD, sizeof(bool), hipMemcpyDeviceToHost));
     HIP_CHECK(hipFree(checkOkD));
     HIP_ASSERT(checkOk);

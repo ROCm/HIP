@@ -85,6 +85,7 @@ TEST_CASE("Unit_hipTextureObj2D_Check") {
 
   hipLaunchKernelGGL(tex2DKernel, dim3(dimGrid), dim3(dimBlock),
                      0, 0, dData, textureObject, width);
+  HIP_CHECK(hipGetLastError()); 
 
   HIP_CHECK(hipDeviceSynchronize());
   HIP_CHECK(hipMemcpy(hOutputData, dData, size, hipMemcpyDeviceToHost));

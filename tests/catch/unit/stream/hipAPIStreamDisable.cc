@@ -59,8 +59,10 @@ TEST_CASE("Unit_hipStreamCreate_MultistreamBasicFunctionalities") {
     hipLaunchKernelGGL(HIP_KERNEL_NAME(hipAPIStreamDisableTest::kernel),
                        dim3(1), dim3(1), 0, streams[i], data[i], xd,
                        hipAPIStreamDisableTest::NN);
+    HIP_CHECK(hipGetLastError());
     hipLaunchKernelGGL(HIP_KERNEL_NAME(hipAPIStreamDisableTest::nKernel),
                        dim3(1), dim3(1), 0, 0, yd);
+    HIP_CHECK(hipGetLastError());
     HIP_CHECK(hipStreamDestroy(streams[i]));
   }
   HIP_CHECK(hipMemcpy(&x, xd, sizeof(float), hipMemcpyDeviceToHost));

@@ -19,8 +19,12 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-
-// Test hipEventRecord serialization behavior.
+/*
+Testcase Scenarios :
+Unit_hipEventRecord- Test hipEventRecord serialization behavior
+Unit_hipEventRecord_Negative - Test unsuccessful hipEventRecord when event is passed as nullptr
+                             - Test unsuccessful hipEventRecord when event is created/recorded on different devices
+*/
 
 #include <hip_test_common.hh>
 
@@ -84,7 +88,7 @@ TEST_CASE("Unit_hipEventRecord") {
     HipTest::launchKernel<float>(HipTest::vectorADD<float>, blocks, 1, 0, 0,
                                  static_cast<const float*>(A_d), static_cast<const float*>(B_d),
                                  C_d, N);
-
+    HIP_CHECK(hipGetLastError());
     HIP_CHECK(hipEventRecord(stop, NULL));
     HIP_CHECK(hipEventSynchronize(stop));
     long long hostStop = HipTest::get_time();
@@ -116,5 +120,22 @@ TEST_CASE("Unit_hipEventRecord") {
 TEST_CASE("Unit_hipEventRecord_Negative") {
   SECTION("Nullptr event") {
     HIP_CHECK_ERROR(hipEventRecord(nullptr, nullptr), hipErrorInvalidResourceHandle);
+  }
+
+  SECTION("Different devices") {
+    int devCount = 0;
+    HIP_CHECK(hipGetDeviceCount(&devCount));
+    if (devCount > 1) {
+      // create event on dev=0
+      HIP_CHECK(hipSetDevice(0));
+      hipEvent_t start;
+      HIP_CHECK(hipEventCreate(&start));
+
+      // start on device 0 but null stream on device 1
+      HIP_CHECK(hipSetDevice(1));
+      HIP_CHECK_ERROR(hipEventRecord(start, nullptr), hipErrorInvalidHandle)
+	  
+      HIP_CHECK(hipEventDestroy(start));
+    }
   }
 }

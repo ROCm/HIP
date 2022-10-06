@@ -76,6 +76,8 @@ set(TEST_SRC
   hipGraphExecMemcpyNodeSetParamsToSymbol.cc
   hipGraphNodeGetDependentNodes.cc
   hipGraphNodeGetDependencies.cc
+  hipGraphHostNodeGetParams.cc
+  hipGraphExecChildGraphNodeSetParams.cc
 )
 
 hip_add_exe_to_target(NAME GraphsTest

@@ -163,7 +163,7 @@ if ($HIP_PLATFORM eq "amd") {
 
     # Figure out the target with which llvm is configured
     $HIP_CLANG_TARGET = `$HIPCC -print-target-triple`;
-    $HIP_CLANG_TARGET = chomp($HIP_CLANG_TARGET);
+    chomp($HIP_CLANG_TARGET);
 
     if (! defined $HIP_CLANG_INCLUDE_PATH) {
         $HIP_CLANG_INCLUDE_PATH = abs_path("$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION/include");
@@ -321,6 +321,9 @@ foreach $arg (@ARGV)
     # Check target selection option: --offload-arch= and --amdgpu-target=...
     foreach my $targetOpt (@targetOpts) {
         if (substr($arg, 0, length($targetOpt)) eq $targetOpt) {
+             if ($targetOpt eq '--amdgpu-target=') {
+                print "Warning: The --amdgpu-target option has been deprecated and will be removed in the future.  Use --offload-arch instead.\n";
+             }
              # If targets string is not empty, add a comma before adding new target option value.
              $targetsStr .= ($targetsStr ? ',' : '');
              $targetsStr .=  substr($arg, length($targetOpt));
@@ -355,10 +358,6 @@ foreach $arg (@ARGV)
         $compileOnly = 1;
         $buildDeps = 1;
     }
-    if($trimarg eq '-use_fast_math') {
-        $HIPCXXFLAGS .= " -DHIP_FAST_MATH ";
-        $HIPCFLAGS .= " -DHIP_FAST_MATH ";
-    }
     if(($trimarg eq '-use-staticlib') and ($setLinkType eq 0))
     {
         $linkType = 0;
@@ -376,6 +375,7 @@ foreach $arg (@ARGV)
     }
     if($arg =~ '--amdhsa-code-object-version=')
     {
+        print "Warning: The --amdhsa-code-object-version option has been deprecated and will be removed in the future.  Use -mllvm -mcode-object-version instead.\n";
         $arg =~ s/--amdhsa-code-object-version=//;
         $hsacoVersion = $arg;
         $swallowArg = 1;
@@ -534,12 +534,11 @@ foreach $arg (@ARGV)
         # Process HIPCC options here:
         if ($arg =~ m/^--hipcc/) {
             $swallowArg = 1;
-            #if $arg eq "--hipcc_profile") {  # Example argument here, hipcc
-            #
-            #}
             if ($arg eq "--hipcc-func-supp") {
+              print "Warning: The --hipcc-func-supp option has been deprecated and will be removed in the future.\n";
               $funcSupp = 1;
             } elsif ($arg eq "--hipcc-no-func-supp") {
+              print "Warning: The --hipcc-no-func-supp option has been deprecated and will be removed in the future.\n";
               $funcSupp = 0;
             }
         } else {
@@ -708,7 +707,7 @@ if ($HIP_PLATFORM eq "amd") {
       if ($linkType eq 0) {
         $toolArgs = " -L$HIP_LIB_PATH -lamdhip64 -L$ROCM_PATH/lib -lhsa-runtime64 -ldl -lnuma " . ${toolArgs};
       } else {
-        $toolArgs = ${toolArgs} . " -Wl,--enable-new-dtags -Wl,-rpath=$HIP_LIB_PATH:$ROCM_PATH/lib -lamdhip64 ";
+        $toolArgs = ${toolArgs} . " -Wl,-rpath=$HIP_LIB_PATH:$ROCM_PATH/lib -lamdhip64 ";
       }
       # To support __fp16 and _Float16, explicitly link with compiler-rt
       $HIP_CLANG_BUILTIN_LIB="$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION/lib/$HIP_CLANG_TARGET/libclang_rt.builtins.a";

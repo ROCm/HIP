@@ -117,9 +117,21 @@ TEST_CASE("Unit_hipExtStreamGetCUMask_verifyDefaultAndCustomMask") {
   }
 
   SECTION("Verify with custom mask set") {
+    hipDeviceProp_t props;
     std::vector<uint32_t> customMask(defaultCUMask);
     hipStream_t stream;
-    customMask[0] = 0xe;
+    int deviceId;
+
+    HIP_CHECK(hipGetDevice(&deviceId));
+    HIP_CHECK(hipGetDeviceProperties(&props, deviceId));
+
+    if (props.major >= 10) {
+      // For gfx >= 10, one work group processor encompasses 2 CUs &
+      // hence the CUs need to be enabled in pair
+      customMask[0] = 0xc;
+    } else {
+      customMask[0] = 0xe;
+    }
 
     HIP_CHECK(hipExtStreamCreateWithCUMask(&stream, customMask.size(),
                                                       customMask.data()));

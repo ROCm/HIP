@@ -73,6 +73,7 @@ static void runTest(const int width, const float offsetX) {
 
   hipLaunchKernelGGL(tex1DKernel<normalizedCoords>, dimGrid, dimBlock, 0, 0, dData,
                      textureObject, width, offsetX);
+  HIP_CHECK(hipGetLastError()); 
 
   HIP_CHECK(hipDeviceSynchronize());
 
@@ -102,10 +103,6 @@ static void runTest(const int width, const float offsetX) {
 TEST_CASE("Unit_hipTextureObj1DCheckModes") {
   CHECK_IMAGE_SUPPORT
 
-#ifdef _WIN32
-  INFO("Unit_hipTextureObj1DCheckModes skipped on Windows");
-  return;
-#endif
   SECTION("hipAddressModeClamp, hipFilterModePoint, regularCoords") {
     runTest<hipAddressModeClamp, hipFilterModePoint, false>(256, -3);
     runTest<hipAddressModeClamp, hipFilterModePoint, false>(256, 4);

@@ -31,7 +31,7 @@
 
 /* Defines */
 #define NUM_THREADS 1000
-#define ITER 100
+#define ITER 10
 #define NUM_H 256
 #define NUM_W 256
 
@@ -105,6 +105,7 @@ TEST_CASE("Unit_hipMemset2DAsync_WithKernel") {
     for (size_t k = 0; k < ITER; k++) {
       hipLaunchKernelGGL(HipTest::vector_square, dim3(blocks),
                    dim3(threadsPerBlock), 0, hipStreamPerThread, B_d, C_d, elements);
+      HIP_CHECK(hipGetLastError());
       HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
       HIP_CHECK(hipMemset2DAsync(C_d, pitch_C, memsetval, NUM_W, NUM_H,
                 hipStreamPerThread));

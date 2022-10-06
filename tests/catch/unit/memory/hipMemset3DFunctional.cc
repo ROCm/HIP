@@ -369,7 +369,7 @@ static void seekAndSet3DArrayPortion(bool bAsync) {
   myparms.srcPos = make_hipPos(0, 0, 0);
   myparms.dstPos = make_hipPos(0, 0, 0);
   myparms.dstPtr = make_hipPitchedPtr(array3D, sizeof(char) * arr_dimensions.x,
-                                      arr_dimensions.x, arr_dimensions.y);
+                                      arr_dimensions.y, arr_dimensions.z);
   myparms.srcPtr = devicePitchedPointer;
   myparms.extent = extent;
 #if HT_NVIDIA
