@@ -123,22 +123,3 @@ class StreamGuard {
   const Streams stream_type_;
   hipStream_t stream_;
 };
-
-inline unsigned int GenerateLinearAllocationFlagCombinations(const LinearAllocs allocation_type) {
-  switch (allocation_type) {
-    case LinearAllocs::mallocAndRegister:
-      // TODO
-      return 0;
-    case LinearAllocs::hipHostMalloc:
-      return GENERATE(hipHostMallocDefault, hipHostMallocPortable, hipHostMallocMapped,
-                      hipHostMallocWriteCombined);
-    case LinearAllocs::hipMallocManaged:
-      // TODO
-      return 1u;
-    case LinearAllocs::malloc:
-    case LinearAllocs::hipMalloc:
-      return 0u;
-    default:
-      assert("Invalid LinearAllocs enumerator");
-  }
-}
