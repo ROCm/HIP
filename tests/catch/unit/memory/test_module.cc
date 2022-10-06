@@ -37,7 +37,6 @@ THE SOFTWARE.
   }                                                                                                \
   }
 
-
 HIP_MODULE_GET_GLOBAL_TEST_DEFINE_DEVICE_GLOBALS(int)
 HIP_MODULE_GET_GLOBAL_TEST_DEFINE_DEVICE_GLOBALS(float)
 HIP_MODULE_GET_GLOBAL_TEST_DEFINE_DEVICE_GLOBALS(char)

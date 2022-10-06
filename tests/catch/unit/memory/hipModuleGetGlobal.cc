@@ -27,44 +27,33 @@ THE SOFTWARE.
 
 #include <hip_test_common.hh>
 #include <hip/hip_runtime_api.h>
+#include <resource_guards.hh>
+#include <utils.hh>
 
 #include "hipModuleGetGlobal.hh"
 
-template <typename T> constexpr const char* TypeNameToString() {
-  if constexpr (std::is_same<int, T>::value) {
-    return "int";
-  } else if constexpr (std::is_same<float, T>::value) {
-    return "float";
-  } else if constexpr (std::is_same<char, T>::value) {
-    return "char";
-  } else if constexpr (std::is_same<double, T>::value) {
-    return "double";
-  } else {
-    static_assert(!sizeof(T), "Stringify not implemented for this type");
-  }
-}
-
-template <typename T, size_t N> static void HipModuleGetGlobalTest(hipModule_t module) {
+template <typename T, size_t N>
+static void HipModuleGetGlobalTest(hipModule_t module, const std::string global_name) {
   constexpr auto size = N * sizeof(T);
 
-  hipDeviceptr_t global = nullptr;
+  hipDeviceptr_t global;
   size_t global_size = 0;
-  const std::string global_name = TypeNameToString<T>() + std::string(1 == N ? "_var" : "_arr");
   HIP_CHECK(hipModuleGetGlobal(&global, &global_size, module, global_name.c_str()));
-  REQUIRE(global != nullptr);
+  REQUIRE(global != 0);
   REQUIRE(size == global_size);
 
   hipFunction_t kernel = nullptr;
   const auto kernel_name = global_name + "_address_validation_kernel";
   HIP_CHECK(hipModuleGetFunction(&kernel, module, kernel_name.c_str()));
-  bool* equal_addresses;
-  HIP_CHECK(hipMalloc(&equal_addresses, sizeof(*equal_addresses)));
-  HIP_CHECK(hipMemset(equal_addresses, false, sizeof(*equal_addresses)));
-  void* kernel_args[2] = {&global, &equal_addresses};
+  LinearAllocGuard<bool> equal_addresses(LinearAllocs::hipMalloc, sizeof(bool));
+  HIP_CHECK(hipMemset(equal_addresses.ptr(), false, sizeof(*equal_addresses.ptr())));
+  bool* equal_addresses_ptr = equal_addresses.ptr();
+  void* kernel_args[2] = {&global, &equal_addresses_ptr};
   HIP_CHECK(hipModuleLaunchKernel(kernel, 1, 1, 1, 1, 1, 1, 0, nullptr, kernel_args, nullptr));
-  HIP_CHECK(hipStreamSynchronize(nullptr));
+  HIP_CHECK(hipGetLastError());
+  HIP_CHECK(hipDeviceSynchronize());
   bool ok;
-  HIP_CHECK(hipMemcpy(&ok, equal_addresses, sizeof(ok), hipMemcpyDeviceToHost));
+  HIP_CHECK(hipMemcpy(&ok, equal_addresses_ptr, sizeof(ok), hipMemcpyDeviceToHost));
   REQUIRE(ok);
 
   constexpr T expected_value = 42;
@@ -75,19 +64,23 @@ template <typename T, size_t N> static void HipModuleGetGlobalTest(hipModule_t m
 
   std::array<T, N> read_buffer;
   HIP_CHECK(hipMemcpyDtoH(read_buffer.data(), global, size));
-  const auto it = std::find_if_not(std::begin(read_buffer), std::end(read_buffer),
-                                   [](const T element) { return expected_value == element; });
-  REQUIRE(it == std::end(read_buffer));
+  ArrayFindIfNot(read_buffer.data(), expected_value, read_buffer.size());
 }
 
-template <typename T> static void HipModuleGetGlobalTest(hipModule_t module) {
-  SECTION("array") { HipModuleGetGlobalTest<T, kArraySize>(module); }
-  SECTION("scalar") { HipModuleGetGlobalTest<T, 1>(module); }
-}
+#define HIP_MODULE_GET_GLOBAL_S(expr) #expr
+#define HIP_MODULE_GET_GLOBAL_TEST(type, module)                                                   \
+  SECTION("array") {                                                                               \
+    HipModuleGetGlobalTest<type, kArraySize>(module, HIP_MODULE_GET_GLOBAL_S(type##_arr));         \
+  }                                                                                                \
+  SECTION("scalar") {                                                                              \
+    HipModuleGetGlobalTest<type, 1>(module, HIP_MODULE_GET_GLOBAL_S(type##_var));                  \
+  }
 
 static hipModule_t GetModule() {
   static hipModule_t module = nullptr;
   if (!module) {
+    // To appease cuda
+    HIP_CHECK(hipFree(nullptr));
     HIP_CHECK(hipModuleLoad(&module, "test_module.code"));
   }
   return module;
@@ -95,19 +88,15 @@ static hipModule_t GetModule() {
 
 TEST_CASE("Unit_hipModuleGetGlobal_Basic") {
   hipModule_t module = GetModule();
-  // Listed like this instead of using a templated test because a separate test case will be created
-  // for each type, so loading the module for each type can't be avoided. Sections are used to
-  // retain a modicum of organization, which leads to using the singleton, to avoid loading the
-  // module before each section.
-  SECTION("int") { HipModuleGetGlobalTest<int>(module); }
-  SECTION("float") { HipModuleGetGlobalTest<float>(module); }
-  SECTION("char") { HipModuleGetGlobalTest<char>(module); }
-  SECTION("double") { HipModuleGetGlobalTest<double>(module); }
+  SECTION("int") { HIP_MODULE_GET_GLOBAL_TEST(int, module); }
+  SECTION("float") { HIP_MODULE_GET_GLOBAL_TEST(float, module); }
+  SECTION("char") { HIP_MODULE_GET_GLOBAL_TEST(char, module); }
+  SECTION("double") { HIP_MODULE_GET_GLOBAL_TEST(double, module); }
 }
 
 TEST_CASE("Unit_hipModuleGetGlobal_Negative_Parameters") {
   hipModule_t module = GetModule();
-  hipDeviceptr_t global = nullptr;
+  hipDeviceptr_t global = 0;
   size_t global_size = 0;
   SECTION("dptr == nullptr") {
     HIP_CHECK_ERROR(hipModuleGetGlobal(nullptr, &global_size, module, "int_var"),
