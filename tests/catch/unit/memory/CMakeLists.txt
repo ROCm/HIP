@@ -97,6 +97,8 @@ set(TEST_SRC
     hipMemsetSync.cc
     hipMemsetAsync.cc
     hipMemAdvise.cc
+    hipMallocMipmappedArray.cc
+    hipFreeMipmappedArray.cc
 )
 else()
 set(TEST_SRC
