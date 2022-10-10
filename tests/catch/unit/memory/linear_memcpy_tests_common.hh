@@ -43,9 +43,8 @@ static inline unsigned int GenerateLinearAllocationFlagCombinations(
   }
 }
 
-template <typename F>
-void MemcpyDeviceToHostShell(F memcpy_func, const bool should_synchronize,
-                             const hipStream_t kernel_stream = nullptr) {
+template <bool should_synchronize, typename F>
+void MemcpyDeviceToHostShell(F memcpy_func, const hipStream_t kernel_stream = nullptr) {
   using LA = LinearAllocs;
   const auto allocation_size = GENERATE(kPageSize / 2, kPageSize, kPageSize * 2);
   const auto host_allocation_type = GENERATE(LA::mallocAndRegister, LA::hipHostMalloc);
@@ -64,16 +63,15 @@ void MemcpyDeviceToHostShell(F memcpy_func, const bool should_synchronize,
   HIP_CHECK(hipGetLastError());
 
   HIP_CHECK(memcpy_func(host_allocation.host_ptr(), device_allocation.ptr(), allocation_size));
-  if (should_synchronize) {
+  if constexpr (should_synchronize) {
     HIP_CHECK(hipStreamSynchronize(kernel_stream));
   }
 
   ArrayFindIfNot(host_allocation.host_ptr(), expected_value, element_count);
 }
 
-template <typename F>
-void MemcpyHostToDeviceShell(F memcpy_func, const bool should_synchronize,
-                             const hipStream_t kernel_stream = nullptr) {
+template <bool should_synchronize, typename F>
+void MemcpyHostToDeviceShell(F memcpy_func, const hipStream_t kernel_stream = nullptr) {
   using LA = LinearAllocs;
   const auto allocation_size = GENERATE(kPageSize / 2, kPageSize, kPageSize * 2);
   const auto host_allocation_type = GENERATE(LA::mallocAndRegister, LA::hipHostMalloc);
@@ -88,7 +86,7 @@ void MemcpyHostToDeviceShell(F memcpy_func, const bool should_synchronize,
   std::fill_n(host_allocation.host_ptr(), element_count, fill_value);
 
   HIP_CHECK(memcpy_func(device_allocation.ptr(), host_allocation.host_ptr(), allocation_size));
-  if (should_synchronize) {
+  if constexpr (should_synchronize) {
     HIP_CHECK(hipStreamSynchronize(kernel_stream));
   }
 
@@ -105,9 +103,8 @@ void MemcpyHostToDeviceShell(F memcpy_func, const bool should_synchronize,
   ArrayFindIfNot(host_allocation.host_ptr(), fill_value + increment_value, element_count);
 }
 
-template <typename F>
-void MemcpyHostToHostShell(F memcpy_func, const bool should_synchronize,
-                           const hipStream_t kernel_stream = nullptr) {
+template <bool should_synchronize, typename F>
+void MemcpyHostToHostShell(F memcpy_func, const hipStream_t kernel_stream = nullptr) {
   using LA = LinearAllocs;
   const auto allocation_size = GENERATE(kPageSize / 2, kPageSize, kPageSize * 2);
   const auto src_allocation_type = GENERATE(LA::malloc, LA::hipHostMalloc);
@@ -123,22 +120,35 @@ void MemcpyHostToHostShell(F memcpy_func, const bool should_synchronize,
   std::fill_n(src_allocation.host_ptr(), element_count, expected_value);
 
   HIP_CHECK(memcpy_func(dst_allocation.host_ptr(), src_allocation.host_ptr(), allocation_size));
-  if (should_synchronize) {
+  if constexpr (should_synchronize) {
     HIP_CHECK(hipStreamSynchronize(kernel_stream));
   }
 
   ArrayFindIfNot(dst_allocation.host_ptr(), expected_value, element_count);
 }
 
-template <typename F>
-void MemcpyDeviceToDeviceShell(F memcpy_func, const bool should_synchronize,
-                               const hipStream_t kernel_stream = nullptr) {
+template <bool should_synchronize, bool enable_peer_access, typename F>
+void MemcpyDeviceToDeviceShell(F memcpy_func, const hipStream_t kernel_stream = nullptr) {
   const auto allocation_size = GENERATE(kPageSize / 2, kPageSize, kPageSize * 2);
   const auto device_count = HipTest::getDeviceCount();
   const auto src_device = GENERATE(range(0, HipTest::getDeviceCount()));
   const auto dst_device = GENERATE(range(0, HipTest::getDeviceCount()));
+  INFO("Src device: " << src_device << ", Dst device: " << dst_device);
 
   HIP_CHECK(hipSetDevice(src_device));
+  if constexpr (enable_peer_access) {
+    if (src_device == dst_device) {
+      return;
+    }
+    int can_access_peer = 0;
+    HIP_CHECK(hipDeviceCanAccessPeer(&can_access_peer, src_device, dst_device));
+    if (!can_access_peer) {
+      INFO("Peer access cannot be enabled between devices " << src_device << " " << dst_device);
+      REQUIRE(can_access_peer);
+    }
+    HIP_CHECK(hipDeviceEnablePeerAccess(dst_device, 0));
+  }
+
   LinearAllocGuard<int> src_allocation(LinearAllocs::hipMalloc, allocation_size);
   LinearAllocGuard<int> result(LinearAllocs::hipHostMalloc, allocation_size, hipHostMallocPortable);
   HIP_CHECK(hipSetDevice(dst_device));
@@ -154,56 +164,72 @@ void MemcpyDeviceToDeviceShell(F memcpy_func, const bool should_synchronize,
   HIP_CHECK(hipGetLastError());
 
   HIP_CHECK(memcpy_func(dst_allocation.ptr(), src_allocation.ptr(), allocation_size));
-  if (should_synchronize) {
+  if constexpr (should_synchronize) {
     HIP_CHECK(hipStreamSynchronize(kernel_stream));
   }
 
   HIP_CHECK(
       hipMemcpy(result.host_ptr(), dst_allocation.ptr(), allocation_size, hipMemcpyDeviceToHost));
+  if constexpr (enable_peer_access) {
+    // If we've gotten this far, EnablePeerAccess must have succeeded, so we only need to check this
+    // condition
+    HIP_CHECK(hipDeviceDisablePeerAccess(dst_device));
+  }
 
   ArrayFindIfNot(result.host_ptr(), expected_value, element_count);
 }
 
-template <typename F>
-void MemcpyWithDirectionCommonTests(F memcpy_func, const bool should_synchronize) {
+template <bool should_synchronize, typename F> void MemcpyWithDirectionCommonTests(F memcpy_func) {
   using namespace std::placeholders;
   SECTION("Device to host") {
-    MemcpyDeviceToHostShell(std::bind(memcpy_func, _1, _2, _3, hipMemcpyDeviceToHost),
-                            should_synchronize);
+    MemcpyDeviceToHostShell<should_synchronize>(
+        std::bind(memcpy_func, _1, _2, _3, hipMemcpyDeviceToHost));
   }
 
   SECTION("Device to host with default kind") {
-    MemcpyDeviceToHostShell(std::bind(memcpy_func, _1, _2, _3, hipMemcpyDefault),
-                            should_synchronize);
+    MemcpyDeviceToHostShell<should_synchronize>(
+        std::bind(memcpy_func, _1, _2, _3, hipMemcpyDefault));
   }
 
   SECTION("Host to device") {
-    MemcpyHostToDeviceShell(std::bind(memcpy_func, _1, _2, _3, hipMemcpyHostToDevice),
-                            should_synchronize);
+    MemcpyHostToDeviceShell<should_synchronize>(
+        std::bind(memcpy_func, _1, _2, _3, hipMemcpyHostToDevice));
   }
 
   SECTION("Host to device with default kind") {
-    MemcpyHostToDeviceShell(std::bind(memcpy_func, _1, _2, _3, hipMemcpyDefault),
-                            should_synchronize);
+    MemcpyHostToDeviceShell<should_synchronize>(
+        std::bind(memcpy_func, _1, _2, _3, hipMemcpyDefault));
   }
 
   SECTION("Host to host") {
-    MemcpyHostToHostShell(std::bind(memcpy_func, _1, _2, _3, hipMemcpyHostToHost),
-                          should_synchronize);
+    MemcpyHostToHostShell<should_synchronize>(
+        std::bind(memcpy_func, _1, _2, _3, hipMemcpyHostToHost));
   }
 
   SECTION("Host to host with default kind") {
-    MemcpyHostToHostShell(std::bind(memcpy_func, _1, _2, _3, hipMemcpyDefault), should_synchronize);
+    MemcpyHostToHostShell<should_synchronize>(std::bind(memcpy_func, _1, _2, _3, hipMemcpyDefault));
   }
 
   SECTION("Device to device") {
-    MemcpyDeviceToDeviceShell(std::bind(memcpy_func, _1, _2, _3, hipMemcpyDeviceToDevice),
-                              should_synchronize);
+    SECTION("Peer access enabled") {
+      MemcpyDeviceToDeviceShell<should_synchronize, true>(
+          std::bind(memcpy_func, _1, _2, _3, hipMemcpyDeviceToDevice));
+    }
+    SECTION("Peer access disabled") {
+      MemcpyDeviceToDeviceShell<should_synchronize, false>(
+          std::bind(memcpy_func, _1, _2, _3, hipMemcpyDeviceToDevice));
+    }
   }
 
   SECTION("Device to device with default kind") {
-    MemcpyDeviceToDeviceShell(std::bind(memcpy_func, _1, _2, _3, hipMemcpyDefault),
-                              should_synchronize);
+    SECTION("Peer access enabled") {
+      MemcpyDeviceToDeviceShell<should_synchronize, true>(
+          std::bind(memcpy_func, _1, _2, _3, hipMemcpyDefault));
+    }
+    SECTION("Peer access disabled") {
+      MemcpyDeviceToDeviceShell<should_synchronize, false>(
+          std::bind(memcpy_func, _1, _2, _3, hipMemcpyDefault));
+    }
   }
 }
 

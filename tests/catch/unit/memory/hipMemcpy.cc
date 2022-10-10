@@ -24,7 +24,7 @@ THE SOFTWARE.
 #include <utils.hh>
 #include <resource_guards.hh>
 
-TEST_CASE("Unit_hipMemcpy_Basic") { MemcpyWithDirectionCommonTests(hipMemcpy, false); }
+TEST_CASE("Unit_hipMemcpy_Basic") { MemcpyWithDirectionCommonTests<false>(hipMemcpy); }
 
 TEST_CASE("Unit_hipMemcpy_Synchronization_Behavior") {
   using namespace std::placeholders;

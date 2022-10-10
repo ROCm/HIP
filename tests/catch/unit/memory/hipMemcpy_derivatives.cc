@@ -26,11 +26,9 @@ THE SOFTWARE.
 
 // hipMemcpyDtoH
 TEST_CASE("Unit_hipMemcpyDtoH_Basic") {
-  MemcpyDeviceToHostShell(
-      [](void* dst, void* src, size_t count) {
-        return hipMemcpyDtoH(dst, reinterpret_cast<hipDeviceptr_t>(src), count);
-      },
-      false);
+  MemcpyDeviceToHostShell<false>([](void* dst, void* src, size_t count) {
+    return hipMemcpyDtoH(dst, reinterpret_cast<hipDeviceptr_t>(src), count);
+  });
 }
 
 TEST_CASE("Unit_hipMemcpyDtoH_Synchronization_Behavior") {
@@ -55,11 +53,9 @@ TEST_CASE("Unit_hipMemcpyDtoH_Negative_Parameters") {
 
 // hipMemcpyHtoD
 TEST_CASE("Unit_hipMemcpyHtoD_Basic") {
-  MemcpyHostToDeviceShell(
-      [](void* dst, void* src, size_t count) {
-        return hipMemcpyHtoD(reinterpret_cast<hipDeviceptr_t>(dst), src, count);
-      },
-      false);
+  MemcpyHostToDeviceShell<false>([](void* dst, void* src, size_t count) {
+    return hipMemcpyHtoD(reinterpret_cast<hipDeviceptr_t>(dst), src, count);
+  });
 }
 
 TEST_CASE("Unit_hipMemcpyHtoD_Synchronization_Behavior") {
@@ -84,14 +80,12 @@ TEST_CASE("Unit_hipMemcpyHtoD_Negative_Parameters") {
 
 // hipMemcpyDtoD
 TEST_CASE("Unit_hipMemcpyDtoD_Basic") {
-  SECTION("Device to device") {
-    MemcpyDeviceToDeviceShell(
-        [](void* dst, void* src, size_t count) {
-          return hipMemcpyDtoD(reinterpret_cast<hipDeviceptr_t>(dst),
-                               reinterpret_cast<hipDeviceptr_t>(src), count);
-        },
-        false);
-  }
+  const auto f = [](void* dst, void* src, size_t count) {
+    return hipMemcpyDtoD(reinterpret_cast<hipDeviceptr_t>(dst),
+                         reinterpret_cast<hipDeviceptr_t>(src), count);
+  };
+  SECTION("Peer access enabled") { MemcpyDeviceToDeviceShell<false, true>(f); }
+  SECTION("Peer access disabled") { MemcpyDeviceToDeviceShell<false, false>(f); }
 }
 
 TEST_CASE("Unit_hipMemcpyDtoD_Synchronization_Behavior") {

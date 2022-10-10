@@ -30,7 +30,7 @@ TEST_CASE("Unit_hipMemcpyWithStream_Basic") {
   const StreamGuard stream_guard(stream_type);
   const hipStream_t stream = stream_guard.stream();
 
-  MemcpyWithDirectionCommonTests(std::bind(hipMemcpyWithStream, _1, _2, _3, _4, stream), false);
+  MemcpyWithDirectionCommonTests<false>(std::bind(hipMemcpyWithStream, _1, _2, _3, _4, stream));
 }
 
 TEST_CASE("Unit_hipMemcpyWithStream_Synchronization_Behavior") {
@@ -73,15 +73,9 @@ TEST_CASE("Unit_hipMemcpyWithStream_Negative_Parameters") {
     LinearAllocGuard<int> device_alloc(LinearAllocs::hipMalloc, kPageSize);
     LinearAllocGuard<int> host_alloc(LinearAllocs::hipHostMalloc, kPageSize);
 
-    MemcpyCommonNegativeTests(
-        std::bind(hipMemcpyWithStream, _1, _2, _3, hipMemcpyHostToDevice, nullptr),
-        device_alloc.ptr(), host_alloc.ptr(), kPageSize);
-
-    SECTION("Invalid MemcpyKind") {
-      HIP_CHECK_ERROR(hipMemcpyWithStream(device_alloc.ptr(), host_alloc.ptr(), kPageSize,
-                                          static_cast<hipMemcpyKind>(-1), nullptr),
-                      hipErrorInvalidMemcpyDirection);
-    }
+    MemcpyWithDirectionCommonNegativeTests(std::bind(hipMemcpyWithStream, _1, _2, _3, _4, nullptr),
+                                           device_alloc.ptr(), host_alloc.ptr(), kPageSize,
+                                           hipMemcpyHostToDevice);
 
     SECTION("Invalid stream") {
       hipStream_t stream;
@@ -95,15 +89,9 @@ TEST_CASE("Unit_hipMemcpyWithStream_Negative_Parameters") {
     LinearAllocGuard<int> device_alloc(LinearAllocs::hipMalloc, kPageSize);
     LinearAllocGuard<int> host_alloc(LinearAllocs::hipHostMalloc, kPageSize);
 
-    MemcpyCommonNegativeTests(
-        std::bind(hipMemcpyWithStream, _1, _2, _3, hipMemcpyDeviceToHost, nullptr),
-        host_alloc.ptr(), device_alloc.ptr(), kPageSize);
-
-    SECTION("Invalid MemcpyKind") {
-      HIP_CHECK_ERROR(hipMemcpyWithStream(host_alloc.ptr(), device_alloc.ptr(), kPageSize,
-                                          static_cast<hipMemcpyKind>(-1), nullptr),
-                      hipErrorInvalidMemcpyDirection);
-    }
+    MemcpyWithDirectionCommonNegativeTests(std::bind(hipMemcpyWithStream, _1, _2, _3, _4, nullptr),
+                                           host_alloc.ptr(), device_alloc.ptr(), kPageSize,
+                                           hipMemcpyDeviceToHost);
 
     SECTION("Invalid stream") {
       hipStream_t stream;
@@ -117,15 +105,9 @@ TEST_CASE("Unit_hipMemcpyWithStream_Negative_Parameters") {
     LinearAllocGuard<int> src_alloc(LinearAllocs::hipHostMalloc, kPageSize);
     LinearAllocGuard<int> dst_alloc(LinearAllocs::hipHostMalloc, kPageSize);
 
-    MemcpyCommonNegativeTests(
-        std::bind(hipMemcpyWithStream, _1, _2, _3, hipMemcpyHostToHost, nullptr), dst_alloc.ptr(),
-        src_alloc.ptr(), kPageSize);
-
-    SECTION("Invalid MemcpyKind") {
-      HIP_CHECK_ERROR(hipMemcpyWithStream(dst_alloc.ptr(), src_alloc.ptr(), kPageSize,
-                                          static_cast<hipMemcpyKind>(-1), nullptr),
-                      hipErrorInvalidMemcpyDirection);
-    }
+    MemcpyWithDirectionCommonNegativeTests(std::bind(hipMemcpyWithStream, _1, _2, _3, _4, nullptr),
+                                           dst_alloc.ptr(), src_alloc.ptr(), kPageSize,
+                                           hipMemcpyHostToHost);
 
     SECTION("Invalid stream") {
       hipStream_t stream;
@@ -139,15 +121,9 @@ TEST_CASE("Unit_hipMemcpyWithStream_Negative_Parameters") {
     LinearAllocGuard<int> src_alloc(LinearAllocs::hipMalloc, kPageSize);
     LinearAllocGuard<int> dst_alloc(LinearAllocs::hipMalloc, kPageSize);
 
-    MemcpyCommonNegativeTests(
-        std::bind(hipMemcpyWithStream, _1, _2, _3, hipMemcpyDeviceToDevice, nullptr),
-        dst_alloc.ptr(), src_alloc.ptr(), kPageSize);
-
-    SECTION("Invalid MemcpyKind") {
-      HIP_CHECK_ERROR(hipMemcpyWithStream(src_alloc.ptr(), dst_alloc.ptr(), kPageSize,
-                                          static_cast<hipMemcpyKind>(-1), nullptr),
-                      hipErrorInvalidMemcpyDirection);
-    }
+    MemcpyWithDirectionCommonNegativeTests(std::bind(hipMemcpyWithStream, _1, _2, _3, _4, nullptr),
+                                           dst_alloc.ptr(), src_alloc.ptr(), kPageSize,
+                                           hipMemcpyDeviceToDevice);
 
     SECTION("Invalid stream") {
       hipStream_t stream;
