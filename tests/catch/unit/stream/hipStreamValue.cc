@@ -499,7 +499,40 @@ TEST_CASE("Unit_hipStreamValue_Negative_InvalidMemory") {
   HIP_CHECK(hipStreamDestroy(stream));
 }
 
-TEMPLATE_TEST_CASE("Unit_hipStreamWaitValue_Negative_InvalidFlag", "", uint32_t, uint64_t) {
+TEMPLATE_TEST_CASE("Unit_hipStreamValue_Negative_UninitializedStream", "", uint32_t, uint64_t) {
+  if (!streamWaitValueSupported()) {
+    HipTest::HIP_SKIP_TEST("hipStreamWaitValue not supported on this device.");
+    return;
+  }
+
+  hipStream_t stream{reinterpret_cast<hipStream_t>(0xFFFF)};
+
+  // Allocate Host Memory
+  auto hostPtr = std::make_unique<TestType>();
+
+  // Register Host Memory
+  HIP_CHECK(hipHostRegister(hostPtr.get(), sizeof(TestType), 0));
+
+  // Set dummy data
+  *hostPtr = 0x0;
+
+  const auto compareOp = hipStreamWaitValueGte;
+  const auto expectedError = hipErrorContextIsDestroyed;
+
+  // Stream handle negative tests
+  SECTION("Invalid Stream handle for hipStreamWriteValue") {
+    HIP_CHECK_ERROR(writeFunc<TestType>(stream, hostPtr.get(), 0, writeFlag), expectedError);
+  }
+
+  SECTION("Invalid Stream handle for hipStreamWaitValue") {
+    HIP_CHECK_ERROR(waitFunc<TestType>(stream, hostPtr.get(), 0, compareOp), expectedError);
+  }
+
+  // Cleanup
+  HIP_CHECK(hipHostUnregister(hostPtr.get()));
+}
+
+TEMPLATE_TEST_CASE("Unit_hipStreamValue_Negative_InvalidFlag", "", uint32_t, uint64_t) {
   if (!streamWaitValueSupported()) {
     HipTest::HIP_SKIP_TEST("hipStreamWaitValue not supported on this device.");
     return;
@@ -518,7 +551,6 @@ TEMPLATE_TEST_CASE("Unit_hipStreamWaitValue_Negative_InvalidFlag", "", uint32_t,
   // Set dummy data
   *hostPtr = 0x0;
 
-  /* EXSWCPHIPT-96 */
   HIP_CHECK_ERROR(waitFunc<TestType>(stream, hostPtr.get(), 0, -1), hipErrorInvalidValue);
 
   // Cleanup
