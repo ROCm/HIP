@@ -74,56 +74,28 @@ TEST_CASE("Unit_hipMemcpy_Negative_Parameters") {
   SECTION("Host to device") {
     LinearAllocGuard<int> device_alloc(LinearAllocs::hipMalloc, kPageSize);
     LinearAllocGuard<int> host_alloc(LinearAllocs::hipHostMalloc, kPageSize);
-
-    MemcpyCommonNegativeTests(std::bind(hipMemcpy, _1, _2, _3, hipMemcpyHostToDevice),
-                              device_alloc.ptr(), host_alloc.ptr(), kPageSize);
-
-    SECTION("Invalid MemcpyKind") {
-      HIP_CHECK_ERROR(hipMemcpy(device_alloc.ptr(), host_alloc.ptr(), kPageSize,
-                                static_cast<hipMemcpyKind>(-1)),
-                      hipErrorInvalidMemcpyDirection);
-    }
+    MemcpyWithDirectionCommonNegativeTests(hipMemcpy, device_alloc.ptr(), host_alloc.ptr(),
+                                           kPageSize, hipMemcpyHostToDevice);
   }
 
   SECTION("Device to host") {
     LinearAllocGuard<int> device_alloc(LinearAllocs::hipMalloc, kPageSize);
     LinearAllocGuard<int> host_alloc(LinearAllocs::hipHostMalloc, kPageSize);
-
-    MemcpyCommonNegativeTests(std::bind(hipMemcpy, _1, _2, _3, hipMemcpyDeviceToHost),
-                              host_alloc.ptr(), device_alloc.ptr(), kPageSize);
-
-    SECTION("Invalid MemcpyKind") {
-      HIP_CHECK_ERROR(hipMemcpy(host_alloc.ptr(), device_alloc.ptr(), kPageSize,
-                                static_cast<hipMemcpyKind>(-1)),
-                      hipErrorInvalidMemcpyDirection);
-    }
+    MemcpyWithDirectionCommonNegativeTests(hipMemcpy, host_alloc.ptr(), device_alloc.ptr(),
+                                           kPageSize, hipMemcpyDeviceToHost);
   }
 
   SECTION("Host to host") {
     LinearAllocGuard<int> src_alloc(LinearAllocs::hipHostMalloc, kPageSize);
     LinearAllocGuard<int> dst_alloc(LinearAllocs::hipHostMalloc, kPageSize);
-
-    MemcpyCommonNegativeTests(std::bind(hipMemcpy, _1, _2, _3, hipMemcpyHostToHost),
-                              dst_alloc.ptr(), src_alloc.ptr(), kPageSize);
-
-    SECTION("Invalid MemcpyKind") {
-      HIP_CHECK_ERROR(
-          hipMemcpy(dst_alloc.ptr(), src_alloc.ptr(), kPageSize, static_cast<hipMemcpyKind>(-1)),
-          hipErrorInvalidMemcpyDirection);
-    }
+    MemcpyWithDirectionCommonNegativeTests(hipMemcpy, dst_alloc.ptr(), src_alloc.ptr(), kPageSize,
+                                           hipMemcpyHostToHost);
   }
 
   SECTION("Device to device") {
     LinearAllocGuard<int> src_alloc(LinearAllocs::hipMalloc, kPageSize);
     LinearAllocGuard<int> dst_alloc(LinearAllocs::hipMalloc, kPageSize);
-
-    MemcpyCommonNegativeTests(std::bind(hipMemcpy, _1, _2, _3, hipMemcpyDeviceToDevice),
-                              dst_alloc.ptr(), src_alloc.ptr(), kPageSize);
-
-    SECTION("Invalid MemcpyKind") {
-      HIP_CHECK_ERROR(
-          hipMemcpy(dst_alloc.ptr(), src_alloc.ptr(), kPageSize, static_cast<hipMemcpyKind>(-1)),
-          hipErrorInvalidMemcpyDirection);
-    }
+    MemcpyWithDirectionCommonNegativeTests(hipMemcpy, dst_alloc.ptr(), src_alloc.ptr(), kPageSize,
+                                           hipMemcpyDeviceToDevice);
   }
 }
