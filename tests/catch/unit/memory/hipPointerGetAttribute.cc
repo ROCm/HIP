@@ -138,6 +138,7 @@ TEST_CASE("Unit_hipPointerGetAttribute_KernelUpdation") {
                                    reinterpret_cast<hipDeviceptr_t>(A_d)));
   hipLaunchKernelGGL(var_update, dim3(1), dim3(1), 0, 0,
                      reinterpret_cast<int *>(data));
+  HIP_CHECK(hipGetLastError()); 
   HIP_CHECK(hipDeviceSynchronize());
   HIP_CHECK(hipMemcpy(A_h, A_d, Nbytes, hipMemcpyDeviceToHost));
   for (unsigned int i = 0; i < N; i++) {

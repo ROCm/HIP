@@ -72,6 +72,7 @@ TEMPLATE_TEST_CASE("Unit_unsafeAtomicAdd_CoherentwithnoUnsafeflag", "",
       hipLaunchKernelGGL(AtomicCheck<TestType>, dim3(1), dim3(1),
                          0, 0, A_d,
                          result_d);
+      HIP_CHECK(hipGetLastError()); 
       HIP_CHECK(hipDeviceSynchronize());
       bool testResult;
 

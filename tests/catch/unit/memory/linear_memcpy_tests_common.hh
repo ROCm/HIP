@@ -26,6 +26,23 @@ THE SOFTWARE.
 #include <utils.hh>
 #include <resource_guards.hh>
 
+
+static inline unsigned int GenerateLinearAllocationFlagCombinations(
+    const LinearAllocs allocation_type) {
+  switch (allocation_type) {
+    case LinearAllocs::hipHostMalloc:
+      return GENERATE(hipHostMallocDefault, hipHostMallocPortable, hipHostMallocMapped,
+                      hipHostMallocWriteCombined);
+    case LinearAllocs::mallocAndRegister:
+    case LinearAllocs::hipMallocManaged:
+    case LinearAllocs::malloc:
+    case LinearAllocs::hipMalloc:
+      return 0u;
+    default:
+      assert("Invalid LinearAllocs enumerator");
+  }
+}
+
 template <typename F>
 void MemcpyDeviceToHostShell(F memcpy_func, const bool should_synchronize,
                              const hipStream_t kernel_stream = nullptr) {
@@ -118,9 +135,8 @@ void MemcpyDeviceToDeviceShell(F memcpy_func, const bool should_synchronize,
                                const hipStream_t kernel_stream = nullptr) {
   const auto allocation_size = GENERATE(kPageSize / 2, kPageSize, kPageSize * 2);
   const auto device_count = HipTest::getDeviceCount();
-  // Waiting to figure out what the issue is when devices are different
-  const auto src_device = GENERATE_COPY(0);
-  const auto dst_device = GENERATE_COPY(0);
+  const auto src_device = GENERATE(range(0, HipTest::getDeviceCount()));
+  const auto dst_device = GENERATE(range(0, HipTest::getDeviceCount()));
 
   HIP_CHECK(hipSetDevice(src_device));
   LinearAllocGuard<int> src_allocation(LinearAllocs::hipMalloc, allocation_size);
@@ -132,7 +148,6 @@ void MemcpyDeviceToDeviceShell(F memcpy_func, const bool should_synchronize,
   constexpr auto thread_count = 1024;
   const auto block_count = element_count / thread_count + 1;
   constexpr int expected_value = 42;
-  // Consider situations when this is dst_device instead
   HIP_CHECK(hipSetDevice(src_device));
   VectorSet<<<block_count, thread_count, 0, kernel_stream>>>(src_allocation.ptr(), expected_value,
                                                              element_count);
@@ -260,4 +275,15 @@ void MemcpyHtoHSyncBehavior(F memcpy_func, const bool should_sync,
 template <typename F> void MemcpyCommonNegativeTests(F f, void* dst, void* src, size_t count) {
   SECTION("dst == nullptr") { HIP_CHECK_ERROR(f(nullptr, src, count), hipErrorInvalidValue); }
   SECTION("src == nullptr") { HIP_CHECK_ERROR(f(dst, nullptr, count), hipErrorInvalidValue); }
+}
+
+template <typename F>
+void MemcpyWithDirectionCommonNegativeTests(F f, void* dst, void* src, size_t count,
+                                            hipMemcpyKind kind) {
+  using namespace std::placeholders;
+  MemcpyCommonNegativeTests(std::bind(f, _1, _2, _3, kind), dst, src, count);
+  SECTION("Invalid MemcpyKind") {
+    HIP_CHECK_ERROR(f(dst, src, count, static_cast<hipMemcpyKind>(-1)),
+                    hipErrorInvalidMemcpyDirection);
+  }
 }

@@ -69,8 +69,8 @@ int main(){
 	check("Registering A",status);
 	cudaHostGetDevicePointer(&Ad, A, 0);
 	cudaMalloc((void**)&Bd, SIZE);
-	dim3 dimGrid(LEN/512,1,1);
-	dim3 dimBlock(512,1,1);
+	dim3 dimGrid(LEN/256,1,1);
+	dim3 dimBlock(256,1,1);
 	Inc1<<<dimGrid, dimBlock>>>(Ad, Bd);
 	sleep(3);
 	A[0] = -(ITER*1.0f);

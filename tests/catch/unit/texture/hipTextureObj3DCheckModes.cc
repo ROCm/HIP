@@ -113,6 +113,7 @@ static void runTest(const int width, const int height, const int depth, const fl
 
   hipLaunchKernelGGL(tex3DKernel<normalizedCoords>, dimGrid, dimBlock, 0, 0, dData,
                      textureObject, width, height, depth, offsetX, offsetY, offsetZ);
+  HIP_CHECK(hipGetLastError()); 
 
   HIP_CHECK(hipDeviceSynchronize());
 
