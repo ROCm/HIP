@@ -73,7 +73,7 @@ TEMPLATE_TEST_CASE("Unit_hipMemcpyParam2DAsync_multiDevice-StreamOnDiffDevice",
       // Initalizing A_d with C_h
       HIP_CHECK(hipSetDevice(1));
       hipStream_t stream;
-      hipStreamCreate(&stream);
+      HIP_CHECK(hipStreamCreate(&stream));
 
       HIP_CHECK(hipMemcpy2DAsync(A_d, pitch_A, C_h, width,
                            NUM_W*sizeof(TestType), NUM_H,
@@ -143,7 +143,7 @@ TEMPLATE_TEST_CASE("Unit_hipMemcpyParam2DAsync_multiDevice-D2D",
     size_t pitch_A;
     size_t width{NUM_W * sizeof(TestType)};
     hipStream_t stream;
-    hipStreamCreate(&stream);
+    HIP_CHECK(hipStreamCreate(&stream));
     HIP_CHECK(hipMallocPitch(reinterpret_cast<void**>(&A_d),
                             &pitch_A, width, NUM_H));
     HipTest::initArrays<TestType>(nullptr, nullptr, nullptr,
@@ -257,7 +257,7 @@ TEMPLATE_TEST_CASE("Unit_hipMemcpyParam2DAsync_multiDevice-H2D-D2H",
     } else {
       // Host to Device
       hip_Memcpy2D desc = {};
-      hipStreamCreate(&stream);
+      HIP_CHECK(hipStreamCreate(&stream));
 #ifdef __HIP_PLATFORM_NVCC__
       desc.srcMemoryType = CU_MEMORYTYPE_HOST;
 #else
@@ -331,7 +331,7 @@ TEST_CASE("Unit_hipMemcpyParam2DAsync_ExtentValidation") {
   size_t width{NUM_W * sizeof(char)};
   constexpr auto memsetval{100};
   hipStream_t stream;
-  hipStreamCreate(&stream);
+  HIP_CHECK(hipStreamCreate(&stream));
 
   // Allocating and Initializing the data
   HIP_CHECK(hipMallocPitch(reinterpret_cast<void**>(&A_d),
@@ -409,7 +409,7 @@ TEST_CASE("Unit_hipMemcpyParam2DAsync_Negative") {
   size_t width{NUM_W * sizeof(float)};
   constexpr auto memsetval{100};
   hipStream_t stream;
-  hipStreamCreate(&stream);
+  HIP_CHECK(hipStreamCreate(&stream));
 
   // Allocating and Initializing the data
   HIP_CHECK(hipMallocPitch(reinterpret_cast<void**>(&A_d),
