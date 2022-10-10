@@ -109,10 +109,10 @@ void Memcpy3DAsync<T>::AllocateMemory() {
  */
 template <typename T>
 void Memcpy3DAsync<T>::DeAllocateMemory() {
-  hipFreeArray(arr);
-  hipFreeArray(arr1);
+  HIP_CHECK(hipFreeArray(arr));
+  HIP_CHECK(hipFreeArray(arr1));
   free(hData);
-  hipStreamDestroy(stream);
+  HIP_CHECK(hipStreamDestroy(stream));
 }
 
 /*
