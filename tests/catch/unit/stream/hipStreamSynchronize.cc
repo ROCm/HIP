@@ -33,6 +33,19 @@ TEST_CASE("Unit_hipStreamSynchronize_EmptyStream") {
   HIP_CHECK(hipStreamDestroy(stream));
 }
 
+#if !HT_NVIDIA
+/**
+ * @brief Check that synchronization of uninitialized stream sets its status to
+ * hipErrorContextIsDestroyed
+ *
+ * Test removed for Nvidia devices because it returns unexpected error
+ */
+TEST_CASE("Unit_hipStreamSynchronize_UninitializedStream") {
+  hipStream_t stream{reinterpret_cast<hipStream_t>(0xFFFF)};
+  HIP_CHECK_ERROR(hipStreamSynchronize(stream), hipErrorContextIsDestroyed);
+}
+#endif
+
 #if HT_AMD /* Disabled because frequency based wait is timing out on nvidia platforms */
 
 /**
