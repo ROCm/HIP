@@ -70,9 +70,12 @@
 	   "Unit_hipGraphHostNodeGetParams_SetParams",
 	   "Unit_hipGraphExecChildGraphNodeSetParams_BasicFunc",
 	   "Unit_hipGraphExecChildGraphNodeSetParams_ChildTopology",
-       "Unit_hipGraphMemcpyNodeSetParams1D_Functional",
-       "Unit_hipGraphMemcpyNodeSetParamsToSymbol_Functional",
-	   "Unit_hipDeviceGetCacheConfig_Positive_Basic",
+	   "Unit_hipGraphMemcpyNodeSetParams1D_Functional",
+	   "Unit_hipGraphMemcpyNodeSetParamsToSymbol_Functional",
+	   "Unit_hipStreamQuery_WithPendingWork",
+	   "Unit_hipStreamWaitEvent_DifferentStreams",
+	   "Unit_hipStreamQuery_WithFinishedWork",
+     "Unit_hipDeviceGetCacheConfig_Positive_Basic",
 	   "Unit_hipDeviceGetCacheConfig_Positive_Threaded"
 	]
 }
