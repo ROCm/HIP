@@ -344,10 +344,10 @@ static inline void memsetCheck(T* aPtr, size_t value, memType memType, MultiDDat
 template <typename T> static inline void freeStuff(T* aPtr, allocType type) {
   switch (type) {
     case allocType::deviceMalloc:
-      hipFree(aPtr);
+      HIP_CHECK(hipFree(aPtr));
       break;
     case allocType::hostMalloc:
-      hipHostFree(aPtr);
+      HIP_CHECK(hipHostFree(aPtr));
       break;
     default:  // for host and device registered
       HIP_CHECK(hipHostUnregister(aPtr));
