@@ -379,10 +379,10 @@ void memsetCheck(T* aPtr, size_t value, memSetType memsetType, MultiDData& data,
 template <typename T> void freeStuff(T* aPtr, allocType type) {
   switch (type) {
     case allocType::deviceMalloc:
-      hipFree(aPtr);
+      HIP_CHECK(hipFree(aPtr));
       break;
     case allocType::hostMalloc:
-      hipHostFree(aPtr);
+      HIP_CHECK(hipHostFree(aPtr));
       break;
     case allocType::hostRegisted:
       HIP_CHECK(hipHostUnregister(aPtr));
