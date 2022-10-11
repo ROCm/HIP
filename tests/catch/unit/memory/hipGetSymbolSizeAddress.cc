@@ -45,7 +45,7 @@ HIP_GET_SYMBOL_SIZE_ADDRESS_DEFINE_GLOBALS(char)
 HIP_GET_SYMBOL_SIZE_ADDRESS_DEFINE_GLOBALS(double)
 
 template <typename T, size_t N, void (*validation_kernel)(void*, bool*)>
-static void HipGetSymbolSizeAddressTest(const void *symbol) {
+static void HipGetSymbolSizeAddressTest(const void* symbol) {
   constexpr auto size = N * sizeof(T);
 
   T* symbol_ptr = nullptr;
@@ -65,11 +65,16 @@ static void HipGetSymbolSizeAddressTest(const void *symbol) {
   REQUIRE(ok);
 }
 
+#if HT_AMD
+#define SYMBOL(expr) &HIP_SYMBOL(expr)
+#else
+#define SYMBOL(expr) HIP_SYMBOL(expr)
+#endif
+
 #define HIP_GET_SYMBOL_SIZE_ADDRESS_TEST(type)                                                     \
-  HipGetSymbolSizeAddressTest<type, 1, type##_var_address_validation_kernel>(                      \
-      HIP_SYMBOL(type##_var));                                                                     \
+  HipGetSymbolSizeAddressTest<type, 1, type##_var_address_validation_kernel>(SYMBOL(type##_var));  \
   HipGetSymbolSizeAddressTest<type, kArraySize, type##_arr_address_validation_kernel>(             \
-      HIP_SYMBOL(type##_arr));
+      SYMBOL(type##_arr));
 
 TEST_CASE("Unit_hipGetSymbolAddress_Positive_Basic") {
   SECTION("int") { HIP_GET_SYMBOL_SIZE_ADDRESS_TEST(int); }
