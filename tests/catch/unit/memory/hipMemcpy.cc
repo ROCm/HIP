@@ -576,7 +576,7 @@ TEMPLATE_TEST_CASE("Unit_hipMemcpy_PinnedRegMemWithKernelLaunch",
     HIP_CHECK(hipSetDevice(HipTest::RAND_R(&seed) % (numDevices-1)+1));
 
     int device;
-    hipGetDevice(&device);
+    HIP_CHECK(hipGetDevice(&device));
     std::cout <<"hipMemcpy is set to happen between device 0 and device "
       <<device << std::endl;
     HipTest::initArrays<TestType>(&X_d, &Y_d, &Z_d, nullptr,
@@ -588,10 +588,10 @@ TEMPLATE_TEST_CASE("Unit_hipMemcpy_PinnedRegMemWithKernelLaunch",
       C_h[j] = 0;
     }
 
-    hipMemcpy(A_h, A_d, Nbytes, hipMemcpyDeviceToHost);
-    hipMemcpy(X_d, A_h, Nbytes, hipMemcpyHostToDevice);
-    hipMemcpy(B_h, B_d, Nbytes, hipMemcpyDeviceToHost);
-    hipMemcpy(Y_d, B_h, Nbytes, hipMemcpyHostToDevice);
+    HIP_CHECK(hipMemcpy(A_h, A_d, Nbytes, hipMemcpyDeviceToHost));
+    HIP_CHECK(hipMemcpy(X_d, A_h, Nbytes, hipMemcpyHostToDevice));
+    HIP_CHECK(hipMemcpy(B_h, B_d, Nbytes, hipMemcpyDeviceToHost));
+    HIP_CHECK(hipMemcpy(Y_d, B_h, Nbytes, hipMemcpyHostToDevice));
 
     hipLaunchKernelGGL(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock),
                        0, 0, static_cast<const TestType*>(X_d),
