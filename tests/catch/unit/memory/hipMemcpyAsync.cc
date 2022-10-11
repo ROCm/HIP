@@ -373,10 +373,10 @@ TEMPLATE_TEST_CASE("Unit_hipMemcpyAsync_PinnedRegMemWithKernelLaunch",
       C_h[j] = 0;
     }
 
-    hipMemcpy(A_h, A_d, Nbytes, hipMemcpyDeviceToHost);
-    hipMemcpyAsync(X_d, A_h, Nbytes, hipMemcpyHostToDevice, gpu1Stream);
-    hipMemcpy(B_h, B_d, Nbytes, hipMemcpyDeviceToHost);
-    hipMemcpyAsync(Y_d, B_h, Nbytes, hipMemcpyHostToDevice, gpu1Stream);
+    HIP_CHECK(hipMemcpy(A_h, A_d, Nbytes, hipMemcpyDeviceToHost));
+    HIP_CHECK(hipMemcpyAsync(X_d, A_h, Nbytes, hipMemcpyHostToDevice, gpu1Stream));
+    HIP_CHECK(hipMemcpy(B_h, B_d, Nbytes, hipMemcpyDeviceToHost));
+    HIP_CHECK(hipMemcpyAsync(Y_d, B_h, Nbytes, hipMemcpyHostToDevice, gpu1Stream));
 
     hipLaunchKernelGGL(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock),
                        0, 0, static_cast<const TestType*>(X_d),
