@@ -82,12 +82,12 @@ TEST_CASE("Unit_hipMemcpyPeerAsync_Negative") {
       }
 
       SECTION("Passing invalid Destination device ID") {
-        REQUIRE(hipMemcpyPeerAsync(B_d, 10, A_d, 0, copy_bytes,
+        REQUIRE(hipMemcpyPeerAsync(B_d, numDevices, A_d, 0, copy_bytes,
               stream) != hipSuccess);
       }
 
       SECTION("Passing invalid Source device ID") {
-        REQUIRE(hipMemcpyPeerAsync(B_d, 10, A_d, 0, copy_bytes,
+        REQUIRE(hipMemcpyPeerAsync(B_d, 0, A_d, numDevices, copy_bytes,
               stream) != hipSuccess);
       }
 
@@ -155,14 +155,14 @@ TEST_CASE("Unit_hipMemcpyPeerAsync_Basic") {
                                      stream));
         HIP_CHECK(hipMemcpyPeerAsync(Y_d, 1, B_d, 0, copy_bytes,
                                      stream));
-	HIP_CHECK(hipStreamSynchronize(stream));
+        HIP_CHECK(hipStreamSynchronize(stream));
       }
       SECTION("Calling hipMemcpyPerAsync() using hipStreamPerThread") {
         HIP_CHECK(hipMemcpyPeerAsync(X_d, 1, A_d, 0, copy_bytes,
                                      hipStreamPerThread));
         HIP_CHECK(hipMemcpyPeerAsync(Y_d, 1, B_d, 0, copy_bytes,
                                      hipStreamPerThread));
-	HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
+        HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
       }
       hipLaunchKernelGGL(HipTest::vectorADD, dim3(1), dim3(1),
           0, 0, static_cast<const int*>(X_d),
