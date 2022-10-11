@@ -190,7 +190,7 @@ TEST_CASE("Unit_hipMemcpy2DFromArray_multiDevicePinnedMemPeerGpu") {
   HIP_CHECK(hipGetDeviceCount(&numDevices));
   if (numDevices > 1) {
     int canAccessPeer = 0;
-    hipDeviceCanAccessPeer(&canAccessPeer, 0, 1);
+    HIP_CHECK(hipDeviceCanAccessPeer(&canAccessPeer, 0, 1));
     if (canAccessPeer) {
       HIP_CHECK(hipSetDevice(0));
       hipArray *A_d{nullptr};
@@ -246,7 +246,7 @@ TEST_CASE("Unit_hipMemcpy2DFromArray_multiDeviceContextChange") {
   HIP_CHECK(hipGetDeviceCount(&numDevices));
   if (numDevices > 1) {
     int canAccessPeer = 0;
-    hipDeviceCanAccessPeer(&canAccessPeer, 0, 1);
+    HIP_CHECK(hipDeviceCanAccessPeer(&canAccessPeer, 0, 1));
     if (canAccessPeer) {
       HIP_CHECK(hipSetDevice(0));
       hipArray *A_d{nullptr};
