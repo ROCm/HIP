@@ -112,7 +112,7 @@ TEMPLATE_TEST_CASE("Unit_hipMemcpyAsync_KernelLaunch", "", int, float,
   TestType *A_h{nullptr}, *B_h{nullptr}, *C_h{nullptr};
   HIP_CHECK(hipSetDevice(0));
   hipStream_t stream;
-  hipStreamCreate(&stream);
+  HIP_CHECK(hipStreamCreate(&stream));
 
   HipTest::initArrays(&A_d, &B_d, &C_d, &A_h, &B_h, &C_h, NUM_ELM, false);
 
@@ -147,7 +147,7 @@ TEMPLATE_TEST_CASE("Unit_hipMemcpyAsync_H2H-H2D-D2H-H2PinMem", "", char, int,
   TestType *A_Ph{nullptr}, *B_Ph{nullptr};
   HIP_CHECK(hipSetDevice(0));
   hipStream_t stream;
-  hipStreamCreate(&stream);
+  HIP_CHECK(hipStreamCreate(&stream));
   HipTest::initArrays<TestType>(&A_d, &B_d, nullptr,
                                 &A_h, &B_h, nullptr,
                                 NUM_ELM*sizeof(TestType));
