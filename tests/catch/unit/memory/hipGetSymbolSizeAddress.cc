@@ -85,7 +85,7 @@ TEST_CASE("Unit_hipGetSymbolAddress_Positive_Basic") {
 
 TEST_CASE("Unit_hipGetSymbolAddress_Negative_Parameters") {
   SECTION("devPtr == nullptr") {
-    HIP_CHECK_ERROR(hipGetSymbolAddress(nullptr, HIP_SYMBOL(int_var)), hipErrorInvalidValue);
+    HIP_CHECK_ERROR(hipGetSymbolAddress(nullptr, SYMBOL(int_var)), hipErrorInvalidValue);
   }
   SECTION("symbolName == nullptr") {
     void* ptr = nullptr;
@@ -95,7 +95,7 @@ TEST_CASE("Unit_hipGetSymbolAddress_Negative_Parameters") {
 
 TEST_CASE("Unit_hipGetSymbolSize_Negative_Parameters") {
   SECTION("size == nullptr") {
-    HIP_CHECK_ERROR(hipGetSymbolSize(nullptr, HIP_SYMBOL(int_var)), hipErrorInvalidValue);
+    HIP_CHECK_ERROR(hipGetSymbolSize(nullptr, SYMBOL(int_var)), hipErrorInvalidValue);
   }
   SECTION("symbolName == nullptr") {
     size_t size = 0;
