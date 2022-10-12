@@ -68,6 +68,8 @@ TEST_CASE("Unit_hipMemcpyWithStream_Synchronization_Behavior") {
 
 TEST_CASE("Unit_hipMemcpyWithStream_Negative_Parameters") {
   using namespace std::placeholders;
+  const auto InvalidStream = []{ StreamGuard sg(Streams::created); return sg.stream(); };
+  hipStream_t stream = InvalidStream();
 
   SECTION("Host to device") {
     LinearAllocGuard<int> device_alloc(LinearAllocs::hipMalloc, kPageSize);
@@ -78,7 +80,6 @@ TEST_CASE("Unit_hipMemcpyWithStream_Negative_Parameters") {
                                            hipMemcpyHostToDevice);
 
     SECTION("Invalid stream") {
-      hipStream_t stream;
       HIP_CHECK_ERROR(hipMemcpyWithStream(device_alloc.ptr(), host_alloc.ptr(), kPageSize,
                                           hipMemcpyHostToDevice, stream),
                       hipErrorInvalidValue);
@@ -94,7 +95,6 @@ TEST_CASE("Unit_hipMemcpyWithStream_Negative_Parameters") {
                                            hipMemcpyDeviceToHost);
 
     SECTION("Invalid stream") {
-      hipStream_t stream;
       HIP_CHECK_ERROR(hipMemcpyWithStream(host_alloc.ptr(), device_alloc.ptr(), kPageSize,
                                           hipMemcpyDeviceToHost, stream),
                       hipErrorInvalidValue);
@@ -110,7 +110,6 @@ TEST_CASE("Unit_hipMemcpyWithStream_Negative_Parameters") {
                                            hipMemcpyHostToHost);
 
     SECTION("Invalid stream") {
-      hipStream_t stream;
       HIP_CHECK_ERROR(hipMemcpyWithStream(dst_alloc.ptr(), src_alloc.ptr(), kPageSize,
                                           hipMemcpyHostToHost, stream),
                       hipErrorInvalidValue);
@@ -126,7 +125,6 @@ TEST_CASE("Unit_hipMemcpyWithStream_Negative_Parameters") {
                                            hipMemcpyDeviceToDevice);
 
     SECTION("Invalid stream") {
-      hipStream_t stream;
       HIP_CHECK_ERROR(hipMemcpyWithStream(dst_alloc.ptr(), src_alloc.ptr(), kPageSize,
                                           hipMemcpyDeviceToDevice, stream),
                       hipErrorInvalidValue);

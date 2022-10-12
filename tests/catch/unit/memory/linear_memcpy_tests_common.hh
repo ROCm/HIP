@@ -131,8 +131,8 @@ template <bool should_synchronize, bool enable_peer_access, typename F>
 void MemcpyDeviceToDeviceShell(F memcpy_func, const hipStream_t kernel_stream = nullptr) {
   const auto allocation_size = GENERATE(kPageSize / 2, kPageSize, kPageSize * 2);
   const auto device_count = HipTest::getDeviceCount();
-  const auto src_device = GENERATE(range(0, HipTest::getDeviceCount()));
-  const auto dst_device = GENERATE(range(0, HipTest::getDeviceCount()));
+  const auto src_device = GENERATE_COPY(range(0, device_count));
+  const auto dst_device = GENERATE_COPY(range(0, device_count));
   INFO("Src device: " << src_device << ", Dst device: " << dst_device);
 
   HIP_CHECK(hipSetDevice(src_device));
