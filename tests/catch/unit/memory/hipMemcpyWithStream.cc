@@ -68,66 +68,43 @@ TEST_CASE("Unit_hipMemcpyWithStream_Synchronization_Behavior") {
 
 TEST_CASE("Unit_hipMemcpyWithStream_Negative_Parameters") {
   using namespace std::placeholders;
-  const auto InvalidStream = []{ StreamGuard sg(Streams::created); return sg.stream(); };
-  hipStream_t stream = InvalidStream();
+
+  constexpr auto NegativeTests = [](void* dst, void* src, size_t count,
+                                    const hipMemcpyKind direction) {
+    MemcpyWithDirectionCommonNegativeTests(std::bind(hipMemcpyWithStream, _1, _2, _3, _4, nullptr),
+                                           dst, src, count, direction);
+
+    constexpr auto InvalidStream = [] {
+      StreamGuard sg(Streams::created);
+      return sg.stream();
+    };
+    SECTION("Invalid stream") {
+      HIP_CHECK_ERROR(hipMemcpyWithStream(dst, src, count, direction, InvalidStream()),
+                      hipErrorContextIsDestroyed);
+    }
+  };
 
   SECTION("Host to device") {
     LinearAllocGuard<int> device_alloc(LinearAllocs::hipMalloc, kPageSize);
     LinearAllocGuard<int> host_alloc(LinearAllocs::hipHostMalloc, kPageSize);
-
-    MemcpyWithDirectionCommonNegativeTests(std::bind(hipMemcpyWithStream, _1, _2, _3, _4, nullptr),
-                                           device_alloc.ptr(), host_alloc.ptr(), kPageSize,
-                                           hipMemcpyHostToDevice);
-
-    SECTION("Invalid stream") {
-      HIP_CHECK_ERROR(hipMemcpyWithStream(device_alloc.ptr(), host_alloc.ptr(), kPageSize,
-                                          hipMemcpyHostToDevice, stream),
-                      hipErrorInvalidValue);
-    }
+    NegativeTests(device_alloc.ptr(), host_alloc.ptr(), kPageSize, hipMemcpyHostToDevice);
   }
 
   SECTION("Device to host") {
     LinearAllocGuard<int> device_alloc(LinearAllocs::hipMalloc, kPageSize);
     LinearAllocGuard<int> host_alloc(LinearAllocs::hipHostMalloc, kPageSize);
-
-    MemcpyWithDirectionCommonNegativeTests(std::bind(hipMemcpyWithStream, _1, _2, _3, _4, nullptr),
-                                           host_alloc.ptr(), device_alloc.ptr(), kPageSize,
-                                           hipMemcpyDeviceToHost);
-
-    SECTION("Invalid stream") {
-      HIP_CHECK_ERROR(hipMemcpyWithStream(host_alloc.ptr(), device_alloc.ptr(), kPageSize,
-                                          hipMemcpyDeviceToHost, stream),
-                      hipErrorInvalidValue);
-    }
+    NegativeTests(host_alloc.ptr(), device_alloc.ptr(), kPageSize, hipMemcpyDeviceToHost);
   }
 
   SECTION("Host to host") {
     LinearAllocGuard<int> src_alloc(LinearAllocs::hipHostMalloc, kPageSize);
     LinearAllocGuard<int> dst_alloc(LinearAllocs::hipHostMalloc, kPageSize);
-
-    MemcpyWithDirectionCommonNegativeTests(std::bind(hipMemcpyWithStream, _1, _2, _3, _4, nullptr),
-                                           dst_alloc.ptr(), src_alloc.ptr(), kPageSize,
-                                           hipMemcpyHostToHost);
-
-    SECTION("Invalid stream") {
-      HIP_CHECK_ERROR(hipMemcpyWithStream(dst_alloc.ptr(), src_alloc.ptr(), kPageSize,
-                                          hipMemcpyHostToHost, stream),
-                      hipErrorInvalidValue);
-    }
+    NegativeTests(dst_alloc.ptr(), src_alloc.ptr(), kPageSize, hipMemcpyHostToHost);
   }
 
   SECTION("Device to device") {
     LinearAllocGuard<int> src_alloc(LinearAllocs::hipMalloc, kPageSize);
     LinearAllocGuard<int> dst_alloc(LinearAllocs::hipMalloc, kPageSize);
-
-    MemcpyWithDirectionCommonNegativeTests(std::bind(hipMemcpyWithStream, _1, _2, _3, _4, nullptr),
-                                           dst_alloc.ptr(), src_alloc.ptr(), kPageSize,
-                                           hipMemcpyDeviceToDevice);
-
-    SECTION("Invalid stream") {
-      HIP_CHECK_ERROR(hipMemcpyWithStream(dst_alloc.ptr(), src_alloc.ptr(), kPageSize,
-                                          hipMemcpyDeviceToDevice, stream),
-                      hipErrorInvalidValue);
-    }
+    NegativeTests(dst_alloc.ptr(), src_alloc.ptr(), kPageSize, hipMemcpyDeviceToDevice);
   }
 }
