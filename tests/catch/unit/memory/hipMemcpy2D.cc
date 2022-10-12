@@ -135,7 +135,7 @@ TEMPLATE_TEST_CASE("Unit_hipMemcpy2D_multiDevice-D2D", ""
   size_t width{NUM_W * sizeof(TestType)};
   HIP_CHECK(hipGetDeviceCount(&numDevices));
   if (numDevices > 1) {
-    hipDeviceCanAccessPeer(&canAccessPeer, 0, 1);
+    HIP_CHECK(hipDeviceCanAccessPeer(&canAccessPeer, 0, 1));
     if (canAccessPeer) {
       HIP_CHECK(hipSetDevice(0));
 
