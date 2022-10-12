@@ -47,7 +47,7 @@ template <bool should_synchronize, typename F>
 void MemcpyDeviceToHostShell(F memcpy_func, const hipStream_t kernel_stream = nullptr) {
   using LA = LinearAllocs;
   const auto allocation_size = GENERATE(kPageSize / 2, kPageSize, kPageSize * 2);
-  const auto host_allocation_type = GENERATE(LA::mallocAndRegister, LA::hipHostMalloc);
+  const auto host_allocation_type = GENERATE(LA::malloc, LA::hipHostMalloc);
   const auto host_allocation_flags = GenerateLinearAllocationFlagCombinations(host_allocation_type);
 
   LinearAllocGuard<int> host_allocation(host_allocation_type, allocation_size,
@@ -74,7 +74,7 @@ template <bool should_synchronize, typename F>
 void MemcpyHostToDeviceShell(F memcpy_func, const hipStream_t kernel_stream = nullptr) {
   using LA = LinearAllocs;
   const auto allocation_size = GENERATE(kPageSize / 2, kPageSize, kPageSize * 2);
-  const auto host_allocation_type = GENERATE(LA::mallocAndRegister, LA::hipHostMalloc);
+  const auto host_allocation_type = GENERATE(LA::malloc, LA::hipHostMalloc);
   const auto host_allocation_flags = GenerateLinearAllocationFlagCombinations(host_allocation_type);
 
   LinearAllocGuard<int> host_allocation(host_allocation_type, allocation_size,
