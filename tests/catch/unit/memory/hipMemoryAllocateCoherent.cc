@@ -44,8 +44,8 @@ __global__ void Kernel(float* hostRes, int clkRate) {
 TEST_CASE("Unit_hipHostMalloc_CoherentAccess") {
   int blocks = 2;
   float* hostRes;
-  hipHostMalloc(&hostRes, blocks * sizeof(float),
-                hipHostMallocMapped);
+  HIP_CHECK(hipHostMalloc(&hostRes, blocks * sizeof(float),
+                hipHostMallocMapped));
   hostRes[0] = 0;
   hostRes[1] = 0;
   int clkRate;
@@ -60,6 +60,6 @@ TEST_CASE("Unit_hipHostMalloc_CoherentAccess") {
     while (hostRes[eleCounter] == 0) {printf("waiting for counter inc\n");}
     eleCounter++;
   }
-  hipHostFree(reinterpret_cast<void *>(hostRes));
+  HIP_CHECK(hipHostFree(reinterpret_cast<void *>(hostRes)));
 }
 
