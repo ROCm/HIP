@@ -60,6 +60,7 @@ set(TEST_SRC
     hipMemCoherencyTst.cc
     hipMallocManaged.cc
     hipMemRangeGetAttribute.cc
+    hipMemRangeGetAttribute_old.cc
     hipMemRangeGetAttributes.cc
     hipMemcpyFromSymbol.cc
     hipPtrGetAttribute.cc
@@ -137,6 +138,7 @@ set(TEST_SRC
     hipMemAdviseMmap.cc
     hipMallocManaged.cc
     hipMemRangeGetAttribute.cc
+    hipMemRangeGetAttribute_old.cc
     hipMemRangeGetAttributes.cc
     hipMemcpyFromSymbol.cc
     hipPtrGetAttribute.cc
