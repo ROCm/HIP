@@ -212,7 +212,7 @@ if ($HIP_PLATFORM eq "amd") {
     }
 
     if (not $isWindows) {
-        $HSA_PATH=$ENV{'HSA_PATH'} // "$ROCM_PATH/hsa";
+        $HSA_PATH=$ENV{'HSA_PATH'} // "$ROCM_PATH";
         $HIPCXXFLAGS .= " -isystem $HSA_PATH/include";
         $HIPCFLAGS .= " -isystem $HSA_PATH/include";
     }
