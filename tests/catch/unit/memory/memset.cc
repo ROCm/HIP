@@ -6,7 +6,8 @@ TEST_CASE("Unit_hipMemset_4bytes") {
   REQUIRE(res == hipSuccess);
   res = hipMemset(d_a, 0, sizeof(int));
   REQUIRE(res == hipSuccess);
-  hipFree(d_a);
+  res = hipFree(d_a);
+  REQUIRE(res == hipSuccess);
 }
 
 TEST_CASE("Unit_hipMemset_4bytes_hostMem") {
@@ -15,5 +16,6 @@ TEST_CASE("Unit_hipMemset_4bytes_hostMem") {
   REQUIRE(res == hipSuccess);
   res = hipMemset(d_a, 0, sizeof(int));
   REQUIRE(res == hipSuccess);
-  hipHostFree(d_a);
+  res = hipHostFree(d_a);
+  REQUIRE(res == hipSuccess);
 }
