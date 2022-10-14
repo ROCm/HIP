@@ -17,7 +17,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "linear_memcpy_tests_common.hh"
+#include "memcpy1d_tests_common.hh"
 
 #include <hip_test_common.hh>
 #include <hip/hip_runtime_api.h>
