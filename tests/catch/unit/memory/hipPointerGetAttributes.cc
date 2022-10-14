@@ -43,7 +43,7 @@ constexpr size_t N{1000000};
 
 bool operator==(const hipPointerAttribute_t& lhs, const hipPointerAttribute_t& rhs) {
   return ((lhs.hostPointer == rhs.hostPointer) && (lhs.devicePointer == rhs.devicePointer) &&
-          (lhs.memoryType == rhs.memoryType) && (lhs.device == rhs.device) &&
+          (lhs.type == rhs.type) && (lhs.device == rhs.device) &&
           (lhs.allocationFlags == rhs.allocationFlags));
 }
 
@@ -68,7 +68,7 @@ const char* memoryTypeToString(hipMemoryType memoryType) {
 void resetAttribs(hipPointerAttribute_t* attribs) {
   attribs->hostPointer = reinterpret_cast<void*>(-1);
   attribs->devicePointer = reinterpret_cast<void*>(-1);
-  attribs->memoryType = hipMemoryTypeHost;
+  attribs->type = hipMemoryTypeHost;
   attribs->device = -2;
   attribs->isManaged = -1;
   attribs->allocationFlags = 0xffff;
@@ -77,9 +77,9 @@ void resetAttribs(hipPointerAttribute_t* attribs) {
 
 void printAttribs(const hipPointerAttribute_t* attribs) {
   printf(
-      "hostPointer:%p devicePointer:%p  memType:%s deviceId:%d isManaged:%d "
+      "hostPointer:%p devicePointer:%p  type:%s deviceId:%d isManaged:%d "
       "allocationFlags:%u\n",
-      attribs->hostPointer, attribs->devicePointer, memoryTypeToString(attribs->memoryType),
+      attribs->hostPointer, attribs->devicePointer, memoryTypeToString(attribs->type),
       attribs->device, attribs->isManaged, attribs->allocationFlags);
 }
 
@@ -151,14 +151,14 @@ void clusterAllocs(int numAllocs, size_t minSize, size_t maxSize) {
     if (isDevice) {
       totalDeviceAllocated[reference[i]._attrib.device] += reference[i]._sizeBytes;
       HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&ptr), reference[i]._sizeBytes));
-      reference[i]._attrib.memoryType = hipMemoryTypeDevice;
+      reference[i]._attrib.type = hipMemoryTypeDevice;
       reference[i]._attrib.devicePointer = ptr;
       reference[i]._attrib.hostPointer = NULL;
       reference[i]._attrib.allocationFlags = 0;
     } else {
       HIP_CHECK(hipHostMalloc(reinterpret_cast<void**>(&ptr), reference[i]._sizeBytes,
                               hipHostMallocDefault));
-      reference[i]._attrib.memoryType = hipMemoryTypeHost;
+      reference[i]._attrib.type = hipMemoryTypeHost;
       reference[i]._attrib.devicePointer = ptr;
       reference[i]._attrib.hostPointer = ptr;
       reference[i]._attrib.allocationFlags = 0;
@@ -190,7 +190,7 @@ void clusterAllocs(int numAllocs, size_t minSize, size_t maxSize) {
       checkPointer(ref, i, 2, (ptr + ref._sizeBytes - 1));
     }
 
-    if (ref._attrib.memoryType == hipMemoryTypeDevice) {
+    if (ref._attrib.type == hipMemoryTypeDevice) {
       HIP_CHECK(hipFree(ref._pointer));
     } else {
       HIP_CHECK(hipHostFree(ref._pointer));
@@ -369,11 +369,11 @@ TEST_CASE("Unit_hipPointerGetAttributes_GpuIter") {
 
     // Memory address and type check
     if (MemoryType == MemoryTypes::DeviceMemory) {
-      REQUIRE(attributes.memoryType == hipMemoryTypeDevice);
+      REQUIRE(attributes.type == hipMemoryTypeDevice);
       REQUIRE(attributes.devicePointer == ptr);
       REQUIRE(attributes.hostPointer == nullptr);
     } else if (MemoryType == MemoryTypes::HostMemory) {
-      REQUIRE(attributes.memoryType == hipMemoryTypeHost);
+      REQUIRE(attributes.type == hipMemoryTypeHost);
       REQUIRE(attributes.hostPointer == ptr);
     } else if (MemoryType == MemoryTypes::MappedMemory) {
       int* devicePtr{nullptr};

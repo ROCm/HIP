@@ -35,7 +35,7 @@ my $isWindows =  ($^O eq 'MSWin32' or $^O eq 'msys');
 # escapes args with quotes SWDEV-341955
 foreach $arg (@ARGV) {
   if ($isWindows) {
-    $arg =~ s/[^-a-zA-Z0-9_=+,.:\/\\]/\\$&/g;
+    $arg =~ s/[^-a-zA-Z0-9_=+,.:\/\\ ]/\\$&/g;
   }
 }
 
