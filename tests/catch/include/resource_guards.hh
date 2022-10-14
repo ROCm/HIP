@@ -80,10 +80,8 @@ template <typename T> class LinearAllocGuard {
     }
   }
 
-  T* ptr() { return ptr_; };
-  T* const ptr() const { return ptr_; };
-  T* host_ptr() { return host_ptr_; }
-  T* const host_ptr() const { return host_ptr(); }
+  T* ptr() const { return ptr_; };
+  T* host_ptr() const { return host_ptr_; }
 
  private:
   const LinearAllocs allocation_type_;
@@ -137,6 +135,10 @@ template <typename T> class LinearAllocGuard3D : public LinearAllocGuardMultiDim
   LinearAllocGuard3D(const size_t width_logical, const size_t height, const size_t depth)
   : LinearAllocGuardMultiDim<T>{make_hipExtent(width_logical * sizeof(T), height, depth)}
   {
+    HIP_CHECK(hipMalloc3D(&this->pitched_ptr_, this->extent_));
+  }
+
+  LinearAllocGuard3D(const hipExtent extent) : LinearAllocGuardMultiDim<T>(extent) {
     HIP_CHECK(hipMalloc3D(&this->pitched_ptr_, this->extent_));
   }
 
