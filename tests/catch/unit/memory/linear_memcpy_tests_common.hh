@@ -26,7 +26,6 @@ THE SOFTWARE.
 #include <utils.hh>
 #include <resource_guards.hh>
 
-
 static inline unsigned int GenerateLinearAllocationFlagCombinations(
     const LinearAllocs allocation_type) {
   switch (allocation_type) {
@@ -77,30 +76,25 @@ void MemcpyHostToDeviceShell(F memcpy_func, const hipStream_t kernel_stream = nu
   const auto host_allocation_type = GENERATE(LA::malloc, LA::hipHostMalloc);
   const auto host_allocation_flags = GenerateLinearAllocationFlagCombinations(host_allocation_type);
 
-  LinearAllocGuard<int> host_allocation(host_allocation_type, allocation_size,
-                                        host_allocation_flags);
+  LinearAllocGuard<int> src_host_allocation(host_allocation_type, allocation_size,
+                                            host_allocation_flags);
+  LinearAllocGuard<int> dst_host_allocation(LA::hipHostMalloc, allocation_size);
   LinearAllocGuard<int> device_allocation(LA::hipMalloc, allocation_size);
 
   const auto element_count = allocation_size / sizeof(*device_allocation.ptr());
-  constexpr int fill_value = 41;
-  std::fill_n(host_allocation.host_ptr(), element_count, fill_value);
+  constexpr int fill_value = 42;
+  std::fill_n(src_host_allocation.host_ptr(), element_count, fill_value);
+  std::fill_n(dst_host_allocation.host_ptr(), element_count, 0);
 
-  HIP_CHECK(memcpy_func(device_allocation.ptr(), host_allocation.host_ptr(), allocation_size));
+  HIP_CHECK(memcpy_func(device_allocation.ptr(), src_host_allocation.host_ptr(), allocation_size));
   if constexpr (should_synchronize) {
     HIP_CHECK(hipStreamSynchronize(kernel_stream));
   }
 
-  constexpr int increment_value = 1;
-  constexpr int thread_count = 1024;
-  const int block_count = element_count / thread_count + 1;
-  VectorIncrement<<<block_count, thread_count, 0, kernel_stream>>>(device_allocation.ptr(),
-                                                                   increment_value, element_count);
-  HIP_CHECK(hipGetLastError());
-
-  HIP_CHECK(hipMemcpy(host_allocation.host_ptr(), device_allocation.ptr(), allocation_size,
+  HIP_CHECK(hipMemcpy(dst_host_allocation.host_ptr(), device_allocation.ptr(), allocation_size,
                       hipMemcpyDeviceToHost));
 
-  ArrayFindIfNot(host_allocation.host_ptr(), fill_value + increment_value, element_count);
+  ArrayFindIfNot(dst_host_allocation.host_ptr(), fill_value, element_count);
 }
 
 template <bool should_synchronize, typename F>

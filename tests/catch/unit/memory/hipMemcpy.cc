@@ -24,9 +24,9 @@ THE SOFTWARE.
 #include <utils.hh>
 #include <resource_guards.hh>
 
-TEST_CASE("Unit_hipMemcpy_Basic") { MemcpyWithDirectionCommonTests<false>(hipMemcpy); }
+TEST_CASE("Unit_hipMemcpy_Positive_Basic") { MemcpyWithDirectionCommonTests<false>(hipMemcpy); }
 
-TEST_CASE("Unit_hipMemcpy_Synchronization_Behavior") {
+TEST_CASE("Unit_hipMemcpy_Positive_Synchronization_Behavior") {
   using namespace std::placeholders;
   HIP_CHECK(hipDeviceSynchronize());
 
@@ -66,7 +66,6 @@ TEST_CASE("Unit_hipMemcpy_Synchronization_Behavior") {
     MemcpyHtoHSyncBehavior(std::bind(hipMemcpy, _1, _2, _3, hipMemcpyHostToHost), true);
   }
 }
-
 
 TEST_CASE("Unit_hipMemcpy_Negative_Parameters") {
   using namespace std::placeholders;
