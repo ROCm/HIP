@@ -19,24 +19,29 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "linear_memcpy_tests_common.hh"
+#include "memcpy1d_tests_common.hh"
 
 #include <hip_test_common.hh>
 #include <hip/hip_runtime_api.h>
 #include <utils.hh>
 #include <resource_guards.hh>
 
-TEST_CASE("Unit_hipMemcpyDtoHAsync_Basic") {
+static hipStream_t InvalidStream() {
+  StreamGuard sg(Streams::created);
+  return sg.stream();
+}
+
+TEST_CASE("Unit_hipMemcpyDtoHAsync_Positive_Basic") {
   const auto stream_type = GENERATE(Streams::nullstream, Streams::perThread, Streams::created);
   const StreamGuard stream_guard(stream_type);
 
   const auto f = [stream = stream_guard.stream()](void* dst, void* src, size_t count) {
     return hipMemcpyDtoHAsync(dst, reinterpret_cast<hipDeviceptr_t>(src), count, stream);
   };
-  MemcpyDeviceToHostShell(f, true, stream_guard.stream());
+  MemcpyDeviceToHostShell<true>(f, stream_guard.stream());
 }
 
-TEST_CASE("Unit_hipMemcpyDtoHAsync_Synchronization_Behavior") {
+TEST_CASE("Unit_hipMemcpyDtoHAsync_Positive_Synchronization_Behavior") {
   HIP_CHECK(hipDeviceSynchronize());
 
   SECTION("Device memory to pageable host memory") {
@@ -68,25 +73,24 @@ TEST_CASE("Unit_hipMemcpyDtoHAsync_Negative_Parameters") {
       host_alloc.ptr(), device_alloc.ptr(), kPageSize);
 
   SECTION("Invalid stream") {
-    hipStream_t stream;
     HIP_CHECK_ERROR(
         hipMemcpyDtoHAsync(host_alloc.ptr(), reinterpret_cast<hipDeviceptr_t>(device_alloc.ptr()),
-                           kPageSize, stream),
-        hipErrorInvalidValue);
+                           kPageSize, InvalidStream()),
+        hipErrorContextIsDestroyed);
   }
 }
 
-TEST_CASE("Unit_hipMemcpyHtoDAsync_Basic") {
+TEST_CASE("Unit_hipMemcpyHtoDAsync_Positive_Basic") {
   const auto stream_type = GENERATE(Streams::nullstream, Streams::perThread, Streams::created);
   const StreamGuard stream_guard(stream_type);
 
   const auto f = [stream = stream_guard.stream()](void* dst, void* src, size_t count) {
     return hipMemcpyHtoDAsync(reinterpret_cast<hipDeviceptr_t>(dst), src, count, stream);
   };
-  MemcpyHostToDeviceShell(f, true, stream_guard.stream());
+  MemcpyHostToDeviceShell<true>(f, stream_guard.stream());
 }
 
-TEST_CASE("Unit_hipMemcpyHtoDAsync_Synchronization_Behavior") {
+TEST_CASE("Unit_hipMemcpyHtoDAsync_Positive_Synchronization_Behavior") {
   // This behavior differs on NVIDIA and AMD, on AMD the hipMemcpy calls is synchronous with
   // respect to the host
 #if HT_AMD
@@ -114,28 +118,35 @@ TEST_CASE("Unit_hipMemcpyHtoDAsync_Negative_Parameters") {
       device_alloc.ptr(), host_alloc.ptr(), kPageSize);
 
   SECTION("Invalid stream") {
-    hipStream_t stream;
     HIP_CHECK_ERROR(hipMemcpyHtoDAsync(reinterpret_cast<hipDeviceptr_t>(device_alloc.ptr()),
-                                       host_alloc.ptr(), kPageSize, stream),
-                    hipErrorInvalidValue);
+                                       host_alloc.ptr(), kPageSize, InvalidStream()),
+                    hipErrorContextIsDestroyed);
   }
 }
 
-TEST_CASE("Unit_hipMemcpyDtoDAsync_Basic") {
+TEST_CASE("Unit_hipMemcpyDtoDAsync_Positive_Basic") {
   const auto stream_type = GENERATE(Streams::nullstream, Streams::perThread, Streams::created);
   const StreamGuard stream_guard(stream_type);
 
   SECTION("Device to device") {
-    MemcpyDeviceToDeviceShell(
-        [stream = stream_guard.stream()](void* dst, void* src, size_t count) {
-          return hipMemcpyDtoDAsync(reinterpret_cast<hipDeviceptr_t>(dst),
-                                    reinterpret_cast<hipDeviceptr_t>(src), count, stream);
-        },
-        true);
+    SECTION("Peer access enabled") {
+      MemcpyDeviceToDeviceShell<true, true>(
+          [stream = stream_guard.stream()](void* dst, void* src, size_t count) {
+            return hipMemcpyDtoDAsync(reinterpret_cast<hipDeviceptr_t>(dst),
+                                      reinterpret_cast<hipDeviceptr_t>(src), count, stream);
+          });
+    }
+    SECTION("Peer access disabled") {
+      MemcpyDeviceToDeviceShell<true, false>(
+          [stream = stream_guard.stream()](void* dst, void* src, size_t count) {
+            return hipMemcpyDtoDAsync(reinterpret_cast<hipDeviceptr_t>(dst),
+                                      reinterpret_cast<hipDeviceptr_t>(src), count, stream);
+          });
+    }
   }
 }
 
-TEST_CASE("Unit_hipMemcpyDtoDAsync_Synchronization_Behavior") {
+TEST_CASE("Unit_hipMemcpyDtoDAsync_Positive_Synchronization_Behavior") {
   MemcpyDtoDSyncBehavior(
       [](void* dst, void* src, size_t count) {
         return hipMemcpyDtoDAsync(reinterpret_cast<hipDeviceptr_t>(dst),
@@ -157,10 +168,9 @@ TEST_CASE("Unit_hipMemcpyDtoDAsync_Negative_Parameters") {
       dst_alloc.ptr(), src_alloc.ptr(), kPageSize);
 
   SECTION("Invalid stream") {
-    hipStream_t stream;
-    HIP_CHECK_ERROR(
-        hipMemcpyDtoDAsync(reinterpret_cast<hipDeviceptr_t>(dst_alloc.ptr()),
-                           reinterpret_cast<hipDeviceptr_t>(src_alloc.ptr()), kPageSize, stream),
-        hipErrorInvalidValue);
+    HIP_CHECK_ERROR(hipMemcpyDtoDAsync(reinterpret_cast<hipDeviceptr_t>(dst_alloc.ptr()),
+                                       reinterpret_cast<hipDeviceptr_t>(src_alloc.ptr()), kPageSize,
+                                       InvalidStream()),
+                    hipErrorContextIsDestroyed);
   }
 }
