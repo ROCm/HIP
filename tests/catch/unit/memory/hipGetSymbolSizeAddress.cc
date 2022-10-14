@@ -24,6 +24,7 @@ THE SOFTWARE.
 #include <hip_test_common.hh>
 #include <hip/hip_runtime_api.h>
 #include <resource_guards.hh>
+#include <utils.hh>
 
 namespace {
 constexpr size_t kArraySize = 5;
@@ -63,6 +64,16 @@ static void HipGetSymbolSizeAddressTest(const void* symbol) {
   bool ok = false;
   HIP_CHECK(hipMemcpy(&ok, equal_addresses.ptr(), sizeof(ok), hipMemcpyDeviceToHost));
   REQUIRE(ok);
+
+  constexpr T expected_value = 42;
+  std::array<T, N> fill_buffer;
+  std::fill_n(fill_buffer.begin(), N, expected_value);
+  HIP_CHECK(hipMemcpy(symbol_ptr, fill_buffer.data(), symbol_size, hipMemcpyHostToDevice));
+
+
+  std::array<T, N> read_buffer;
+  HIP_CHECK(hipMemcpy(read_buffer.data(), symbol_ptr, symbol_size, hipMemcpyDeviceToHost));
+  ArrayFindIfNot(read_buffer.data(), expected_value, read_buffer.size());
 }
 
 #if HT_AMD
