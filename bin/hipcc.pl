@@ -184,9 +184,6 @@ if ($HIP_PLATFORM eq "amd") {
     $HIP_CLANG_TARGET = `$HIPCC -print-target-triple`;
     chomp($HIP_CLANG_TARGET);
 
-    if (! defined $HIP_CLANG_INCLUDE_PATH) {
-        $HIP_CLANG_INCLUDE_PATH = abs_path("$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION/include");
-    }
     if (! defined $HIP_INCLUDE_PATH) {
         $HIP_INCLUDE_PATH = "$HIP_PATH/include";
     }
@@ -199,15 +196,12 @@ if ($HIP_PLATFORM eq "amd") {
             print ("HIP_ROCCLR_HOME=$HIP_ROCCLR_HOME\n");
         }
         print ("HIP_CLANG_PATH=$HIP_CLANG_PATH\n");
-        print ("HIP_CLANG_INCLUDE_PATH=$HIP_CLANG_INCLUDE_PATH\n");
         print ("HIP_INCLUDE_PATH=$HIP_INCLUDE_PATH\n");
         print ("HIP_LIB_PATH=$HIP_LIB_PATH\n");
         print ("DEVICE_LIB_PATH=$DEVICE_LIB_PATH\n");
         print ("HIP_CLANG_TARGET=$HIP_CLANG_TARGET\n");
     }
 
-    $HIPCXXFLAGS .= " -isystem \"$HIP_CLANG_INCLUDE_PATH/..\"";
-    $HIPCFLAGS .= " -isystem \"$HIP_CLANG_INCLUDE_PATH/..\"";
     $HIPLDFLAGS .= " -L\"$HIP_LIB_PATH\"";
     if ($isWindows) {
       $HIPLDFLAGS .= " -lamdhip64";
