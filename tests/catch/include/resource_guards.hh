@@ -80,15 +80,72 @@ template <typename T> class LinearAllocGuard {
     }
   }
 
-  T* ptr() { return ptr_; };
-  T* const ptr() const { return ptr_; };
-  T* host_ptr() { return host_ptr_; }
-  T* const host_ptr() const { return host_ptr(); }
+  T* ptr() const { return ptr_; };
+  T* host_ptr() const { return host_ptr_; }
 
  private:
   const LinearAllocs allocation_type_;
   T* ptr_ = nullptr;
   T* host_ptr_ = nullptr;
+};
+
+template <typename T> class LinearAllocGuardMultiDim {
+  protected:
+  LinearAllocGuardMultiDim(hipExtent extent)
+  : extent_{extent} {}
+
+  ~LinearAllocGuardMultiDim() {
+    static_cast<void>(hipFree(pitched_ptr_.ptr));
+  }
+  
+  public:
+  T* ptr() const { return reinterpret_cast<T*>(pitched_ptr_.ptr); };
+
+  size_t pitch() const { return pitched_ptr_.pitch; }
+
+  hipExtent extent() const { return extent_; }
+
+  hipPitchedPtr pitched_ptr() const { return pitched_ptr_; }
+
+  size_t width() const { return extent_.width; }
+
+  size_t width_logical() const { return extent_.width / sizeof(T); }
+
+  size_t height() const { return extent_.height; }
+
+  public:
+  hipPitchedPtr pitched_ptr_;
+  const hipExtent extent_;
+};
+
+template <typename T> class LinearAllocGuard2D : public LinearAllocGuardMultiDim<T> {
+  public:
+  LinearAllocGuard2D(const size_t width_logical, const size_t height) 
+  : LinearAllocGuardMultiDim<T>{make_hipExtent(width_logical * sizeof(T), height, 1)}
+  {
+    HIP_CHECK(hipMallocPitch(&this->pitched_ptr_.ptr, &this->pitched_ptr_.pitch, this->extent_.width, this->extent_.height));
+  }
+
+  LinearAllocGuard2D(const LinearAllocGuard2D&) = delete;
+  LinearAllocGuard2D(LinearAllocGuard2D&&) = delete;
+};
+
+template <typename T> class LinearAllocGuard3D : public LinearAllocGuardMultiDim<T> {
+  public:
+  LinearAllocGuard3D(const size_t width_logical, const size_t height, const size_t depth)
+  : LinearAllocGuardMultiDim<T>{make_hipExtent(width_logical * sizeof(T), height, depth)}
+  {
+    HIP_CHECK(hipMalloc3D(&this->pitched_ptr_, this->extent_));
+  }
+
+  LinearAllocGuard3D(const hipExtent extent) : LinearAllocGuardMultiDim<T>(extent) {
+    HIP_CHECK(hipMalloc3D(&this->pitched_ptr_, this->extent_));
+  }
+
+  LinearAllocGuard3D(const LinearAllocGuard3D&) = delete;
+  LinearAllocGuard3D(LinearAllocGuard3D&&) = delete;
+
+  size_t depth() const { return this->extent_.depth; }
 };
 
 enum class Streams { nullstream, perThread, created };
