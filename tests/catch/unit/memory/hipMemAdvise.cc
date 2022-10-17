@@ -34,6 +34,7 @@ static inline hipMemoryAdvise GetUnsetMemAdvice(const hipMemoryAdvise advice) {
       return hipMemAdviseUnsetPreferredLocation;
     default:
       assert("Invalid hipMemoryAdvise enumerator");
+      return advice; 
   }
 }
 
@@ -47,6 +48,7 @@ static inline hipMemRangeAttribute GetMemAdviceAttr(const hipMemoryAdvise advice
       return hipMemRangeAttributePreferredLocation;
     default:
       assert("Invalid hipMemoryAdvise enumerator");
+      return static_cast<hipMemRangeAttribute>(-1); 
   }
 }
 
