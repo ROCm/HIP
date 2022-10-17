@@ -106,7 +106,7 @@ TEST_CASE("Unit_hipMallocMipmappedArray_MultiThread") {
 }
 
 namespace {
-void checkArrayIsExpected(hipMipmappedArray_t array, const hipChannelFormatDesc& expected_desc,
+void checkMipmappedArrayIsExpected(hipMipmappedArray_t array, hipArray level_array, const hipChannelFormatDesc& expected_desc,
                           const hipExtent& expected_extent, const unsigned int expected_flags) {
 // hipArrayGetInfo doesn't currently exist (EXSWCPHIPT-87)
 #if HT_AMD
@@ -115,16 +115,22 @@ void checkArrayIsExpected(hipMipmappedArray_t array, const hipChannelFormatDesc&
   std::ignore = expected_extent;
   std::ignore = expected_flags;
 #else
+  cudaArraySparseProperties sparseProperties;
   cudaChannelFormatDesc queried_desc;
   cudaExtent queried_extent;
   unsigned int queried_flags;
 
-  cudaArrayGetInfo(&queried_desc, &queried_extent, &queried_flags, array);
+  cudaMipmappedArrayGetSparseProperties(&sparseProperties, array);
+  cudaArrayGetInfo(&queried_desc, &queried_extent, &queried_flags, level_array);
 
   REQUIRE(expected_desc.x == queried_desc.x);
   REQUIRE(expected_desc.y == queried_desc.y);
   REQUIRE(expected_desc.z == queried_desc.z);
   REQUIRE(expected_desc.f == queried_desc.f);
+
+  REQUIRE(expected_extent.width == sparseProperties.width);
+  REQUIRE(expected_extent.height == sparseProperties.height);
+  REQUIRE(expected_extent.depth == sparseProperties.depth);
 
   REQUIRE(expected_extent.width == queried_extent.width);
   REQUIRE(expected_extent.height == queried_extent.height);
@@ -135,8 +141,7 @@ void checkArrayIsExpected(hipMipmappedArray_t array, const hipChannelFormatDesc&
 }
 }  // namespace
 
-TEMPLATE_TEST_CASE("Unit_hipMallocMipmappedArray_happy", "", char, uchar2, uint2, int4, short4, float,
-                   float2, float4) {
+TEMPLATE_TEST_CASE("Unit_hipMallocMipmappedArray_happy", "", char, uint2, int4, short4, float) {
   hipMipmappedArray_t array;
   const auto desc = hipCreateChannelDesc<TestType>();
 #if HT_AMD
@@ -160,13 +165,14 @@ TEMPLATE_TEST_CASE("Unit_hipMallocMipmappedArray_happy", "", char, uchar2, uint2
     CAPTURE(flags, extent.width, extent.height, extent.depth);
 
     HIP_CHECK(hipMallocMipmappedArray(&array, &desc, extent, numLevels, flags));
-    checkArrayIsExpected(array, desc, extent, flags);
+    hipArray* hipArray = nullptr;
+    HIP_CHECK(hipMipmappedArrayGetLevel(&hipArray, array, 1));
+    checkMipmappedArrayIsExpected(array, hipArray, desc, extent, flags);
     HIP_CHECK(hipFreeMipmappedArray(array));
   }
 }
 
-TEMPLATE_TEST_CASE("Unit_hipMallocMipmappedArray_MaxTexture", "", int, uint4, short, ushort2,
-                   unsigned char, float, float4) {
+TEMPLATE_TEST_CASE("Unit_hipMallocMipmappedArray_MaxTexture", "", int, uint4, ushort2, float) {
   hipMipmappedArray_t array;
   const hipChannelFormatDesc desc = hipCreateChannelDesc<TestType>();
 #if HT_AMD
@@ -206,7 +212,9 @@ TEMPLATE_TEST_CASE("Unit_hipMallocMipmappedArray_MaxTexture", "", int, uint4, sh
     // this can try to alloc many GB of memory, so out of memory is acceptable
     if (maxArrayCreateError == hipErrorOutOfMemory) return;
     HIP_CHECK(maxArrayCreateError);
-    checkArrayIsExpected(array, desc, extent, flag);
+    hipArray* hipArray = nullptr;
+    HIP_CHECK(hipMipmappedArrayGetLevel(&hipArray, array, 1));
+    checkMipmappedArrayIsExpected(array, hipArray, desc, extent, flags);
     HIP_CHECK(hipFreeMipmappedArray(array));
   }
   SECTION("Negative") {
@@ -430,8 +438,7 @@ TEST_CASE("Unit_hipMallocMipmappedArray_Negative_NumericLimit") {
 }
 
 // texture gather arrays are only allowed to be 2D
-TEMPLATE_TEST_CASE("Unit_hipMallocMipmappedArray_Negative_Non2DTextureGather", "", char, uchar2, short4,
-                   float2, float4) {
+TEMPLATE_TEST_CASE("Unit_hipMallocMipmappedArray_Negative_Non2DTextureGather", "", char, uchar2, float2) {
 #if HT_AMD
   HipTest::HIP_SKIP_TEST("Texture Gather arrays not supported using AMD backend");
   return;
@@ -445,4 +452,23 @@ TEMPLATE_TEST_CASE("Unit_hipMallocMipmappedArray_Negative_Non2DTextureGather", "
   const hipExtent extent = GENERATE(make_hipExtent(size, 0, 0), make_hipExtent(size, size, size));
 
   HIP_CHECK_ERROR(hipMallocMipmappedArray(&array, &desc, extent, numLevels, flags), hipErrorInvalidValue);
+}
+
+TEST_CASE("Unit_hipGetMipmappedArrayLevel_Negative") {
+  constexpr size_t s = 6;
+  unsigned int numLevels = 1;
+  hipMipmappedArray_t array;
+  hipArray level_array;
+
+  hipChannelFormatDesc desc = hipCreateChannelDesc<float>();
+
+  HIP_CHECK(hipMallocMipmappedArray(&array, &desc, make_hipExtent(s, s, s), numLevels, hipArrayDefault));
+  SECTION("Level is invalid")
+  {
+    HIP_CHECK_ERROR(hipMipmappedArrayGetLevel(&level_array, array, 3), hipErrorInvalidValue);
+  }
+  SECTION("Mipmapped array is nullptr")
+  {
+    HIP_CHECK_ERROR(hipMipmappedArrayGetLevel(&level_array, nullptr, 1), hipErrorInvalidResourceHandle);
+  }
 }

@@ -2,7 +2,38 @@
     "DisabledTests":
 	[
 		"Unit_hipStreamPerThread_DeviceReset_1",
-		"Unit_hipMallocManaged_OverSubscription"
+		"Unit_hipMallocManaged_OverSubscription",
+		"Unit_hipMallocMipmappedArray_DiffSizes",
+		"Unit_hipMallocMipmappedArray_MultiThread",
+		"Unit_hipMallocMipmappedArray_happy - char",
+		"Unit_hipMallocMipmappedArray_happy - uint2",
+		"Unit_hipMallocMipmappedArray_happy - int4",
+		"Unit_hipMallocMipmappedArray_happy - short4",
+		"Unit_hipMallocMipmappedArray_happy - float",
+		"Unit_hipMallocMipmappedArray_MaxTexture - int",
+		"Unit_hipMallocMipmappedArray_MaxTexture - uint4",
+		"Unit_hipMallocMipmappedArray_MaxTexture - ushort2",
+		"Unit_hipMallocMipmappedArray_MaxTexture - float",
+		"Unit_hipMallocMipmappedArray_Negative_NullArrayPtr",
+		"Unit_hipMallocMipmappedArray_Negative_NullDescPtr",
+		"Unit_hipMallocMipmappedArray_Negative_ZeroWidth",
+		"Unit_hipMallocMipmappedArray_Negative_ZeroHeight",
+		"Unit_hipMallocMipmappedArray_Negative_InvalidFlags",
+		"Unit_hipMallocMipmappedArray_Negative_InvalidFormat",
+		"Unit_hipMallocMipmappedArray_Negative_BadChannelLayout",
+		"Unit_hipMallocMipmappedArray_Negative_8BitFloat",
+		"Unit_hipMallocMipmappedArray_Negative_DifferentChannelSizes",
+		"Unit_hipMallocMipmappedArray_Negative_BadChannelSize",
+		"Unit_hipMallocMipmappedArray_Negative_NumericLimit",
+		"Unit_hipMallocMipmappedArray_Negative_Non2DTextureGather - char",
+		"Unit_hipMallocMipmappedArray_Negative_Non2DTextureGather - uchar2",
+		"Unit_hipMallocMipmappedArray_Negative_Non2DTextureGather - float2",
+		"Unit_hipGetMipmappedArrayLevel_Negative",
+		"Unit_hipFreeMipmappedArrayImplicitSyncArray - char",
+		"Unit_hipFreeMipmappedArrayImplicitSyncArray - float",
+		"Unit_hipFreeMipmappedArray_Negative_DoubleFree",
+		"Unit_hipFreeMipmappedArrayMultiTArray - char",
+		"Unit_hipFreeMipmappedArrayMultiTArray - int"
 	]
 
 }

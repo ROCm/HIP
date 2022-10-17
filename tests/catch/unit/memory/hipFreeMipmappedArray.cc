@@ -40,7 +40,7 @@ THE SOFTWARE.
  * hipErrorInvalidValue is returned.
  */
 
-TEMPLATE_TEST_CASE("Unit_hipFreeMipmappedArrayImplicitSyncArray", "", char, float, float2, float4) {
+TEMPLATE_TEST_CASE("Unit_hipFreeMipmappedArrayImplicitSyncArray", "", char, float) {
 
   hipMipmappedArray_t arrayPtr{};
   hipExtent extent{};
@@ -94,7 +94,7 @@ TEST_CASE("Unit_hipFreeMipmappedArray_Negative_DoubleFree") {
   HIP_CHECK_ERROR(hipFreeMipmappedArray(arrayPtr), hipErrorContextIsDestroyed);
 }
 
-TEMPLATE_TEST_CASE("Unit_hipFreeMipmappedArrayMultiTArray", "", char, int, float2, float4) {
+TEMPLATE_TEST_CASE("Unit_hipFreeMipmappedArrayMultiTArray", "", char, int) {
   constexpr size_t numAllocs = 10;
   std::vector<std::thread> threads;
   std::vector<hipMipmappedArray_t> ptrs(numAllocs);
