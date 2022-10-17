@@ -228,6 +228,21 @@ TEST_CASE("Unit_hipMallocPitch_Negative") {
   }
 }
 
+TEST_CASE("Unit_hipMallocPitch_Zero_Dims") {
+  void* ptr = nullptr;
+  size_t pitch = 0;
+
+  SECTION("width == 0") {
+    HIP_CHECK(hipMallocPitch(&ptr, &pitch, 0, 1));
+    REQUIRE(ptr == nullptr);
+  }
+
+  SECTION("height == 0") {
+    HIP_CHECK(hipMallocPitch(&ptr, &pitch, 1, 0));
+    REQUIRE(ptr == nullptr);
+  }
+}
+
 TEST_CASE("Unit_hipMemAllocPitch_Negative") {
   size_t pitch = 0;
   hipDeviceptr_t ptr{};
@@ -366,42 +381,7 @@ static void MemoryAllocDiffSizes(int gpu) {
 static void threadFunc(int gpu) {
   MemoryAllocDiffSizes<float>(gpu);
 }
-/*
- * This testcase verifies the negative scenarios of hipMallocPitch API
- */
-#if 0 //TODO: Review, fix and re-enable test
-TEST_CASE("Unit_hipMallocPitch_Negative") {
-  float* A_d;
-  size_t pitch_A = 0;
-  size_t width{NUM_W * sizeof(float)};
-#if HT_NVIDIA
-  SECTION("NullPtr to Pitched Ptr") {
-    REQUIRE(hipMallocPitch(nullptr,
-            &pitch_A, width, NUM_H) != hipSuccess);
-  }
 
-  SECTION("nullptr to pitch") {
-    REQUIRE(hipMallocPitch(reinterpret_cast<void**>(&A_d),
-                           nullptr, width, NUM_H) != hipSuccess);
-  }
-#endif
-  SECTION("Width 0 in hipMallocPitch") {
-    REQUIRE(hipMallocPitch(reinterpret_cast<void**>(&A_d),
-                           &pitch_A, 0, NUM_H) == hipSuccess);
-  }
-
-  SECTION("Height 0 in hipMallocPitch") {
-    REQUIRE(hipMallocPitch(reinterpret_cast<void**>(&A_d),
-                           &pitch_A, width, 0) == hipSuccess);
-  }
-
-  SECTION("Max int values") {
-    REQUIRE(hipMallocPitch(reinterpret_cast<void**>(&A_d),
-                           &pitch_A, std::numeric_limits<int>::max(),
-                           std::numeric_limits<int>::max()) != hipSuccess);
-  }
-}
-#endif
 /*
  * This testcase verifies the basic scenario of
  * hipMallocPitch API for different datatypes
@@ -414,6 +394,7 @@ TEMPLATE_TEST_CASE("Unit_hipMallocPitch_Basic",
   size_t width{NUM_W * sizeof(TestType)};
   REQUIRE(hipMallocPitch(reinterpret_cast<void**>(&A_d),
           &pitch_A, width, NUM_H) == hipSuccess);
+  REQUIRE(width <= pitch_A);
   HIP_CHECK(hipFree(A_d));
 }
 
