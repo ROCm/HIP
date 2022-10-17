@@ -93,7 +93,7 @@ TEST_CASE("Unit_hipMallocManaged_HostDeviceConcurrent") {
   std::thread host_thread(HostKernelDouble, Hmm, hPtr, N);
   KernelDouble<<<dim3(blocks), dim3(threadsPerBlock), 0, 0>>>(Hmm, dPtr, N);
   host_thread.join();
-  hipMemcpy(resPtr, dPtr, N * sizeof(float), hipMemcpyDeviceToHost);
+  HIP_CHECK(hipMemcpy(resPtr, dPtr, N * sizeof(float), hipMemcpyDeviceToHost));
 
   for (size_t i = 0; i < N; i++) {
     REQUIRE(hPtr[i] == resPtr[i]);
