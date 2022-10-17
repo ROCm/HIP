@@ -468,31 +468,34 @@ int main()
 
 ## CU_POINTER_ATTRIBUTE_MEMORY_TYPE
 
-To get pointer's memory type in HIP/HIP-Clang, developers should use hipPointerGetAttributes API. First parameter of the API is hipPointerAttribute_t which has 'memoryType' as member variable. 'memoryType' indicates input pointer is allocated on device or host.
+To get pointer's memory type in HIP/HIP-Clang, developers should use hipPointerGetAttributes API. First parameter of the API is hipPointerAttribute_t which has 'type' as member variable. 'type' indicates input pointer is allocated on device or host.
 
 For example:
 ```
 double * ptr;
 hipMalloc(reinterpret_cast<void**>(&ptr), sizeof(double));
 hipPointerAttribute_t attr;
-hipPointerGetAttributes(&attr, ptr); /*attr.memoryType will have value as hipMemoryTypeDevice*/
+hipPointerGetAttributes(&attr, ptr); /*attr.type will have value as hipMemoryTypeDevice*/
 
 double* ptrHost;
 hipHostMalloc(&ptrHost, sizeof(double));
 hipPointerAttribute_t attr;
-hipPointerGetAttributes(&attr, ptrHost); /*attr.memoryType will have value as hipMemoryTypeHost*/
+hipPointerGetAttributes(&attr, ptrHost); /*attr.type will have value as hipMemoryTypeHost*/
 ```
 Please note, hipMemoryType enum values are different from cudaMemoryType enum values.
 
-For example, on AMD platform, memoryType is defined in hip_runtime_api.h,
+For example, on AMD platform, hipMemoryType is defined in hip_runtime_api.h,
+```
 typedef enum hipMemoryType {
-    hipMemoryTypeHost,    ///< Memory is physically located on host
-    hipMemoryTypeDevice,  ///< Memory is physically located on device.
-    hipMemoryTypeArray,  ///< Array memory, physically located on device.
-    hipMemoryTypeUnified  ///< Not used currently
+    hipMemoryTypeHost = 0,    ///< Memory is physically located on host
+    hipMemoryTypeDevice = 1,  ///< Memory is physically located on device. (see deviceId for specific device)
+    hipMemoryTypeArray = 2,   ///< Array memory, physically located on device. (see deviceId for specific device)
+    hipMemoryTypeUnified = 3, ///< Not used currently
+    hipMemoryTypeManaged = 4  ///< Managed memory, automaticallly managed by the unified memory system
 } hipMemoryType;
-
-Looking into CUDA toolkit, it defines memoryType as following,
+```
+Looking into CUDA toolkit, it defines cudaMemoryType as following,
+```
 enum cudaMemoryType
 {
   cudaMemoryTypeUnregistered = 0, // Unregistered memory.
@@ -500,8 +503,8 @@ enum cudaMemoryType
   cudaMemoryTypeDevice = 2, // Device memory.
   cudaMemoryTypeManaged = 3, // Managed memory
 }
-
-In this case, memoryType translation for hipPointerGetAttributes needs to be handled properly on nvidia platform to get the correct memory type in CUDA, which is done in the file nvidia_hip_runtime_api.h.
+```
+In this case, memory type translation for hipPointerGetAttributes needs to be handled properly on nvidia platform to get the correct memory type in CUDA, which is done in the file nvidia_hip_runtime_api.h.
 
 So in any HIP applications which use HIP APIs involving memory types, developers should use #ifdef in order to assign the correct enum values depending on Nvidia or AMD platform.
 
