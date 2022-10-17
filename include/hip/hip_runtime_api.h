@@ -6392,7 +6392,7 @@ hipError_t hipGraphRetainUserObject(hipGraph_t graph, hipUserObject_t object, un
  * @warning : This API is marked as beta, meaning, while this is feature complete,
  * it is still open to changes and may have outstanding issues.
  */
-hipError_t hipGraphReleaseUserObject(hipGraph_t graph, hipUserObject_t object, unsigned int count);
+hipError_t hipGraphReleaseUserObject(hipGraph_t graph, hipUserObject_t object, unsigned int count __dparm(1));
 // doxygen end graph API
 /**
  * @}
