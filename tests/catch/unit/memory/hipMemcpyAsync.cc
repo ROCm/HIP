@@ -19,23 +19,24 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "linear_memcpy_tests_common.hh"
+#include "memcpy1d_tests_common.hh"
 
 #include <hip_test_common.hh>
 #include <hip/hip_runtime_api.h>
 #include <utils.hh>
 #include <resource_guards.hh>
 
-TEST_CASE("Unit_hipMemcpyAsync_Basic") {
+TEST_CASE("Unit_hipMemcpyAsync_Positive_Basic") {
   using namespace std::placeholders;
   const auto stream_type = GENERATE(Streams::nullstream, Streams::perThread, Streams::created);
   const StreamGuard stream_guard(stream_type);
   const hipStream_t stream = stream_guard.stream();
 
-  MemcpyWithDirectionCommonTests(std::bind(hipMemcpyAsync, _1, _2, _3, _4, stream), true);
+  MemcpyWithDirectionCommonTests<true>(std::bind(hipMemcpyAsync, _1, _2, _3, _4, stream));
 }
 
-TEST_CASE("Unit_hipMemcpyAsync_Synchronization_Behavior") {
+
+TEST_CASE("Unit_hipMemcpyAsync_Positive_Synchronization_Behavior") {
   using namespace std::placeholders;
   HIP_CHECK(hipDeviceSynchronize());
 
@@ -75,6 +76,10 @@ TEST_CASE("Unit_hipMemcpyAsync_Synchronization_Behavior") {
 
 TEST_CASE("Unit_hipMemcpyAsync_Negative_Parameters") {
   using namespace std::placeholders;
+  constexpr auto InvalidStream = [] {
+    StreamGuard sg(Streams::created);
+    return sg.stream();
+  };
 
   SECTION("Host to device") {
     LinearAllocGuard<int> device_alloc(LinearAllocs::hipMalloc, kPageSize);
@@ -90,10 +95,9 @@ TEST_CASE("Unit_hipMemcpyAsync_Negative_Parameters") {
     }
 
     SECTION("Invalid stream") {
-      hipStream_t stream;
       HIP_CHECK_ERROR(hipMemcpyAsync(device_alloc.ptr(), host_alloc.ptr(), kPageSize,
-                                     hipMemcpyHostToDevice, stream),
-                      hipErrorInvalidValue);
+                                     hipMemcpyHostToDevice, InvalidStream()),
+                      hipErrorContextIsDestroyed);
     }
   }
 
@@ -111,10 +115,9 @@ TEST_CASE("Unit_hipMemcpyAsync_Negative_Parameters") {
     }
 
     SECTION("Invalid stream") {
-      hipStream_t stream;
       HIP_CHECK_ERROR(hipMemcpyAsync(host_alloc.ptr(), device_alloc.ptr(), kPageSize,
-                                     hipMemcpyDeviceToHost, stream),
-                      hipErrorInvalidValue);
+                                     hipMemcpyDeviceToHost, InvalidStream()),
+                      hipErrorContextIsDestroyed);
     }
   }
 
@@ -132,10 +135,9 @@ TEST_CASE("Unit_hipMemcpyAsync_Negative_Parameters") {
     }
 
     SECTION("Invalid stream") {
-      hipStream_t stream;
-      HIP_CHECK_ERROR(
-          hipMemcpyAsync(dst_alloc.ptr(), src_alloc.ptr(), kPageSize, hipMemcpyHostToHost, stream),
-          hipErrorInvalidValue);
+      HIP_CHECK_ERROR(hipMemcpyAsync(dst_alloc.ptr(), src_alloc.ptr(), kPageSize,
+                                     hipMemcpyHostToHost, InvalidStream()),
+                      hipErrorContextIsDestroyed);
     }
   }
 
@@ -154,10 +156,9 @@ TEST_CASE("Unit_hipMemcpyAsync_Negative_Parameters") {
     }
 
     SECTION("Invalid stream") {
-      hipStream_t stream;
       HIP_CHECK_ERROR(hipMemcpyAsync(dst_alloc.ptr(), src_alloc.ptr(), kPageSize,
-                                     hipMemcpyDeviceToDevice, stream),
-                      hipErrorInvalidValue);
+                                     hipMemcpyDeviceToDevice, InvalidStream()),
+                      hipErrorContextIsDestroyed);
     }
   }
 }
