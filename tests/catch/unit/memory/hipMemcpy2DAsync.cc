@@ -160,7 +160,7 @@ TEMPLATE_TEST_CASE("Unit_hipMemcpy2DAsync_multiDevice-Host&PinnedMem", ""
   hipStream_t stream;
 
   if (numDevices > 1) {
-    hipDeviceCanAccessPeer(&canAccessPeer, 0, 1);
+    HIP_CHECK(hipDeviceCanAccessPeer(&canAccessPeer, 0, 1));
     if (canAccessPeer) {
       HIP_CHECK(hipSetDevice(0));
       HIP_CHECK(hipStreamCreate(&stream));
@@ -250,7 +250,7 @@ TEMPLATE_TEST_CASE("Unit_hipMemcpy2DAsync_multiDevice-StreamOnDiffDevice", ""
   hipStream_t stream;
 
   if (numDevices > 1) {
-    hipDeviceCanAccessPeer(&canAccessPeer, 0, 1);
+    HIP_CHECK(hipDeviceCanAccessPeer(&canAccessPeer, 0, 1));
     if (canAccessPeer) {
       HIP_CHECK(hipSetDevice(0));
 

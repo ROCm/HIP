@@ -260,21 +260,21 @@ TEST_CASE("Unit_hipMemset_2AsyncOperations") {
   std::vector<float> v;
   v.resize(2048);
   float* p2, *p3;
-  hipMalloc(reinterpret_cast<void**>(&p2), 4096 + 4096*2);
+  HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&p2), 4096 + 4096*2));
   p3 = p2+2048;
   hipStream_t s;
-  hipStreamCreate(&s);
-  hipMemsetAsync(p2, 0, 32*32*4, s);
-  hipMemsetD32Async((hipDeviceptr_t)p3, 0x3fe00000, 32*32, s);
-  hipStreamSynchronize(s);
+  HIP_CHECK(hipStreamCreate(&s));
+  HIP_CHECK(hipMemsetAsync(p2, 0, 32*32*4, s));
+  HIP_CHECK(hipMemsetD32Async((hipDeviceptr_t)p3, 0x3fe00000, 32*32, s));
+  HIP_CHECK(hipStreamSynchronize(s));
   for (int i = 0; i < 256; ++i) {
-    hipMemsetAsync(p2, 0, 32*32*4, s);
-    hipMemsetD32Async((hipDeviceptr_t)p3, 0x3fe00000, 32*32, s);
+    HIP_CHECK(hipMemsetAsync(p2, 0, 32*32*4, s));
+    HIP_CHECK(hipMemsetD32Async((hipDeviceptr_t)p3, 0x3fe00000, 32*32, s));
   }
-  hipStreamSynchronize(s);
-  hipDeviceSynchronize();
-  hipMemcpy(&v[0], p2, 1024, hipMemcpyDeviceToHost);
-  hipMemcpy(&v[1024], p3, 1024, hipMemcpyDeviceToHost);
+  HIP_CHECK(hipStreamSynchronize(s));
+  HIP_CHECK(hipDeviceSynchronize());
+  HIP_CHECK(hipMemcpy(&v[0], p2, 1024, hipMemcpyDeviceToHost));
+  HIP_CHECK(hipMemcpy(&v[1024], p3, 1024, hipMemcpyDeviceToHost));
 
   REQUIRE(v[0] == 0);
   REQUIRE(v[1024] == 1.75f);

@@ -112,7 +112,7 @@ TEMPLATE_TEST_CASE("Unit_hipMemcpyAsync_KernelLaunch", "", int, float,
   TestType *A_h{nullptr}, *B_h{nullptr}, *C_h{nullptr};
   HIP_CHECK(hipSetDevice(0));
   hipStream_t stream;
-  hipStreamCreate(&stream);
+  HIP_CHECK(hipStreamCreate(&stream));
 
   HipTest::initArrays(&A_d, &B_d, &C_d, &A_h, &B_h, &C_h, NUM_ELM, false);
 
@@ -147,7 +147,7 @@ TEMPLATE_TEST_CASE("Unit_hipMemcpyAsync_H2H-H2D-D2H-H2PinMem", "", char, int,
   TestType *A_Ph{nullptr}, *B_Ph{nullptr};
   HIP_CHECK(hipSetDevice(0));
   hipStream_t stream;
-  hipStreamCreate(&stream);
+  HIP_CHECK(hipStreamCreate(&stream));
   HipTest::initArrays<TestType>(&A_d, &B_d, nullptr,
                                 &A_h, &B_h, nullptr,
                                 NUM_ELM*sizeof(TestType));
@@ -373,10 +373,10 @@ TEMPLATE_TEST_CASE("Unit_hipMemcpyAsync_PinnedRegMemWithKernelLaunch",
       C_h[j] = 0;
     }
 
-    hipMemcpy(A_h, A_d, Nbytes, hipMemcpyDeviceToHost);
-    hipMemcpyAsync(X_d, A_h, Nbytes, hipMemcpyHostToDevice, gpu1Stream);
-    hipMemcpy(B_h, B_d, Nbytes, hipMemcpyDeviceToHost);
-    hipMemcpyAsync(Y_d, B_h, Nbytes, hipMemcpyHostToDevice, gpu1Stream);
+    HIP_CHECK(hipMemcpy(A_h, A_d, Nbytes, hipMemcpyDeviceToHost));
+    HIP_CHECK(hipMemcpyAsync(X_d, A_h, Nbytes, hipMemcpyHostToDevice, gpu1Stream));
+    HIP_CHECK(hipMemcpy(B_h, B_d, Nbytes, hipMemcpyDeviceToHost));
+    HIP_CHECK(hipMemcpyAsync(Y_d, B_h, Nbytes, hipMemcpyHostToDevice, gpu1Stream));
 
     hipLaunchKernelGGL(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock),
                        0, 0, static_cast<const TestType*>(X_d),

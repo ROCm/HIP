@@ -105,7 +105,7 @@ void memcpyTests<T>::Memcpy_And_verify(bool *ret_val) {
         for (int i = 0; i < Available_Gpus; ++i) {
           for (int j = i+1; j < Available_Gpus; ++j) {
             canAccessPeer = 0;
-            hipDeviceCanAccessPeer(&canAccessPeer, i, j);
+            HIPCHECK(hipDeviceCanAccessPeer(&canAccessPeer, i, j));
             if (canAccessPeer) {
               HIPCHECK(hipMemcpy(A_d[j], A_d[i], NUM_ELM * sizeof(T),
                     hipMemcpyDefault));
@@ -155,7 +155,7 @@ void memcpyTests<T>::Memcpy_And_verify(bool *ret_val) {
           int canAccessPeer = 0;
           for (int i = 0; i < Available_Gpus; ++i) {
             for (int j = i+1; j < Available_Gpus; ++j) {
-              hipDeviceCanAccessPeer(&canAccessPeer, i, j);
+              HIPCHECK(hipDeviceCanAccessPeer(&canAccessPeer, i, j));
               if (canAccessPeer) {
                 HIPCHECK(hipMemcpyHtoD(hipDeviceptr_t(A_d[i]),
                       A_h, NUM_ELM * sizeof(T)));
@@ -198,7 +198,7 @@ void memcpyTests<T>::Memcpy_And_verify(bool *ret_val) {
         for (int i = 0; i < Available_Gpus; ++i) {
           for (int j = i+1; j < Available_Gpus; ++j) {
             canAccessPeer = 0;
-            hipDeviceCanAccessPeer(&canAccessPeer, i, j);
+            HIPCHECK(hipDeviceCanAccessPeer(&canAccessPeer, i, j));
             if (canAccessPeer) {
               HIPCHECK(hipMemcpyAsync(A_d[j], A_d[i],
                     NUM_ELM * sizeof(T),
@@ -252,7 +252,7 @@ void memcpyTests<T>::Memcpy_And_verify(bool *ret_val) {
           for (int i = 0; i < Available_Gpus; ++i) {
             for (int j = i+1; j < Available_Gpus; ++j) {
               canAccessPeer = 0;
-              hipDeviceCanAccessPeer(&canAccessPeer, i, j);
+              HIPCHECK(hipDeviceCanAccessPeer(&canAccessPeer, i, j));
               if (canAccessPeer) {
                 HIPCHECK(hipSetDevice(j));
                 HIPCHECK(hipMemcpyDtoDAsync(hipDeviceptr_t(A_d[j]),

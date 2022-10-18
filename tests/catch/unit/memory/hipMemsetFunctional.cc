@@ -83,7 +83,7 @@ void checkMemset(T value, size_t count, MemsetType memsetType, bool async = fals
                  MemsetMallocType mallocType = hipDeviceMalloc_t, T* devPtr = nullptr) {
   hipStream_t stream{nullptr};
   if (async) {
-    hipStreamCreate(&stream);
+    HIP_CHECK(hipStreamCreate(&stream));
   }
 
   // Allocate Memory
@@ -254,7 +254,7 @@ template <typename T>
 void checkMemset2D(T value, size_t width, size_t height, bool async = false, size_t pitch = 0,
                    T* devPtr = nullptr) {
   hipStream_t stream{nullptr};
-  hipStreamCreate(&stream);
+  HIP_CHECK(hipStreamCreate(&stream));
   constexpr size_t elementSize = sizeof(T);
   bool freeDevPtr = false;
   if (devPtr == nullptr) {
@@ -277,7 +277,7 @@ void checkMemset2D(T value, size_t width, size_t height, bool async = false, siz
   if (freeDevPtr) {
     HIP_CHECK(hipFree(devPtr));
   }
-  hipStreamDestroy(stream);
+  HIP_CHECK(hipStreamDestroy(stream));
 }
 
 TEST_CASE("Unit_hipMemsetFunctional_ZeroValue_2D") {
@@ -430,7 +430,7 @@ void check_device_data_3D(hipPitchedPtr& devPitchedPtr, T value, hipExtent exten
 template <typename T>
 void checkMemset3D(hipPitchedPtr& devPitchedPtr, T value, hipExtent extent, bool async = false) {
   hipStream_t stream{nullptr};
-  hipStreamCreate(&stream);
+  HIP_CHECK(hipStreamCreate(&stream));
   if (devPitchedPtr.ptr == nullptr) {
     HIP_CHECK(hipMalloc3D(&devPitchedPtr, extent));
   }
@@ -445,7 +445,7 @@ void checkMemset3D(hipPitchedPtr& devPitchedPtr, T value, hipExtent extent, bool
   if (extent.width * extent.height * extent.depth > 0) {
     check_device_data_3D(devPitchedPtr, value, extent);
   }
-  hipStreamDestroy(stream);
+  HIP_CHECK(hipStreamDestroy(stream));
 }
 
 void check_memset_3D(std::string sectionStr, size_t width, size_t height, size_t depth,
