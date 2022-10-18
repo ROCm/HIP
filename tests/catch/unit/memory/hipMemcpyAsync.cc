@@ -35,7 +35,6 @@ TEST_CASE("Unit_hipMemcpyAsync_Basic") {
   MemcpyWithDirectionCommonTests(std::bind(hipMemcpyAsync, _1, _2, _3, _4, stream), true);
 }
 
-
 TEST_CASE("Unit_hipMemcpyAsync_Synchronization_Behavior") {
   using namespace std::placeholders;
   HIP_CHECK(hipDeviceSynchronize());
