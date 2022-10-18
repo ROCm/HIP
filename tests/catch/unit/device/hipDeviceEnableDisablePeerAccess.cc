@@ -71,7 +71,7 @@ TEST_CASE("Unit_hipDeviceEnablePeerAccess_negative") {
   }
   SECTION("Flag is invalid") {
     HIP_CHECK(hipSetDevice(0));
-    REQUIRE(hipDeviceEnablePeerAccess(0, -1) == hipErrorInvalidValue);
+    REQUIRE(hipDeviceEnablePeerAccess(0, 1) == hipErrorInvalidValue);
   }
   SECTION("Peer Access already enabled") {
     HIP_CHECK(hipSetDevice(0));
