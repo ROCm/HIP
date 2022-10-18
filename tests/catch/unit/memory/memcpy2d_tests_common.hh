@@ -21,6 +21,8 @@ THE SOFTWARE.
 
 #pragma once
 
+#include <variant>
+
 #include <hip_test_common.hh>
 #include <hip/hip_runtime_api.h>
 #include <utils.hh>
@@ -321,4 +323,212 @@ void Memcpy2DZeroWidthHeight(F memcpy_func, const hipStream_t stream = nullptr) 
     }
     ArrayFindIfNot(dst_alloc.ptr(), static_cast<uint8_t>(42), alloc_size);
   }
+}
+
+constexpr auto MemTypeHost() {
+#if HT_AMD
+  return hipMemoryTypeHost;
+#else
+  return CU_MEMORYTYPE_HOST;
+#endif
+}
+
+constexpr auto MemTypeDevice() {
+#if HT_AMD
+  return hipMemoryTypeDevice;
+#else
+  return CU_MEMORYTYPE_DEVICE;
+#endif
+}
+
+constexpr auto MemTypeArray() {
+#if HT_AMD
+  return hipMemoryTypeArray;
+#else
+  return CU_MEMORYTYPE_ARRAY;
+#endif
+}
+
+constexpr auto MemTypeUnified() {
+#if HT_AMD
+  return hipMemoryTypeUnified;
+#else
+  return CU_MEMORYTYPE_UNIFIED;
+#endif
+}
+
+using PtrVariant = std::variant<void*, hiparray>;
+
+template <bool async = false>
+constexpr auto MemcpyParam2DAdapter(const hipExtent src_offset = {0, 0, 0},
+                                    const hipExtent dst_offset = {0, 0, 0}) {
+  return [=](PtrVariant dst, size_t dpitch, PtrVariant src, size_t spitch, size_t width,
+             size_t height, hipMemcpyKind kind, hipStream_t stream = nullptr) {
+    hip_Memcpy2D parms = {0};
+
+    if (std::holds_alternative<hiparray>(dst)) {
+      parms.dstMemoryType = MemTypeArray();
+      parms.dstArray = std::get<hiparray>(dst);
+    } else {
+      parms.dstPitch = dpitch;
+      auto ptr = std::get<void*>(dst);
+      switch (kind) {
+        case hipMemcpyDeviceToHost:
+        case hipMemcpyHostToHost:
+          parms.dstMemoryType = MemTypeHost();
+          parms.dstHost = ptr;
+          break;
+        case hipMemcpyDeviceToDevice:
+        case hipMemcpyHostToDevice:
+          parms.dstMemoryType = MemTypeDevice();
+          parms.dstDevice = reinterpret_cast<hipDeviceptr_t>(ptr);
+          break;
+        case hipMemcpyDefault:
+          parms.dstMemoryType = MemTypeUnified();
+          parms.dstDevice = reinterpret_cast<hipDeviceptr_t>(ptr);
+          break;
+        default:
+          assert(false);
+      }
+    }
+
+    if (std::holds_alternative<hiparray>(src)) {
+      parms.srcMemoryType = MemTypeArray();
+      parms.srcArray = std::get<hiparray>(src);
+    } else {
+      parms.srcPitch = spitch;
+      auto ptr = std::get<void*>(src);
+      switch (kind) {
+        case hipMemcpyDeviceToHost:
+        case hipMemcpyDeviceToDevice:
+          parms.srcMemoryType = MemTypeDevice();
+          parms.srcDevice = reinterpret_cast<hipDeviceptr_t>(ptr);
+          break;
+        case hipMemcpyHostToDevice:
+        case hipMemcpyHostToHost:
+          parms.srcMemoryType = MemTypeHost();
+          parms.srcHost = ptr;
+          break;
+        case hipMemcpyDefault:
+          parms.srcMemoryType = MemTypeUnified();
+          parms.srcDevice = reinterpret_cast<hipDeviceptr_t>(ptr);
+          break;
+        default:
+          assert(false);
+      }
+    }
+
+    parms.WidthInBytes = width;
+    parms.Height = height;
+    parms.srcXInBytes = src_offset.width;
+    parms.srcY = src_offset.height;
+    parms.dstXInBytes = dst_offset.width;
+    parms.dstY = dst_offset.height;
+
+    if constexpr (async) {
+      return hipMemcpyParam2DAsync(&parms, stream);
+    } else {
+      return hipMemcpyParam2D(&parms);
+    }
+  };
+}
+
+template <bool should_synchronize, typename F>
+void MemcpyParam2DArrayHostShell(F memcpy_func, const hipStream_t kernel_stream = nullptr) {
+  constexpr hipExtent extent{127 * sizeof(int), 128, 1};
+
+  LinearAllocGuard<int> src_host(LinearAllocs::hipHostMalloc,
+                                 extent.width * extent.height * extent.depth);
+  LinearAllocGuard<int> dst_host(LinearAllocs::hipHostMalloc,
+                                 extent.width * extent.height * extent.depth);
+
+  DrvArrayAllocGuard<int> src_array(extent);
+  DrvArrayAllocGuard<int> dst_array(extent);
+
+  const auto f = [extent](size_t x, size_t y, size_t z) {
+    constexpr auto width_logical = extent.width / sizeof(int);
+    return z * width_logical * extent.height + y * width_logical + x;
+  };
+  PitchedMemorySet(src_host.ptr(), extent.width, extent.width / sizeof(int), extent.height,
+                   extent.depth, f);
+
+  // Host -> Array
+  HIP_CHECK(memcpy_func(src_array.ptr(), 0, src_host.ptr(), extent.width, extent.width,
+                        extent.height, hipMemcpyHostToDevice, kernel_stream));
+  if constexpr (should_synchronize) {
+    HIP_CHECK(hipStreamSynchronize(kernel_stream));
+  }
+
+  // Array -> Array
+  HIP_CHECK(memcpy_func(dst_array.ptr(), 0, src_array.ptr(), 0, extent.width, extent.height,
+                        hipMemcpyDeviceToDevice, kernel_stream));
+  if constexpr (should_synchronize) {
+    HIP_CHECK(hipStreamSynchronize(kernel_stream));
+  }
+
+  // Array -> Host
+  HIP_CHECK(memcpy_func(dst_host.ptr(), extent.width, dst_array.ptr(), 0, extent.width,
+                        extent.height, hipMemcpyDeviceToHost, kernel_stream));
+  if constexpr (should_synchronize) {
+    HIP_CHECK(hipStreamSynchronize(kernel_stream));
+  }
+
+  PitchedMemoryVerify(dst_host.ptr(), extent.width, extent.width / sizeof(int), extent.height,
+                      extent.depth, f);
+}
+
+template <bool should_synchronize, typename F>
+void MemcpyParam2DArrayDeviceShell(F memcpy_func, const hipStream_t kernel_stream = nullptr) {
+  constexpr hipExtent extent{127 * sizeof(int), 128, 1};
+
+  LinearAllocGuard<int> host_alloc(LinearAllocs::hipHostMalloc,
+                                   extent.width * extent.height * extent.depth);
+
+  DrvArrayAllocGuard<int> src_array(extent);
+  DrvArrayAllocGuard<int> dst_array(extent);
+
+  LinearAllocGuard3D<int> src_device(extent);
+  LinearAllocGuard3D<int> dst_device(extent);
+
+  const dim3 threads_per_block(32, 32);
+  const dim3 blocks(src_device.width_logical() / threads_per_block.x + 1,
+                    src_device.height() / threads_per_block.y + 1, src_device.depth());
+  Iota<<<blocks, threads_per_block>>>(src_device.ptr(), src_device.pitch(),
+                                      src_device.width_logical(), src_device.height(),
+                                      src_device.depth());
+  HIP_CHECK(hipGetLastError());
+
+  // Device -> Array
+  HIP_CHECK(memcpy_func(src_array.ptr(), 0, src_device.ptr(), src_device.pitch(), extent.width,
+                        extent.height, hipMemcpyDeviceToDevice, kernel_stream));
+  if constexpr (should_synchronize) {
+    HIP_CHECK(hipStreamSynchronize(kernel_stream));
+  }
+
+  // Array -> Array
+  HIP_CHECK(memcpy_func(dst_array.ptr(), 0, src_array.ptr(), 0, extent.width, extent.height,
+                        hipMemcpyDeviceToDevice, kernel_stream));
+  if constexpr (should_synchronize) {
+    HIP_CHECK(hipStreamSynchronize(kernel_stream));
+  }
+
+  // Array -> Device
+  HIP_CHECK(memcpy_func(dst_device.ptr(), dst_device.pitch(), dst_array.ptr(), 0, extent.width,
+                        extent.height, hipMemcpyDeviceToDevice, kernel_stream));
+  if constexpr (should_synchronize) {
+    HIP_CHECK(hipStreamSynchronize(kernel_stream));
+  }
+
+  HIP_CHECK(memcpy_func(host_alloc.ptr(), extent.width, dst_device.ptr(), dst_device.pitch(),
+                        extent.width, extent.height, hipMemcpyDeviceToHost, kernel_stream));
+  if constexpr (should_synchronize) {
+    HIP_CHECK(hipStreamSynchronize(kernel_stream));
+  }
+
+  const auto f = [extent](size_t x, size_t y, size_t z) {
+    constexpr auto width_logical = extent.width / sizeof(int);
+    return z * width_logical * extent.height + y * width_logical + x;
+  };
+  PitchedMemoryVerify(host_alloc.ptr(), extent.width, extent.width / sizeof(int), extent.height,
+                      extent.depth, f);
 }

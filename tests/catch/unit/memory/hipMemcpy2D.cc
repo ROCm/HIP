@@ -46,10 +46,9 @@ TEST_CASE("Unit_hipMemcpy2D_Positive_Synchronization_Behavior") {
 
   SECTION("Host to Device") { Memcpy2DHtoDSyncBehavior(hipMemcpy2D, true); }
 
-  SECTION("Device to Host") {
-    Memcpy2DDtoHPageableSyncBehavior(hipMemcpy2D, true);
-    Memcpy2DDtoHPinnedSyncBehavior(hipMemcpy2D, true);
-  }
+  SECTION("Device to Pageable Host") { Memcpy2DDtoHPageableSyncBehavior(hipMemcpy2D, true); }
+
+  SECTION("Device to Pinned Host") { Memcpy2DDtoHPinnedSyncBehavior(hipMemcpy2D, true); }
 
   SECTION("Device to Device") { Memcpy2DDtoDSyncBehavior(hipMemcpy2D, false); }
 

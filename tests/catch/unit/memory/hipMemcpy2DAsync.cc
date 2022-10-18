@@ -76,6 +76,7 @@ TEST_CASE("Unit_hipMemcpy2DAsync_Positive_Synchronization_Behavior") {
     Memcpy2DDtoHPageableSyncBehavior(
         std::bind(hipMemcpy2DAsync, _1, _2, _3, _4, _5, _6, _7, nullptr), true);
   }
+
   SECTION("Device to Pinned Host") {
     Memcpy2DDtoHPinnedSyncBehavior(std::bind(hipMemcpy2DAsync, _1, _2, _3, _4, _5, _6, _7, nullptr),
                                    false);

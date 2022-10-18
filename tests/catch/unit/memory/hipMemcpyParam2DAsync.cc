@@ -6,485 +6,200 @@ in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
+
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANNTY OF ANY KIND, EXPRESS OR
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER INN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR INN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-/*
-This testfile verifies the following scenarios of hipMemcpyParam2DAsync API
-1. Negative Scenarios
-2. Extent Validation Scenarios
-3. D2D copy for different datatypes
-4. H2D and D2H copy for different datatypes
-5. Device context change scenario where memory allocated in one GPU
-   stream created in another GPU
-*/
+#include "memcpy2d_tests_common.hh"
 
 #include <hip_test_common.hh>
-#include <hip_test_checkers.hh>
+#include <hip/hip_runtime_api.h>
+#include <resource_guards.hh>
+#include <utils.hh>
 
-static constexpr size_t NUM_W{10};
-static constexpr size_t NUM_H{10};
-/*
- * This testcase verifies D2D functionality of hipMemcpyParam2DAsync API
- * Where Memory is allocated in GPU-0 and stream is created in GPU-1
- *
- * Input: Intializing "A_d" device variable with "C_h" host variable
- * Output: "A_d" device variable to "E_d" device variable
- *
- * Validating the result by copying "E_d" to "A_h" and checking
- * it with the initalized data "C_h".
- *
- */
-TEMPLATE_TEST_CASE("Unit_hipMemcpyParam2DAsync_multiDevice-StreamOnDiffDevice",
-                   "[hipMemcpyParam2DAsync]", char, float, int,
-                   double, long double) {
-  int numDevices = 0;
-  HIP_CHECK(hipGetDeviceCount(&numDevices));
-  if (numDevices > 1) {
-    // Allocating and Initializing the data
-    HIP_CHECK(hipSetDevice(0));
-    TestType* A_h{nullptr}, *C_h{nullptr}, *A_d{nullptr};
-    size_t pitch_A;
-    size_t width{NUM_W * sizeof(TestType)};
-    HIP_CHECK(hipMallocPitch(reinterpret_cast<void**>(&A_d),
-                            &pitch_A, width, NUM_H));
-    HipTest::initArrays<TestType>(nullptr, nullptr, nullptr,
-                                  &A_h, nullptr, &C_h,
-                                  width*NUM_H, false);
-    HipTest::setDefaultData<TestType>(NUM_W*NUM_H, A_h, nullptr, C_h);
-    int peerAccess = 0;
-    HIP_CHECK(hipDeviceCanAccessPeer(&peerAccess, 1, 0));
-    if (!peerAccess) {
-      SUCCEED("Skipped the test as there is no peer access");
-    } else {
-      TestType *E_d{nullptr};
-      size_t pitch_E;
-      HIP_CHECK(hipMallocPitch(reinterpret_cast<void**>(&E_d),
-                              &pitch_E, width, NUM_H));
+TEST_CASE("Unit_hipMemcpyParam2DAsync_Positive_Basic") {
+  using namespace std::placeholders;
 
-      // Initalizing A_d with C_h
-      HIP_CHECK(hipSetDevice(1));
-      hipStream_t stream;
-      HIP_CHECK(hipStreamCreate(&stream));
+  constexpr bool async = true;
 
-      HIP_CHECK(hipMemcpy2DAsync(A_d, pitch_A, C_h, width,
-                           NUM_W*sizeof(TestType), NUM_H,
-                           hipMemcpyHostToDevice, stream));
-      HIP_CHECK(hipStreamSynchronize(stream));
-      // Device to Device
-      hip_Memcpy2D desc = {};
-#ifdef __HIP_PLATFORM_NVCC__
-      desc.srcMemoryType = CU_MEMORYTYPE_DEVICE;
-#else
-      desc.srcMemoryType = hipMemoryTypeDevice;
-#endif
-      desc.srcHost = A_d;
-      desc.srcDevice = hipDeviceptr_t(A_d);
-      desc.srcPitch = pitch_A;
-#ifdef __HIP_PLATFORM_NVCC__
-      desc.dstMemoryType = CU_MEMORYTYPE_DEVICE;
-#else
-      desc.dstMemoryType = hipMemoryTypeDevice;
-#endif
-      desc.dstHost = E_d;
-      desc.dstDevice = hipDeviceptr_t(E_d);
-      desc.dstPitch = pitch_E;
-      desc.WidthInBytes = NUM_W*sizeof(TestType);
-      desc.Height = NUM_H;
-      REQUIRE(hipMemcpyParam2DAsync(&desc, stream) == hipSuccess);
-      HIP_CHECK(hipStreamSynchronize(stream));
+  const auto stream_type = GENERATE(Streams::nullstream, Streams::perThread, Streams::created);
+  const StreamGuard stream_guard(stream_type);
+  const hipStream_t stream = stream_guard.stream();
 
-      // Copying the result E_d to A_h host variable
-      HIP_CHECK(hipMemcpy2D(A_h, width, E_d, pitch_E,
-            NUM_W*sizeof(TestType), NUM_H,
-            hipMemcpyDeviceToHost));
-      HIP_CHECK(hipDeviceSynchronize());
-      // Validating the result
-      REQUIRE(HipTest::checkArray<TestType>(A_h, C_h, NUM_W, NUM_H) == true);
-
-      // DeAllocating the memory
-      HIP_CHECK(hipFree(E_d));
-      HIP_CHECK(hipFree(A_d));
-      HIP_CHECK(hipStreamDestroy(stream));
-      HipTest::freeArrays<TestType>(nullptr, nullptr, nullptr,
-          A_h, nullptr, C_h, false);
+  SECTION("Device to Host") {
+    Memcpy2DDeviceToHostShell<async>(
+        std::bind(MemcpyParam2DAdapter<async>(), _1, _2, _3, _4, _5, _6, _7, stream), stream);
+  }
+  SECTION("Device to Device") {
+    SECTION("Peer access disabled") {
+      Memcpy2DDeviceToDeviceShell<async, false>(
+          std::bind(MemcpyParam2DAdapter<async>(), _1, _2, _3, _4, _5, _6, _7, stream), stream);
     }
-  } else {
-    SUCCEED("skipping the testcases as numDevices < 2");
+    SECTION("Peer access enabled") {
+      Memcpy2DDeviceToDeviceShell<async, true>(
+          std::bind(MemcpyParam2DAdapter<async>(), _1, _2, _3, _4, _5, _6, _7, stream), stream);
+    }
+  }
+  SECTION("Host to Device") {
+    Memcpy2DHostToDeviceShell<async>(
+        std::bind(MemcpyParam2DAdapter<async>(), _1, _2, _3, _4, _5, _6, _7, stream), stream);
+  }
+  SECTION("Host to Host") {
+    Memcpy2DHostToHostShell<async>(
+        std::bind(MemcpyParam2DAdapter<async>(), _1, _2, _3, _4, _5, _6, _7, stream), stream);
   }
 }
 
-/*
- * This testcase verifies D2D functionality of hipMemcpyParam2DAsync API
- * Input: Intializing "A_d" device variable with "C_h" host variable
- * Output: "A_d" device variable to "E_d" device variable
- *
- * Validating the result by copying "E_d" to "A_h" and checking
- * it with the initalized data "C_h".
- *
- */
-TEMPLATE_TEST_CASE("Unit_hipMemcpyParam2DAsync_multiDevice-D2D",
-                   "[hipMemcpyParam2DAsync]", char,
-                   int, float, double, long double) {
-  int numDevices = 0;
-  HIP_CHECK(hipGetDeviceCount(&numDevices));
-  if (numDevices > 1) {
-    // Allocating and Initializing the data
-    HIP_CHECK(hipSetDevice(0));
-    TestType* A_h{nullptr}, *C_h{nullptr}, *A_d{nullptr};
-    size_t pitch_A;
-    size_t width{NUM_W * sizeof(TestType)};
-    hipStream_t stream;
-    HIP_CHECK(hipStreamCreate(&stream));
-    HIP_CHECK(hipMallocPitch(reinterpret_cast<void**>(&A_d),
-                            &pitch_A, width, NUM_H));
-    HipTest::initArrays<TestType>(nullptr, nullptr, nullptr,
-                                  &A_h, nullptr, &C_h,
-                                  width*NUM_H, false);
-    HipTest::setDefaultData<TestType>(NUM_W*NUM_H, A_h, nullptr, C_h);
+TEST_CASE("Unit_hipMemcpyParam2DAsync_Positive_Synchronization_Behavior") {
+  using namespace std::placeholders;
 
-    int peerAccess = 0;
-    HIP_CHECK(hipDeviceCanAccessPeer(&peerAccess, 1, 0));
-    if (!peerAccess) {
-      SUCCEED("Skipped the test as there is no peer access");
-    } else {
-      HIP_CHECK(hipSetDevice(1));
-      TestType *E_d;
-      size_t pitch_E;
-      HIP_CHECK(hipMallocPitch(reinterpret_cast<void**>(&E_d),
-            &pitch_E, width, NUM_H));
+  constexpr bool async = true;
 
-      // Initializing A_d  with C_h
-      HIP_CHECK(hipMemcpy2D(A_d, pitch_A, C_h, width,
-            NUM_W*sizeof(TestType), NUM_H, hipMemcpyHostToDevice));
+  HIP_CHECK(hipDeviceSynchronize());
 
-      // Device to Device
-      hip_Memcpy2D desc = {};
-#ifdef __HIP_PLATFORM_NVCC__
-      desc.srcMemoryType = CU_MEMORYTYPE_DEVICE;
-#else
-      desc.srcMemoryType = hipMemoryTypeDevice;
-#endif
-      desc.srcHost = A_d;
-      desc.srcDevice = hipDeviceptr_t(A_d);
-      desc.srcPitch = pitch_A;
-#ifdef __HIP_PLATFORM_NVCC__
-      desc.dstMemoryType = CU_MEMORYTYPE_DEVICE;
-#else
-      desc.dstMemoryType = hipMemoryTypeDevice;
-#endif
-      desc.dstHost = E_d;
-      desc.dstDevice = hipDeviceptr_t(E_d);
-      desc.dstPitch = pitch_E;
-      desc.WidthInBytes = NUM_W*sizeof(TestType);
-      desc.Height = NUM_H;
-      REQUIRE(hipMemcpyParam2DAsync(&desc, stream) == hipSuccess);
-      HIP_CHECK(hipStreamSynchronize(stream));
-
-      // Copying the result E_d to A_h host variable
-      HIP_CHECK(hipMemcpy2D(A_h, width, E_d, pitch_E,
-            NUM_W*sizeof(TestType), NUM_H, hipMemcpyDeviceToHost));
-
-      // Validating the result
-      REQUIRE(HipTest::checkArray<TestType>(A_h, C_h, NUM_W, NUM_H) == true);
-
-      // DeAllocating the memory
-      HIP_CHECK(hipFree(A_d));
-      HIP_CHECK(hipStreamDestroy(stream));
-      HipTest::freeArrays<TestType>(nullptr, nullptr, nullptr,
-          A_h, nullptr, C_h, false);
-    }
-  } else {
-    SUCCEED("skipping the testcases as numDevices < 2");
+  SECTION("Host to Device") {
+    Memcpy2DHtoDSyncBehavior(
+        std::bind(MemcpyParam2DAdapter<async>(), _1, _2, _3, _4, _5, _6, _7, nullptr), false);
+  }
+  SECTION("Device to Pageable Host") {
+    Memcpy2DDtoHPageableSyncBehavior(
+        std::bind(MemcpyParam2DAdapter<async>(), _1, _2, _3, _4, _5, _6, _7, nullptr), true);
+  }
+  SECTION("Device to Pinned Host") {
+    Memcpy2DDtoHPinnedSyncBehavior(
+        std::bind(MemcpyParam2DAdapter<async>(), _1, _2, _3, _4, _5, _6, _7, nullptr), false);
+  }
+  SECTION("Device to Device") {
+    Memcpy2DDtoDSyncBehavior(
+        std::bind(MemcpyParam2DAdapter<async>(), _1, _2, _3, _4, _5, _6, _7, nullptr), false);
+  }
+  SECTION("Host to Host") {
+    Memcpy2DHtoHSyncBehavior(
+        std::bind(MemcpyParam2DAdapter<async>(), _1, _2, _3, _4, _5, _6, _7, nullptr), true);
   }
 }
 
-/*
- * This testcase verifies H2D & D2H functionality of hipMemcpyParam2DAsync API
- * H2D case:
- * Input: "C_h" host variable initialized with default data
- * Output: "A_d" device variable
- *
- * D2H case:
- * Input: "A_d" device variable from the previous output
- * OutPut: "A_h" variable
- *
- * Validating the result by comparing "A_h" to "C_h"
- */
-TEMPLATE_TEST_CASE("Unit_hipMemcpyParam2DAsync_multiDevice-H2D-D2H",
-                   "[hipMemcpyParam2DAsync]", char,
-                   int, float, double, long double) {
-  // 1 refers to pinned host memory and 0 refers
-  // to unpinned memory
-  auto memory_type = GENERATE(0, 1);
-  int numDevices = 0;
-  HIP_CHECK(hipGetDeviceCount(&numDevices));
-  if (numDevices > 1) {
-    // Allocating and Initializing the data
-    HIP_CHECK(hipSetDevice(0));
-    TestType* A_h{nullptr}, *C_h{nullptr},
-      *A_d{nullptr};
-    size_t pitch_A;
-    size_t width{NUM_W * sizeof(TestType)};
-    hipStream_t stream;
-
-    HIP_CHECK(hipMallocPitch(reinterpret_cast<void**>(&A_d),
-                            &pitch_A, width, NUM_H));
-
-    // Based on memory type (pinned/unpinned) allocating memory
-    if (memory_type) {
-      HipTest::initArrays<TestType>(nullptr, nullptr, nullptr,
-                                    &A_h, nullptr, &C_h,
-                                    width*NUM_H, true);
-    } else {
-      HipTest::initArrays<TestType>(nullptr, nullptr, nullptr,
-                                    &A_h, nullptr, &C_h,
-                                    width*NUM_H, false);
-    }
-    HipTest::setDefaultData<TestType>(NUM_W*NUM_H, A_h, nullptr, C_h);
-    int peerAccess = 0;
-    HIP_CHECK(hipDeviceCanAccessPeer(&peerAccess, 1, 0));
-    if (!peerAccess) {
-      SUCCEED("Skipped the test as there is no peer access");
-    } else {
-      // Host to Device
-      hip_Memcpy2D desc = {};
-      HIP_CHECK(hipStreamCreate(&stream));
-#ifdef __HIP_PLATFORM_NVCC__
-      desc.srcMemoryType = CU_MEMORYTYPE_HOST;
-#else
-      desc.srcMemoryType = hipMemoryTypeHost;
-#endif
-      desc.srcHost = C_h;
-      desc.srcDevice = hipDeviceptr_t(C_h);
-      desc.srcPitch = width;
-#ifdef __HIP_PLATFORM_NVCC__
-      desc.dstMemoryType = CU_MEMORYTYPE_DEVICE;
-#else
-      desc.dstMemoryType = hipMemoryTypeDevice;
-#endif
-      desc.dstHost = A_d;
-      desc.dstDevice = hipDeviceptr_t(A_d);
-      desc.dstPitch = pitch_A;
-      desc.WidthInBytes = NUM_W*sizeof(TestType);
-      desc.Height = NUM_H;
-      REQUIRE(hipMemcpyParam2DAsync(&desc, stream) == hipSuccess);
-      HIP_CHECK(hipStreamSynchronize(stream));
-
-      // Device to Host
-      memset(&desc, 0x0, sizeof(hip_Memcpy2D));
-#ifdef __HIP_PLATFORM_NVCC__
-      desc.srcMemoryType = CU_MEMORYTYPE_DEVICE;
-#else
-      desc.srcMemoryType = hipMemoryTypeDevice;
-#endif
-      desc.srcHost = A_d;
-      desc.srcDevice = hipDeviceptr_t(A_d);
-      desc.srcPitch = pitch_A;
-#ifdef __HIP_PLATFORM_NVCC__
-      desc.dstMemoryType = CU_MEMORYTYPE_HOST;
-#else
-      desc.dstMemoryType = hipMemoryTypeHost;
-#endif
-      desc.dstHost = A_h;
-      desc.dstDevice = hipDeviceptr_t(A_h);
-      desc.dstPitch = width;
-      desc.WidthInBytes = NUM_W*sizeof(TestType);
-      desc.Height = NUM_H;
-      REQUIRE(hipMemcpyParam2DAsync(&desc, stream) == hipSuccess);
-      HIP_CHECK(hipStreamSynchronize(stream));
-
-      // Validating the result
-      REQUIRE(HipTest::checkArray<TestType>(A_h, C_h, NUM_W, NUM_H) == true);
-
-      // DeAllocating the memory
-      HIP_CHECK(hipFree(A_d));
-      HIP_CHECK(hipStreamDestroy(stream));
-      if (memory_type) {
-        HipTest::freeArrays<TestType>(nullptr, nullptr, nullptr,
-                                      A_h, nullptr, C_h, true);
-      } else {
-        HipTest::freeArrays<TestType>(nullptr, nullptr, nullptr,
-                                      A_h, nullptr, C_h, false);
-      }
-    }
-  } else {
-      SUCCEED("skipping the testcases as numDevices < 2");
-  }
-}
-/*
- * This testcase verifies the extent validation scenarios
- */
-TEST_CASE("Unit_hipMemcpyParam2DAsync_ExtentValidation") {
-  HIP_CHECK(hipSetDevice(0));
-  char* A_h{nullptr}, *B_h{nullptr}, *C_h{nullptr},
-      * A_d{nullptr};
-  size_t pitch_A;
-  size_t width{NUM_W * sizeof(char)};
-  constexpr auto memsetval{100};
-  hipStream_t stream;
-  HIP_CHECK(hipStreamCreate(&stream));
-
-  // Allocating and Initializing the data
-  HIP_CHECK(hipMallocPitch(reinterpret_cast<void**>(&A_d),
-                          &pitch_A, width, NUM_H));
-  HipTest::initArrays<char>(nullptr, nullptr, nullptr,
-                            &A_h, nullptr, &C_h,
-                            width*NUM_H, false);
-  HipTest::initArrays<char>(nullptr, nullptr, nullptr,
-                            &B_h, nullptr, nullptr,
-                            width*NUM_H, false);
-  HipTest::setDefaultData<char>(NUM_W*NUM_H, A_h, nullptr, C_h);
-  HipTest::setDefaultData<char>(NUM_W*NUM_H, B_h, nullptr, nullptr);
-  HIP_CHECK(hipMemset2D(A_d, pitch_A, memsetval, NUM_W, NUM_H));
-
-  // Device to Host
-  hip_Memcpy2D desc = {};
-#ifdef __HIP_PLATFORM_NVCC__
-  desc.srcMemoryType = CU_MEMORYTYPE_DEVICE;
-#else
-  desc.srcMemoryType = hipMemoryTypeDevice;
-#endif
-  desc.srcHost = A_d;
-  desc.srcDevice = hipDeviceptr_t(A_d);
-  desc.srcPitch = pitch_A;
-#ifdef __HIP_PLATFORM_NVCC__
-  desc.dstMemoryType = CU_MEMORYTYPE_HOST;
-#else
-  desc.dstMemoryType = hipMemoryTypeHost;
-#endif
-  desc.dstHost = A_h;
-  desc.dstDevice = hipDeviceptr_t(A_h);
-  desc.dstPitch = width;
-  desc.WidthInBytes = NUM_W;
-  desc.Height = NUM_H;
-
-  SECTION("Destination Pitch is 0") {
-    desc.dstPitch = 0;
-    REQUIRE(hipMemcpyParam2DAsync(&desc, stream) == hipSuccess);
-  }
-
-  SECTION("Source Pitch is 0") {
-    desc.srcPitch = 0;
-    REQUIRE(hipMemcpyParam2DAsync(&desc, stream) == hipSuccess);
-  }
-
-  SECTION("Height is 0") {
-    desc.Height = 0;
-    REQUIRE(hipMemcpyParam2DAsync(&desc, stream) == hipSuccess);
-    HIP_CHECK(hipStreamSynchronize(stream));
-    REQUIRE(HipTest::checkArray<char>(A_h, B_h, NUM_W, NUM_H) == true);
-  }
-
-  SECTION("Width is 0") {
-    desc.Height = 0;
-    REQUIRE(hipMemcpyParam2DAsync(&desc, stream) == hipSuccess);
-    HIP_CHECK(hipStreamSynchronize(stream));
-    REQUIRE(HipTest::checkArray<char>(A_h, B_h, NUM_W, NUM_H) == true);
-  }
-
-  // DeAllocating the Memory
-  HIP_CHECK(hipFree(A_d));
-  HIP_CHECK(hipStreamDestroy(stream));
-  HipTest::freeArrays<char>(nullptr, nullptr, nullptr,
-                                A_h, B_h, C_h, false);
+TEST_CASE("Unit_hipMemcpyParam2DAsync_Positive_Parameters") {
+  constexpr bool async = true;
+  Memcpy2DZeroWidthHeight<async>(MemcpyParam2DAdapter<async>());
 }
 
-/*
- * This testcase verifies the negative scenarios
- */
-TEST_CASE("Unit_hipMemcpyParam2DAsync_Negative") {
-  HIP_CHECK(hipSetDevice(0));
-  float* A_h{nullptr}, *B_h{nullptr}, *C_h{nullptr},
-       * A_d{nullptr};
-  size_t pitch_A;
-  size_t width{NUM_W * sizeof(float)};
-  constexpr auto memsetval{100};
-  hipStream_t stream;
-  HIP_CHECK(hipStreamCreate(&stream));
+TEST_CASE("Unit_hipMemcpyParam2DAsync_Positive_Array") {
+  constexpr bool async = true;
+  SECTION("Array from/to Host") {
+    MemcpyParam2DArrayHostShell<async>(MemcpyParam2DAdapter<async>());
+  }
+  SECTION("Array from/to Device") {
+    MemcpyParam2DArrayDeviceShell<async>(MemcpyParam2DAdapter<async>());
+  }
+}
 
-  // Allocating and Initializing the data
-  HIP_CHECK(hipMallocPitch(reinterpret_cast<void**>(&A_d),
-                          &pitch_A, width, NUM_H));
-  HipTest::initArrays<float>(nullptr, nullptr, nullptr,
-                                &A_h, &B_h, &C_h,
-                                width*NUM_H, false);
-  HipTest::setDefaultData<float>(NUM_W*NUM_H, A_h, B_h, C_h);
-  HIP_CHECK(hipMemset2D(A_d, pitch_A, memsetval, NUM_W, NUM_H));
+TEST_CASE("Unit_hipMemcpyParam2DAsync_Negative_Parameters") {
+  constexpr bool async = true;
 
-  // Device to Host
-  hip_Memcpy2D desc = {};
-#ifdef __HIP_PLATFORM_NVCC__
-  desc.srcMemoryType = CU_MEMORYTYPE_DEVICE;
-#else
-  desc.srcMemoryType = hipMemoryTypeDevice;
-#endif
-  desc.srcHost = A_d;
-  desc.srcDevice = hipDeviceptr_t(A_d);
-  desc.srcPitch = pitch_A;
-#ifdef __HIP_PLATFORM_NVCC__
-  desc.dstMemoryType = CU_MEMORYTYPE_HOST;
-#else
-  desc.dstMemoryType = hipMemoryTypeHost;
-#endif
-  desc.dstHost = A_h;
-  desc.dstDevice = hipDeviceptr_t(A_h);
-  desc.dstPitch = width;
-  desc.WidthInBytes = NUM_W;
-  desc.Height = NUM_H;
+  constexpr size_t cols = 128;
+  constexpr size_t rows = 128;
 
-  SECTION("Null Pointer to Source Device Pointer") {
-    desc.srcDevice = hipDeviceptr_t(nullptr);
-    REQUIRE(hipMemcpyParam2DAsync(&desc, stream) != hipSuccess);
+  constexpr auto NegativeTests = [](void* dst, size_t dpitch, void* src, size_t spitch,
+                                    size_t width, size_t height, hipMemcpyKind kind) {
+    SECTION("dst == nullptr") {
+      HIP_CHECK_ERROR(MemcpyParam2DAdapter<async>()(static_cast<void*>(nullptr), dpitch, src,
+                                                    spitch, width, height, kind),
+                      hipErrorInvalidValue);
+    }
+    SECTION("src == nullptr") {
+      HIP_CHECK_ERROR(MemcpyParam2DAdapter<async>()(dst, dpitch, static_cast<void*>(nullptr),
+                                                    spitch, width, height, kind),
+                      hipErrorInvalidValue);
+    }
+    SECTION("dstPitch < WidthInBytes") {
+      HIP_CHECK_ERROR(
+          MemcpyParam2DAdapter<async>()(dst, width - 1, src, spitch, width, height, kind),
+          hipErrorInvalidValue);
+    }
+    SECTION("srcPitch < WidthInBytes") {
+      HIP_CHECK_ERROR(
+          MemcpyParam2DAdapter<async>()(dst, dpitch, src, width - 1, width, height, kind),
+          hipErrorInvalidValue);
+    }
+    SECTION("dpitch > max pitch") {
+      int attr = 0;
+      HIP_CHECK(hipDeviceGetAttribute(&attr, hipDeviceAttributeMaxPitch, 0));
+      HIP_CHECK_ERROR(MemcpyParam2DAdapter<async>()(dst, static_cast<size_t>(attr) + 1, src, spitch,
+                                                    width, height, kind),
+                      hipErrorInvalidValue);
+    }
+    SECTION("spitch > max pitch") {
+      int attr = 0;
+      HIP_CHECK(hipDeviceGetAttribute(&attr, hipDeviceAttributeMaxPitch, 0));
+      HIP_CHECK_ERROR(MemcpyParam2DAdapter<async>()(dst, dpitch, src, static_cast<size_t>(attr) + 1,
+                                                    width, height, kind),
+                      hipErrorInvalidValue);
+    }
+    SECTION("WidthInBytes + srcXInBytes > srcPitch") {
+      HIP_CHECK_ERROR(MemcpyParam2DAdapter<async>(make_hipExtent(spitch - width + 1, 0, 0))(
+                          dst, dpitch, src, spitch, width, height, kind),
+                      hipErrorInvalidValue);
+    }
+    SECTION("WidthInBytes + dstXInBytes > dstPitch") {
+      HIP_CHECK_ERROR(MemcpyParam2DAdapter<async>(make_hipExtent(0, 0, 0),
+                                                  make_hipExtent(dpitch - width + 1, 0, 0))(
+                          dst, dpitch, src, spitch, width, height, kind),
+                      hipErrorInvalidValue);
+    }
+    SECTION("srcY out of bounds") {
+      HIP_CHECK_ERROR(MemcpyParam2DAdapter<async>(make_hipExtent(0, 1, 0))(dst, dpitch, src, spitch,
+                                                                           width, height, kind),
+                      hipErrorInvalidValue);
+    }
+    SECTION("dstY out of bounds") {
+      HIP_CHECK_ERROR(MemcpyParam2DAdapter<async>(make_hipExtent(0, 0, 0), make_hipExtent(0, 1, 0))(
+                          dst, dpitch, src, spitch, width, height, kind),
+                      hipErrorInvalidValue);
+    }
+    SECTION("Invalid stream") {
+      StreamGuard stream_guard(Streams::created);
+      HIP_CHECK(hipStreamDestroy(stream_guard.stream()));
+      HIP_CHECK_ERROR(MemcpyParam2DAdapter<async>()(dst, dpitch, src, spitch, width, height, kind,
+                                                    stream_guard.stream()),
+                      hipErrorContextIsDestroyed);
+    }
+  };
+
+  SECTION("Host to device") {
+    LinearAllocGuard2D<int> device_alloc(cols, rows);
+    LinearAllocGuard<int> host_alloc(LinearAllocs::hipHostMalloc, device_alloc.pitch() * rows);
+    NegativeTests(device_alloc.ptr(), device_alloc.pitch(), host_alloc.ptr(), device_alloc.pitch(),
+                  device_alloc.width(), device_alloc.height(), hipMemcpyHostToDevice);
   }
 
-  SECTION("Null Pointer to Destination Device Pointer") {
-    memset(&desc, 0x0, sizeof(hip_Memcpy2D));
-#ifdef __HIP_PLATFORM_NVCC__
-    desc.srcMemoryType = CU_MEMORYTYPE_HOST;
-#else
-    desc.srcMemoryType = hipMemoryTypeHost;
-#endif
-    desc.srcHost = A_h;
-    desc.srcDevice = hipDeviceptr_t(A_h);
-    desc.srcPitch = width;
-#ifdef __HIP_PLATFORM_NVCC__
-    desc.dstMemoryType = CU_MEMORYTYPE_DEVICE;
-#else
-    desc.dstMemoryType = hipMemoryTypeDevice;
-#endif
-    desc.dstHost = A_d;
-    desc.dstDevice = hipDeviceptr_t(nullptr);
-    desc.dstPitch = pitch_A;
-    desc.WidthInBytes = NUM_W;
-    desc.Height = NUM_H;
-
-    REQUIRE(hipMemcpyParam2DAsync(&desc, stream) != hipSuccess);
+  SECTION("Device to host") {
+    LinearAllocGuard2D<int> device_alloc(cols, rows);
+    LinearAllocGuard<int> host_alloc(LinearAllocs::hipHostMalloc, device_alloc.pitch() * rows);
+    NegativeTests(host_alloc.ptr(), device_alloc.pitch(), device_alloc.ptr(), device_alloc.pitch(),
+                  device_alloc.width(), device_alloc.height(), hipMemcpyDeviceToHost);
   }
 
-  SECTION("Null Pointer to both Src & Dst Device Pointer") {
-    desc.srcDevice = hipDeviceptr_t(nullptr);
-    desc.dstDevice = hipDeviceptr_t(nullptr);
-    REQUIRE(hipMemcpyParam2DAsync(&desc, stream) != hipSuccess);
+  SECTION("Host to host") {
+    LinearAllocGuard<int> src_alloc(LinearAllocs::hipHostMalloc, cols * rows * sizeof(int));
+    LinearAllocGuard<int> dst_alloc(LinearAllocs::hipHostMalloc, cols * rows * sizeof(int));
+    NegativeTests(dst_alloc.ptr(), cols * sizeof(int), src_alloc.ptr(), cols * sizeof(int),
+                  cols * sizeof(int), rows, hipMemcpyHostToHost);
   }
 
-  SECTION("Width > src/dest pitches") {
-    desc.WidthInBytes = pitch_A+1;
-    REQUIRE(hipMemcpyParam2DAsync(&desc, stream) != hipSuccess);
+  SECTION("Device to device") {
+    LinearAllocGuard2D<int> src_alloc(cols, rows);
+    LinearAllocGuard2D<int> dst_alloc(cols, rows);
+    NegativeTests(dst_alloc.ptr(), dst_alloc.pitch(), src_alloc.ptr(), src_alloc.pitch(),
+                  dst_alloc.width(), dst_alloc.height(), hipMemcpyDeviceToDevice);
   }
-
-  // DeAllocating the memory
-  HIP_CHECK(hipFree(A_d));
-  HIP_CHECK(hipStreamSynchronize(stream));
-  HIP_CHECK(hipStreamDestroy(stream));
-  HipTest::freeArrays<float>(nullptr, nullptr, nullptr,
-                                A_h, B_h, C_h, false);
 }
