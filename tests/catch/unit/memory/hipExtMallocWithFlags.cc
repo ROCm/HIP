@@ -80,6 +80,13 @@ TEST_CASE("Unit_hipExtMallocWithFlags_Positive_Alignment") {
 }
 
 TEST_CASE("Unit_hipExtMallocWithFlags_Negative_Parameters") {
+  SECTION("Invalid flags") {
+    void* ptr = nullptr;
+    HIP_CHECK_ERROR(
+        hipExtMallocWithFlags(&ptr, 4096, hipDeviceMallocDefault | hipMallocSignalMemory),
+        hipErrorInvalidValue);
+  }
+
   SECTION("hipDeviceMallocDefault") {
     SECTION("ptr == nullptr") {
       HIP_CHECK_ERROR(hipExtMallocWithFlags(nullptr, 4096, hipDeviceMallocDefault),
