@@ -87,6 +87,8 @@ set(TEST_SRC
     hipArray3DCreate.cc
     hipDrvMemcpy3D.cc
     hipDrvMemcpy3DAsync.cc
+    hipDrvMemcpy3D_old.cc
+    hipDrvMemcpy3DAsync_old.cc
     hipPointerGetAttribute.cc
     hipDrvPtrGetAttributes.cc
     hipMallocMngdMultiThread.cc
@@ -165,6 +167,8 @@ set(TEST_SRC
     hipArray3DCreate.cc
     hipDrvMemcpy3D.cc
     hipDrvMemcpy3DAsync.cc
+    hipDrvMemcpy3D_old.cc
+    hipDrvMemcpy3DAsync_old.cc
     hipPointerGetAttribute.cc
     hipDrvPtrGetAttributes.cc
     hipMemPrefetchAsync.cc
