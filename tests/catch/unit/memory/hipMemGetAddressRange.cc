@@ -69,11 +69,9 @@ TEST_CASE("Unit_hipMemGetAddressRange_Negative") {
   hipDeviceptr_t dummy_ptr;
 
   SECTION("Device pointer is invalid") {
-
     REQUIRE(hipMemGetAddressRange(&base_ptr, &mem_size, dummy_ptr) != hipSuccess);
-
   }
   SECTION("Offset is greater than allocated size") {
-    REQUIRE(hipMemGetAddressRange(&base_ptr, &mem_size, host_alloc.ptr() + offset) != hipSuccess);    
+    REQUIRE(hipMemGetAddressRange(&base_ptr, &mem_size, reinterpret_cast<hipDeviceptr_t>(host_alloc.ptr() + offset)) != hipSuccess);
   }
 }
