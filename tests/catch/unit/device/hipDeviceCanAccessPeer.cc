@@ -64,16 +64,16 @@ TEST_CASE("Unit_hipDeviceCanAccessPeer_negative") {
   }
 
   SECTION("canAccessPeer is nullptr") {
-    REQUIRE(hipDeviceCanAccessPeer(nullptr, 0, 1) != hipSuccess);
+    HIP_CHECK_ERROR(hipDeviceCanAccessPeer(nullptr, 0, 1), hipErrorInvalidValue);
   }
 
   SECTION("deviceId is invalid") {
-    REQUIRE(hipDeviceCanAccessPeer(&canAccessPeer, -1, 1) != hipSuccess);
-    REQUIRE(hipDeviceCanAccessPeer(&canAccessPeer, deviceCount, 1) != hipSuccess);
+    HIP_CHECK_ERROR(hipDeviceCanAccessPeer(&canAccessPeer, -1, 1), hipErrorInvalidDevice);
+    HIP_CHECK_ERROR(hipDeviceCanAccessPeer(&canAccessPeer, deviceCount, 1), hipErrorInvalidDevice);
   }
 
   SECTION("peerDeviceId is invalid") {
-    REQUIRE(hipDeviceCanAccessPeer(&canAccessPeer, 0, -1) != hipSuccess);
-    REQUIRE(hipDeviceCanAccessPeer(&canAccessPeer, 0, deviceCount) != hipSuccess);
+    HIP_CHECK_ERROR(hipDeviceCanAccessPeer(&canAccessPeer, 0, -1), hipErrorInvalidDevice);
+    HIP_CHECK_ERROR(hipDeviceCanAccessPeer(&canAccessPeer, 0, deviceCount), hipErrorInvalidDevice);
   }
 }
