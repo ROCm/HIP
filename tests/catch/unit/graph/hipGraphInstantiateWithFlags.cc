@@ -43,11 +43,9 @@ Mapping is missing for NVIDIA platform hence skipping the testcases
 #include <hip_test_kernels.hh>
 
 constexpr size_t N = 1000000;
-#if HT_AMD
 /* This test covers the negative scenarios of
    hipGraphInstantiateWithFlags API */
 TEST_CASE("Unit_hipGraphInstantiateWithFlags_Negative") {
-#if HT_NVIDIA
   SECTION("Passing nullptr pGraphExec") {
     hipGraph_t graph;
     HIP_CHECK(hipGraphCreate(&graph, 0));
@@ -67,7 +65,6 @@ TEST_CASE("Unit_hipGraphInstantiateWithFlags_Negative") {
     hipGraphExec_t graphExec;
     REQUIRE(hipGraphInstantiateWithFlags(&graphExec, graph, 10) != hipSuccess);
   }
-#endif
 }
 /*
 This function verifies the following scenarios
@@ -314,4 +311,3 @@ TEST_CASE("Unit_hipGraphInstantiateWithFlags_StreamCaptureDeviceContextChg") {
     SUCCEED("skipped the testcase as no of devices is less than 2");
   }
 }
-#endif
