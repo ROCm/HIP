@@ -32,7 +32,7 @@ Testcase Scenarios :
 
 /* HIT_START
  * BUILD_CMD: %t %hc %S/%s %S/../../test_common.cpp -I%S/../../ -o %T/%t -std=c++11
- * TEST:
+ * TEST: %t
  * HIT_END
  */
 
