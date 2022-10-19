@@ -454,6 +454,17 @@ TEMPLATE_TEST_CASE("Unit_hipMallocMipmappedArray_Negative_Non2DTextureGather", "
   HIP_CHECK_ERROR(hipMallocMipmappedArray(&array, &desc, extent, numLevels, flags), hipErrorInvalidValue);
 }
 
+TEST_CASE("Unit_hipMallocMipmappedArray_Negative_NumLevels") {
+  hipMipmappedArray_t array;
+  constexpr size_t size = 6;
+  unsigned int numLevels = floor(log2(size)) + 2;
+  hipChannelFormatDesc desc = hipCreateChannelDesc<float>();
+
+  const auto flag = GENERATE(from_range(std::begin(validFlags), std::end(validFlags)));
+  HIP_CHECK_ERROR(hipMallocMipmappedArray(&array, &desc, makeMipmappedExtent(flag, size), numLevels, flag),
+                  hipErrorInvalidValue);
+}
+
 TEST_CASE("Unit_hipGetMipmappedArrayLevel_Negative") {
   constexpr size_t s = 6;
   unsigned int numLevels = 1;

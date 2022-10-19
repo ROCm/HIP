@@ -73,7 +73,18 @@ TEST_CASE("Unit_hipMalloc3D_Basic") {
   size_t height{SMALL_SIZE}, depth{SMALL_SIZE};
   hipPitchedPtr devPitchedPtr;
   hipExtent extent = make_hipExtent(width, height, depth);
+  size_t tot, avail, ptot, pavail;
+  HIP_CHECK(hipMemGetInfo(&pavail, &ptot));
+
   REQUIRE(hipMalloc3D(&devPitchedPtr, extent) == hipSuccess);
+  HIPCHECK(hipFree(devPitchedPtr.ptr));
+
+  HIP_CHECK(hipMemGetInfo(&avail, &tot));
+
+  if (pavail != avail) {
+    WARN("Memory leak of hipMalloc3D API in multithreaded scenario");
+    REQUIRE(false);
+  }
 }
 
 /*
