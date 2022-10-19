@@ -72,7 +72,7 @@ void Memcpy_And_verify(int NUM_ELM) {
           for (int i = 0; i < Available_Gpus; ++i) {
             for (int j = i+1; j < Available_Gpus; ++j) {
               canAccessPeer = 0;
-              hipDeviceCanAccessPeer(&canAccessPeer, i, j);
+              HIP_CHECK(hipDeviceCanAccessPeer(&canAccessPeer, i, j));
               if (canAccessPeer) {
                 HIP_CHECK(hipMemcpy(A_d[j], A_d[i], NUM_ELM * sizeof(TestType),
                       hipMemcpyDefault));
@@ -122,7 +122,7 @@ void Memcpy_And_verify(int NUM_ELM) {
             int canAccessPeer = 0;
             for (int i = 0; i < Available_Gpus; ++i) {
               for (int j = i+1; j < Available_Gpus; ++j) {
-                hipDeviceCanAccessPeer(&canAccessPeer, i, j);
+                HIP_CHECK(hipDeviceCanAccessPeer(&canAccessPeer, i, j));
                 if (canAccessPeer) {
                   HIP_CHECK(hipMemcpyHtoD(hipDeviceptr_t(A_d[i]),
                         A_h, NUM_ELM * sizeof(TestType)));
@@ -165,7 +165,7 @@ void Memcpy_And_verify(int NUM_ELM) {
           for (int i = 0; i < Available_Gpus; ++i) {
             for (int j = i+1; j < Available_Gpus; ++j) {
               canAccessPeer = 0;
-              hipDeviceCanAccessPeer(&canAccessPeer, i, j);
+              HIP_CHECK(hipDeviceCanAccessPeer(&canAccessPeer, i, j));
               if (canAccessPeer) {
                 HIP_CHECK(hipMemcpyAsync(A_d[j], A_d[i],
                       NUM_ELM * sizeof(TestType),
@@ -219,7 +219,7 @@ void Memcpy_And_verify(int NUM_ELM) {
             for (int i = 0; i < Available_Gpus; ++i) {
               for (int j = i+1; j < Available_Gpus; ++j) {
                 canAccessPeer = 0;
-                hipDeviceCanAccessPeer(&canAccessPeer, i, j);
+                HIP_CHECK(hipDeviceCanAccessPeer(&canAccessPeer, i, j));
                 if (canAccessPeer) {
                   HIP_CHECK(hipSetDevice(j));
                   HIP_CHECK(hipMemcpyDtoDAsync(hipDeviceptr_t(A_d[j]),

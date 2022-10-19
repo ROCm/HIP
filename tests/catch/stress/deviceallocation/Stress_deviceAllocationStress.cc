@@ -349,7 +349,7 @@ static bool TestMemoryAllocationInLoop(int test_type,
     }
     if (!bPassed) break;
   }
-  hipFree(outputVec_d);
+  HIP_CHECK(hipFree(outputVec_d));
   free(outputVec_h);
   return bPassed;
 }
