@@ -73,11 +73,13 @@ TEST_CASE("Unit_hipMemcpyPeer_Negative") {
       }
 
       SECTION("Passing invalid Destination device ID") {
-        REQUIRE(hipMemcpyPeer(B_d, 10, A_d, 0, copy_bytes) != hipSuccess);
+        REQUIRE(hipMemcpyPeer(B_d, numDevices, A_d, 0, copy_bytes) !=
+                hipSuccess);
       }
 
       SECTION("Passing invalid Source device ID") {
-        REQUIRE(hipMemcpyPeer(B_d, 1, A_d, 10, copy_bytes) != hipSuccess);
+        REQUIRE(hipMemcpyPeer(B_d, 1, A_d, numDevices, copy_bytes) !=
+                hipSuccess);
       }
       HipTest::freeArrays<int>(A_d, B_d, nullptr, A_h, B_h, nullptr, false);
     } else {
