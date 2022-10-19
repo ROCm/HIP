@@ -40,15 +40,12 @@
 
 __global__  void CoherentTst(int *ptr, int PeakClk) {
   // Incrementing the value by 1
-  int64_t GpuFrq = (PeakClk * 1000);
+  int64_t GpuFrq = int64_t(PeakClk) * 1000;
   int64_t StrtTck = clock64();
   atomicAdd(ptr, 1);
   // The following while loop checks the value in ptr for around 3-4 seconds
   while ((clock64() - StrtTck) <= (3 * GpuFrq)) {
-    if (*ptr == 3) {
-      atomicAdd(ptr, 1);
-      return;
-    }
+    if (atomicCAS(ptr, 3, 4) == 3) break;
   }
 }
 
@@ -56,8 +53,6 @@ __global__  void SquareKrnl(int *ptr) {
   // ptr value squared here
   *ptr = (*ptr) * (*ptr);
 }
-
-
 
 // The variable below will work as signal to decide pass/fail
 static bool YES_COHERENT = false;
@@ -641,40 +636,31 @@ TEST_CASE("Unit_hipHostMalloc_WthEnv1") {
       WARN("Unable to turn on HIP_HOST_COHERENT, hence terminating the Test case!");
       REQUIRE(false);
   }
-  int stat = 0, Pageable = 0;
+  int stat = 0;
 
-  HIP_CHECK(hipDeviceGetAttribute(&Pageable,
-                                 hipDeviceAttributePageableMemoryAccess, 0));
-  INFO("hipDeviceAttributePageableMemoryAccess: " << Pageable);
-
-  if (Pageable) {
-    if (fork() == 0) {  // child process
-      int *Ptr = nullptr, SIZE = sizeof(int);
-      bool HmmMem = false;
-      YES_COHERENT = false;
-      // Allocating hipHostMalloc() memory
-      HIP_CHECK(hipHostMalloc(&Ptr, SIZE));
-      *Ptr = 4;
-      TstCoherency(Ptr, HmmMem);
-      if (YES_COHERENT) {
-        // exit() with code 10 which indicates pass
-        HIP_CHECK(hipHostFree(Ptr));
-        exit(10);
-      } else {
-        // exit() with code 9 which indicates fail
-        HIP_CHECK(hipHostFree(Ptr));
-        exit(9);
-      }
-    } else {  // parent process
-      wait(&stat);
-      int Result = WEXITSTATUS(stat);
-      if (Result != 10) {
-        REQUIRE(false);
-      }
+  if (fork() == 0) {  // child process
+    int *Ptr = nullptr, SIZE = sizeof(int);
+    bool HmmMem = false;
+    YES_COHERENT = false;
+    // Allocating hipHostMalloc() memory
+    HIP_CHECK(hipHostMalloc(&Ptr, SIZE));
+    *Ptr = 4;
+    TstCoherency(Ptr, HmmMem);
+    if (YES_COHERENT) {
+      // exit() with code 10 which indicates pass
+      HIP_CHECK(hipHostFree(Ptr));
+      exit(10);
+    } else {
+      // exit() with code 9 which indicates fail
+      HIP_CHECK(hipHostFree(Ptr));
+      exit(9);
     }
-  } else {
-    SUCCEED("GPU 0 doesn't support hipDeviceAttributePageableMemoryAccess "
-               "attribute. Hence skipping the test with Pass result.\n"); 
+  } else {  // parent process
+    wait(&stat);
+    int Result = WEXITSTATUS(stat);
+    if (Result != 10) {
+      REQUIRE(false);
+    }
   }
 }
 #endif
@@ -689,40 +675,31 @@ TEST_CASE("Unit_hipHostMalloc_WthEnv1Flg1") {
       WARN("Unable to turn on HIP_HOST_COHERENT, hence terminating the Test case!");
       REQUIRE(false);
   }
-  int stat = 0, Pageable = 0;
+  int stat = 0;
 
-  HIP_CHECK(hipDeviceGetAttribute(&Pageable,
-                                 hipDeviceAttributePageableMemoryAccess, 0));
-  INFO("hipDeviceAttributePageableMemoryAccess: " << Pageable);
-
-  if (Pageable) {
-    if (fork() == 0) {  // child process
-      int *Ptr = nullptr, SIZE = sizeof(int);
-      bool HmmMem = false;
-      YES_COHERENT = false;
-      // Allocating hipHostMalloc() memory
-      HIP_CHECK(hipHostMalloc(&Ptr, SIZE, hipHostMallocPortable));
-      *Ptr = 1;
-      TstCoherency(Ptr, HmmMem);
-      if (YES_COHERENT) {
-        // exit() with code 10 which indicates pass
-        HIP_CHECK(hipHostFree(Ptr));
-        exit(10);
-      } else {
-        // exit() with code 9 which indicates fail
-        HIP_CHECK(hipHostFree(Ptr));
-        exit(9);
-      }
-    } else {  // parent process
-      wait(&stat);
-      int Result = WEXITSTATUS(stat);
-      if (Result != 10) {
-        REQUIRE(false);
-      }
+  if (fork() == 0) {  // child process
+    int *Ptr = nullptr, SIZE = sizeof(int);
+    bool HmmMem = false;
+    YES_COHERENT = false;
+    // Allocating hipHostMalloc() memory
+    HIP_CHECK(hipHostMalloc(&Ptr, SIZE, hipHostMallocPortable));
+    *Ptr = 1;
+    TstCoherency(Ptr, HmmMem);
+    if (YES_COHERENT) {
+      // exit() with code 10 which indicates pass
+      HIP_CHECK(hipHostFree(Ptr));
+      exit(10);
+    } else {
+      // exit() with code 9 which indicates fail
+      HIP_CHECK(hipHostFree(Ptr));
+      exit(9);
     }
-  } else {
-    SUCCEED("GPU 0 doesn't support hipDeviceAttributePageableMemoryAccess "
-               "attribute. Hence skipping the test with Pass result.\n"); 
+  } else {  // parent process
+    wait(&stat);
+    int Result = WEXITSTATUS(stat);
+    if (Result != 10) {
+      REQUIRE(false);
+    }
   }
 }
 #endif
@@ -736,44 +713,34 @@ TEST_CASE("Unit_hipHostMalloc_WthEnv1Flg2") {
       WARN("Unable to turn on HIP_HOST_COHERENT, hence terminating the Test case!");
       REQUIRE(false);
   }
-  int stat = 0, Pageable = 0;
+  int stat = 0;
 
-  HIP_CHECK(hipDeviceGetAttribute(&Pageable,
-                                 hipDeviceAttributePageableMemoryAccess, 0));
-  INFO("hipDeviceAttributePageableMemoryAccess: " << Pageable);
-
-  if (Pageable) {
-    if (fork() == 0) {  // child process
-      int *Ptr = nullptr, SIZE = sizeof(int);
-      bool HmmMem = false;
-      YES_COHERENT = false;
-      // Allocating hipHostMalloc() memory
-      HIP_CHECK(hipHostMalloc(&Ptr, SIZE, hipHostMallocWriteCombined));
-      *Ptr = 4;
-      TstCoherency(Ptr, HmmMem);
-      if (YES_COHERENT) {
-        // exit() with code 10 which indicates pass
-        HIP_CHECK(hipHostFree(Ptr));
-        exit(10);
-      } else {
-        // exit() with code 9 which indicates fail
-        HIP_CHECK(hipHostFree(Ptr));
-        exit(9);
-      }
-    } else {  // parent process
-      wait(&stat);
-      int Result = WEXITSTATUS(stat);
-      if (Result != 10) {
-        REQUIRE(false);
-      }
+  if (fork() == 0) {  // child process
+    int *Ptr = nullptr, SIZE = sizeof(int);
+    bool HmmMem = false;
+    YES_COHERENT = false;
+    // Allocating hipHostMalloc() memory
+    HIP_CHECK(hipHostMalloc(&Ptr, SIZE, hipHostMallocWriteCombined));
+    *Ptr = 4;
+    TstCoherency(Ptr, HmmMem);
+    if (YES_COHERENT) {
+      // exit() with code 10 which indicates pass
+      HIP_CHECK(hipHostFree(Ptr));
+      exit(10);
+    } else {
+      // exit() with code 9 which indicates fail
+      HIP_CHECK(hipHostFree(Ptr));
+      exit(9);
     }
-  } else {
-    SUCCEED("GPU 0 doesn't support hipDeviceAttributePageableMemoryAccess "
-               "attribute. Hence skipping the test with Pass result.\n"); 
+  } else {  // parent process
+    wait(&stat);
+    int Result = WEXITSTATUS(stat);
+    if (Result != 10) {
+      REQUIRE(false);
+    }
   }
 }
 #endif
-
 
 /* Test Case Description: The following test checks if the memory exhibits
    fine grain behavior when HIP_HOST_COHERENT is set to 1*/
@@ -784,42 +751,31 @@ TEST_CASE("Unit_hipHostMalloc_WthEnv1Flg3") {
       WARN("Unable to turn on HIP_HOST_COHERENT, hence terminating the Test case!");
       REQUIRE(false);
   }
-  int stat = 0, Pageable = 0;
+  int stat = 0;
 
-  HIP_CHECK(hipDeviceGetAttribute(&Pageable,
-                                 hipDeviceAttributePageableMemoryAccess, 0));
-  INFO("hipDeviceAttributePageableMemoryAccess: " << Pageable);
-
-  if (Pageable) {
-    if (fork() == 0) {  // child process
-      int *Ptr = nullptr, SIZE = sizeof(int);
-      bool HmmMem = false;
-      YES_COHERENT = false;
-      // Allocating hipHostMalloc() memory
-      HIP_CHECK(hipHostMalloc(&Ptr, SIZE, hipHostMallocNumaUser));
-      *Ptr = 1;
-      TstCoherency(Ptr, HmmMem);
-      if (YES_COHERENT) {
-        // exit() with code 10 which indicates pass
-        HIP_CHECK(hipHostFree(Ptr));
-        exit(10);
-      } else {
-        // exit() with code 9 which indicates fail
-        HIP_CHECK(hipHostFree(Ptr));
-        exit(9);
-      }
-    } else {  // parent process
-      wait(&stat);
-      int Result = WEXITSTATUS(stat);
-      if (Result != 10) {
-        REQUIRE(false);
-      }
+  if (fork() == 0) {  // child process
+    int *Ptr = nullptr, SIZE = sizeof(int);
+    bool HmmMem = false;
+    YES_COHERENT = false;
+    // Allocating hipHostMalloc() memory
+    HIP_CHECK(hipHostMalloc(&Ptr, SIZE, hipHostMallocNumaUser));
+    *Ptr = 1;
+    TstCoherency(Ptr, HmmMem);
+    if (YES_COHERENT) {
+      // exit() with code 10 which indicates pass
+      HIP_CHECK(hipHostFree(Ptr));
+      exit(10);
+    } else {
+      // exit() with code 9 which indicates fail
+      HIP_CHECK(hipHostFree(Ptr));
+      exit(9);
     }
-  } else {
-    SUCCEED("GPU 0 doesn't support hipDeviceAttributePageableMemoryAccess "
-               "attribute. Hence skipping the test with Pass result.\n"); 
+  } else {  // parent process
+    wait(&stat);
+    int Result = WEXITSTATUS(stat);
+    if (Result != 10) {
+      REQUIRE(false);
+    }
   }
 }
 #endif
-
-

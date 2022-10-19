@@ -777,7 +777,7 @@ TEST_CASE("Unit_hipMemAdvise_TstMemAdvisePrefrdLoc") {
       REQUIRE(false);
     }
   } else {
-    SUCCEED("GPU 0 doesn't support hipDeviceAttributePageableMemoryAccess "
+    SUCCEED("GPU 0 doesn't support hipDeviceAttributeManagedMemory "
            "attribute. Hence skipping the testing with Pass result.\n");
   }
 }
@@ -809,7 +809,7 @@ TEST_CASE("Unit_hipMemAdvise_TstMemAdviseLstPreftchLoc") {
         REQUIRE(false);
       }
     } else {
-      SUCCEED("GPU 0 doesn't support hipDeviceAttributePageableMemoryAccess "
+      SUCCEED("GPU 0 doesn't support hipDeviceAttributeManagedMemory "
              "attribute. Hence skipping the testing with Pass result.\n");
     }
   } else {
@@ -847,7 +847,7 @@ TEST_CASE("Unit_hipMemAdvise_TstMemAdviseMultiFlag") {
     }
     HIP_CHECK(hipFree(Hmm));
   } else {
-    SUCCEED("GPU 0 doesn't support hipDeviceAttributePageableMemoryAccess "
+    SUCCEED("GPU 0 doesn't support hipDeviceAttributeManagedMemory "
            "attribute. Hence skipping the testing with Pass result.\n");
   }
 }
@@ -929,7 +929,7 @@ TEST_CASE("Unit_hipMemAdvise_ReadMosltyMgpuTst") {
     HIP_CHECK(hipFree(Hmm));
     HIP_CHECK(hipStreamDestroy(strm));
   } else {
-    SUCCEED("GPU 0 doesn't support hipDeviceAttributePageableMemoryAccess "
+    SUCCEED("GPU 0 doesn't support hipDeviceAttributeManagedMemory "
            "attribute. Hence skipping the testing with Pass result.\n");
   }
 }
@@ -955,7 +955,7 @@ TEST_CASE("Unit_hipMemAdvise_TstSetUnsetPrfrdLoc") {
       REQUIRE(false);
     }
   } else {
-    SUCCEED("GPU 0 doesn't support hipDeviceAttributePageableMemoryAccess "
+    SUCCEED("GPU 0 doesn't support hipDeviceAttributeManagedMemory "
            "attribute. Hence skipping the testing with Pass result.\n");
   }
 }
