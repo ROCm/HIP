@@ -81,7 +81,7 @@ static hipModule_t GetModule() {
   if (!module) {
     // To appease cuda
     HIP_CHECK(hipFree(nullptr));
-    HIP_CHECK(hipModuleLoad(&module, "test_module.code"));
+    HIP_CHECK(hipModuleLoad(&module, "get_global_test_module.code"));
   }
   return module;
 }
