@@ -135,4 +135,4 @@ endforeach()
 add_command(set ${TEST_LIST} ${tests})
 
 # Write CTest script
-file(WRITE "${CTEST_FILE}" "${script}")
+file(APPEND "${CTEST_FILE}" "${script}")

@@ -119,7 +119,7 @@ same as the Catch name; see also ``TEST_PREFIX`` and ``TEST_SUFFIX``.
 #]=======================================================================]
 
 #------------------------------------------------------------------------------
-function(catch_discover_tests TARGET)
+function(catch_discover_tests TARGET TEST_SET)
   cmake_parse_arguments(
     ""
     ""
@@ -134,14 +134,16 @@ function(catch_discover_tests TARGET)
   if(NOT _TEST_LIST)
     set(_TEST_LIST ${TARGET}_TESTS)
   endif()
+  set(EXE_LIST ${EXE_LIST} ${TARGET})
 
   ## Generate a unique name based on the extra arguments
   string(SHA1 args_hash "${_TEST_SPEC} ${_EXTRA_ARGS} ${_REPORTER} ${_OUTPUT_DIR} ${_OUTPUT_PREFIX} ${_OUTPUT_SUFFIX}")
   string(SUBSTRING ${args_hash} 0 7 args_hash)
 
   # Define rule to generate test list for aforementioned test executable
-  set(ctest_include_file "${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_include-${args_hash}.cmake")
-  set(ctest_tests_file "${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_tests-${args_hash}.cmake")
+  set(exec_list_file "${CMAKE_CURRENT_BINARY_DIR}/${TEST_SET}_exec_list.txt")
+  set(ctest_include_file "${CMAKE_CURRENT_BINARY_DIR}/${TEST_SET}_include-${args_hash}.cmake")
+  set(ctest_tests_file "${CMAKE_CURRENT_BINARY_DIR}/${TEST_SET}_tests-${args_hash}.cmake")
   file(RELATIVE_PATH ctestincludepath ${CMAKE_CURRENT_BINARY_DIR} ${ctest_include_file})
   file(RELATIVE_PATH ctestfilepath ${CMAKE_CURRENT_BINARY_DIR} ${ctest_tests_file})
   file(RELATIVE_PATH _workdir ${CMAKE_CURRENT_BINARY_DIR} ${_WORKING_DIRECTORY})
@@ -157,27 +159,23 @@ function(catch_discover_tests TARGET)
     set(EXEC_NAME ${EXEC_NAME}.exe)
   endif()
 
-  # uses catch_include.cmake.in file to generate the *_include.cmake file
-  # *_include.cmake is used to generate the *_test.cmake during execution of ctest cmd
-  configure_file(${CATCH2_INCLUDE} ${TARGET}_include-${args_hash}.cmake @ONLY)
-
-  if(NOT ${CMAKE_VERSION} VERSION_LESS "3.10.0") 
-    # Add discovered tests to directory TEST_INCLUDE_FILES
-    set_property(DIRECTORY
-      APPEND PROPERTY TEST_INCLUDE_FILES "${ctestincludepath}"
-    )
-  else()
-    # Add discovered tests as directory TEST_INCLUDE_FILE if possible
-    get_property(test_include_file_set DIRECTORY PROPERTY TEST_INCLUDE_FILE SET)
-    if (NOT ${test_include_file_set})
+  if(NOT ${CMAKE_VERSION} VERSION_LESS "3.10.0")
+    if(NOT EXISTS  ${exec_list_file})
+      set(include_file_contents "file(READ '${TEST_SET}_exec_list.txt' exc_names)\n")
+      set(include_file_contents ${include_file_contents} "set(TARGET ${TEST_SET})\n")
+      set(include_file_contents ${include_file_contents} "set(_workdir ${CMAKE_CURRENT_BINARY_DIR})\n")
+      set(include_file_contents ${include_file_contents} "set(ctestfilepath ${ctestfilepath})\n")
+      set(include_file_contents ${include_file_contents} "set(_CATCH_ADD_TEST_SCRIPT ${_CATCH_ADD_TEST_SCRIPT})\n")
+      set(include_file_contents ${include_file_contents} "set(_PROPERTIES ${_PROPERTIES})\n")
+      set(include_file_contents ${include_file_contents} "include(${CATCH_INCLUDE_PATH})\n")
+      file(WRITE ${ctest_include_file} ${include_file_contents})
+      # Add discovered tests to directory TEST_INCLUDE_FILES      
       set_property(DIRECTORY
-        PROPERTY TEST_INCLUDE_FILE "${ctestincludepath}"
+        APPEND PROPERTY TEST_INCLUDE_FILES "${ctestincludepath}"
       )
-    else()
-      message(FATAL_ERROR
-        "Cannot set more than one TEST_INCLUDE_FILE"
-      )
+      
     endif()
+    file(APPEND ${exec_list_file} "${TARGET};")
   endif()
 
 endfunction()
@@ -202,47 +200,51 @@ function(hip_add_exe_to_target)
     "${args}"
     "${list_args}"
   )
-  # Create shared lib of all tests
-  if(NOT RTC_TESTING)
-    add_executable(${_NAME} EXCLUDE_FROM_ALL ${_TEST_SRC} $<TARGET_OBJECTS:Main_Object> $<TARGET_OBJECTS:KERNELS>)
-  else ()
-    add_executable(${_NAME} EXCLUDE_FROM_ALL ${_TEST_SRC} $<TARGET_OBJECTS:Main_Object>)
-    if(HIP_PLATFORM STREQUAL "amd")
-      target_link_libraries(${_NAME} hiprtc)
+
+  foreach(SRC_NAME ${TEST_SRC})
+    # TODO strip of the extension of the source to get the executable name
+    set(_EXE_NAME ${SRC_NAME})
+    # Create shared lib of all tests
+    if(NOT RTC_TESTING)
+      add_executable(${_EXE_NAME} EXCLUDE_FROM_ALL ${SRC_NAME} $<TARGET_OBJECTS:Main_Object> $<TARGET_OBJECTS:KERNELS>)
+    else ()
+      add_executable(${_EXE_NAME} EXCLUDE_FROM_ALL ${SRC_NAME} $<TARGET_OBJECTS:Main_Object>)
+      if(HIP_PLATFORM STREQUAL "amd")
+        target_link_libraries(${_EXE_NAME} hiprtc)
+      else()
+        target_link_libraries(${_EXE_NAME} nvrtc)
+      endif()
+    endif()
+    if (DEFINED _PROPERTY)
+      set_property(TARGET ${_NAME} PROPERTY ${_PROPERTY})
+    endif()
+    if(UNIX)
+      set(_LINKER_LIBS ${_LINKER_LIBS} stdc++fs)
+      set(_LINKER_LIBS ${_LINKER_LIBS} -ldl)
     else()
-      target_link_libraries(${_NAME} nvrtc)
+      # res files are built resource files using rc files.
+      # use llvm-rc exe to build the res files
+      # Thes are used to populate the properties of the built executables
+      if(EXISTS "${PROP_RC}/catchProp.res")
+        set(_LINKER_LIBS ${_LINKER_LIBS} "${PROP_RC}/catchProp.res")
+      endif()
     endif()
-  endif()
-  catch_discover_tests(${_NAME} PROPERTIES  SKIP_REGULAR_EXPRESSION "HIP_SKIP_THIS_TEST")
-  if(UNIX)
-    set(_LINKER_LIBS ${_LINKER_LIBS} stdc++fs)
-    set(_LINKER_LIBS ${_LINKER_LIBS} -ldl)
-  else()
-    # res files are built resource files using rc files.
-    # use llvm-rc exe to build the res files
-    # Thes are used to populate the properties of the built executables
-    if(EXISTS "${PROP_RC}/catchProp.res")
-      set(_LINKER_LIBS ${_LINKER_LIBS} "${PROP_RC}/catchProp.res")
+
+    if(DEFINED _LINKER_LIBS)
+      target_link_libraries(${_EXE_NAME} ${_LINKER_LIBS})
     endif()
-  endif()
 
-  if(DEFINED _LINKER_LIBS)
-    target_link_libraries(${_NAME} ${_LINKER_LIBS})
-  endif()
+    # Add dependency on build_tests to build it on this custom target
+    add_dependencies(${_TEST_TARGET_NAME} ${_EXE_NAME})
 
-  # Add dependency on build_tests to build it on this custom target
-  add_dependencies(${_TEST_TARGET_NAME} ${_NAME})
+    if (DEFINED _COMPILE_OPTIONS)
+      target_compile_options(${_EXE_NAME} PUBLIC ${_COMPILE_OPTIONS})
+    endif()
 
-  if (DEFINED _PROPERTY)
-    set_property(TARGET ${_NAME} PROPERTY ${_PROPERTY})
-  endif()
-
-  if (DEFINED _COMPILE_OPTIONS)
-    target_compile_options(${_NAME} PUBLIC ${_COMPILE_OPTIONS})
-  endif()
-
-  foreach(arg IN LISTS _UNPARSED_ARGUMENTS)
-      message(WARNING "Unparsed arguments: ${arg}")
+    foreach(arg IN LISTS _UNPARSED_ARGUMENTS)
+        message(WARNING "Unparsed arguments: ${arg}")
+    endforeach()
+    catch_discover_tests(${_EXE_NAME} ${_NAME} PROPERTIES  SKIP_REGULAR_EXPRESSION "HIP_SKIP_THIS_TEST")
   endforeach()
 endfunction()
 

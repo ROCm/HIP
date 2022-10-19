@@ -122,7 +122,10 @@ set(CATCH_BUILD_DIR catch_tests)
 file(COPY ./hipTestMain/config DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/${CATCH_BUILD_DIR}/hipTestMain)
 file(COPY ./external/Catch2/cmake/Catch2/CatchAddTests.cmake
      DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/${CATCH_BUILD_DIR}/script)
+file(COPY ./external/Catch2/cmake/Catch2/catch_include.cmake
+     DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/${CATCH_BUILD_DIR}/script)
 set(ADD_SCRIPT_PATH ${CMAKE_CURRENT_BINARY_DIR}/${CATCH_BUILD_DIR}/script/CatchAddTests.cmake)
+set(CATCH_INCLUDE_PATH ${CMAKE_CURRENT_BINARY_DIR}/${CATCH_BUILD_DIR}/script/catch_include.cmake)
 
 if (WIN32)
   configure_file(catchProp_in_rc.in ${CMAKE_CURRENT_BINARY_DIR}/catchProp.rc @ONLY)
@@ -217,13 +220,13 @@ add_custom_target(build_tests)
 
 # Tests folder
 add_subdirectory(unit ${CATCH_BUILD_DIR}/unit)
-add_subdirectory(ABM ${CATCH_BUILD_DIR}/ABM)
+#add_subdirectory(ABM ${CATCH_BUILD_DIR}/ABM)
 add_subdirectory(kernels ${CATCH_BUILD_DIR}/kernels)
 add_subdirectory(hipTestMain ${CATCH_BUILD_DIR}/hipTestMain)
-add_subdirectory(stress ${CATCH_BUILD_DIR}/stress)
-add_subdirectory(TypeQualifiers ${CATCH_BUILD_DIR}/TypeQualifiers)
+#add_subdirectory(stress ${CATCH_BUILD_DIR}/stress)
+#add_subdirectory(TypeQualifiers ${CATCH_BUILD_DIR}/TypeQualifiers)
 if(UNIX)
-   add_subdirectory(multiproc ${CATCH_BUILD_DIR}/multiproc)
+#   add_subdirectory(multiproc ${CATCH_BUILD_DIR}/multiproc)
 endif()
 
 cmake_policy(POP)
