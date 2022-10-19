@@ -23,48 +23,48 @@ THE SOFTWARE.
 #include <resource_guards.hh>
 
 TEST_CASE("Unit_hipMemcpyPeer_Default") {
-  const auto allocation_size = GENERATE(kPageSize / 2, kPageSize, kPageSize * 2);
   const auto device_count = HipTest::getDeviceCount();
+  if (device_count < 2) {
+    HipTest::HIP_SKIP_TEST("Skipping because devices < 2");
+    return;
+  }
 
-  if (device_count > 1) {
-    int can_access_peer = 0;
-    const auto src_device = GENERATE(range(0, HipTest::getDeviceCount()));
-    const auto dst_device = GENERATE(range(0, HipTest::getDeviceCount()));
-    INFO("Src device: " << src_device << ", Dst device: " << dst_device);
+  const auto allocation_size = GENERATE(kPageSize / 2, kPageSize, kPageSize * 2);
 
+  int can_access_peer = 0;
+  const auto src_device = GENERATE(range(0, HipTest::getDeviceCount()));
+  const auto dst_device = GENERATE(range(0, HipTest::getDeviceCount()));
+  INFO("Src device: " << src_device << ", Dst device: " << dst_device);
+
+  HIP_CHECK(hipSetDevice(src_device));
+  HIP_CHECK(hipDeviceCanAccessPeer(&can_access_peer, src_device, dst_device));
+  if (can_access_peer) {
+    HIP_CHECK(hipDeviceEnablePeerAccess(dst_device, 0));
+
+    LinearAllocGuard<int> src_alloc(LinearAllocs::hipMalloc, allocation_size);
+    LinearAllocGuard<int> result(LinearAllocs::hipHostMalloc, allocation_size);
+    HIP_CHECK(hipSetDevice(dst_device));
+    LinearAllocGuard<int> dst_alloc(LinearAllocs::hipMalloc, allocation_size);
+
+    const auto element_count = allocation_size / sizeof(*src_alloc.ptr());
+    constexpr auto thread_count = 1024;
+    const auto block_count = element_count / thread_count + 1;
+    constexpr int expected_value = 22;
     HIP_CHECK(hipSetDevice(src_device));
-    HIP_CHECK(hipDeviceCanAccessPeer(&can_access_peer, src_device, dst_device));
-    if (can_access_peer) {
-      HIP_CHECK(hipDeviceEnablePeerAccess(dst_device, 0));
-
-      LinearAllocGuard<int> src_alloc(LinearAllocs::hipMalloc, allocation_size);
-      LinearAllocGuard<int> result(LinearAllocs::hipHostMalloc, allocation_size);
-      HIP_CHECK(hipSetDevice(dst_device));
-      LinearAllocGuard<int> dst_alloc(LinearAllocs::hipMalloc, allocation_size);
-
-      const auto element_count = allocation_size / sizeof(*src_alloc.ptr());
-      constexpr auto thread_count = 1024;
-      const auto block_count = element_count / thread_count + 1;
-      constexpr int expected_value = 22;
-      HIP_CHECK(hipSetDevice(src_device));
-      VectorSet<<<block_count, thread_count, 0>>>(src_alloc.ptr(), expected_value,
+    VectorSet<<<block_count, thread_count, 0>>>(src_alloc.ptr(), expected_value,
                                                              element_count);
-      HIP_CHECK(hipGetLastError());
+    HIP_CHECK(hipGetLastError());
 
-      HIP_CHECK(hipMemcpyPeer(dst_alloc.ptr(), dst_device, src_alloc.ptr(), src_device, allocation_size));
+    HIP_CHECK(hipMemcpyPeer(dst_alloc.ptr(), dst_device, src_alloc.ptr(), src_device, allocation_size));
 
-      HIP_CHECK(
-        hipMemcpy(result.host_ptr(), dst_alloc.ptr(), allocation_size, hipMemcpyDeviceToHost));
+    HIP_CHECK(
+      hipMemcpy(result.host_ptr(), dst_alloc.ptr(), allocation_size, hipMemcpyDeviceToHost));
 
-      HIP_CHECK(hipDeviceDisablePeerAccess(dst_device));
+    HIP_CHECK(hipDeviceDisablePeerAccess(dst_device));
 
-      ArrayFindIfNot(result.host_ptr(), expected_value, element_count);
-    }
-    else {
-      INFO("Peer access cannot be enabled between devices " << src_device << " " << dst_device);
-    }
+    ArrayFindIfNot(result.host_ptr(), expected_value, element_count);
   } else {
-    SUCCEED("Number of devices are < 2");
+    INFO("Peer access cannot be enabled between devices " << src_device << " " << dst_device);
   }
 }
 
@@ -72,126 +72,128 @@ TEST_CASE("Unit_hipMemcpyPeer_Synchronization_Behavior") {
   HIP_CHECK(hipDeviceSynchronize());
 
   const auto device_count = HipTest::getDeviceCount();
-  if (device_count > 1) {
-    int can_access_peer = 0;
-    const auto src_device = 0;
-    const auto dst_device = 1;
+  if (device_count < 2) {
+    HipTest::HIP_SKIP_TEST("Skipping because devices < 2");
+    return;
+  }
+
+  int can_access_peer = 0;
+  const auto src_device = 0;
+  const auto dst_device = 1;
+
+  HIP_CHECK(hipSetDevice(src_device));
+  HIP_CHECK(hipDeviceCanAccessPeer(&can_access_peer, src_device, dst_device));
+  if (can_access_peer) {
+    HIP_CHECK(hipDeviceEnablePeerAccess(dst_device, 0));
+
+    LinearAllocGuard<int> src_alloc(LinearAllocs::hipMalloc, kPageSize);
+    HIP_CHECK(hipSetDevice(dst_device));
+    LinearAllocGuard<int> dst_alloc(LinearAllocs::hipMalloc, kPageSize);
 
     HIP_CHECK(hipSetDevice(src_device));
-    HIP_CHECK(hipDeviceCanAccessPeer(&can_access_peer, src_device, dst_device));
-    if (can_access_peer) {
-      HIP_CHECK(hipDeviceEnablePeerAccess(dst_device, 0));
+    LaunchDelayKernel(std::chrono::milliseconds{100}, nullptr);
 
-      LinearAllocGuard<int> src_alloc(LinearAllocs::hipMalloc, kPageSize);
-      HIP_CHECK(hipSetDevice(dst_device));
-      LinearAllocGuard<int> dst_alloc(LinearAllocs::hipMalloc, kPageSize);
+    HIP_CHECK(hipMemcpyPeer(dst_alloc.ptr(), dst_device, src_alloc.ptr(), src_device, kPageSize));
+    HIP_CHECK_ERROR(hipStreamQuery(nullptr), hipErrorNotReady);
 
-      HIP_CHECK(hipSetDevice(src_device));
-      LaunchDelayKernel(std::chrono::milliseconds{100}, nullptr);
-
-      HIP_CHECK(hipMemcpyPeer(dst_alloc.ptr(), dst_device, src_alloc.ptr(), src_device, kPageSize));
-      HIP_CHECK_ERROR(hipStreamQuery(nullptr), hipErrorNotReady);
-
-      HIP_CHECK(hipDeviceDisablePeerAccess(dst_device));
-    } else {
-      SUCCEED("Machine Does not have P2P capability");  
-    }
+    HIP_CHECK(hipDeviceDisablePeerAccess(dst_device));
   } else {
-    SUCCEED("Number of devices are < 2");  
-  } 
+    INFO("Peer access cannot be enabled between devices " << src_device << " " << dst_device);
+  }
 }
 
 TEST_CASE("Unit_hipMemcpyPeer_ZeroSize") {
- const auto allocation_size = kPageSize;
   const auto device_count = HipTest::getDeviceCount();
+  if (device_count < 2) {
+    HipTest::HIP_SKIP_TEST("Skipping because devices < 2");
+    return;
+  }
 
-  if (device_count > 1) {
-    int can_access_peer = 0;
-    const auto src_device = 0;
-    const auto dst_device = 1;
+  const auto allocation_size = kPageSize;
 
+  int can_access_peer = 0;
+  const auto src_device = 0;
+  const auto dst_device = 1;
+
+  HIP_CHECK(hipSetDevice(src_device));
+  HIP_CHECK(hipDeviceCanAccessPeer(&can_access_peer, src_device, dst_device));
+  if (can_access_peer) {
+    HIP_CHECK(hipDeviceEnablePeerAccess(dst_device, 0));
+
+    LinearAllocGuard<int> src_alloc(LinearAllocs::hipMalloc, allocation_size);
+    LinearAllocGuard<int> result(LinearAllocs::hipHostMalloc, allocation_size, hipHostMallocPortable);
+    HIP_CHECK(hipSetDevice(dst_device));
+    LinearAllocGuard<int> dst_alloc(LinearAllocs::hipMalloc, allocation_size);
+
+    const auto element_count = allocation_size / sizeof(*src_alloc.ptr());
+    constexpr auto thread_count = 1024;
+    const auto block_count = element_count / thread_count + 1;
+    constexpr int set_value = 22;
     HIP_CHECK(hipSetDevice(src_device));
-    HIP_CHECK(hipDeviceCanAccessPeer(&can_access_peer, src_device, dst_device));
-    if (can_access_peer) {
-      HIP_CHECK(hipDeviceEnablePeerAccess(dst_device, 0));
-
-      LinearAllocGuard<int> src_alloc(LinearAllocs::hipMalloc, allocation_size);
-      LinearAllocGuard<int> result(LinearAllocs::hipHostMalloc, allocation_size, hipHostMallocPortable);
-      HIP_CHECK(hipSetDevice(dst_device));
-      LinearAllocGuard<int> dst_alloc(LinearAllocs::hipMalloc, allocation_size);
-
-      const auto element_count = allocation_size / sizeof(*src_alloc.ptr());
-      constexpr auto thread_count = 1024;
-      const auto block_count = element_count / thread_count + 1;
-      constexpr int set_value = 22;
-      HIP_CHECK(hipSetDevice(src_device));
-      VectorSet<<<block_count, thread_count, 0>>>(src_alloc.ptr(), set_value,
+    VectorSet<<<block_count, thread_count, 0>>>(src_alloc.ptr(), set_value,
                                                              element_count);
-      HIP_CHECK(hipGetLastError());
+    HIP_CHECK(hipGetLastError());
 
-      constexpr int expected_value = 21;
-      std::fill_n(src_alloc.host_ptr(), element_count, expected_value);
+    constexpr int expected_value = 21;
+    std::fill_n(src_alloc.host_ptr(), element_count, expected_value);
 
-      HIP_CHECK(hipMemcpyPeer(dst_alloc.ptr(), dst_device, src_alloc.ptr(), src_device, 0));
+    HIP_CHECK(hipMemcpyPeer(dst_alloc.ptr(), dst_device, src_alloc.ptr(), src_device, 0));
 
-      HIP_CHECK(
-        hipMemcpy(result.host_ptr(), dst_alloc.ptr(), allocation_size, hipMemcpyDeviceToHost));
+    HIP_CHECK(
+      hipMemcpy(result.host_ptr(), dst_alloc.ptr(), allocation_size, hipMemcpyDeviceToHost));
 
-      HIP_CHECK(hipDeviceDisablePeerAccess(dst_device));
+    HIP_CHECK(hipDeviceDisablePeerAccess(dst_device));
 
-      ArrayFindIfNot(result.host_ptr(), expected_value, element_count);
-    }
-    else {
-      SUCCEED("Machine Does not have P2P capability");
-    }
+    ArrayFindIfNot(result.host_ptr(), expected_value, element_count);
   } else {
-    SUCCEED("Number of devices are < 2");
+    INFO("Peer access cannot be enabled between devices " << src_device << " " << dst_device);
   }
 }
 
 TEST_CASE("Unit_hipMemcpyPeer_Negative_Parameters") {
   const auto device_count = HipTest::getDeviceCount();
-  if (device_count > 1) {
-    int can_access_peer = 0;
-    const auto src_device = 0;
-    const auto dst_device = 1;
+  if (device_count < 2) {
+    HipTest::HIP_SKIP_TEST("Skipping because devices < 2");
+    return;
+  }
+
+  int can_access_peer = 0;
+  const auto src_device = 0;
+  const auto dst_device = 1;
+
+  HIP_CHECK(hipSetDevice(src_device));
+  HIP_CHECK(hipDeviceCanAccessPeer(&can_access_peer, src_device, dst_device));
+  if (can_access_peer) {
+    HIP_CHECK(hipDeviceEnablePeerAccess(dst_device, 0));
+
+    LinearAllocGuard<int> src_alloc(LinearAllocs::hipMalloc, kPageSize);
+    HIP_CHECK(hipSetDevice(dst_device));
+    LinearAllocGuard<int> dst_alloc(LinearAllocs::hipMalloc, kPageSize);
 
     HIP_CHECK(hipSetDevice(src_device));
-    HIP_CHECK(hipDeviceCanAccessPeer(&can_access_peer, src_device, dst_device));
-    if (can_access_peer) {
-      HIP_CHECK(hipDeviceEnablePeerAccess(dst_device, 0));
 
-      LinearAllocGuard<int> src_alloc(LinearAllocs::hipMalloc, kPageSize);
-      HIP_CHECK(hipSetDevice(dst_device));
-      LinearAllocGuard<int> dst_alloc(LinearAllocs::hipMalloc, kPageSize);
-
-      HIP_CHECK(hipSetDevice(src_device));
-
-      SECTION("Nullptr to Destination Pointer") {
-        REQUIRE(hipMemcpyPeer(nullptr, dst_device, src_alloc.ptr(), src_device, kPageSize) != hipSuccess);
-      }
-
-      SECTION("Nullptr to Source Pointer") {
-        REQUIRE(hipMemcpyPeer(dst_alloc.ptr(), dst_device, nullptr, src_device, kPageSize) != hipSuccess);
-      }
-
-      SECTION("Passing more than allocated size") {
-        REQUIRE(hipMemcpyPeer(dst_alloc.ptr(), dst_device, src_alloc.ptr(), src_device, kPageSize + 1) != hipSuccess);
-      }
-
-      SECTION("Passing invalid Destination device ID") {
-        REQUIRE(hipMemcpyPeer(dst_alloc.ptr(), device_count, src_alloc.ptr(), src_device, kPageSize)!= hipSuccess);
-      }
-
-      SECTION("Passing invalid Source device ID") {
-        REQUIRE(hipMemcpyPeer(dst_alloc.ptr(), dst_device, src_alloc.ptr(), device_count, kPageSize) != hipSuccess);
-      }
-
-      HIP_CHECK(hipDeviceDisablePeerAccess(dst_device));
-    } else {
-      SUCCEED("Machine Does not have P2P capability");  
+    SECTION("Nullptr to Destination Pointer") {
+      HIP_CHECK_ERROR(hipMemcpyPeer(nullptr, dst_device, src_alloc.ptr(), src_device, kPageSize), hipErrorInvalidValue);
     }
+
+    SECTION("Nullptr to Source Pointer") {
+      HIP_CHECK_ERROR(hipMemcpyPeer(dst_alloc.ptr(), dst_device, nullptr, src_device, kPageSize), hipErrorInvalidValue);
+    }
+
+    SECTION("Passing more than allocated size") {
+      HIP_CHECK_ERROR(hipMemcpyPeer(dst_alloc.ptr(), dst_device, src_alloc.ptr(), src_device, kPageSize + 1), hipErrorInvalidValue);
+    }
+
+    SECTION("Passing invalid Destination device ID") {
+      HIP_CHECK_ERROR(hipMemcpyPeer(dst_alloc.ptr(), device_count, src_alloc.ptr(), src_device, kPageSize), hipErrorInvalidDevice);
+    }
+
+    SECTION("Passing invalid Source device ID") {
+      HIP_CHECK_ERROR(hipMemcpyPeer(dst_alloc.ptr(), dst_device, src_alloc.ptr(), device_count, kPageSize), hipErrorInvalidDevice);
+    }
+
+    HIP_CHECK(hipDeviceDisablePeerAccess(dst_device));
   } else {
-    SUCCEED("Number of devices are < 2");  
-  } 
+    INFO("Peer access cannot be enabled between devices " << src_device << " " << dst_device);
+  }
 }
