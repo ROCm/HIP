@@ -9,7 +9,6 @@ set(LINUX_TEST_SRC
     hipGetDevicePropertiesMproc.cc
     hipSetGetDeviceMproc.cc
     hipIpcMemAccessTest.cc
-    hipHostMallocTestsMproc.cc
     hipMallocConcurrencyMproc.cc
     hipMemCoherencyTstMProc.cc
     hipIpcEventHandle.cc
