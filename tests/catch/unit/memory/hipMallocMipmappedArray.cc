@@ -482,4 +482,5 @@ TEST_CASE("Unit_hipGetMipmappedArrayLevel_Negative") {
   {
     HIP_CHECK_ERROR(hipMipmappedArrayGetLevel(&level_array, nullptr, 1), hipErrorInvalidResourceHandle);
   }
+  HIP_CHECK(hipFreeMipmappedArray(array));
 }
