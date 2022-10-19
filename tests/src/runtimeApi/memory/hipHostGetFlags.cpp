@@ -71,8 +71,8 @@ int main() {
         B[i] = 2.0f;
     }
 
-    dim3 dimGrid(LEN / 512, 1, 1);
-    dim3 dimBlock(512, 1, 1);
+    dim3 dimGrid(LEN / 256, 1, 1);
+    dim3 dimBlock(256, 1, 1);
 
     hipLaunchKernelGGL(HIP_KERNEL_NAME(Add), dimGrid, dimBlock, 0, 0, Ad, Bd, Cd);
 
