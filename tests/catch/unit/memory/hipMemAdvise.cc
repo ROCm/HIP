@@ -664,98 +664,63 @@ TEST_CASE("Unit_hipMemAdvise_TstAlignedAllocMem") {
     WARN("Unable to turn on HSA_XNACK, hence terminating the Test case!");
     REQUIRE(false);
   }
-  // The following code block is used to check for gfx906/8 so as to skip if
-  // any of the gpus available
-  int fd1[2];  // Used to store two ends of first pipe
-  pid_t p;
-  if (pipe(fd1) == -1) {
-    fprintf(stderr, "Pipe Failed");
-    REQUIRE(false);
-  }
+  // The following code block checks for gfx90a so as to skip if the device is not MI200
 
-  /* GpuId[0] for gfx906 exists--> 1 for yes and 0 for no
-     GpuId[0] for gfx908 exists--> 1 for yes and 0 for no*/
-  int GpuId[2] = {0, 0};
-  p = fork();
+  hipDeviceProp_t prop;
+  int device;
+  HIP_CHECK(hipGetDevice(&device));
+  HIP_CHECK(hipGetDeviceProperties(&prop, device));
+  std::string gfxName(prop.gcnArchName);
 
-  if (p < 0) {
-    fprintf(stderr, "fork Failed");
-    REQUIRE(false);
-  } else if (p > 0) {  // parent process
-    close(fd1[1]);  // Close writing end of first pipe
-    // Wait for child to send a string
-    wait(NULL);
-    //  Read string from child and close reading end.
-    read(fd1[0], GpuId, 2 * sizeof(int));
-    close(fd1[0]);
-    if ((GpuId[0] == 1) || (GpuId[0] == 1)) {
-      WARN("This test is not applicable on MI60 & MI100."
-              "Skipping the test!!");
-      exit(0);
-    }
-  } else {    // child process
-    close(fd1[0]);  // Close read end of first pipe
-    hipDeviceProp_t prop;
-    HIPCHECK(hipGetDeviceProperties(&prop, 0));
-    char *p = NULL;
-    p = strstr(prop.gcnArchName, "gfx906");
-    if (p) {
-      WARN("gfx906 gpu found on this system!!");
-      GpuId[0] = 1;
-    }
-    p = strstr(prop.gcnArchName, "gfx908");
-    if (p) {
-      WARN("gfx908 gpu found on this system!!");
-      GpuId[1] = 1;
-    }
-    // Write concatenated string and close writing end
-    write(fd1[1], GpuId, 2 * sizeof(int));
-    close(fd1[1]);
-    exit(0);
-  }
-  int stat = 0;
-  if (fork() == 0) {
-    // The below part should be inside fork
-    int managed = HmmAttrPrint();
-    if (managed == 1) {
-      int *Mllc = nullptr, MemSz = 4096 * 4, NumElms = 4096, InitVal = 123;
-      // Mllc = reinterpret_cast<(int *)>(aligned_alloc(4096, MemSz));
-      Mllc = reinterpret_cast<int*>(aligned_alloc(4096, 4096*4));
-      for (int i = 0; i < NumElms; ++i) {
-        Mllc[i] = InitVal;
-      }
-      hipStream_t strm;
-      int DataMismatch = 0;
-      HIP_CHECK(hipStreamCreate(&strm));
-      // The following hipMemAdvise() call is made to know if advise on
-      // aligned_alloc() is causing any issue
-      HIP_CHECK(hipMemAdvise(Mllc, MemSz, hipMemAdviseSetPreferredLocation, 0));
-      HIP_CHECK(hipMemPrefetchAsync(Mllc, MemSz, 0, strm));
-      HIP_CHECK(hipStreamSynchronize(strm));
-      MemAdvise2<<<(NumElms/32), 32, 0, strm>>>(Mllc, NumElms);
-      HIP_CHECK(hipStreamSynchronize(strm));
-      for (int i = 0; i < NumElms; ++i) {
-        if (Mllc[i] != (InitVal + 10)) {
-          DataMismatch++;
+  if ((gfxName == "gfx90a" || gfxName.find("gfx90a:")) == 0) {
+    int stat = 0;
+    if (fork() == 0) {
+      // The below part should be inside fork
+      int managed = HmmAttrPrint();
+      if (managed == 1) {
+        int *Mllc = nullptr, MemSz = 4096 * 4, NumElms = 4096, InitVal = 123;
+        // Mllc = reinterpret_cast<(int *)>(aligned_alloc(4096, MemSz));
+        Mllc = reinterpret_cast<int*>(aligned_alloc(4096, 4096*4));
+        for (int i = 0; i < NumElms; ++i) {
+          Mllc[i] = InitVal;
         }
-      }
-      if (DataMismatch != 0) {
-        WARN("DataMismatch observed!!");
-        exit(9);  // 9 for failure
+        hipStream_t strm;
+        int DataMismatch = 0;
+        HIP_CHECK(hipStreamCreate(&strm));
+        // The following hipMemAdvise() call is made to know if advise on
+        // aligned_alloc() is causing any issue
+        HIP_CHECK(hipMemAdvise(Mllc, MemSz, hipMemAdviseSetPreferredLocation, 0));
+        HIP_CHECK(hipMemPrefetchAsync(Mllc, MemSz, 0, strm));
+        HIP_CHECK(hipStreamSynchronize(strm));
+        MemAdvise2<<<(NumElms/32), 32, 0, strm>>>(Mllc, NumElms);
+        HIP_CHECK(hipStreamSynchronize(strm));
+        for (int i = 0; i < NumElms; ++i) {
+          if (Mllc[i] != (InitVal + 10)) {
+            DataMismatch++;
+          }
+        }
+        if (DataMismatch != 0) {
+          WARN("DataMismatch observed!!");
+          exit(9);  // 9 for failure
+        } else {
+          exit(10);  // 10 for Pass result
+        }
       } else {
-        exit(10);  // 10 for Pass result
+        SUCCEED("GPU 0 doesn't support hipDeviceAttributeManagedMemory "
+               "attribute. Hence skipping the testing with Pass result.\n");
       }
     } else {
-      SUCCEED("GPU 0 doesn't support hipDeviceAttributeManagedMemory "
-             "attribute. Hence skipping the testing with Pass result.\n");
+      wait(&stat);
+      int Result = WEXITSTATUS(stat);
+      if (Result != 10) {
+        REQUIRE(false);
+      }
     }
-  }  else {
-    wait(&stat);
-    int Result = WEXITSTATUS(stat);
-    if (Result != 10) {
-      REQUIRE(false);
-    }
+  } else {
+    SUCCEED("Memory model feature is only supported for gfx90a, Hence"
+             "skipping the testcase for this GPU " << device);
   }
+
 }
 #endif
 
@@ -777,7 +742,7 @@ TEST_CASE("Unit_hipMemAdvise_TstMemAdvisePrefrdLoc") {
       REQUIRE(false);
     }
   } else {
-    SUCCEED("GPU 0 doesn't support hipDeviceAttributePageableMemoryAccess "
+    SUCCEED("GPU 0 doesn't support hipDeviceAttributeManagedMemory "
            "attribute. Hence skipping the testing with Pass result.\n");
   }
 }
@@ -809,7 +774,7 @@ TEST_CASE("Unit_hipMemAdvise_TstMemAdviseLstPreftchLoc") {
         REQUIRE(false);
       }
     } else {
-      SUCCEED("GPU 0 doesn't support hipDeviceAttributePageableMemoryAccess "
+      SUCCEED("GPU 0 doesn't support hipDeviceAttributeManagedMemory "
              "attribute. Hence skipping the testing with Pass result.\n");
     }
   } else {
@@ -847,7 +812,7 @@ TEST_CASE("Unit_hipMemAdvise_TstMemAdviseMultiFlag") {
     }
     HIP_CHECK(hipFree(Hmm));
   } else {
-    SUCCEED("GPU 0 doesn't support hipDeviceAttributePageableMemoryAccess "
+    SUCCEED("GPU 0 doesn't support hipDeviceAttributeManagedMemory "
            "attribute. Hence skipping the testing with Pass result.\n");
   }
 }
@@ -929,7 +894,7 @@ TEST_CASE("Unit_hipMemAdvise_ReadMosltyMgpuTst") {
     HIP_CHECK(hipFree(Hmm));
     HIP_CHECK(hipStreamDestroy(strm));
   } else {
-    SUCCEED("GPU 0 doesn't support hipDeviceAttributePageableMemoryAccess "
+    SUCCEED("GPU 0 doesn't support hipDeviceAttributeManagedMemory "
            "attribute. Hence skipping the testing with Pass result.\n");
   }
 }
@@ -955,7 +920,7 @@ TEST_CASE("Unit_hipMemAdvise_TstSetUnsetPrfrdLoc") {
       REQUIRE(false);
     }
   } else {
-    SUCCEED("GPU 0 doesn't support hipDeviceAttributePageableMemoryAccess "
+    SUCCEED("GPU 0 doesn't support hipDeviceAttributeManagedMemory "
            "attribute. Hence skipping the testing with Pass result.\n");
   }
 }

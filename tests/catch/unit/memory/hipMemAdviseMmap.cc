@@ -50,7 +50,7 @@ TEST_CASE("Unit_hipMemAdvise_MmapMem") {
   HIP_CHECK(hipDeviceGetAttribute(&managed, hipDeviceAttributeManagedMemory,
                                   0));
   INFO("hipDeviceAttributeManagedMemory: " << managed);
-  if ((managed == 1) && (PageableMem == 1)) {
+  if (PageableMem == 1) {
 #ifdef __linux__
     // For now this test is enabled only for linux platforms
     FILE *fptr;
