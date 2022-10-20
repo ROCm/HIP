@@ -150,7 +150,7 @@ TEST_CASE("Unit_hipMemcpy_NullCheck") {
                              &A_h, &B_h, &C_h,
                              NUM_ELM*sizeof(float));
   hipStream_t stream;
-  hipStreamCreate(&stream);
+  HIP_CHECK(hipStreamCreate(&stream));
   HIP_CHECK(hipMemcpy(A_d, C_h,
                       NUM_ELM*sizeof(float),
                       hipMemcpyHostToDevice));
@@ -240,7 +240,7 @@ TEST_CASE("Unit_hipMemcpy_HalfMemCopy") {
                              &A_h, &B_h, &C_h,
                              NUM_ELM*sizeof(float));
   hipStream_t stream;
-  hipStreamCreate(&stream);
+  HIP_CHECK(hipStreamCreate(&stream));
 
   SECTION("hipMemcpyHtoD half memory copy") {
     HIP_CHECK(hipMemcpyHtoD(hipDeviceptr_t(A_d), A_h,
