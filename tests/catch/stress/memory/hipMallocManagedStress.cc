@@ -158,7 +158,7 @@ TEST_CASE("Stress_hipMallocManaged_MultiSize") {
     hipStream_t strm;
     HIP_CHECK(hipStreamCreate(&strm));
     dim3 dimBlock(blockSize, 1, 1);
-    for (int i = 1; i < (1024*1024); ++i) {
+    for (int i = 1; i < (1024*100); ++i) {
       HIP_CHECK(hipMallocManaged(&Hmm1, i));
       HIP_CHECK(hipMallocManaged(&Hmm2, i));
       for (int j = 0; j < i; ++j) {
