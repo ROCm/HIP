@@ -26,9 +26,16 @@ THE SOFTWARE.
  **/
 TEST_CASE("Unit_hipStreamQuery_WithNoWork") {
   hipStream_t stream{nullptr};
-  HIP_CHECK(hipStreamCreate(&stream));
-  HIP_CHECK(hipStreamQuery(stream));
-  HIP_CHECK(hipStreamDestroy(stream));
+
+  SECTION("Null Stream") {
+    HIP_CHECK(hipStreamQuery(stream));
+  }
+
+  SECTION ("Created Stream") {
+    HIP_CHECK(hipStreamCreate(&stream));
+    HIP_CHECK(hipStreamQuery(stream));
+    HIP_CHECK(hipStreamDestroy(stream));
+  }
 }
 
 /**
@@ -37,13 +44,22 @@ TEST_CASE("Unit_hipStreamQuery_WithNoWork") {
  **/
 TEST_CASE("Unit_hipStreamQuery_WithFinishedWork") {
   hipStream_t stream{nullptr};
-  HIP_CHECK(hipStreamCreate(&stream));
 
-  hip::stream::empty_kernel<<<dim3(1), dim3(1), 0, stream>>>();
-  HIP_CHECK(hipStreamSynchronize(stream));
+  SECTION("Null Stream") {
+    hip::stream::empty_kernel<<<dim3(1), dim3(1), 0, stream>>>();
+    HIP_CHECK(hipStreamSynchronize(stream));
 
-  HIP_CHECK(hipStreamQuery(stream));
-  HIP_CHECK(hipStreamDestroy(stream));
+    HIP_CHECK(hipStreamQuery(stream));
+  }
+
+  SECTION ("Created Stream") {
+    HIP_CHECK(hipStreamCreate(&stream));
+    hip::stream::empty_kernel<<<dim3(1), dim3(1), 0, stream>>>();
+    HIP_CHECK(hipStreamSynchronize(stream));
+
+    HIP_CHECK(hipStreamQuery(stream));
+    HIP_CHECK(hipStreamDestroy(stream));
+  }
 }
 
 #if !HT_NVIDIA

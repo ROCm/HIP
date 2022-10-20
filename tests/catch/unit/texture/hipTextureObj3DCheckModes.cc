@@ -113,6 +113,7 @@ static void runTest(const int width, const int height, const int depth, const fl
 
   hipLaunchKernelGGL(tex3DKernel<normalizedCoords>, dimGrid, dimBlock, 0, 0, dData,
                      textureObject, width, height, depth, offsetX, offsetY, offsetZ);
+  HIP_CHECK(hipGetLastError()); 
 
   HIP_CHECK(hipDeviceSynchronize());
 
@@ -148,10 +149,6 @@ line1:
 
 TEST_CASE("Unit_hipTextureObj3DCheckModes") {
   CHECK_IMAGE_SUPPORT
-#ifdef _WIN32
-  INFO("Unit_hipTextureObj3DCheckModes skipped on Windows");
-  return;
-#endif
 
   int device = 0;
   hipDeviceProp_t props;

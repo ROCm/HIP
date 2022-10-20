@@ -105,7 +105,7 @@ TEST_CASE("Unit_hipMemset2D_Negative_InvalidPtr") {
   size_t pitch_A;
   HIP_CHECK(hipMallocPitch(&A_d, &pitch_A, width, height));
   testHipMemset2DApis(dst, pitch_A, memsetVal, width, height);
-  hipFree(A_d);
+  HIP_CHECK(hipFree(A_d));
 }
 
 TEST_CASE("Unit_hipMemset2D_Negative_InvalidSizes") {

@@ -20,6 +20,7 @@ set(TEST_SRC
     hipDeviceCanAccessPeer.cc
     hipDeviceEnableDisablePeerAccess.cc
     hipExtGetLinkTypeAndHopCount.cc
+    hipDeviceSetLimit.cc
 )
 
 set_source_files_properties(hipGetDeviceCount.cc PROPERTIES COMPILE_FLAGS -std=c++17)
