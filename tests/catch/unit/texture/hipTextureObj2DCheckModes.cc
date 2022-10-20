@@ -35,7 +35,7 @@ __global__ void tex2DKernel(float *outputData, hipTextureObject_t textureObject,
 }
 
 template<hipTextureAddressMode addressMode, hipTextureFilterMode filterMode, bool normalizedCoords>
-void runTest(const int width, const int height, const float offsetX, const float offsetY) {
+static void runTest(const int width, const int height, const float offsetX, const float offsetY) {
   //printf("%s(addressMode=%d, filterMode=%d, normalizedCoords=%d, width=%d, height=%d, offsetX=%f, offsetY=%f)\n",
   //     __FUNCTION__, addressMode, filterMode, normalizedCoords, width, height, offsetX, offsetY);
   unsigned int size = width * height * sizeof(float);
@@ -51,7 +51,7 @@ void runTest(const int width, const int height, const float offsetX, const float
   hipChannelFormatDesc channelDesc = hipCreateChannelDesc(
       32, 0, 0, 0, hipChannelFormatKindFloat);
   hipArray *hipArray;
-  hipMallocArray(&hipArray, &channelDesc, width, height);
+  HIP_CHECK(hipMallocArray(&hipArray, &channelDesc, width, height));
 
   HIP_CHECK(hipMemcpy2DToArray(hipArray, 0, 0, hData, width * sizeof(float), width * sizeof(float), height, hipMemcpyHostToDevice));
 
@@ -74,7 +74,7 @@ void runTest(const int width, const int height, const float offsetX, const float
   HIP_CHECK(hipCreateTextureObject(&textureObject, &resDesc, &texDesc, NULL));
 
   float *dData = nullptr;
-  hipMalloc((void**) &dData, size);
+  HIP_CHECK(hipMalloc((void**) &dData, size));
 
   dim3 dimBlock(16, 16, 1);
   dim3 dimGrid((width + dimBlock.x - 1) / dimBlock.x, (height + dimBlock.y -1)/ dimBlock.y, 1);
@@ -82,17 +82,17 @@ void runTest(const int width, const int height, const float offsetX, const float
   hipLaunchKernelGGL(tex2DKernel<normalizedCoords>, dimGrid, dimBlock, 0, 0, dData,
                      textureObject, width, height, offsetX, offsetY);
 
-  hipDeviceSynchronize();
+  HIP_CHECK(hipDeviceSynchronize());
 
   float *hOutputData = (float*) malloc(size);
   memset(hOutputData, 0, size);
-  hipMemcpy(hOutputData, dData, size, hipMemcpyDeviceToHost);
+  HIP_CHECK(hipMemcpy(hOutputData, dData, size, hipMemcpyDeviceToHost));
 
   bool result = true;
   for (int i = 0; i < height; i++) {
     for (int j = 0; j < width; j++) {
       int index = i * width + j;
-      float expectedValue = getExpectedValue<addressMode, filterMode>(width, height,
+      float expectedValue = getExpectedValue<float, addressMode, filterMode>(width, height,
                                                     offsetX + j, offsetY + i, hData);
       if (!hipTextureSamplingVerify<float, filterMode>(hOutputData[index], expectedValue)) {
         INFO("Mismatch at (" << offsetX + j << ", " << offsetY + i << "):" <<
@@ -103,9 +103,9 @@ void runTest(const int width, const int height, const float offsetX, const float
     }
   }
 line1:
-  hipDestroyTextureObject(textureObject);
-  hipFree(dData);
-  hipFreeArray(hipArray);
+  HIP_CHECK(hipDestroyTextureObject(textureObject));
+  HIP_CHECK(hipFree(dData));
+  HIP_CHECK(hipFreeArray(hipArray));
   free(hData);
   free(hOutputData);
   REQUIRE(result);
@@ -128,7 +128,7 @@ TEST_CASE("Unit_hipTextureObj2DCheckModes") {
     runTest<hipAddressModeBorder, hipFilterModePoint, false>(256, 256, 12.5, 6.7);
   }
 
-  SECTION("hipAddressModeClamp, hipFilterModePoint, regularCoords") {
+  SECTION("hipAddressModeClamp, hipFilterModeLinear, regularCoords") {
     runTest<hipAddressModeClamp, hipFilterModeLinear, false>(256, 256, -0.4, -0.4);
     runTest<hipAddressModeClamp, hipFilterModeLinear, false>(256, 256, 4, 14.6);
   }
