@@ -1707,8 +1707,9 @@ hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t* handle, void* devPtr);
  * hipErrorInvalidHandle,
  * hipErrorTooManyPeers
  *
- * @note No guarantees are made about the address returned in @p *devPtr.
- * In particular, multiple processes may not receive the same address for the same @p handle.
+ * @note During multiple processes, using the same memory handle opened by the current context,
+ * there is no guarantee that the same device poiter will be returned in @p *devPtr.
+ * This is diffrent from CUDA.
  *
  */
 hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned int flags);
