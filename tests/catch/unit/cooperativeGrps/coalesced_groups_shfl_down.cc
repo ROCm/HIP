@@ -157,6 +157,7 @@ static void test_group_partition(unsigned int tileSz) {
     // Launch Kernel
     hipLaunchKernelGGL(kernel_cg_group_partition, blockSize, threadsPerBlock,
                        threadsPerBlock * sizeof(int), 0, dResult, tileSz, i);
+    HIP_CHECK(hipGetLastError()); 
     err = hipDeviceSynchronize();
     if (err != hipSuccess) {
       fprintf(stderr, "Failed to launch kernel (error code %s)!\n", hipGetErrorString(err));
@@ -217,6 +218,7 @@ static void test_shfl_down() {
     // Launch Kernel
     hipLaunchKernelGGL(kernel_shfl_down, blockSize, threadsPerBlock,
                        threadsPerBlock * sizeof(int), 0, dPtr, dResults, lane_delta, i);
+    HIP_CHECK(hipGetLastError()); 
     hipMemcpy(hPtr, dResults, group_size_in_bytes, hipMemcpyDeviceToHost);
     err = hipDeviceSynchronize();
     if (err != hipSuccess) {

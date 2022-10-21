@@ -29,12 +29,13 @@ TEMPLATE_TEST_CASE("ABM_AddKernel_MultiTypeMultiSize", "", int, long, float, lon
   REQUIRE(res == hipSuccess);
 
   hipLaunchKernelGGL(add<TestType>, 1, size, 0, 0, d_a, d_b, d_c, size);
+  HIP_CHECK(hipGetLastError());
 
   res = hipMemcpy(a.data(), d_c, sizeof(TestType) * size, hipMemcpyDeviceToHost);
   REQUIRE(res == hipSuccess);
 
-  hipFree(d_a);
-  hipFree(d_b);
-  hipFree(d_c);
+  HIP_CHECK(hipFree(d_a));
+  HIP_CHECK(hipFree(d_b));
+  HIP_CHECK(hipFree(d_c));
   REQUIRE(a == c);
 }
