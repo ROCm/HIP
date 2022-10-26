@@ -41,10 +41,10 @@ void MaxPotentialBlockSizeNegative(F func) {
 
   // Validate common arguments
   SECTION("gridSize is nullptr") {
-    HIP_CHECK_ERROR(func(nullptr, &blockSize, 0, 0), hipErrorInvalidValue);
+    HIP_CHECK_ERROR(func(nullptr, &blockSize), hipErrorInvalidValue);
   }
   SECTION("blockSize is nullptr") {
-    HIP_CHECK_ERROR(func(&gridSize, nullptr, 0, 0), hipErrorInvalidValue);
+    HIP_CHECK_ERROR(func(&gridSize, nullptr), hipErrorInvalidValue);
   }
 }
 
