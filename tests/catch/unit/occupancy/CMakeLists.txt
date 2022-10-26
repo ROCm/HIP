@@ -1,5 +1,6 @@
 # Common Tests - Test independent of all platforms
 set(TEST_SRC
+  DriverContext.cc
   hipOccupancyMaxActiveBlocksPerMultiprocessor.cc
   hipOccupancyMaxPotentialBlockSize.cc
   hipModuleOccupancyMaxPotentialBlockSize.cc

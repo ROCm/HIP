@@ -17,6 +17,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 #include "occupancy_common.hh"
+#include "DriverContext.hh"
 
 TEST_CASE("Unit_hipModuleOccupancyMaxPotentialBlockSize_Negative_Parameters") {
   hipModule_t module;
@@ -24,7 +25,7 @@ TEST_CASE("Unit_hipModuleOccupancyMaxPotentialBlockSize_Negative_Parameters") {
   int blockSize = 0;
   int gridSize = 0;
 
-  HIP_CHECK(hipInit(0));
+  DriverContext ctx;
 
   HIP_CHECK(hipModuleLoad(&module, "simple_kernel.code"));
   HIPCHECK(hipModuleGetFunction(&function, module, "SimpleKernel"));
@@ -47,7 +48,7 @@ TEST_CASE("Unit_hipModuleOccupancyMaxPotentialBlockSizeWithFlags_Negative_Parame
   int blockSize = 0;
   int gridSize = 0;
 
-  HIP_CHECK(hipInit(0));
+  DriverContext ctx;
 
   HIP_CHECK(hipModuleLoad(&module, "simple_kernel.code"));
   HIPCHECK(hipModuleGetFunction(&function, module, "SimpleKernel"));
@@ -74,7 +75,7 @@ TEST_CASE("Unit_hipModuleOccupancyMaxPotentialBlockSize_Positive_RangeValidation
   hipModule_t module;
   hipFunction_t function;
 
-  HIP_CHECK(hipInit(0));
+  DriverContext ctx;
 
   HIP_CHECK(hipModuleLoad(&module, "simple_kernel.code"));
   HIPCHECK(hipModuleGetFunction(&function, module, "SimpleKernel"));
@@ -101,10 +102,12 @@ TEST_CASE("Unit_hipModuleOccupancyMaxPotentialBlockSizeWithFlags_Positive_RangeV
   hipModule_t module;
   hipFunction_t function;
 
-  HIP_CHECK(hipInit(0));
+  DriverContext ctx;
 
   HIP_CHECK(hipModuleLoad(&module, "simple_kernel.code"));
   HIPCHECK(hipModuleGetFunction(&function, module, "SimpleKernel"));
+
+  HIP_CHECK(hipGetDeviceProperties(&devProp, 0));
 
   SECTION("dynSharedMemPerBlk = 0, blockSizeLimit = 0") {
     MaxPotentialBlockSize([&function](int* gridSize, int* blockSize) {

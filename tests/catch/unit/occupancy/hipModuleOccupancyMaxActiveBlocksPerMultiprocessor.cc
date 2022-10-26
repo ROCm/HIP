@@ -17,16 +17,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 #include "occupancy_common.hh"
+#include "DriverContext.hh"
 
 TEST_CASE("Unit_hipModuleOccupancyMaxActiveBlocksPerMultiprocessor_Negative_Parameters") {
-  hipDeviceProp_t devProp;
   hipModule_t module;
   hipFunction_t function;
   int numBlocks = 0;
   int blockSize = 0;
   int gridSize = 0;
 
-  HIP_CHECK(hipInit(0));
+  DriverContext ctx;
 
   HIP_CHECK(hipModuleLoad(&module, "simple_kernel.code"));
   HIPCHECK(hipModuleGetFunction(&function, module, "SimpleKernel"));
@@ -47,14 +47,13 @@ TEST_CASE("Unit_hipModuleOccupancyMaxActiveBlocksPerMultiprocessor_Negative_Para
 }
 
 TEST_CASE("Unit_hipModuleOccupancyMaxActiveBlocksPerMultiprocessorWithFlags_Negative_Parameters") {
-  hipDeviceProp_t devProp;
   hipModule_t module;
   hipFunction_t function;
   int numBlocks = 0;
   int blockSize = 0;
   int gridSize = 0;
 
-  HIP_CHECK(hipInit(0));
+  DriverContext ctx;
 
   HIP_CHECK(hipModuleLoad(&module, "simple_kernel.code"));
   HIPCHECK(hipModuleGetFunction(&function, module, "SimpleKernel"));
@@ -86,7 +85,7 @@ TEST_CASE("Unit_hipModuleOccupancyMaxActiveBlocksPerMultiprocessor_Positive_Rang
   int blockSize = 0;
   int gridSize = 0;
 
-  HIP_CHECK(hipInit(0));
+  DriverContext ctx;
 
   HIP_CHECK(hipModuleLoad(&module, "simple_kernel.code"));
   HIPCHECK(hipModuleGetFunction(&function, module, "SimpleKernel"));
@@ -120,7 +119,7 @@ TEST_CASE("Unit_hipModuleOccupancyMaxActiveBlocksPerMultiprocessorWithFlags_Posi
   int blockSize = 0;
   int gridSize = 0;
 
-  HIP_CHECK(hipInit(0));
+  DriverContext ctx;
 
   HIP_CHECK(hipModuleLoad(&module, "simple_kernel.code"));
   HIPCHECK(hipModuleGetFunction(&function, module, "SimpleKernel"));
