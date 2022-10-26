@@ -23,7 +23,7 @@ static __global__ void f1(float *a) { *a = 1.0; }
 template <typename T>
 static __global__ void f2(T *a) { *a = 1; }
 
-TEST_CASE("Unit_hipOccupancyMaxActiveBlocksPerMultiprocessor_Negative") {
+TEST_CASE("Unit_hipOccupancyMaxActiveBlocksPerMultiprocessor_Negative_Parameters") {
   int numBlocks = 0;
   int blockSize = 0;
   int gridSize = 0;
@@ -37,11 +37,11 @@ TEST_CASE("Unit_hipOccupancyMaxActiveBlocksPerMultiprocessor_Negative") {
   }, blockSize);
 
   SECTION("Kernel function is NULL") {
-    HIP_CHECK_ERROR(hipOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocks, NULL, blockSize, 0), hipErrorInvalidValue);
+    HIP_CHECK_ERROR(hipOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocks, NULL, blockSize, 0), hipErrorInvalidDeviceFunction);
   }
 }
 
-TEST_CASE("Unit_hipOccupancyMaxActiveBlocksPerMultiprocessor_rangeValidation") {
+TEST_CASE("Unit_hipOccupancyMaxActiveBlocksPerMultiprocessor_Positive_RangeValidation") {
   hipDeviceProp_t devProp;
   int blockSize = 0;
   int gridSize = 0;
@@ -66,7 +66,7 @@ TEST_CASE("Unit_hipOccupancyMaxActiveBlocksPerMultiprocessor_rangeValidation") {
   }
 }
 
-TEST_CASE("Unit_hipOccupancyMaxActiveBlocksPerMultiprocessor_templateInvocation") {
+TEST_CASE("Unit_hipOccupancyMaxActiveBlocksPerMultiprocessor_Positive_TemplateInvocation") {
   hipDeviceProp_t devProp;
   int blockSize = 0;
   int gridSize = 0;
