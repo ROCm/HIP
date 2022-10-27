@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp
+ * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_PLATFORM nvidia
  * TEST: %t
  * HIT_END
  */
@@ -28,6 +28,8 @@ THE SOFTWARE.
 #include <iostream>
 #include <hip/hip_runtime.h>
 #include "test_common.h"
+#include <hip/hip_fp16.h>
+const int size = 32;
 
 template <typename T>
 __global__ void shflDownSum(T* a, int size) {
@@ -59,27 +61,59 @@ void getFactor(int& fact) { fact = 101; }
 void getFactor(unsigned int& fact) { fact = static_cast<unsigned int>(INT32_MAX)+1; }
 void getFactor(float& fact) { fact = 2.5; }
 void getFactor(double& fact) { fact = 2.5; }
+void getFactor(__half& fact) { fact = 2.5; }
 void getFactor(long& fact) { fact = 202; }
 void getFactor(unsigned long& fact) { fact = static_cast<unsigned long>(__LONG_MAX__)+1; }
 void getFactor(long long& fact) { fact = 303; }
 void getFactor(unsigned long long& fact) { fact = static_cast<unsigned long long>(__LONG_LONG_MAX__)+1; }
 
-template <typename T>
-void runTestShflUp() {
-    const int size = 32;
-    T a[size];
+template <typename T> T sum(T* a) {
     T cpuSum = 0;
-    T factor; getFactor(factor);
+    T factor;
+    getFactor(factor);
     for (int i = 0; i < size; i++) {
         a[i] = i + factor;
         cpuSum += a[i];
     }
+    return cpuSum;
+}
+
+template <> __half sum(__half* a) {
+    __half cpuSum = 0;
+    __half factor;
+    getFactor(factor);
+    for (int i = 0; i < size; i++) {
+        a[i] = i + __half2float(factor);
+        cpuSum = __half2float(cpuSum) + __half2float(a[i]);
+    }
+    return cpuSum;
+}
+
+template <typename T> bool compare(T gpuSum, T cpuSum) {
+    if (gpuSum != cpuSum) {
+        return true;
+    }
+    return false;
+}
+
+template <> bool compare(__half gpuSum, __half cpuSum) {
+    if (__half2float(gpuSum) != __half2float(cpuSum)) {
+        return true;
+    }
+    return false;
+}
+
+template <typename T>
+void runTestShflUp() {
+    const int size = 32;
+    T a[size];
+    T cpuSum = sum(a);
     T* d_a;
     hipMalloc(&d_a, sizeof(T) * size);
     hipMemcpy(d_a, &a, sizeof(T) * size, hipMemcpyDefault);
     hipLaunchKernelGGL(shflUpSum<T>, 1, size, 0, 0, d_a, size);
     hipMemcpy(&a, d_a, sizeof(T) * size, hipMemcpyDefault);
-    if (a[size - 1] != cpuSum) {
+    if (compare(a[size - 1], cpuSum)) {
         hipFree(d_a);
         failed("Shfl Up Sum did not match.");
     }
@@ -88,20 +122,14 @@ void runTestShflUp() {
 
 template <typename T>
 void runTestShflDown() {
-    const int size = 32;
     T a[size];
-    T cpuSum = 0;
-    T factor; getFactor(factor);
-    for (int i = 0; i < size; i++) {
-        a[i] = i + factor;
-        cpuSum += a[i];
-    }
+    T cpuSum = sum(a);
     T* d_a;
     hipMalloc(&d_a, sizeof(T) * size);
     hipMemcpy(d_a, &a, sizeof(T) * size, hipMemcpyDefault);
     hipLaunchKernelGGL(shflDownSum<T>, 1, size, 0, 0, d_a, size);
     hipMemcpy(&a, d_a, sizeof(T) * size, hipMemcpyDefault);
-    if (a[0] != cpuSum) {
+    if (compare(a[0], cpuSum)) {
         hipFree(d_a);
         failed("Shfl Down Sum did not match.");
     }
@@ -110,20 +138,14 @@ void runTestShflDown() {
 
 template <typename T>
 void runTestShflXor() {
-    const int size = 32;
     T a[size];
-    T cpuSum = 0;
-    T factor; getFactor(factor);
-    for (int i = 0; i < size; i++) {
-        a[i] = i + factor;
-        cpuSum += a[i];
-    }
+    T cpuSum = sum(a);
     T* d_a;
     hipMalloc(&d_a, sizeof(T) * size);
     hipMemcpy(d_a, &a, sizeof(T) * size, hipMemcpyDefault);
     hipLaunchKernelGGL(shflXorSum<T>, 1, size, 0, 0, d_a, size);
     hipMemcpy(&a, d_a, sizeof(T) * size, hipMemcpyDefault);
-    if (a[0] != cpuSum) {
+    if (compare(a[0], cpuSum)) {
         hipFree(d_a);
         failed("Shfl Xor Sum did not match.");
     }
@@ -134,6 +156,7 @@ int main() {
     runTestShflUp<float>();
     runTestShflUp<double>();
     runTestShflUp<long>();
+    runTestShflUp<__half>();
     runTestShflUp<long long>();
     runTestShflUp<unsigned int>();
     runTestShflUp<unsigned long>();
@@ -143,6 +166,7 @@ int main() {
     runTestShflDown<float>();
     runTestShflDown<double>();
     runTestShflDown<long>();
+    runTestShflDown<__half>();
     runTestShflDown<long long>();
     runTestShflDown<unsigned int>();
     runTestShflDown<unsigned long>();
@@ -152,6 +176,7 @@ int main() {
     runTestShflXor<float>();
     runTestShflXor<double>();
     runTestShflXor<long>();
+    runTestShflXor<__half>();
     runTestShflXor<long long>();
     runTestShflXor<unsigned int>();
     runTestShflXor<unsigned long>();
