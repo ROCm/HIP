@@ -21,7 +21,7 @@
 	   "Unit_hipMallocMipmappedArray_Negative_InvalidFlags",
 	   "Unit_hipMallocMipmappedArray_Negative_InvalidFormat",
 	   "Unit_hipMallocMipmappedArray_Negative_BadChannelLayout",
-       "Unit_hipMallocMipmappedArray_Negative_8BitFloat",
+	   "Unit_hipMallocMipmappedArray_Negative_8BitFloat",
 	   "Unit_hipMallocMipmappedArray_Negative_DifferentChannelSizes",
 	   "Unit_hipMallocMipmappedArray_Negative_BadChannelSize",
 	   "Unit_hipMallocMipmappedArray_Negative_NumericLimit",
