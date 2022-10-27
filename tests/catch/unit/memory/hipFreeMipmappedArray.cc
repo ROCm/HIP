@@ -26,18 +26,13 @@ THE SOFTWARE.
 #include "utils.hh"
 
 /*
- * This testcase verifies [ hipFree || hipFreeArray || hipFreeType::ArrayDestroy ||
- * hipFreeType::HostFree with hipHostMalloc ]
- * 1. Check that hipFree implicitly synchronises the device.
- * 2. Perform multiple allocations and then call hipFree on each pointer concurrently (from unique
+ * hipFreeMipmappedArray API test scenarios
+ * 1. Check that hipFreeMipmappedArray implicitly synchronises the device.
+ * 2. Perform multiple allocations and then call hipFreeMipmappedArray on each pointer concurrently (from unique
  * threads) for different memory types and different allocation sizes.
- * 3. Pass nullptr as argument and check that no operation is performed and hipSuccess is returned.
- * 4. Pass an invalid ptr and check that hipErrorInvalidValue is returned.
- * 5. Call hipFree twice on the same pointer and check that the implementation handles the second
+ * 3. Pass nullptr as argument and check that correct error code is returned.
+ * 4. Call hipFreeMipmappedArray twice on the same pointer and check that the implementation handles the second
  * call correctly.
- * 6. HipFreeType::HostFree only:
- *    Try to free memory that has been registered with hipHostRegister and check that
- * hipErrorInvalidValue is returned.
  */
 
 TEMPLATE_TEST_CASE("Unit_hipFreeMipmappedArrayImplicitSyncArray", "", char, float) {
