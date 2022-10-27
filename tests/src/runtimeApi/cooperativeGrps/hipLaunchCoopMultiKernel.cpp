@@ -41,7 +41,6 @@ const static uint BufferSizeInDwords = 256 * 1024 * 1024;
 const static uint numQueues = 4;
 const static uint numIter = 100;
 constexpr uint NumKernelArgs = 4;
-constexpr uint MaxGPUs = 8;
 
 #include <stdio.h>
 
@@ -93,10 +92,7 @@ __global__ void test_gws(uint* buf, uint bufSize, long* tmpBuf, long* result)
 
 int main() {
   float *A, *B;
-  uint* dA[MaxGPUs];
-  long* dB[MaxGPUs];
   long* dC;
-  hipStream_t stream[MaxGPUs];
 
   uint32_t* init = new uint32_t[BufferSizeInDwords];
   for (uint32_t i = 0; i < BufferSizeInDwords; ++i) {
@@ -106,7 +102,11 @@ int main() {
   int nGpu = 0;
   HIPCHECK(hipGetDeviceCount(&nGpu));
   size_t copySizeInDwords = BufferSizeInDwords / nGpu;
-  hipDeviceProp_t deviceProp[MaxGPUs];
+
+  uint* dA[nGpu];
+  long* dB[nGpu];
+  hipStream_t stream[nGpu];
+  hipDeviceProp_t deviceProp[nGpu];
 
   for (int i = 0; i < nGpu; i++) {
     HIPCHECK(hipSetDevice(i));
@@ -146,7 +146,7 @@ int main() {
   std::time_t end_time;
   double time = 0;
   for (uint set = 0; set < 3; ++set) {
-    void* args[MaxGPUs * NumKernelArgs];
+    void* args[nGpu * NumKernelArgs];
     std::cout << "---------- Test#" << set << ", size: "<< BufferSizeInDwords <<
       " dwords ---------------\n";
     for (int i = 0; i < nGpu; i++) {
@@ -205,6 +205,7 @@ int main() {
     hipFree(dB[i]);
     HIPCHECK(hipStreamDestroy(stream[i]));
   }
+
   delete [] init;
   passed();
   return 0;
