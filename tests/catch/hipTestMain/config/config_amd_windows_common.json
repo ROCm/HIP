@@ -86,6 +86,8 @@
 	   "Unit_hipGraphNodeGetDependencies_Functional",
 	   "Unit_hipGraphExecChildGraphNodeSetParams_ChildTopology",
 	   "Note: needs to be enabled when streamPerThread issues are fixed",
-	   "Unit_hipStreamSynchronize_NullStreamAndStreamPerThread"
+	   "Unit_hipStreamSynchronize_NullStreamAndStreamPerThread",
+	   "Unit_hipGraphAddEventRecordNode_Functional_ElapsedTime",
+	   "Unit_hipStreamBeginCapture_captureComplexGraph"
 	]
 }
