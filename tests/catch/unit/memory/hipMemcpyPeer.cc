@@ -16,13 +16,19 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-
+/*
+Testcase Scenarios :
+Unit_hipMemcpyPeer_Positive_Default - Test basic P2P memcpy between two devices with hipMemcpyPeer api
+Unit_hipMemcpyPeer_Positive_Synchronization_Behavior - Test synchronization behavior for hipMemcpyPeer api
+Unit_hipMemcpyPeer_Positive_ZeroSize - Test that no data is copied when sizeBytes is set to 0
+Unit_hipMemcpyPeer_Negative_Parameters - Test unsuccessful execution of hipMemcpyPeer api when parameters are invalid
+*/
 #include <hip_test_common.hh>
 #include <hip/hip_runtime_api.h>
 #include <utils.hh>
 #include <resource_guards.hh>
 
-TEST_CASE("Unit_hipMemcpyPeer_Default") {
+TEST_CASE("Unit_hipMemcpyPeer_Positive_Default") {
   const auto device_count = HipTest::getDeviceCount();
   if (device_count < 2) {
     HipTest::HIP_SKIP_TEST("Skipping because devices < 2");
@@ -68,7 +74,7 @@ TEST_CASE("Unit_hipMemcpyPeer_Default") {
   }
 }
 
-TEST_CASE("Unit_hipMemcpyPeer_Synchronization_Behavior") {
+TEST_CASE("Unit_hipMemcpyPeer_Positive_Synchronization_Behavior") {
   HIP_CHECK(hipDeviceSynchronize());
 
   const auto device_count = HipTest::getDeviceCount();
@@ -102,7 +108,7 @@ TEST_CASE("Unit_hipMemcpyPeer_Synchronization_Behavior") {
   }
 }
 
-TEST_CASE("Unit_hipMemcpyPeer_ZeroSize") {
+TEST_CASE("Unit_hipMemcpyPeer_Positive_ZeroSize") {
   const auto device_count = HipTest::getDeviceCount();
   if (device_count < 2) {
     HipTest::HIP_SKIP_TEST("Skipping because devices < 2");

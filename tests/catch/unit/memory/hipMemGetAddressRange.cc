@@ -16,7 +16,11 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-
+/*
+Testcase Scenarios :
+Unit_hipMemGetAddressRange_Positive - Test hipMemGetAddressRange api for various memory allocation types and offsets
+Unit_hipMemGetAddressRange_Negative - Test unsuccessful execution of hipMemGetAddressRange api when parameters are invalid
+*/
 #include <hip_test_common.hh>
 #include <hip/hip_runtime_api.h>
 #include <utils.hh>
