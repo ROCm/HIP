@@ -120,7 +120,7 @@ set(TEST_SRC
     hipMemcpy2DFromArray_old.cc
     hipMemcpy2DFromArrayAsync.cc
     hipMemcpyAtoH.cc
-    hipMemcpyHtoA_old.cc
+    hipMemcpyAtoH_old.cc
     hipMemcpyHtoA.cc
     hipMemcpyHtoA_old.cc
     hipMemcpyAllApiNegative.cc

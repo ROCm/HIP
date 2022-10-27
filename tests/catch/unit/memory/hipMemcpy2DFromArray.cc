@@ -16,7 +16,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-
+/*
+Testcase Scenarios :
+Unit_hipMemcpy2DFromArray_Positive_Default - Test basic memcpy between 2D array and host/device with hipMemcpy2DFromArray api
+Unit_hipMemcpy2DFromArray_Positive_Synchronization_Behavior - Test synchronization behavior for hipMemcpy2DFromArray api
+Unit_hipMemcpy2DFromArray_Positive_ZeroWidthHeight - Test that no data is copied when width/height is set to 0
+Unit_hipMemcpy2DFromArray_Negative_Parameters - Test unsuccessful execution of hipMemcpy2DFromArray api when parameters are invalid
+*/
 #include "array_memcpy_tests_common.hh"
 
 #include <hip_test_common.hh>
@@ -24,7 +30,7 @@ THE SOFTWARE.
 #include <utils.hh>
 #include <resource_guards.hh>
 
-TEST_CASE("Unit_hipMemcpy2DFromArray_Default") {
+TEST_CASE("Unit_hipMemcpy2DFromArray_Positive_Default") {
   using namespace std::placeholders;
 
   const auto width = GENERATE(16, 32, 48);
@@ -57,7 +63,7 @@ TEST_CASE("Unit_hipMemcpy2DFromArray_Default") {
   }
 }
 
-TEST_CASE("Unit_hipMemcpy2DFromArray_Synchronization_Behavior") {
+TEST_CASE("Unit_hipMemcpy2DFromArray_Positive_Synchronization_Behavior") {
   using namespace std::placeholders;
   HIP_CHECK(hipDeviceSynchronize());
 
@@ -77,7 +83,7 @@ TEST_CASE("Unit_hipMemcpy2DFromArray_Synchronization_Behavior") {
   }
 }
 
-TEST_CASE("Unit_hipMemcpy2DFromArray_ZeroWidthHeight") {
+TEST_CASE("Unit_hipMemcpy2DFromArray_Positive_ZeroWidthHeight") {
   using namespace std::placeholders;
   const auto width = 16;
   const auto height = 16;

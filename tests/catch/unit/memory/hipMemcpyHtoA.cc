@@ -16,7 +16,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-
+/*
+Testcase Scenarios :
+Unit_hipMemcpyHtoA_Positive_Default - Test basic memcpy between host and 1D array with hipMemcpyHtoA api
+Unit_hipMemcpyHtoA_Positive_Synchronization_Behavior - Test synchronization behavior for hipMemcpyHtoA api
+Unit_hipMemcpyHtoA_Positive_ZeroCount - Test that no data is copied when allocation_size is set to 0
+Unit_hipMemcpyHtoA_Negative_Parameters - Test unsuccessful execution of hipMemcpyHtoA api when parameters are invalid
+*/
 #include "array_memcpy_tests_common.hh"
 
 #include <hip_test_common.hh>
@@ -24,7 +30,7 @@ THE SOFTWARE.
 #include <utils.hh>
 #include <resource_guards.hh>
 
-TEST_CASE("Unit_hipMemcpyHtoA_Default") {
+TEST_CASE("Unit_hipMemcpyHtoA_Positive_Default") {
   using namespace std::placeholders;
 
   const auto width = GENERATE(512, 1024, 2048);
@@ -33,7 +39,7 @@ TEST_CASE("Unit_hipMemcpyHtoA_Default") {
   MemcpyHtoAShell<false, int>(std::bind(hipMemcpyHtoA, _1, 0, _2, allocation_size), width);
 }
 
-TEST_CASE("Unit_hipMemcpyHtoA_Synchronization_Behavior") {
+TEST_CASE("Unit_hipMemcpyHtoA_Positive_Synchronization_Behavior") {
   using namespace std::placeholders;
 
   const auto width = GENERATE(512, 1024, 2048);
@@ -49,7 +55,7 @@ This is excluded for AMD as we have a bug already raised
 SWDEV-274683
 */
 #if HT_NVIDIA
-TEST_CASE("Unit_hipMemcpyHtoA_ZeroCount") {
+TEST_CASE("Unit_hipMemcpyHtoA_Positive_ZeroCount") {
   const auto width = 1024;
   const auto height = 0;
   const auto allocation_size = width * sizeof(int);
