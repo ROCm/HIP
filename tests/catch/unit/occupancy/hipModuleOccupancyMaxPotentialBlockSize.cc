@@ -22,8 +22,6 @@ THE SOFTWARE.
 TEST_CASE("Unit_hipModuleOccupancyMaxPotentialBlockSize_Negative_Parameters") {
   hipModule_t module;
   hipFunction_t function;
-  int blockSize = 0;
-  int gridSize = 0;
 
   DriverContext ctx;
 
@@ -36,6 +34,8 @@ TEST_CASE("Unit_hipModuleOccupancyMaxPotentialBlockSize_Negative_Parameters") {
   });
 
   SECTION("Kernel function is nullptr") {
+    int blockSize = 0;
+    int gridSize = 0;
     HIP_CHECK_ERROR(hipModuleOccupancyMaxPotentialBlockSize(&gridSize, &blockSize, nullptr, 0, 0), hipErrorInvalidDeviceFunction);
   }
 
@@ -83,15 +83,19 @@ TEST_CASE("Unit_hipModuleOccupancyMaxPotentialBlockSize_Positive_RangeValidation
   HIP_CHECK(hipGetDeviceProperties(&devProp, 0));
 
   SECTION("dynSharedMemPerBlk = 0, blockSizeLimit = 0") {
-    MaxPotentialBlockSize([&function](int* gridSize, int* blockSize) {
-      return hipModuleOccupancyMaxPotentialBlockSize(gridSize, blockSize, function, 0, 0);
-    }, devProp.maxThreadsPerBlock);
+    MaxPotentialBlockSize(
+      [&function](int* gridSize, int* blockSize) {
+        return hipModuleOccupancyMaxPotentialBlockSize(gridSize, blockSize, function, 0, 0);
+      },
+      devProp.maxThreadsPerBlock);
   }
 
   SECTION("dynSharedMemPerBlk = sharedMemPerBlock, blockSizeLimit = maxThreadsPerBlock") {
-    MaxPotentialBlockSize([&function, devProp](int* gridSize, int* blockSize) {
-      return hipModuleOccupancyMaxPotentialBlockSize(gridSize, blockSize, function, devProp.sharedMemPerBlock, devProp.maxThreadsPerBlock);
-    }, devProp.maxThreadsPerBlock);
+    MaxPotentialBlockSize(
+      [&function, devProp](int* gridSize, int* blockSize) {
+        return hipModuleOccupancyMaxPotentialBlockSize(gridSize, blockSize, function, devProp.sharedMemPerBlock, devProp.maxThreadsPerBlock);
+      },
+      devProp.maxThreadsPerBlock);
   }
 
   HIP_CHECK(hipModuleUnload(module));
@@ -110,15 +114,19 @@ TEST_CASE("Unit_hipModuleOccupancyMaxPotentialBlockSizeWithFlags_Positive_RangeV
   HIP_CHECK(hipGetDeviceProperties(&devProp, 0));
 
   SECTION("dynSharedMemPerBlk = 0, blockSizeLimit = 0") {
-    MaxPotentialBlockSize([&function](int* gridSize, int* blockSize) {
-      return hipModuleOccupancyMaxPotentialBlockSizeWithFlags(gridSize, blockSize, function, 0, 0, hipOccupancyDefault);
-    }, devProp.maxThreadsPerBlock);
+    MaxPotentialBlockSize(
+      [&function](int* gridSize, int* blockSize) {
+        return hipModuleOccupancyMaxPotentialBlockSizeWithFlags(gridSize, blockSize, function, 0, 0, hipOccupancyDefault);
+      },
+      devProp.maxThreadsPerBlock);
   }
 
   SECTION("dynSharedMemPerBlk = sharedMemPerBlock, blockSizeLimit = maxThreadsPerBlock") {
-    MaxPotentialBlockSize([&function, devProp](int* gridSize, int* blockSize) {
-      return hipModuleOccupancyMaxPotentialBlockSizeWithFlags(gridSize, blockSize, function, devProp.sharedMemPerBlock, devProp.maxThreadsPerBlock, hipOccupancyDefault);
-    }, devProp.maxThreadsPerBlock);
+    MaxPotentialBlockSize(
+      [&function, devProp](int* gridSize, int* blockSize) {
+        return hipModuleOccupancyMaxPotentialBlockSizeWithFlags(gridSize, blockSize, function, devProp.sharedMemPerBlock, devProp.maxThreadsPerBlock, hipOccupancyDefault);
+      },
+      devProp.maxThreadsPerBlock);
   }
 
   HIP_CHECK(hipModuleUnload(module));
