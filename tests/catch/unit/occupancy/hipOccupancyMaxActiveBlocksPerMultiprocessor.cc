@@ -32,9 +32,11 @@ TEST_CASE("Unit_hipOccupancyMaxActiveBlocksPerMultiprocessor_Negative_Parameters
   HIP_CHECK(hipOccupancyMaxPotentialBlockSize(&gridSize, &blockSize, f1, 0, 0));
 
   // Common negative tests
-  MaxActiveBlocksPerMultiprocessorNegative([](int* numBlocks, int blockSize, size_t dynSharedMemPerBlk) {
-    return hipOccupancyMaxActiveBlocksPerMultiprocessor(numBlocks, f1, blockSize, dynSharedMemPerBlk);
-  }, blockSize);
+  MaxActiveBlocksPerMultiprocessorNegative(
+    [](int* numBlocks, int blockSize, size_t dynSharedMemPerBlk) {
+      return hipOccupancyMaxActiveBlocksPerMultiprocessor(numBlocks, f1, blockSize, dynSharedMemPerBlk);
+    },
+    blockSize);
 
   SECTION("Kernel function is NULL") {
     HIP_CHECK_ERROR(hipOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocks, NULL, blockSize, 0), hipErrorInvalidDeviceFunction);
@@ -52,17 +54,21 @@ TEST_CASE("Unit_hipOccupancyMaxActiveBlocksPerMultiprocessor_Positive_RangeValid
     // Get potential blocksize
     HIP_CHECK(hipOccupancyMaxPotentialBlockSize(&gridSize, &blockSize, f1, 0, 0));
 
-    MaxActiveBlocksPerMultiprocessor([blockSize](int* numBlocks) {
-      return hipOccupancyMaxActiveBlocksPerMultiprocessor(numBlocks, f1, blockSize, 0);
-    }, blockSize, devProp.maxThreadsPerMultiProcessor);
+    MaxActiveBlocksPerMultiprocessor(
+      [blockSize](int* numBlocks) {
+        return hipOccupancyMaxActiveBlocksPerMultiprocessor(numBlocks, f1, blockSize, 0);
+      },
+      blockSize, devProp.maxThreadsPerMultiProcessor);
   }
   SECTION("dynSharedMemPerBlk = sharedMemPerBlock") {
     // Get potential blocksize
     HIP_CHECK(hipOccupancyMaxPotentialBlockSize(&gridSize, &blockSize, f1, devProp.sharedMemPerBlock, 0));
 
-    MaxActiveBlocksPerMultiprocessor([blockSize, devProp](int* numBlocks) {
-      return hipOccupancyMaxActiveBlocksPerMultiprocessor(numBlocks, f1, blockSize, devProp.sharedMemPerBlock);
-    }, blockSize, devProp.maxThreadsPerMultiProcessor);
+    MaxActiveBlocksPerMultiprocessor(
+      [blockSize, devProp](int* numBlocks) {
+        return hipOccupancyMaxActiveBlocksPerMultiprocessor(numBlocks, f1, blockSize, devProp.sharedMemPerBlock);
+      },
+      blockSize, devProp.maxThreadsPerMultiProcessor);
   }
 }
 
@@ -77,17 +83,21 @@ TEST_CASE("Unit_hipOccupancyMaxActiveBlocksPerMultiprocessor_Positive_TemplateIn
     // Get potential blocksize
     HIP_CHECK(hipOccupancyMaxPotentialBlockSize<void(*)(int *)>(&gridSize, &blockSize, f2, 0, 0));
 
-    MaxActiveBlocksPerMultiprocessor([blockSize](int* numBlocks) {
-      return hipOccupancyMaxActiveBlocksPerMultiprocessor<void(*)(int *)>(numBlocks, f2, blockSize, 0);
-    }, blockSize, devProp.maxThreadsPerMultiProcessor);
+    MaxActiveBlocksPerMultiprocessor(
+      [blockSize](int* numBlocks) {
+        return hipOccupancyMaxActiveBlocksPerMultiprocessor<void(*)(int *)>(numBlocks, f2, blockSize, 0);
+      },
+      blockSize, devProp.maxThreadsPerMultiProcessor);
   }
 
   SECTION("dynSharedMemPerBlk = sharedMemPerBlock") {
     // Get potential blocksize
     HIP_CHECK(hipOccupancyMaxPotentialBlockSize<void(*)(int *)>(&gridSize, &blockSize, f2, devProp.sharedMemPerBlock, 0));
 
-    MaxActiveBlocksPerMultiprocessor([blockSize, devProp](int* numBlocks) {
-      return hipOccupancyMaxActiveBlocksPerMultiprocessor<void(*)(int *)>(numBlocks, f2, blockSize, devProp.sharedMemPerBlock);
-    }, blockSize, devProp.maxThreadsPerMultiProcessor);
+    MaxActiveBlocksPerMultiprocessor(
+      [blockSize, devProp](int* numBlocks) {
+        return hipOccupancyMaxActiveBlocksPerMultiprocessor<void(*)(int *)>(numBlocks, f2, blockSize, devProp.sharedMemPerBlock);
+      },
+      blockSize, devProp.maxThreadsPerMultiProcessor);
   }
 }

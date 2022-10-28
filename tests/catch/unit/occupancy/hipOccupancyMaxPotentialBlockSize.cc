@@ -24,9 +24,6 @@ template <typename T>
 static __global__ void f2(T *a) { *a = 1; }
 
 TEST_CASE("Unit_hipOccupancyMaxPotentialBlockSize_Negative_Parameters") {
-  int blockSize = 0;
-  int gridSize = 0;
-
   // Common negative tests
   MaxPotentialBlockSizeNegative([](int* gridSize, int* blockSize) {
     return hipOccupancyMaxPotentialBlockSize(gridSize, blockSize, f1, 0, 0);
@@ -34,6 +31,8 @@ TEST_CASE("Unit_hipOccupancyMaxPotentialBlockSize_Negative_Parameters") {
 
 #ifndef __HIP_PLATFORM_NVIDIA__
   SECTION("Kernel function is NULL") {
+    int blockSize = 0;
+    int gridSize = 0;
     // nvcc doesnt support kernelfunc(NULL) for api
     HIP_CHECK_ERROR(hipOccupancyMaxPotentialBlockSize(&gridSize, &blockSize, NULL, 0, 0), hipErrorInvalidValue);
   }
@@ -46,15 +45,19 @@ TEST_CASE("Unit_hipOccupancyMaxPotentialBlockSize_Positive_RangeValidation") {
   HIP_CHECK(hipGetDeviceProperties(&devProp, 0));
 
   SECTION("dynSharedMemPerBlk = 0, blockSizeLimit = 0") {
-    MaxPotentialBlockSize([](int* gridSize, int* blockSize) {
-      return hipOccupancyMaxPotentialBlockSize(gridSize, blockSize, f1, 0, 0);
-    }, devProp.maxThreadsPerBlock);
+    MaxPotentialBlockSize(
+      [](int* gridSize, int* blockSize) {
+        return hipOccupancyMaxPotentialBlockSize(gridSize, blockSize, f1, 0, 0);
+      },
+      devProp.maxThreadsPerBlock);
   }
 
   SECTION("dynSharedMemPerBlk = sharedMemPerBlock, blockSizeLimit = maxThreadsPerBlock") {
-    MaxPotentialBlockSize([devProp](int* gridSize, int* blockSize) {
-      return hipOccupancyMaxPotentialBlockSize(gridSize, blockSize, f1, devProp.sharedMemPerBlock, devProp.maxThreadsPerBlock);
-    }, devProp.maxThreadsPerBlock);
+    MaxPotentialBlockSize(
+      [devProp](int* gridSize, int* blockSize) {
+        return hipOccupancyMaxPotentialBlockSize(gridSize, blockSize, f1, devProp.sharedMemPerBlock, devProp.maxThreadsPerBlock);
+      },
+      devProp.maxThreadsPerBlock);
   }
 }
 
@@ -64,14 +67,18 @@ TEST_CASE("Unit_hipOccupancyMaxPotentialBlockSize_Positive_TemplateInvocation") 
   HIP_CHECK(hipGetDeviceProperties(&devProp, 0));
 
   SECTION("dynSharedMemPerBlk = 0, blockSizeLimit = 0") {
-    MaxPotentialBlockSize([](int* gridSize, int* blockSize) {
-      return hipOccupancyMaxPotentialBlockSize<void(*)(int *)>(gridSize, blockSize, f2, 0, 0);
-    }, devProp.maxThreadsPerBlock);
+    MaxPotentialBlockSize(
+      [](int* gridSize, int* blockSize) {
+        return hipOccupancyMaxPotentialBlockSize<void(*)(int *)>(gridSize, blockSize, f2, 0, 0);
+      },
+      devProp.maxThreadsPerBlock);
   }
 
   SECTION("dynSharedMemPerBlk = sharedMemPerBlock, blockSizeLimit = maxThreadsPerBlock") {
-    MaxPotentialBlockSize([devProp](int* gridSize, int* blockSize) {
-      return hipOccupancyMaxPotentialBlockSize<void(*)(int *)>(gridSize, blockSize, f2, devProp.sharedMemPerBlock, devProp.maxThreadsPerBlock);
-    }, devProp.maxThreadsPerBlock);
+    MaxPotentialBlockSize(
+      [devProp](int* gridSize, int* blockSize) {
+        return hipOccupancyMaxPotentialBlockSize<void(*)(int *)>(gridSize, blockSize, f2, devProp.sharedMemPerBlock, devProp.maxThreadsPerBlock);
+      },
+      devProp.maxThreadsPerBlock);
   }
 }
