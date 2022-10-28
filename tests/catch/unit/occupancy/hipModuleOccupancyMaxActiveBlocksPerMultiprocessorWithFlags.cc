@@ -18,13 +18,13 @@ THE SOFTWARE.
 */
 /*
 Testcase Scenarios :
-Unit_hipModuleOccupancyMaxActiveBlocksPerMultiprocessor_Positive_RangeValidation - Test correct execution of hipModuleOccupancyMaxActiveBlocksPerMultiprocessor for diffrent parameter values
-Unit_hipModuleOccupancyMaxActiveBlocksPerMultiprocessor_Negative_Parameters - Test unsuccessful execution of hipModuleOccupancyMaxActiveBlocksPerMultiprocessor api when parameters are invalid
+Unit_hipModuleOccupancyMaxActiveBlocksPerMultiprocessorWithFlags_Positive_RangeValidation - Test correct execution of hipModuleOccupancyMaxActiveBlocksPerMultiprocessorWithFlags for diffrent parameter values
+Unit_hipModuleOccupancyMaxActiveBlocksPerMultiprocessorWithFlags_Negative_Parameters - Test unsuccessful execution of hipModuleOccupancyMaxActiveBlocksPerMultiprocessorWithFlags api when parameters are invalid
 */
 #include "occupancy_common.hh"
 #include "DriverContext.hh"
 
-TEST_CASE("Unit_hipModuleOccupancyMaxActiveBlocksPerMultiprocessor_Negative_Parameters") {
+TEST_CASE("Unit_hipModuleOccupancyMaxActiveBlocksPerMultiprocessorWithFlags_Negative_Parameters") {
   hipModule_t module;
   hipFunction_t function;
   int numBlocks = 0;
@@ -42,18 +42,23 @@ TEST_CASE("Unit_hipModuleOccupancyMaxActiveBlocksPerMultiprocessor_Negative_Para
   // Common negative tests
   MaxActiveBlocksPerMultiprocessorNegative(
     [&function](int* numBlocks, int blockSize, size_t dynSharedMemPerBlk) {
-      return hipModuleOccupancyMaxActiveBlocksPerMultiprocessor(numBlocks, function, blockSize, dynSharedMemPerBlk);
+      return hipModuleOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(numBlocks, function, blockSize, dynSharedMemPerBlk, hipOccupancyDefault);
     },
     blockSize);
 
+  SECTION("Flag is invalid") {
+    // Only default flag is supported
+    HIP_CHECK_ERROR(hipModuleOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(&numBlocks, function, blockSize, 0, 2), hipErrorInvalidValue);
+  }
+
   SECTION("Kernel function is nullptr") {
-    HIP_CHECK_ERROR(hipModuleOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocks, nullptr, blockSize, 0), hipErrorInvalidDeviceFunction);
+    HIP_CHECK_ERROR(hipModuleOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(&numBlocks, nullptr, blockSize, 0, hipOccupancyDefault), hipErrorInvalidDeviceFunction);
   }
 
   HIP_CHECK(hipModuleUnload(module));
 }
 
-TEST_CASE("Unit_hipModuleOccupancyMaxActiveBlocksPerMultiprocessor_Positive_RangeValidation") {
+TEST_CASE("Unit_hipModuleOccupancyMaxActiveBlocksPerMultiprocessorWithFlags_Positive_RangeValidation") {
   hipDeviceProp_t devProp;
   hipModule_t module;
   hipFunction_t function;
@@ -73,7 +78,7 @@ TEST_CASE("Unit_hipModuleOccupancyMaxActiveBlocksPerMultiprocessor_Positive_Rang
 
     MaxActiveBlocksPerMultiprocessor(
       [blockSize, &function](int* numBlocks) {
-        return hipModuleOccupancyMaxActiveBlocksPerMultiprocessor(numBlocks, function, blockSize, 0);
+        return hipModuleOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(numBlocks, function, blockSize, 0, hipOccupancyDefault);
       },
       blockSize, devProp.maxThreadsPerMultiProcessor);
   }
@@ -83,7 +88,7 @@ TEST_CASE("Unit_hipModuleOccupancyMaxActiveBlocksPerMultiprocessor_Positive_Rang
 
     MaxActiveBlocksPerMultiprocessor(
       [blockSize, devProp, &function](int* numBlocks) {
-        return hipModuleOccupancyMaxActiveBlocksPerMultiprocessor(numBlocks, function, blockSize, devProp.sharedMemPerBlock);
+        return hipModuleOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(numBlocks, function, blockSize, devProp.sharedMemPerBlock, hipOccupancyDefault);
       },
       blockSize, devProp.maxThreadsPerMultiProcessor);
   }
