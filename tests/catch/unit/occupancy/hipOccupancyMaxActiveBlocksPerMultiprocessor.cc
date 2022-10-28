@@ -16,6 +16,12 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+/*
+Testcase Scenarios :
+Unit_hipOccupancyMaxActiveBlocksPerMultiprocessor_Positive_RangeValidation - Test correct execution of hipOccupancyMaxActiveBlocksPerMultiprocessor for diffrent parameter values
+Unit_hipOccupancyMaxActiveBlocksPerMultiprocessor_Positive_TemplateInvocation - Test correct execution of hipOccupancyMaxActiveBlocksPerMultiprocessor template for diffrent parameter values
+Unit_hipOccupancyMaxActiveBlocksPerMultiprocessor_Negative_Parameters - Test unsuccessful execution of hipOccupancyMaxActiveBlocksPerMultiprocessor api when parameters are invalid
+*/
 #include "occupancy_common.hh"
 
 static __global__ void f1(float *a) { *a = 1.0; }
