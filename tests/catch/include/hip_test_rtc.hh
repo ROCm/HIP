@@ -77,11 +77,7 @@ inline std::vector<char> alignArguments(std::vector<KernelArgument>& args) {
   for (auto& arg : args) {
     const char* argPtr{reinterpret_cast<const char*>(arg.ptr)};
 
-    /*
-     * Details about the padding formula can be found at:
-     * https://en.wikipedia.org/wiki/Data_structure_alignment#Data_structure_padding
-     */
-    int paddingNeeded = -count & (arg.alignmentRequirement - 1);
+    int paddingNeeded = (arg.alignmentRequirement - 1) & (~count + 1);
     alignedArguments.insert(std::end(alignedArguments), paddingNeeded, 0);
     count += paddingNeeded;
 

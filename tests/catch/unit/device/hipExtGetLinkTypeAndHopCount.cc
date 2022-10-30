@@ -23,7 +23,7 @@ THE SOFTWARE.
 #include <hip_test_common.hh>
 #include <hip/hip_runtime_api.h>
 
-#if HT_AMD
+#if __linux__ && HT_AMD
 TEST_CASE("Unit_hipExtGetLinkTypeAndHopCount_Positive_Basic") {
   const auto device1 = GENERATE(range(0, HipTest::getDeviceCount()));
   const auto device2 = GENERATE(range(0, HipTest::getDeviceCount()));
