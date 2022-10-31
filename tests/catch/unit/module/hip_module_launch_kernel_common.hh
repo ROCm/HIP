@@ -78,27 +78,43 @@ template <ExtModuleLaunchKernelSig* func> void ModuleLaunchKernelPositiveBasic()
 }
 
 template <ExtModuleLaunchKernelSig* func> void ModuleLaunchKernelPositiveParameters() {
-  const auto LaunchNOPKernel = [=](unsigned int blockDimX, unsigned int blockDimY,
-                                   unsigned int blockDimZ) {
+  const auto LaunchNOPKernel = [=](unsigned int gridDimX, unsigned int gridDimY,
+                                   unsigned int gridDimZ, unsigned int blockDimX,
+                                   unsigned int blockDimY, unsigned int blockDimZ) {
     hipFunction_t f = GetKernel(mg.module(), "NOPKernel");
-    HIP_CHECK(func(f, 1, 1, 1, blockDimX, blockDimY, blockDimZ, 0, nullptr, nullptr, nullptr,
-                   nullptr, nullptr, 0u));
+    HIP_CHECK(func(f, gridDimX, gridDimY, gridDimZ, blockDimX, blockDimY, blockDimZ, 0, nullptr,
+                   nullptr, nullptr, nullptr, nullptr, 0u));
     HIP_CHECK(hipDeviceSynchronize());
   };
 
-  SECTION("blockDimX == maxblockDimX") {
+  SECTION("gridDimX == maxGridDimX") {
+    const unsigned int x = GetDeviceAttribute(0, hipDeviceAttributeMaxGridDimX);
+    LaunchNOPKernel(x, 1, 1, 1, 1, 1);
+  }
+
+  SECTION("gridDimY == maxGridDimY") {
+    const unsigned int y = GetDeviceAttribute(0, hipDeviceAttributeMaxGridDimY);
+    LaunchNOPKernel(1, y, 1, 1, 1, 1);
+  }
+
+  SECTION("gridDimZ == maxGridDimZ") {
+    const unsigned int z = GetDeviceAttribute(0, hipDeviceAttributeMaxGridDimZ);
+    LaunchNOPKernel(1, 1, z, 1, 1, 1);
+  }
+
+  SECTION("blockDimX == maxBlockDimX") {
     const unsigned int x = GetDeviceAttribute(0, hipDeviceAttributeMaxBlockDimX);
-    LaunchNOPKernel(x, 1, 1);
+    LaunchNOPKernel(1, 1, 1, x, 1, 1);
   }
 
-  SECTION("blockDimY == maxblockDimY") {
+  SECTION("blockDimY == maxBlockDimY") {
     const unsigned int y = GetDeviceAttribute(0, hipDeviceAttributeMaxBlockDimY);
-    LaunchNOPKernel(1, y, 1);
+    LaunchNOPKernel(1, 1, 1, 1, y, 1);
   }
 
-  SECTION("blockDimZ == maxblockDimZ") {
+  SECTION("blockDimZ == maxBlockDimZ") {
     const unsigned int z = GetDeviceAttribute(0, hipDeviceAttributeMaxBlockDimZ);
-    LaunchNOPKernel(1, 1, z);
+    LaunchNOPKernel(1, 1, 1, 1, 1, z);
   }
 }
 
@@ -141,19 +157,37 @@ template <ExtModuleLaunchKernelSig* func> void ModuleLaunchKernelNegativeParamet
                     hipErrorInvalidValue);
   }
 
-  SECTION("blockDimX > maxblockDimX") {
+  SECTION("gridDimX > maxGridDimX") {
+    const unsigned int x = GetDeviceAttribute(0, hipDeviceAttributeMaxGridDimX) + 1u;
+    HIP_CHECK_ERROR(func(f, x, 1, 1, 1, 1, 1, 0, nullptr, nullptr, nullptr, nullptr, nullptr, 0u),
+                    hipErrorInvalidValue);
+  }
+
+  SECTION("gridDimY > maxGridDimY") {
+    const unsigned int y = GetDeviceAttribute(0, hipDeviceAttributeMaxGridDimY) + 1u;
+    HIP_CHECK_ERROR(func(f, 1, y, 1, 1, 1, 1, 0, nullptr, nullptr, nullptr, nullptr, nullptr, 0u),
+                    hipErrorInvalidValue);
+  }
+
+  SECTION("gridDimZ > maxGridDimZ") {
+    const unsigned int z = GetDeviceAttribute(0, hipDeviceAttributeMaxGridDimZ) + 1u;
+    HIP_CHECK_ERROR(func(f, 1, 1, z, 1, 1, 1, 0, nullptr, nullptr, nullptr, nullptr, nullptr, 0u),
+                    hipErrorInvalidValue);
+  }
+
+  SECTION("blockDimX > maxBlockDimX") {
     const unsigned int x = GetDeviceAttribute(0, hipDeviceAttributeMaxBlockDimX) + 1u;
     HIP_CHECK_ERROR(func(f, 1, 1, 1, x, 1, 1, 0, nullptr, nullptr, nullptr, nullptr, nullptr, 0u),
                     hipErrorInvalidValue);
   }
 
-  SECTION("blockDimY > maxblockDimY") {
+  SECTION("blockDimY > maxBlockDimY") {
     const unsigned int y = GetDeviceAttribute(0, hipDeviceAttributeMaxBlockDimY) + 1u;
     HIP_CHECK_ERROR(func(f, 1, 1, 1, 1, y, 1, 0, nullptr, nullptr, nullptr, nullptr, nullptr, 0u),
                     hipErrorInvalidValue);
   }
 
-  SECTION("blockDimZ > maxblockDimZ") {
+  SECTION("blockDimZ > maxBlockDimZ") {
     const unsigned int z = GetDeviceAttribute(0, hipDeviceAttributeMaxBlockDimZ) + 1u;
     HIP_CHECK_ERROR(func(f, 1, 1, 1, 1, 1, z, 0, nullptr, nullptr, nullptr, nullptr, nullptr, 0u),
                     hipErrorInvalidValue);
