@@ -45,7 +45,8 @@ TEST_CASE("Unit_hipModuleGetFunction_Negative_Parameters") {
   }
 
   SECTION("module == nullptr") {
-    HIP_CHECK_ERROR(hipModuleGetFunction(&kernel, nullptr, "GlobalKernel"), hipErrorNotFound);
+    HIP_CHECK_ERROR(hipModuleGetFunction(&kernel, nullptr, "GlobalKernel"),
+                    hipErrorInvalidResourceHandle);
   }
 
   SECTION("kname == nullptr") {
@@ -53,7 +54,7 @@ TEST_CASE("Unit_hipModuleGetFunction_Negative_Parameters") {
   }
 
   SECTION("kname == empty string") {
-    HIP_CHECK_ERROR(hipModuleGetFunction(&kernel, GetModule(), ""), hipErrorNotFound);
+    HIP_CHECK_ERROR(hipModuleGetFunction(&kernel, GetModule(), ""), hipErrorInvalidValue);
   }
 
   SECTION("kname == non existent kernel") {
