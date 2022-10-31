@@ -4,6 +4,8 @@ set(TEST_SRC
     hipFuncSetSharedMemConfig.cc
     hipFuncSetAttribute.cc
     hipFuncGetAttributes.cc
+    hipLaunchCooperativeKernel.cc
+    hipLaunchCooperativeKernelMultiDevice.cc
 )
 
 hip_add_exe_to_target(NAME ExecutionControlTest
