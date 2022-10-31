@@ -26,6 +26,7 @@ THE SOFTWARE.
 
 
 TEST_CASE("Unit_hipModuleLoadDataEx_Positive_Basic") {
+  HIP_CHECK(hipFree(nullptr));
   hipModule_t module = nullptr;
 
   SECTION("Load compiled module from file") {
@@ -44,6 +45,7 @@ TEST_CASE("Unit_hipModuleLoadDataEx_Positive_Basic") {
 }
 
 TEST_CASE("Unit_hipModuleLoadDataEx_Negative_Parameters") {
+  HIP_CHECK(hipFree(nullptr));
   hipModule_t module = nullptr;
 
   SECTION("module == nullptr") {
@@ -59,7 +61,6 @@ TEST_CASE("Unit_hipModuleLoadDataEx_Negative_Parameters") {
   }
 
   SECTION("image == empty string") {
-    HIP_CHECK_ERROR(hipModuleLoadDataEx(&module, "", 0, nullptr, nullptr),
-                    hipErrorInvalidKernelFile);
+    HIP_CHECK_ERROR(hipModuleLoadDataEx(&module, "", 0, nullptr, nullptr), hipErrorInvalidImage);
   }
 }

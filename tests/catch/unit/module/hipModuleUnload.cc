@@ -23,12 +23,19 @@ THE SOFTWARE.
 #include <hip/hip_runtime_api.h>
 
 TEST_CASE("Unit_hipModuleUnload_Negative_Parameters") {
-  SECTION("module == nullptr") { HIP_CHECK_ERROR(hipModuleUnload(nullptr), hipErrorNotFound); }
+  HIP_CHECK(hipFree(nullptr));
 
+  SECTION("module == nullptr") {
+    HIP_CHECK_ERROR(hipModuleUnload(nullptr), hipErrorInvalidResourceHandle);
+  }
+
+// Causes CUDA to segfault
+#if HT_AMD
   SECTION("Double unload") {
     hipModule_t module = nullptr;
     HIP_CHECK(hipModuleLoad(&module, "empty_module.code"));
     HIP_CHECK(hipModuleUnload(module));
     HIP_CHECK_ERROR(hipModuleUnload(module), hipErrorNotFound);
   }
+#endif
 }

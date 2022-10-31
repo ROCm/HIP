@@ -23,6 +23,7 @@ THE SOFTWARE.
 #include <hip/hip_runtime_api.h>
 
 TEST_CASE("Unit_hipModuleLoad_Positive_Basic") {
+  HIP_CHECK(hipFree(nullptr));
   hipModule_t module = nullptr;
   HIP_CHECK(hipModuleLoad(&module, "empty_module.code"));
   REQUIRE(module != nullptr);
@@ -30,6 +31,7 @@ TEST_CASE("Unit_hipModuleLoad_Positive_Basic") {
 }
 
 TEST_CASE("Unit_hipModuleLoad_Negative_Parameters") {
+  HIP_CHECK(hipFree(nullptr));
   hipModule_t module;
 
   SECTION("module == nullptr") {
@@ -49,6 +51,6 @@ TEST_CASE("Unit_hipModuleLoad_Negative_Parameters") {
   }
 
   SECTION("Load from a file that is not a module") {
-    HIP_CHECK_ERROR(hipModuleLoad(&module, "not_a_module.txt"), hipErrorInvalidKernelFile);
+    HIP_CHECK_ERROR(hipModuleLoad(&module, "not_a_module.txt"), hipErrorInvalidImage);
   }
 }
