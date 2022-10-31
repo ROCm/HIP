@@ -19,10 +19,19 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include <hip/hip_runtime_api.h>
+#include <hip/hip_runtime.h>
 
 extern "C" {
 __global__ void NOPKernel() {}
 
 __global__ void Kernel42(int* out) { *out = 42; }
+
+// Interval is in millisecond
+__global__ void Delay(uint32_t interval, const uint32_t ticks_per_ms) {
+  while (interval--) {
+    uint64_t start = clock();
+    while (clock() - start < ticks_per_ms) {
+    }
+  }
+}
 }
