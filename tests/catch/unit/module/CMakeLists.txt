@@ -1,6 +1,7 @@
 set(TEST_SRC
     hip_module_common.cc
     hipModuleGetFunction.cc
+    hipFuncGetAttribute.cc
 )
 
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/get_function_module.code
