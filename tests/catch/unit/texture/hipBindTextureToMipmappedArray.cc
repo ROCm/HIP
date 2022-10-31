@@ -16,21 +16,21 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-
+/*
+Testcase Scenarios :
+Unit_hipTextureMipmapRef2D_Positive_Check - Test correct execution of hipBindTextureToMipmappedArray api for diffrent mipmapped array sizes and number of levels
+Unit_hipTextureMipmapRef2D_Negative_Parameters - Test unsuccessful execution of hipBindTextureToMipmappedArray api when parameters are invalid
+*/
 #include <hip_test_common.hh>
 
-texture<float, 2, hipReadModeElementType> tex;
-
-// Height Width Vector
-std::vector<unsigned int> hw_vector = {2048, 1024, 512, 256, 64};
-std::vector<unsigned int> mip_vector = {8, 4, 2, 1};
+texture<float, 2, hipReadModeElementType> texRef;
 
 // MipMap is currently supported only on windows
 #if (defined(_WIN32) && !defined(__HIP_NO_IMAGE_SUPPORT))
 __global__ void tex2DKernel(float* outputData, int width, float level) {
   int x = blockIdx.x * blockDim.x + threadIdx.x;
   int y = blockIdx.y * blockDim.y + threadIdx.y;
-  outputData[y * width + x] = tex2DLod<float>(tex, x, y, level);
+  outputData[y * width + x] = tex2DLod<float>(texRef, x, y, level);
 }
 
 static void runMipMapTest(unsigned int width, unsigned int height, unsigned int mipmap_level) {
@@ -53,6 +53,7 @@ static void runMipMapTest(unsigned int width, unsigned int height, unsigned int 
     }
   }
 
+  // Allocate memory for Mipmapped array and set data to mipmap_level
   hipChannelFormatDesc channelDesc = hipCreateChannelDesc<float>();
 
   hipMipmappedArray* mip_array_ptr;
@@ -62,13 +63,16 @@ static void runMipMapTest(unsigned int width, unsigned int height, unsigned int 
   HIP_CHECK(hipMipmappedArrayGetLevel(&hipArray, mip_array_ptr, mipmap_level));
   HIP_CHECK(hipMemcpy2DToArray(hipArray, 0, 0, hData, width * sizeof(float), width * sizeof(float), height, hipMemcpyHostToDevice));
 
-  tex.addressMode[0] = hipAddressModeWrap;
-  tex.addressMode[1] = hipAddressModeWrap;
-  tex.filterMode = hipFilterModePoint;
-  tex.normalized = 0;
+  // Set texture parameters
+  texRef.addressMode[0] = hipAddressModeWrap;
+  texRef.addressMode[1] = hipAddressModeWrap;
+  texRef.filterMode = hipFilterModePoint;
+  texRef.normalized = 0;
 
-  HIP_CHECK(hipBindTextureToMipmappedArray(&tex, mip_array_ptr, &channelDesc));
+  // Bind the array to the texture
+  HIP_CHECK(hipBindTextureToMipmappedArray(&texRef, mip_array_ptr, &channelDesc));
 
+  // Allocate device memory for result
   float* dData = nullptr;
   HIP_CHECK(hipMalloc(&dData, size));
   REQUIRE(dData != nullptr);
@@ -80,6 +84,7 @@ static void runMipMapTest(unsigned int width, unsigned int height, unsigned int 
   HIP_CHECK(hipGetLastError()); 
   HIP_CHECK(hipDeviceSynchronize());
 
+  // Allocate memory on host and copy result from device to host
   float* hOutputData = reinterpret_cast<float*>(malloc(size));
   REQUIRE(hOutputData != nullptr);
   memset(hOutputData, 0, size);
@@ -94,7 +99,7 @@ static void runMipMapTest(unsigned int width, unsigned int height, unsigned int 
       }
     }
   }
-  HIP_CHECK(hipUnbindTexture(tex));
+  HIP_CHECK(hipUnbindTexture(texRef));
   HIP_CHECK(hipFree(dData));
   HIP_CHECK(hipFreeArray(hipArray));
   HIP_CHECK(hipFreeMipmappedArray(mip_array_ptr));
@@ -104,10 +109,12 @@ static void runMipMapTest(unsigned int width, unsigned int height, unsigned int 
 
 TEST_CASE("Unit_hipTextureMipmapRef2D_Positive_Check") {
   CHECK_IMAGE_SUPPORT
-
+  // Height Width Vector
+  std::vector<unsigned int> hw_vec = {2048, 1024, 512, 256, 64};
+  std::vector<unsigned int> mip_vec = {8, 4, 2, 1};
 #ifdef _WIN32
-  for (auto& hw : hw_vector) {
-    for (auto& mip : mip_vector) {
+  for (auto& hw : hw_vec) {
+    for (auto& mip : mip_vec) {
       if ((hw / static_cast<int>(pow(2, (mip * 2)))) > 0) {
         runMipMapTest(hw, hw, mip);
       }
@@ -131,10 +138,10 @@ TEST_CASE("Unit_hipTextureMipmapRef2D_Negative_Parameters") {
   hipMipmappedArray* mip_array_ptr;
   HIP_CHECK(hipMallocMipmappedArray(&mip_array_ptr, &channelDesc, make_hipExtent(width, height, 0), mipmap_level, hipArrayDefault));
 
-  tex.addressMode[0] = hipAddressModeWrap;
-  tex.addressMode[1] = hipAddressModeWrap;
-  tex.filterMode = hipFilterModePoint;
-  tex.normalized = 0;
+  texRef.addressMode[0] = hipAddressModeWrap;
+  texRef.addressMode[1] = hipAddressModeWrap;
+  texRef.filterMode = hipFilterModePoint;
+  texRef.normalized = 0;
 
   SECTION("textureReference is nullptr") {
     ret = hipBindTextureToMipmappedArray(nullptr, mip_array_ptr, &channelDesc)
@@ -142,12 +149,12 @@ TEST_CASE("Unit_hipTextureMipmapRef2D_Negative_Parameters") {
   }
 
   SECTION("MipmappedArray is nullptr") {
-    ret = hipBindTextureToMipmappedArray(&tex, nullptr, &channelDesc)
+    ret = hipBindTextureToMipmappedArray(&texRef, nullptr, &channelDesc)
     REQUIRE(ret != hipSuccess);
   }
 
   SECTION("Channel descriptor is nullptr") {
-    ret = hipBindTextureToMipmappedArray(&tex, mip_array_ptr, nullptr)
+    ret = hipBindTextureToMipmappedArray(&texRef, mip_array_ptr, nullptr)
     REQUIRE(ret != hipSuccess);
   }
 
