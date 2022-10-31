@@ -143,7 +143,7 @@ TEST_CASE("Unit_hipMemAdvise_TstFlags") {
     float *Hmm = nullptr;
     int AttrVal = 0;
     HIP_CHECK(hipGetDeviceCount(&NumDevs));
-    Outpt = new int(NumDevs);
+    Outpt = new int[NumDevs];
     HIP_CHECK(hipMallocManaged(&Hmm, MEM_SIZE * 2, hipMemAttachGlobal));
     // With the following for loop we iterate through each of the Gpus in the
     // system set and unset the flags and check the behavior.
