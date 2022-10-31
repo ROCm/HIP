@@ -24,7 +24,6 @@ THE SOFTWARE.
 #include "hip_module_common.hh"
 
 #include <hip/hip_runtime_api.h>
-#include <hip/hip_ext.h>
 #include <resource_guards.hh>
 #include <utils.hh>
 
@@ -35,9 +34,11 @@ inline ModuleGuard InitModule() {
 
 inline ModuleGuard mg{InitModule()};
 
-using ExtModuleLaunchKernelSig = decltype(hipExtModuleLaunchKernel);
+using ExtModuleLaunchKernelSig = hipError_t(hipFunction_t, uint32_t, uint32_t, uint32_t, uint32_t,
+                                            uint32_t, uint32_t, size_t, hipStream_t, void**, void**,
+                                            hipEvent_t, hipEvent_t, uint32_t);
 
-template <ExtModuleLaunchKernelSig func> void ModuleLaunchKernelPositiveBasic() {
+template <ExtModuleLaunchKernelSig* func> void ModuleLaunchKernelPositiveBasic() {
   SECTION("Kernel with no arguments") {
     hipFunction_t f = GetKernel(mg.module(), "NOPKernel");
     HIP_CHECK(func(f, 1, 1, 1, 1, 1, 1, 0, nullptr, nullptr, nullptr, nullptr, nullptr, 0u));
@@ -76,7 +77,7 @@ template <ExtModuleLaunchKernelSig func> void ModuleLaunchKernelPositiveBasic() 
   }
 }
 
-template <ExtModuleLaunchKernelSig func> void ModuleLaunchKernelPositiveParameters() {
+template <ExtModuleLaunchKernelSig* func> void ModuleLaunchKernelPositiveParameters() {
   const auto LaunchNOPKernel = [=](unsigned int blockDimX, unsigned int blockDimY,
                                    unsigned int blockDimZ) {
     hipFunction_t f = GetKernel(mg.module(), "NOPKernel");
@@ -101,13 +102,13 @@ template <ExtModuleLaunchKernelSig func> void ModuleLaunchKernelPositiveParamete
   }
 }
 
-template <ExtModuleLaunchKernelSig func> void ModuleLaunchKernelNegativeParameters() {
+template <ExtModuleLaunchKernelSig* func> void ModuleLaunchKernelNegativeParameters() {
   hipFunction_t f = GetKernel(mg.module(), "NOPKernel");
 
   SECTION("f == nullptr") {
     HIP_CHECK_ERROR(
         func(nullptr, 1, 1, 1, 1, 1, 1, 0, nullptr, nullptr, nullptr, nullptr, nullptr, 0u),
-        hipErrorInvalidImage);
+        hipErrorInvalidResourceHandle);
   }
 
   SECTION("gridDimX == 0") {
@@ -143,19 +144,19 @@ template <ExtModuleLaunchKernelSig func> void ModuleLaunchKernelNegativeParamete
   SECTION("blockDimX > maxblockDimX") {
     const unsigned int x = GetDeviceAttribute(0, hipDeviceAttributeMaxBlockDimX) + 1u;
     HIP_CHECK_ERROR(func(f, 1, 1, 1, x, 1, 1, 0, nullptr, nullptr, nullptr, nullptr, nullptr, 0u),
-                    hipErrorInvalidConfiguration);
+                    hipErrorInvalidValue);
   }
 
   SECTION("blockDimY > maxblockDimY") {
     const unsigned int y = GetDeviceAttribute(0, hipDeviceAttributeMaxBlockDimY) + 1u;
     HIP_CHECK_ERROR(func(f, 1, 1, 1, 1, y, 1, 0, nullptr, nullptr, nullptr, nullptr, nullptr, 0u),
-                    hipErrorInvalidConfiguration);
+                    hipErrorInvalidValue);
   }
 
   SECTION("blockDimZ > maxblockDimZ") {
     const unsigned int z = GetDeviceAttribute(0, hipDeviceAttributeMaxBlockDimZ) + 1u;
     HIP_CHECK_ERROR(func(f, 1, 1, 1, 1, 1, z, 0, nullptr, nullptr, nullptr, nullptr, nullptr, 0u),
-                    hipErrorInvalidConfiguration);
+                    hipErrorInvalidValue);
   }
 
   SECTION("blockDimX * blockDimY * blockDimZ > MaxThreadsPerBlock") {
@@ -163,13 +164,13 @@ template <ExtModuleLaunchKernelSig func> void ModuleLaunchKernelNegativeParamete
     const unsigned int dim = std::ceil(std::cbrt(max)) + 1;
     HIP_CHECK_ERROR(
         func(f, 1, 1, 1, dim, dim, dim, 0, nullptr, nullptr, nullptr, nullptr, nullptr, 0u),
-        hipErrorInvalidConfiguration);
+        hipErrorInvalidValue);
   }
 
   SECTION("sharedMemBytes > max shared memory per block") {
     const unsigned int max = GetDeviceAttribute(0, hipDeviceAttributeMaxSharedMemoryPerBlock) + 1u;
     HIP_CHECK_ERROR(func(f, 1, 1, 1, 1, 1, 1, max, nullptr, nullptr, nullptr, nullptr, nullptr, 0u),
-                    hipErrorOutOfMemory);
+                    hipErrorInvalidValue);
   }
 
   SECTION("Invalid stream") {
@@ -177,7 +178,7 @@ template <ExtModuleLaunchKernelSig func> void ModuleLaunchKernelNegativeParamete
     HIP_CHECK(hipStreamCreate(&stream));
     HIP_CHECK(hipStreamDestroy(stream));
     HIP_CHECK_ERROR(func(f, 1, 1, 1, 1, 1, 0, 0, stream, nullptr, nullptr, nullptr, nullptr, 0u),
-                    hipErrorInvalidValue);
+                    hipErrorContextIsDestroyed);
   }
 
   SECTION("Passing kernel_args and extra simultaneously") {
@@ -201,6 +202,6 @@ template <ExtModuleLaunchKernelSig func> void ModuleLaunchKernelNegativeParamete
     hipFunction_t f = GetKernel(mg.module(), "Kernel42");
     void* extra[0] = {};
     HIP_CHECK_ERROR(func(f, 1, 1, 1, 1, 1, 1, 0, nullptr, nullptr, extra, nullptr, nullptr, 0u),
-                    hipErrorNotInitialized);
+                    hipErrorInvalidValue);
   }
 }

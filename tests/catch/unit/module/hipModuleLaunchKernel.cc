@@ -34,13 +34,16 @@ static hipError_t hipModuleLaunchKernelWrapper(hipFunction_t f, uint32_t gridX, 
 }
 
 TEST_CASE("Unit_hipModuleLaunchKernel_Positive_Basic") {
+  HIP_CHECK(hipFree(nullptr));
   ModuleLaunchKernelPositiveBasic<hipModuleLaunchKernelWrapper>();
 }
 
 TEST_CASE("Unit_hipModuleLaunchKernel_Positive_Parameters") {
+  HIP_CHECK(hipFree(nullptr));
   ModuleLaunchKernelPositiveParameters<hipModuleLaunchKernelWrapper>();
 }
 
 TEST_CASE("Unit_hipModuleLaunchKernel_Negative_Parameters") {
+  HIP_CHECK(hipFree(nullptr));
   ModuleLaunchKernelNegativeParameters<hipModuleLaunchKernelWrapper>();
 }
