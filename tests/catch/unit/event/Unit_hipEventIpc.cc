@@ -91,9 +91,13 @@ TEST_CASE("Unit_hipEventIpc") {
     hipEvent_t ipc_event;
     hipError_t err = hipIpcOpenEventHandle(&ipc_event, ipc_handle);
 
+    #if HT_WIN
+    // always different process Id on Windows
+    HIP_CHECK(err);
+    #else
     // hipIpcOpenEventHandle() should be called in a different process, hence it should fail here
     REQUIRE(err == hipErrorInvalidContext);
-
+    #endif
     HIP_CHECK(hipEventDestroy(start));
     HIP_CHECK(hipEventDestroy(stop));
 
