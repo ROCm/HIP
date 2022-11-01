@@ -397,7 +397,6 @@ static inline void runKernelForDuration(std::chrono::milliseconds duration,
   static size_t ticksPerSecond = findTicksPerSecond();
   const auto millis = duration.count();
   hipLaunchKernelGGL(waitKernel, dim3(1), dim3(1), 0, stream, ticksPerSecond * millis / 1000);
-  HIP_CHECK(hipGetLastError());
 }
 
 }  // namespace HipTest
