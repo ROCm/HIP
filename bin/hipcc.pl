@@ -172,7 +172,11 @@ if ($HIP_PLATFORM eq "amd") {
     if($isWindows) {
         $HIPLDFLAGS .= " -fuse-ld=lld";
         $HIPLDFLAGS .= " --ld-path=$HIP_CLANG_PATH/lld-link.exe";
+
+        # escape possible spaces in path name
+        $HIPCC =~ s/\s/\\$&/g;
     }
+
     $HIP_CLANG_VERSION = `$HIPCC --version`;
     $HIP_CLANG_VERSION=~/.*clang version (\S+).*/;
     $HIP_CLANG_VERSION=$1;
