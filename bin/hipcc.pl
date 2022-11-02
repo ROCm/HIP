@@ -184,9 +184,6 @@ if ($HIP_PLATFORM eq "amd") {
     $HIP_CLANG_TARGET = `$HIPCC -print-target-triple`;
     chomp($HIP_CLANG_TARGET);
 
-    if (! defined $HIP_CLANG_INCLUDE_PATH) {
-        $HIP_CLANG_INCLUDE_PATH = abs_path("$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION/include");
-    }
     if (! defined $HIP_INCLUDE_PATH) {
         $HIP_INCLUDE_PATH = "$HIP_PATH/include";
     }
@@ -199,15 +196,12 @@ if ($HIP_PLATFORM eq "amd") {
             print ("HIP_ROCCLR_HOME=$HIP_ROCCLR_HOME\n");
         }
         print ("HIP_CLANG_PATH=$HIP_CLANG_PATH\n");
-        print ("HIP_CLANG_INCLUDE_PATH=$HIP_CLANG_INCLUDE_PATH\n");
         print ("HIP_INCLUDE_PATH=$HIP_INCLUDE_PATH\n");
         print ("HIP_LIB_PATH=$HIP_LIB_PATH\n");
         print ("DEVICE_LIB_PATH=$DEVICE_LIB_PATH\n");
         print ("HIP_CLANG_TARGET=$HIP_CLANG_TARGET\n");
     }
 
-    $HIPCXXFLAGS .= " -isystem \"$HIP_CLANG_INCLUDE_PATH/..\"";
-    $HIPCFLAGS .= " -isystem \"$HIP_CLANG_INCLUDE_PATH/..\"";
     $HIPLDFLAGS .= " -L\"$HIP_LIB_PATH\"";
     if ($isWindows) {
       $HIPLDFLAGS .= " -lamdhip64";
@@ -494,7 +488,7 @@ foreach $arg (@ARGV)
             my $fileType = `file $obj`;
             my $isObj = ($fileType =~ m/ELF/ or $fileType =~ m/COFF/);
             if ($fileType =~ m/ELF/) {
-                my $sections = `readelf -e -W $obj`;
+                my $sections = `$HIP_CLANG_PATH/llvm-readelf -e -W $obj`;
                 $isObj = !($sections =~ m/__CLANG_OFFLOAD_BUNDLE__/);
             }
             $allIsObj = ($allIsObj and $isObj);

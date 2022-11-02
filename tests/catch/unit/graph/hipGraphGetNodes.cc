@@ -25,6 +25,8 @@ Functional ::
 2) Pass nodes as nullptr and verify numNodes returns actual number of nodes added to graph.
 3) If numNodes passed is greater than the actual number of nodes, the remaining entries in nodes
 will be set to NULL, and the number of nodes actually obtained will be returned in numNodes.
+4) Begin stream capture and push operations to stream. Verify nodes of created graph are matching the
+operations pushed.
 
 Argument Validation ::
 1) Pass graph as nullptr and verify api returns error code.
@@ -137,6 +139,110 @@ TEST_CASE("Unit_hipGraphGetNodes_Functional") {
   HIP_CHECK(hipGraphDestroy(graph));
   HIP_CHECK(hipStreamDestroy(streamForGraph));
   free(nodes);
+}
+
+/**
+ * Begin stream capture and push operations to stream.
+ * Verify nodes of created graph are matching the operations pushed.
+ */
+TEST_CASE("Unit_hipGraphGetNodes_CapturedStream") {
+  hipGraph_t graph{nullptr};
+  hipGraphExec_t graphExec{nullptr};
+  constexpr unsigned blocks = 512;
+  constexpr unsigned threadsPerBlock = 256;
+  constexpr size_t N = 1000000;
+  size_t Nbytes = N * sizeof(float);
+  constexpr int numMemcpy{2}, numKernel{1}, numMemset{1};
+  int cntMemcpy{}, cntKernel{}, cntMemset{};
+  hipStream_t stream, streamForGraph;
+  hipGraphNodeType nodeType;
+  float *A_d, *C_d;
+  float *A_h, *C_h;
+
+  A_h = reinterpret_cast<float*>(malloc(Nbytes));
+  C_h = reinterpret_cast<float*>(malloc(Nbytes));
+  REQUIRE(A_h != nullptr);
+  REQUIRE(C_h != nullptr);
+  HIP_CHECK(hipMalloc(&A_d, Nbytes));
+  HIP_CHECK(hipMalloc(&C_d, Nbytes));
+  REQUIRE(A_d != nullptr);
+  REQUIRE(C_d != nullptr);
+
+  HIP_CHECK(hipStreamCreate(&streamForGraph));
+  // Initialize input buffer
+  for (size_t i = 0; i < N; ++i) {
+      A_h[i] = 3.146f + i;  // Pi
+  }
+
+  HIP_CHECK(hipStreamCreate(&stream));
+  HIP_CHECK(hipStreamBeginCapture(stream, hipStreamCaptureModeGlobal));
+  HIP_CHECK(hipMemcpyAsync(A_d, A_h, Nbytes, hipMemcpyHostToDevice, stream));
+  HIP_CHECK(hipMemsetAsync(C_d, 0, Nbytes, stream));
+  hipLaunchKernelGGL(HipTest::vector_square, dim3(blocks),
+                              dim3(threadsPerBlock), 0, stream, A_d, C_d, N);
+  HIP_CHECK(hipMemcpyAsync(C_h, C_d, Nbytes, hipMemcpyDeviceToHost, stream));
+  HIP_CHECK(hipStreamEndCapture(stream, &graph));
+  REQUIRE(graph != nullptr);
+
+  size_t numNodes{};
+  HIP_CHECK(hipGraphGetNodes(graph, nullptr, &numNodes));
+  INFO("Num of nodes returned by GetNodes : " << numNodes);
+  REQUIRE(numNodes == numMemcpy + numKernel + numMemset);
+
+  int numBytes = sizeof(hipGraphNode_t) * numNodes;
+  hipGraphNode_t* nodes = reinterpret_cast<hipGraphNode_t *>(malloc(numBytes));
+  REQUIRE(nodes != nullptr);
+
+  HIP_CHECK(hipGraphGetNodes(graph, nodes, &numNodes));
+  for (size_t i = 0; i < numNodes; i++) {
+    HIP_CHECK(hipGraphNodeGetType(nodes[i], &nodeType));
+
+    switch (nodeType) {
+      case hipGraphNodeTypeMemcpy:
+        cntMemcpy++;
+        break;
+
+      case hipGraphNodeTypeKernel:
+        cntKernel++;
+        break;
+
+      case hipGraphNodeTypeMemset:
+        cntMemset++;
+        break;
+
+      default:
+        INFO("Unexpected nodetype returned : " << nodeType);
+        REQUIRE(false);
+    }
+  }
+
+  REQUIRE(cntMemcpy == numMemcpy);
+  REQUIRE(cntKernel == numKernel);
+  REQUIRE(cntMemset == numMemset);
+
+  // Instantiate and launch the graph
+  HIP_CHECK(hipGraphInstantiate(&graphExec, graph, NULL, NULL, 0));
+  HIP_CHECK(hipGraphLaunch(graphExec, streamForGraph));
+  HIP_CHECK(hipStreamSynchronize(streamForGraph));
+
+  // Validate the computation
+  for (size_t i = 0; i < N; i++) {
+    if (C_h[i] != A_h[i] * A_h[i]) {
+      INFO("A and C not matching at " << i << " C_h[i] " << C_h[i]
+                                           << " A_h[i] " << A_h[i]);
+      REQUIRE(false);
+    }
+  }
+
+  HIP_CHECK(hipStreamDestroy(streamForGraph));
+  HIP_CHECK(hipStreamDestroy(stream));
+  HIP_CHECK(hipGraphExecDestroy(graphExec));
+  HIP_CHECK(hipGraphDestroy(graph));
+  free(A_h);
+  free(C_h);
+  free(nodes);
+  HIP_CHECK(hipFree(A_d));
+  HIP_CHECK(hipFree(C_d));
 }
 
 /**
