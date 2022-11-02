@@ -33,7 +33,7 @@ __global__ void warpvote(int* device_any, int* device_all, int pshift) {
 TEST_CASE("Unit_AnyAll_CompileTest") {
   int warpSize, pshift;
   hipDeviceProp_t devProp;
-  hipGetDeviceProperties(&devProp, 0);
+  HIP_CHECK(hipGetDeviceProperties(&devProp, 0));
   warpSize = devProp.warpSize;
 
   int w = warpSize;
@@ -65,6 +65,7 @@ TEST_CASE("Unit_AnyAll_CompileTest") {
   hipLaunchKernelGGL(warpvote, dim3(Num_Blocks_per_Grid), dim3(Num_Threads_per_Block), 0, 0,
                      device_any, device_all, pshift);
 
+  HIP_CHECK(hipGetLastError());
   HIP_CHECK(
       hipMemcpy(host_any, device_any, Num_Warps_per_Grid * sizeof(int), hipMemcpyDeviceToHost));
   HIP_CHECK(

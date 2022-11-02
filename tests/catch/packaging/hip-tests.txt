@@ -71,6 +71,9 @@ set(CPACK_PACKAGE_VENDOR "Advanced Micro Devices, Inc.")
 set(CPACK_PACKAGE_CONTACT "HIP Support <hip.support@amd.com>")
 set(CPACK_PACKAGE_VERSION @HIP_VERSION_MAJOR@.@HIP_VERSION_MINOR@.@HIP_VERSION_PATCH_GITHASH@)
 
+# to remove hip-catch-* package during uninstallation of rocm
+set (CPACK_DEBIAN_PACKAGE_DEPENDS "rocm-core")
+set (CPACK_RPM_PACKAGE_REQUIRES "rocm-core")
 
 if(NOT WIN32)
 set(CPACK_GENERATOR "TGZ;DEB;RPM" CACHE STRING "Linux package types for catch tests")

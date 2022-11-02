@@ -134,8 +134,8 @@ int main() {
         HIPCHECK(hipMalloc((void**)&Bd, SIZE));
         HIPCHECK(hipMemcpy(Bd, B, SIZE, hipMemcpyHostToDevice));
 
-        dim3 dimGrid(LEN / 512, 1, 1);
-        dim3 dimBlock(512, 1, 1);
+        dim3 dimGrid(LEN / 256, 1, 1);
+        dim3 dimBlock(256, 1, 1);
 
         hipLaunchKernelGGL(Add, dimGrid, dimBlock, 0, 0, Ad, Bd, Cd);
 

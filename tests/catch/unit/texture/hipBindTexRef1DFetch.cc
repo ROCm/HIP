@@ -63,6 +63,7 @@ TEST_CASE("Unit_hipBindTexture_tex1DfetchVerification") {
   dim3 dimGrid(N / dimBlock.x, 1, 1);
 
   hipLaunchKernelGGL(kernel, dim3(dimGrid), dim3(dimBlock), 0, 0, devBuf);
+  HIP_CHECK(hipGetLastError()); 
   HIP_CHECK(hipDeviceSynchronize());
   HIP_CHECK(hipMemcpy(output, devBuf, N * sizeof(float),
                                                   hipMemcpyDeviceToHost));
