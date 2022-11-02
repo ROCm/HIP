@@ -488,7 +488,7 @@ foreach $arg (@ARGV)
             my $fileType = `file $obj`;
             my $isObj = ($fileType =~ m/ELF/ or $fileType =~ m/COFF/);
             if ($fileType =~ m/ELF/) {
-                my $sections = `readelf -e -W $obj`;
+                my $sections = `$HIP_CLANG_PATH/llvm-readelf -e -W $obj`;
                 $isObj = !($sections =~ m/__CLANG_OFFLOAD_BUNDLE__/);
             }
             $allIsObj = ($allIsObj and $isObj);
