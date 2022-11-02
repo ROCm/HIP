@@ -31,33 +31,32 @@ static hipModule_t GetModule() {
 }
 
 TEST_CASE("Unit_hipModuleGetTexRef_Positive_Basic") {
-  textureReference* tex_ref_ptr = nullptr;
-  HIP_CHECK(hipModuleGetTexRef(&tex_ref_ptr, GetModule(), "tex"));
-  REQUIRE(tex_ref_ptr != nullptr);
+  hipTexRef tex_ref = nullptr;
+  HIP_CHECK(hipModuleGetTexRef(&tex_ref, GetModule(), "tex"));
+  REQUIRE(tex_ref != nullptr);
 }
 
 TEST_CASE("Unit_hipModuleGetTexRef_Negative_Parameters") {
   hipModule_t module = GetModule();
-  textureReference* tex_ref_ptr = nullptr;
+  hipTexRef tex_ref = nullptr;
 
   SECTION("texRef == nullptr") {
     HIP_CHECK_ERROR(hipModuleGetTexRef(nullptr, module, "tex"), hipErrorInvalidValue);
   }
 
   SECTION("hmod == nullptr") {
-    HIP_CHECK_ERROR(hipModuleGetTexRef(&tex_ref_ptr, nullptr, "tex"), hipErrorNotFound);
+    HIP_CHECK_ERROR(hipModuleGetTexRef(&tex_ref, nullptr, "tex"), hipErrorInvalidResourceHandle);
   }
 
   SECTION("name == nullptr") {
-    HIP_CHECK_ERROR(hipModuleGetTexRef(&tex_ref_ptr, module, nullptr), hipErrorInvalidValue);
+    HIP_CHECK_ERROR(hipModuleGetTexRef(&tex_ref, module, nullptr), hipErrorInvalidValue);
   }
 
   SECTION("name == empty string") {
-    HIP_CHECK_ERROR(hipModuleGetTexRef(&tex_ref_ptr, module, ""), hipErrorNotFound);
+    HIP_CHECK_ERROR(hipModuleGetTexRef(&tex_ref, module, ""), hipErrorInvalidValue);
   }
 
   SECTION("name == non existent texture") {
-    HIP_CHECK_ERROR(hipModuleGetTexRef(&tex_ref_ptr, module, "non_existent_texture"),
-                    hipErrorNotFound);
+    HIP_CHECK_ERROR(hipModuleGetTexRef(&tex_ref, module, "non_existent_texture"), hipErrorNotFound);
   }
 }
