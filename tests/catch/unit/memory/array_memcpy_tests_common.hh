@@ -342,7 +342,7 @@ void Memcpy2DFromArrayZeroWidthHeight(F memcpy_func, size_t width, size_t height
     if (should_synchronize) {
       HIP_CHECK(hipStreamSynchronize(stream));
     }
-    ArrayFindIfNot(host_alloc.host_ptr(), static_cast<uint8_t>(fill_value), element_count);
+    ArrayFindIfNot(host_alloc.host_ptr(), fill_value, element_count);
   }
   SECTION("Device to Device") {
     ArrayAllocGuard<int> array_alloc(make_hipExtent(width, height, 0), flag);
@@ -362,7 +362,7 @@ void Memcpy2DFromArrayZeroWidthHeight(F memcpy_func, size_t width, size_t height
     }
     HIP_CHECK(hipMemcpy2D(host_alloc.host_ptr(), sizeof(int)*width, device_alloc.ptr(),
            device_alloc.pitch(), sizeof(int)*width, height, hipMemcpyDeviceToHost));
-    ArrayFindIfNot(host_alloc.host_ptr(), static_cast<uint8_t>(fill_value), element_count);
+    ArrayFindIfNot(host_alloc.host_ptr(), fill_value, element_count);
   }
 }
 
@@ -387,7 +387,7 @@ void Memcpy2DToArrayZeroWidthHeight(F memcpy_func, size_t width, size_t height, 
     }
     HIP_CHECK(hipMemcpy2DFromArray(host_alloc.host_ptr(), sizeof(int)*width, array_alloc.ptr(),
            0, 0, sizeof(int)*width, height, hipMemcpyDeviceToHost));
-    ArrayFindIfNot(host_alloc.host_ptr(), static_cast<uint8_t>(42), element_count);
+    ArrayFindIfNot(host_alloc.host_ptr(), 42, element_count);
   }
   SECTION("Device to Device") {
     ArrayAllocGuard<int> array_alloc(make_hipExtent(width, height, 0), flag);
@@ -407,6 +407,6 @@ void Memcpy2DToArrayZeroWidthHeight(F memcpy_func, size_t width, size_t height, 
     }
     HIP_CHECK(hipMemcpy2DFromArray(host_alloc.host_ptr(), sizeof(int)*width, array_alloc.ptr(),
            0, 0, sizeof(int)*width, height, hipMemcpyDeviceToHost));
-    ArrayFindIfNot(host_alloc.host_ptr(), static_cast<uint8_t>(42), element_count);
+    ArrayFindIfNot(host_alloc.host_ptr(), 42, element_count);
   }
 }
