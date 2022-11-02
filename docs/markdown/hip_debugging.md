@@ -262,7 +262,7 @@ The following is the summary of the most useful environment variables in HIP.
 | AMD_SERIALIZE_COPY <br><sub> Serialize copies. </sub> |  0  | 1: Wait for completion before enqueue. <br> 2: Wait for completion after enqueue. <br> 3: Both. |
 | HIP_HOST_COHERENT <br><sub> Coherent memory in hipHostMalloc. </sub> |  0  |  0: memory is not coherent between host and GPU. <br> 1: memory is coherent with host. |
 | AMD_DIRECT_DISPATCH <br><sub> Enable direct kernel dispatch. </sub> | 1  | 0: Disable. <br> 1: Enable. |
-
+| GPU_MAX_HW_QUEUES <br><sub> The maximum number of hardware queues allocated per device. </sub> | 4  | The variable controls how many independent hardware queues HIP runtime can create per process, per device. If application allocates more HIP streams than this number, then HIP runtime will reuse the same hardware queues for the new streams in round robin manner. Please note, this maximum number does not apply to either hardware queues that are created for CU masked HIP streams, or cooperative queue for HIP Cooperative Groups (there is only one single queue per device). |
 
 ## General Debugging Tips
 - 'gdb --args' can be used to conveniently pass the executable and arguments to gdb.
