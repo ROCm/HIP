@@ -34,8 +34,8 @@
 
 #include "test_common.h"
 #include "hip/hip_ext.h"
-#define FOURSEC_KERNEL 4999
-#define TWOSEC_KERNEL  2999
+#define FIVESEC_KERNEL 4999
+#define THREESEC_KERNEL 2999
 
 __device__ int globalvar = 1;
 __global__ void TwoSecKernel(int clockrate) {
@@ -163,12 +163,12 @@ bool KernelTimeExecution() {
   e = hipEventElapsedTime(&time_4sec, start_event1, end_event1);
   e = hipEventElapsedTime(&time_2sec, start_event2, end_event2);
 
-  if ( (time_4sec < static_cast<float>(FOURSEC_KERNEL)) &&
-       (time_2sec < static_cast<float>(TWOSEC_KERNEL))) {
+  if ( (time_4sec < static_cast<float>(FIVESEC_KERNEL)) &&
+       (time_2sec < static_cast<float>(THREESEC_KERNEL))) {
     testStatus = true;
   } else {
     printf("Expected Vs Actual: Kernel1-<%d Vs %f Kernel2-<%d Vs %f\n",
-            FOURSEC_KERNEL, time_4sec, TWOSEC_KERNEL, time_2sec);
+            FIVESEC_KERNEL, time_4sec, THREESEC_KERNEL, time_2sec);
     testStatus = false;
   }
 
