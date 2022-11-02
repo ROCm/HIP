@@ -63,7 +63,7 @@ TEST_CASE("Unit_mbcnt") {
 
   hipLaunchKernelGGL(HIP_kernel, dim3(num_blocks), dim3(num_threads_per_block), 0, 0,
                      device_mbcnt_lo, device_mbcnt_hi, device_lane_id);
-
+  HIP_CHECK(hipGetLastError());
   unsigned int* host_mbcnt_lo = (unsigned int*)malloc(buffer_size);
   unsigned int* host_mbcnt_hi = (unsigned int*)malloc(buffer_size);
   unsigned int* host_lane_id = (unsigned int*)malloc(buffer_size);
