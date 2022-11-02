@@ -114,16 +114,16 @@ TEST_CASE("Unit_unsafeAtomicAdd") {
     void* config_d[] = {HIP_LAUNCH_PARAM_BUFFER_POINTER, &args_d, HIP_LAUNCH_PARAM_BUFFER_SIZE,
                         &size_d, HIP_LAUNCH_PARAM_END};
 
-    hipModuleLaunchKernel(f_kernel, 10, 1, 1, 100, 1, 1, 0, nullptr, nullptr, config_f);
-    hipModuleLaunchKernel(d_kernel, 10, 1, 1, 100, 1, 1, 0, nullptr, nullptr, config_d);
+    HIP_CHECK(hipModuleLaunchKernel(f_kernel, 10, 1, 1, 100, 1, 1, 0, nullptr, nullptr, config_f));
+    HIP_CHECK(hipModuleLaunchKernel(d_kernel, 10, 1, 1, 100, 1, 1, 0, nullptr, nullptr, config_d));
 
     float res_f = 0.0f;
     double res_d = 0.0;
     HIP_CHECK(hipMemcpy(&res_f, fX, sizeof(float), hipMemcpyDeviceToHost));
     HIP_CHECK(hipMemcpy(&res_d, dX, sizeof(double), hipMemcpyDeviceToHost));
 
-    hipFree(dX);
-    hipFree(fX);
+    HIP_CHECK(hipFree(dX));
+    HIP_CHECK(hipFree(fX));
 
     HIP_CHECK(hipModuleUnload(module));
 
