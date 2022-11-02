@@ -34,8 +34,8 @@ void MemcpyAtoHShell(F memcpy_func, size_t width, const hipStream_t kernel_strea
   
   size_t allocation_size = width* sizeof(T);
 
-  LinearAllocGuard<int> host_allocation(LinearAllocs::hipHostMalloc, allocation_size);
-  ArrayAllocGuard<int> array_allocation(make_hipExtent(width, 0, 0), flag);
+  LinearAllocGuard<T> host_allocation(LinearAllocs::hipHostMalloc, allocation_size);
+  ArrayAllocGuard<T> array_allocation(make_hipExtent(width, 0, 0), flag);
   
   const auto element_count = allocation_size / sizeof(T);
   constexpr int fill_value = 42;
@@ -58,8 +58,8 @@ void Memcpy2DHostFromAShell(F memcpy_func, size_t width, size_t height, const hi
   
   size_t allocation_size = width * height * sizeof(T);
 
-  LinearAllocGuard<int> host_allocation(LinearAllocs::hipHostMalloc, allocation_size);
-  ArrayAllocGuard<int> array_allocation(make_hipExtent(width, height, 0), flag);
+  LinearAllocGuard<T> host_allocation(LinearAllocs::hipHostMalloc, allocation_size);
+  ArrayAllocGuard<T> array_allocation(make_hipExtent(width, height, 0), flag);
   
   const auto element_count = allocation_size / sizeof(T);
   constexpr int fill_value = 42;
@@ -101,10 +101,10 @@ void Memcpy2DDeviceFromAShell(F memcpy_func, size_t width, size_t height, const 
     HIP_CHECK(hipDeviceEnablePeerAccess(dst_device, 0));
   }
 
-  LinearAllocGuard<int> host_allocation(LinearAllocs::hipHostMalloc, allocation_size);
-  ArrayAllocGuard<int> array_allocation(make_hipExtent(width, height, 0), flag);
+  LinearAllocGuard<T> host_allocation(LinearAllocs::hipHostMalloc, allocation_size);
+  ArrayAllocGuard<T> array_allocation(make_hipExtent(width, height, 0), flag);
   HIP_CHECK(hipSetDevice(dst_device));
-  LinearAllocGuard2D<int> device_allocation(width, height);
+  LinearAllocGuard2D<T> device_allocation(width, height);
   
   HIP_CHECK(hipSetDevice(src_device));
   const auto element_count = allocation_size / sizeof(T);
@@ -331,7 +331,7 @@ void Memcpy2DFromArrayZeroWidthHeight(F memcpy_func, size_t width, size_t height
 
   SECTION("Device to Host") {
     ArrayAllocGuard<int> array_alloc(make_hipExtent(width, height, 0), flag);
-    LinearAllocGuard<uint8_t> host_alloc(LinearAllocs::hipHostMalloc, width * height * sizeof(int));
+    LinearAllocGuard<int> host_alloc(LinearAllocs::hipHostMalloc, width * height * sizeof(int));
     int fill_value = 42;
     std::fill_n(host_alloc.host_ptr(), width * height, fill_value);
     HIP_CHECK(hipMemcpy2DToArray(array_alloc.ptr(), 0, 0, host_alloc.host_ptr(), sizeof(int)*width, sizeof(int)*width, height, hipMemcpyHostToDevice));
@@ -346,8 +346,8 @@ void Memcpy2DFromArrayZeroWidthHeight(F memcpy_func, size_t width, size_t height
   }
   SECTION("Device to Device") {
     ArrayAllocGuard<int> array_alloc(make_hipExtent(width, height, 0), flag);
-    LinearAllocGuard2D<uint8_t> device_alloc(width, height);
-    LinearAllocGuard<uint8_t> host_alloc(LinearAllocs::hipHostMalloc, width * height * sizeof(int));
+    LinearAllocGuard2D<int> device_alloc(width, height);
+    LinearAllocGuard<int> host_alloc(LinearAllocs::hipHostMalloc, width * height * sizeof(int));
     int fill_value = 42;
     std::fill_n(host_alloc.host_ptr(), width * height, fill_value);
     HIP_CHECK(hipMemcpy2DToArray(array_alloc.ptr(), 0, 0, host_alloc.host_ptr(), sizeof(int)*width, sizeof(int)*width, height, hipMemcpyHostToDevice));
@@ -374,7 +374,7 @@ void Memcpy2DToArrayZeroWidthHeight(F memcpy_func, size_t width, size_t height, 
 
   SECTION("Host to Device") {
     ArrayAllocGuard<int> array_alloc(make_hipExtent(width, height, 0), flag);
-    LinearAllocGuard<uint8_t> host_alloc(LinearAllocs::hipHostMalloc, width * height * sizeof(int));
+    LinearAllocGuard<int> host_alloc(LinearAllocs::hipHostMalloc, width * height * sizeof(int));
     int fill_value = 42;
     std::fill_n(host_alloc.host_ptr(), width * height, fill_value);
     HIP_CHECK(hipMemcpy2DToArray(array_alloc.ptr(), 0, 0, host_alloc.host_ptr(), sizeof(int)*width, sizeof(int)*width, height, hipMemcpyHostToDevice));
@@ -391,8 +391,8 @@ void Memcpy2DToArrayZeroWidthHeight(F memcpy_func, size_t width, size_t height, 
   }
   SECTION("Device to Device") {
     ArrayAllocGuard<int> array_alloc(make_hipExtent(width, height, 0), flag);
-    LinearAllocGuard2D<uint8_t> device_alloc(width, height);
-    LinearAllocGuard<uint8_t> host_alloc(LinearAllocs::hipHostMalloc, width * height * sizeof(int));
+    LinearAllocGuard2D<int> device_alloc(width, height);
+    LinearAllocGuard<int> host_alloc(LinearAllocs::hipHostMalloc, width * height * sizeof(int));
     int fill_value = 42;
     std::fill_n(host_alloc.host_ptr(), width * height, fill_value);
     HIP_CHECK(hipMemcpy2DToArray(array_alloc.ptr(), 0, 0, host_alloc.host_ptr(), sizeof(int)*width, sizeof(int)*width, height, hipMemcpyHostToDevice));
