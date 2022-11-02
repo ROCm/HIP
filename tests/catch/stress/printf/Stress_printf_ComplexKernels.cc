@@ -494,7 +494,7 @@ TEST_CASE("Stress_printf_ComplexKernelMultStreamMultGpu") {
   unsigned int print_limit = 4;  // = 4 GB
   uint32_t iterCount = 1;
   int numOfGPUs = 0;
-  hipGetDeviceCount(&numOfGPUs);
+  HIP_CHECK(hipGetDeviceCount(&numOfGPUs));
   if (numOfGPUs < 2) {
     printf("Skipping test because numOfGPUs < 2\n");
     return;
