@@ -143,7 +143,7 @@ TEST_CASE("Unit_hipMemAdvise_TstFlags") {
     float *Hmm = nullptr;
     int AttrVal = 0;
     HIP_CHECK(hipGetDeviceCount(&NumDevs));
-    Outpt = new int(NumDevs);
+    Outpt = new int[NumDevs];
     HIP_CHECK(hipMallocManaged(&Hmm, MEM_SIZE * 2, hipMemAttachGlobal));
     // With the following for loop we iterate through each of the Gpus in the
     // system set and unset the flags and check the behavior.
@@ -676,8 +676,14 @@ TEST_CASE("Unit_hipMemAdvise_TstAlignedAllocMem") {
     int stat = 0;
     if (fork() == 0) {
       // The below part should be inside fork
-      int managed = HmmAttrPrint();
-      if (managed == 1) {
+      int managedMem = 0, pageMemAccess = 0;
+      HIP_CHECK(hipDeviceGetAttribute(&pageMemAccess,
+                hipDeviceAttributePageableMemoryAccess, 0));
+      WARN("hipDeviceAttributePageableMemoryAccess:" << pageMemAccess);
+
+      HIP_CHECK(hipDeviceGetAttribute(&managedMem, hipDeviceAttributeManagedMemory, 0));
+      WARN("hipDeviceAttributeManagedMemory: " << managedMem);
+      if ((managedMem == 1) && (pageMemAccess == 1)) {
         int *Mllc = nullptr, MemSz = 4096 * 4, NumElms = 4096, InitVal = 123;
         // Mllc = reinterpret_cast<(int *)>(aligned_alloc(4096, MemSz));
         Mllc = reinterpret_cast<int*>(aligned_alloc(4096, 4096*4));
@@ -706,19 +712,27 @@ TEST_CASE("Unit_hipMemAdvise_TstAlignedAllocMem") {
           exit(10);  // 10 for Pass result
         }
       } else {
-        SUCCEED("GPU 0 doesn't support hipDeviceAttributeManagedMemory "
-               "attribute. Hence skipping the testing with Pass result.\n");
+        SUCCEED("GPU 0 doesn't support ManagedMemory with hipDeviceAttributePageableMemoryAccess "
+                "attribute. Hence skipping the testing with Pass result.\n");
+        exit(Catch::ResultDisposition::ContinueOnFailure);
       }
     } else {
       wait(&stat);
       int Result = WEXITSTATUS(stat);
-      if (Result != 10) {
-        REQUIRE(false);
+      if (Result == Catch::ResultDisposition::ContinueOnFailure) {
+        WARN("GPU 0 doesn't support ManagedMemory with hipDeviceAttributePageableMemoryAccess "
+             "attribute. Hence skipping the testing with Pass result.\n");
+      } else {
+        if (Result != 10) {
+          REQUIRE(false);
+        }
       }
     }
   } else {
-    SUCCEED("Memory model feature is only supported for gfx90a, Hence"
-             "skipping the testcase for this GPU " << device);
+      SUCCEED("Memory model feature is only supported for gfx90a, Hence"
+              "skipping the testcase for this GPU " << device);
+      WARN("Memory model feature is only supported for gfx90a, Hence"
+              "skipping the testcase for this GPU " << device);
   }
 
 }
