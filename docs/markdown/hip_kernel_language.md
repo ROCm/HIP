@@ -455,9 +455,9 @@ Following is the list of supported integer intrinsics. Note that intrinsics are 
 | unsigned int __popcll ( unsigned long long int x )<br><sub>Count the number of bits that are set to 1 in a 64 bit integer.</sub> |
 | int __mul24 ( int x, int y )<br><sub>Multiply two 24bit integers.</sub> |
 | unsigned int __umul24 ( unsigned int x, unsigned int y )<br><sub>Multiply two 24bit unsigned integers.</sub> |
-<sub><b id="f3"><sup>[1]</sup></b> 
+<sub><b id="f3"><sup>[1]</sup></b>
 The HIP-Clang implementation of __ffs() and __ffsll() contains code to add a constant +1 to produce the ffs result format.
-For the cases where this overhead is not acceptable and programmer is willing to specialize for the platform, 
+For the cases where this overhead is not acceptable and programmer is willing to specialize for the platform,
 HIP-Clang provides __lastbit_u32_u32(unsigned int input) and __lastbit_u32_u64(unsigned long long int input).
 The index returned by __lastbit_ instructions starts at -1, while for ffs the index starts at 0.
 
@@ -495,6 +495,18 @@ clock_t clock()
 long long int clock64()
 ```
 Returns the value of counter that is incremented every clock cycle on device. Difference in values returned provides the cycles used.
+
+```
+long long int wall_clock64()
+```
+Returns wall clock count at a constant frequency on the device, which can be queried via HIP API with hipDeviceAttributeWallClockRate attribute of the device in HIP application code, for example,
+```
+int wallClkRate = 0; //in kilohertz
+HIPCHECK(hipDeviceGetAttribute(&wallClkRate, hipDeviceAttributeWallClockRate, deviceId));
+```
+Where hipDeviceAttributeWallClockRate is a device attribute.
+Note that, wall clock frequency is a per-device attribute.
+
 
 ## Atomic Functions
 

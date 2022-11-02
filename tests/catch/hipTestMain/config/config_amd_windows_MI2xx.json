@@ -71,6 +71,23 @@
 		"Unit_hipStreamSynchronize_FinishWork",
 		"Unit_hipStreamSynchronize_NullStreamAndStreamPerThread",
 		"Unit_hipMultiThreadDevice_NearZero",
-		"Unit_hipStreamPerThread_DeviceReset_1"
+		"Unit_hipStreamPerThread_DeviceReset_1",
+		"Unit_hipStreamValue_Wait32_Blocking_Mask_Gte",
+		"Unit_hipStreamValue_Wait32_Blocking_Mask_Eq_1",
+		"Unit_hipStreamValue_Wait32_Blocking_Mask_Eq_2",
+		"Unit_hipStreamValue_Wait32_Blocking_Mask_And",
+		"Unit_hipStreamValue_Wait32_Blocking_NoMask_Eq",
+		"Unit_hipStreamValue_Wait32_Blocking_NoMask_Gte",
+		"Unit_hipStreamValue_Wait32_Blocking_NoMask_And",
+		"Unit_hipStreamValue_Wait32_Blocking_NoMask_Nor",
+		"Unit_hipStreamValue_Wait64_Blocking_Mask_Gte_1",
+		"Unit_hipStreamValue_Wait64_Blocking_Mask_Gte_2",
+		"Unit_hipStreamValue_Wait64_Blocking_Mask_Eq_1",
+		"Unit_hipStreamValue_Wait64_Blocking_Mask_Eq_2",
+		"Unit_hipStreamValue_Wait64_Blocking_Mask_And",
+		"Unit_hipStreamValue_Wait64_Blocking_NoMask_Gte",
+		"Unit_hipStreamValue_Wait64_Blocking_NoMask_Eq",
+		"Unit_hipStreamValue_Wait64_Blocking_NoMask_And",
+		"Unit_hipStreamValue_Wait64_Blocking_NoMask_Nor" 
 	]
 }
