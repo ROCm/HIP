@@ -87,7 +87,7 @@ static void HipGetSymbolSizeAddressTest(const void* symbol) {
   HipGetSymbolSizeAddressTest<type, kArraySize, type##_arr_address_validation_kernel>(             \
       SYMBOL(type##_arr));
 
-TEST_CASE("Unit_hipGetSymbolAddress_Positive_Basic") {
+TEST_CASE("Unit_hipGetSymbolSizeAddress_Positive_Basic") {
   SECTION("int") { HIP_GET_SYMBOL_SIZE_ADDRESS_TEST(int); }
   SECTION("float") { HIP_GET_SYMBOL_SIZE_ADDRESS_TEST(float); }
   SECTION("char") { HIP_GET_SYMBOL_SIZE_ADDRESS_TEST(char); }
