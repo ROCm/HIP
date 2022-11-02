@@ -69,7 +69,8 @@ TEST_CASE("Unit_hipTextureRef2D_Check") {
   dim3 dimGrid(width / dimBlock.x, height / dimBlock.y, 1);
   hipLaunchKernelGGL(tex2DKernel, dim3(dimGrid), dim3(dimBlock), 0, 0,
                      dData, width);
-  hipDeviceSynchronize();
+  HIP_CHECK(hipGetLastError()); 
+  HIP_CHECK(hipDeviceSynchronize());
 
   float* hOutputData = reinterpret_cast<float*>(malloc(size));
   REQUIRE(hOutputData != nullptr);

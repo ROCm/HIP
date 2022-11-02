@@ -65,7 +65,7 @@ TEST_CASE("Unit_hipEventIpc") {
 
         hipLaunchKernelGGL(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock), 0, 0,
                         static_cast<const float*>(A_d), static_cast<const float*>(B_d), C_d, N);
-
+        HIP_CHECK(hipGetLastError());
 
         HIP_CHECK(hipEventRecord(stop, NULL));
         HIP_CHECK(hipEventSynchronize(stop));
@@ -91,9 +91,13 @@ TEST_CASE("Unit_hipEventIpc") {
     hipEvent_t ipc_event;
     hipError_t err = hipIpcOpenEventHandle(&ipc_event, ipc_handle);
 
+    #if HT_WIN
+    // always different process Id on Windows
+    HIP_CHECK(err);
+    #else
     // hipIpcOpenEventHandle() should be called in a different process, hence it should fail here
     REQUIRE(err == hipErrorInvalidContext);
-
+    #endif
     HIP_CHECK(hipEventDestroy(start));
     HIP_CHECK(hipEventDestroy(stop));
 

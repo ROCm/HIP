@@ -60,18 +60,18 @@ static void hipTestWithGraph() {
   hipGraph_t graph;
   hipGraphExec_t instance;
 
-  hipStreamBeginCapture(stream, hipStreamCaptureModeGlobal);
+  HIP_CHECK(hipStreamBeginCapture(stream, hipStreamCaptureModeGlobal));
   for (int ikrnl = 0; ikrnl < NKERNEL; ikrnl++) {
     simpleKernel<<<dim3(N / 512, 1, 1), dim3(512, 1, 1),
                                              0, stream>>>(out_d, in_d);
   }
-  hipStreamEndCapture(stream, &graph);
-  hipGraphInstantiate(&instance, graph, nullptr, nullptr, 0);
+  HIP_CHECK(hipStreamEndCapture(stream, &graph));
+  HIP_CHECK(hipGraphInstantiate(&instance, graph, nullptr, nullptr, 0));
 
   auto start1 = std::chrono::high_resolution_clock::now();
   for (int istep = 0; istep < NSTEP; istep++) {
-    hipGraphLaunch(instance, stream);
-    hipStreamSynchronize(stream);
+    HIP_CHECK(hipGraphLaunch(instance, stream));
+    HIP_CHECK(hipStreamSynchronize(stream));
   }
   auto stop = std::chrono::high_resolution_clock::now();
   auto withInit = std::chrono::duration<double, std::milli>(stop - start);

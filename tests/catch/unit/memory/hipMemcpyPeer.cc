@@ -35,7 +35,7 @@ TEST_CASE("Unit_hipMemcpyPeer_Negative") {
   HIP_CHECK(hipGetDeviceCount(&numDevices));
   if (numDevices > 1) {
     int canAccessPeer = 0;
-    hipDeviceCanAccessPeer(&canAccessPeer, 0, 1);
+    HIP_CHECK(hipDeviceCanAccessPeer(&canAccessPeer, 0, 1));
     if (canAccessPeer) {
       // Initialization of variables
       int *A_d{nullptr}, *B_d{nullptr};
@@ -73,11 +73,13 @@ TEST_CASE("Unit_hipMemcpyPeer_Negative") {
       }
 
       SECTION("Passing invalid Destination device ID") {
-        REQUIRE(hipMemcpyPeer(B_d, 10, A_d, 0, copy_bytes) != hipSuccess);
+        REQUIRE(hipMemcpyPeer(B_d, numDevices, A_d, 0, copy_bytes) !=
+                hipSuccess);
       }
 
       SECTION("Passing invalid Source device ID") {
-        REQUIRE(hipMemcpyPeer(B_d, 1, A_d, 10, copy_bytes) != hipSuccess);
+        REQUIRE(hipMemcpyPeer(B_d, 1, A_d, numDevices, copy_bytes) !=
+                hipSuccess);
       }
       HipTest::freeArrays<int>(A_d, B_d, nullptr, A_h, B_h, nullptr, false);
     } else {
@@ -102,7 +104,7 @@ TEST_CASE("Unit_hipMemcpyPeer_Basic") {
   HIP_CHECK(hipGetDeviceCount(&numDevices));
   if (numDevices > 1) {
     int canAccessPeer = 0;
-    hipDeviceCanAccessPeer(&canAccessPeer, 0, 1);
+    HIP_CHECK(hipDeviceCanAccessPeer(&canAccessPeer, 0, 1));
     if (canAccessPeer) {
       int *A_d{nullptr}, *B_d{nullptr}, *C_d{nullptr};
       int *X_d{nullptr}, *Y_d{nullptr}, *Z_d{nullptr};
@@ -127,6 +129,7 @@ TEST_CASE("Unit_hipMemcpyPeer_Basic") {
       hipLaunchKernelGGL(HipTest::vectorADD, dim3(1), dim3(1),
           0, 0, static_cast<const int*>(A_d),
           static_cast<const int*>(B_d), C_d, numElements*sizeof(int));
+      HIP_CHECK(hipGetLastError());
       HIP_CHECK(hipMemcpy(C_h, C_d, numElements*sizeof(int),
                hipMemcpyDeviceToHost));
       HipTest::checkVectorADD<int>(A_h, B_h, C_h, numElements);
@@ -138,6 +141,7 @@ TEST_CASE("Unit_hipMemcpyPeer_Basic") {
       hipLaunchKernelGGL(HipTest::vectorADD, dim3(1), dim3(1),
           0, 0, static_cast<const int*>(X_d),
           static_cast<const int*>(Y_d), Z_d, numElements*sizeof(int));
+      HIP_CHECK(hipGetLastError());
       HIP_CHECK(hipMemcpy(C_h, Z_d, numElements*sizeof(int),
             hipMemcpyDeviceToHost));
       HipTest::checkVectorADD<int>(A_h, B_h, C_h, numElements);

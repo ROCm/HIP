@@ -270,6 +270,7 @@ void launchKernel(K kernel, Dim numBlocks, Dim numThreads, std::uint32_t memPerB
   launchRTCKernel<Typenames...>(kernel, numBlocks, numThreads, memPerBlock, stream,
                                 std::forward<Args>(packedArgs)...);
 #endif
+HIP_CHECK(hipGetLastError());
 }
 
 //---
@@ -396,7 +397,6 @@ static inline void runKernelForDuration(std::chrono::milliseconds duration,
   static size_t ticksPerSecond = findTicksPerSecond();
   const auto millis = duration.count();
   hipLaunchKernelGGL(waitKernel, dim3(1), dim3(1), 0, stream, ticksPerSecond * millis / 1000);
-  HIP_CHECK(hipGetLastError());
 }
 
 }  // namespace HipTest
