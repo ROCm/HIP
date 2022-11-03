@@ -1215,6 +1215,102 @@ typedef enum hipGraphInstantiateFlags {
       1,  ///< Automatically free memory allocated in a graph before relaunching.
 } hipGraphInstantiateFlags;
 
+/**
+ * Memory allocation properties
+ */
+typedef struct hipMemAllocationProp {
+    hipMemAllocationType type;                       ///< Memory allocation type
+    hipMemAllocationHandleType requestedHandleType;  ///< Requested handle type
+    hipMemLocation location;                         ///< Memory location
+    void* win32HandleMetaData;                       ///< Metadata for Win32 handles
+    struct {
+        unsigned char compressionType;               ///< Compression type
+        unsigned char gpuDirectRDMACapable;          ///< RDMA capable
+        unsigned short usage;                        ///< Usage
+    } allocFlags;
+} hipMemAllocationProp;
+
+/**
+ * Generic handle for memory allocation
+ */
+typedef struct ihipMemGenericAllocationHandle* hipMemGenericAllocationHandle_t;
+
+/**
+ * @brief Flags for granularity
+ * @enum
+ * @ingroup Enumerations
+ */
+typedef enum hipMemAllocationGranularity_flags {
+    hipMemAllocationGranularityMinimum     = 0x0,  ///< Minimum granularity
+    hipMemAllocationGranularityRecommended = 0x1   ///< Recommended granularity for performance
+} hipMemAllocationGranularity_flags;
+
+/**
+ * @brief Memory handle type
+ * @enum
+ * @ingroup Enumerations
+ */
+typedef enum hipMemHandleType {
+    hipMemHandleTypeGeneric = 0x0  ///< Generic handle type
+} hipMemHandleType;
+
+/**
+ * @brief Memory operation types
+ * @enum
+ * @ingroup Enumerations
+ */
+typedef enum hipMemOperationType {
+    hipMemOperationTypeMap   = 0x1,   ///< Map operation
+    hipMemOperationTypeUnmap = 0x2    ///< Unmap operation
+} hipMemOperationType;
+
+/**
+ * @brief Subresource types for sparse arrays
+ * @enum
+ * @ingroup Enumerations
+ */
+typedef enum hipArraySparseSubresourceType {
+    hipArraySparseSubresourceTypeSparseLevel = 0x0, ///< Sparse level
+    hipArraySparseSubresourceTypeMiptail     = 0x1  ///< Miptail
+} hipArraySparseSubresourceType;
+
+/**
+ * Map info for arrays
+ */
+typedef struct hipArrayMapInfo {
+     hipResourceType resourceType;                   ///< Resource type
+     union {
+         hipMipmappedArray mipmap;
+         hipArray_t array;
+     } resource;
+     hipArraySparseSubresourceType subresourceType;  ///< Sparse subresource type
+     union {
+         struct {
+             unsigned int level;   ///< For mipmapped arrays must be a valid mipmap level. For arrays must be zero
+             unsigned int layer;   ///< For layered arrays must be a valid layer index. Otherwise, must be zero
+             unsigned int offsetX;                   ///< X offset in elements
+             unsigned int offsetY;                   ///< Y offset in elements
+             unsigned int offsetZ;                   ///< Z offset in elements
+             unsigned int extentWidth;               ///< Width in elements
+             unsigned int extentHeight;              ///< Height in elements
+             unsigned int extentDepth;               ///< Depth in elements
+         } sparseLevel;
+         struct {
+             unsigned int layer;   ///< For layered arrays must be a valid layer index. Otherwise, must be zero
+             unsigned long long offset;              ///< Offset within mip tail
+             unsigned long long size;                ///< Extent in bytes
+         } miptail;
+     } subresource;
+     hipMemOperationType memOperationType;           ///< Memory operation type
+     hipMemHandleType memHandleType;                 ///< Memory handle type
+     union {
+         hipMemGenericAllocationHandle_t memHandle;
+     } memHandle;
+     unsigned long long offset;                      ///< Offset within the memory
+     unsigned int deviceBitMask;                     ///< Device ordinal bit mask
+     unsigned int flags;                             ///< flags for future use, must be zero now.
+     unsigned int reserved[2];                       ///< Reserved for future use, must be zero now.
+} hipArrayMapInfo;
 // Doxygen end group GlobalDefs
 /**  @} */
 //-------------------------------------------------------------------------------------------------
@@ -1253,7 +1349,7 @@ hipError_t hipInit(unsigned int flags);
  *
  * @param [out] driverVersion
  *
- * @returns #hipSuccess, #hipErrorInavlidValue
+ * @returns #hipSuccess, #hipErrorInvalidValue
  *
  * @warning The HIP feature set does not correspond to an exact CUDA SDK driver revision.
  * This function always set *driverVersion to 4 as an approximation though HIP supports
@@ -1269,7 +1365,7 @@ hipError_t hipDriverGetVersion(int* driverVersion);
  *
  * @param [out] runtimeVersion
  *
- * @returns #hipSuccess, #hipErrorInavlidValue
+ * @returns #hipSuccess, #hipErrorInvalidValue
  *
  * @warning The version definition of HIP runtime is different from CUDA.
  * On AMD platform, the function returns HIP runtime version,
@@ -1284,7 +1380,7 @@ hipError_t hipRuntimeGetVersion(int* runtimeVersion);
  * @param [out] device
  * @param [in] ordinal
  *
- * @returns #hipSuccess, #hipErrorInavlidDevice
+ * @returns #hipSuccess, #hipErrorInvalidDevice
  */
 hipError_t hipDeviceGet(hipDevice_t* device, int ordinal);
 
@@ -1294,7 +1390,7 @@ hipError_t hipDeviceGet(hipDevice_t* device, int ordinal);
  * @param [out] minor
  * @param [in] device
  *
- * @returns #hipSuccess, #hipErrorInavlidDevice
+ * @returns #hipSuccess, #hipErrorInvalidDevice
  */
 hipError_t hipDeviceComputeCapability(int* major, int* minor, hipDevice_t device);
 /**
@@ -1303,7 +1399,7 @@ hipError_t hipDeviceComputeCapability(int* major, int* minor, hipDevice_t device
  * @param [in] len
  * @param [in] device
  *
- * @returns #hipSuccess, #hipErrorInavlidDevice
+ * @returns #hipSuccess, #hipErrorInvalidDevice
  */
 hipError_t hipDeviceGetName(char* name, int len, hipDevice_t device);
 /**
@@ -1315,7 +1411,7 @@ hipError_t hipDeviceGetName(char* name, int len, hipDevice_t device);
  * it is still open to changes and may have outstanding issues.
  *
  * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue, #hipErrorNotInitialized,
- * #hipErrorDeInitialized
+ * #hipErrorDeinitialized
  */
 hipError_t hipDeviceGetUuid(hipUUID* uuid, hipDevice_t device);
 /**
@@ -1325,7 +1421,7 @@ hipError_t hipDeviceGetUuid(hipUUID* uuid, hipDevice_t device);
  * @param [in] srcDevice
  * @param [in] dstDevice
  *
- * @returns #hipSuccess, #hipErrorInavlidDevice
+ * @returns #hipSuccess, #hipErrorInvalidDevice
  */
 hipError_t hipDeviceGetP2PAttribute(int* value, hipDeviceP2PAttr attr,
                                     int srcDevice, int dstDevice);
@@ -1335,7 +1431,7 @@ hipError_t hipDeviceGetP2PAttribute(int* value, hipDeviceP2PAttr attr,
  * @param [in] len
  * @param [in] device
  *
- * @returns #hipSuccess, #hipErrorInavlidDevice
+ * @returns #hipSuccess, #hipErrorInvalidDevice
  */
 hipError_t hipDeviceGetPCIBusId(char* pciBusId, int len, int device);
 /**
@@ -1343,7 +1439,7 @@ hipError_t hipDeviceGetPCIBusId(char* pciBusId, int len, int device);
  * @param [out] device handle
  * @param [in] PCI Bus ID
  *
- * @returns #hipSuccess, #hipErrorInavlidDevice, #hipErrorInvalidValue
+ * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
  */
 hipError_t hipDeviceGetByPCIBusId(int* device, const char* pciBusId);
 /**
@@ -1351,7 +1447,7 @@ hipError_t hipDeviceGetByPCIBusId(int* device, const char* pciBusId);
  * @param [out] bytes
  * @param [in] device
  *
- * @returns #hipSuccess, #hipErrorInavlidDevice
+ * @returns #hipSuccess, #hipErrorInvalidDevice
  */
 hipError_t hipDeviceTotalMem(size_t* bytes, hipDevice_t device);
 // doxygen end initialization
@@ -1707,8 +1803,9 @@ hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t* handle, void* devPtr);
  * hipErrorInvalidHandle,
  * hipErrorTooManyPeers
  *
- * @note No guarantees are made about the address returned in @p *devPtr.
- * In particular, multiple processes may not receive the same address for the same @p handle.
+ * @note During multiple processes, using the same memory handle opened by the current context,
+ * there is no guarantee that the same device poiter will be returned in @p *devPtr.
+ * This is diffrent from CUDA.
  *
  */
 hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned int flags);
@@ -2379,13 +2476,6 @@ hipError_t hipEventSynchronize(hipEvent_t event);
  * returned. If hipEventRecord() has been called on both events, but the timestamp has not yet been
  * recorded on one or both events (that is, hipEventQuery() would return #hipErrorNotReady on at
  * least one of the events), then #hipErrorNotReady is returned.
- *
- * Note, for HIP Events used in kernel dispatch using hipExtLaunchKernelGGL/hipExtLaunchKernel,
- * events passed in hipExtLaunchKernelGGL/hipExtLaunchKernel are not explicitly recorded and should
- * only be used to get elapsed time for that specific launch. In case events are used across
- * multiple dispatches, for example, start and stop events from different hipExtLaunchKernelGGL/
- * hipExtLaunchKernel calls, they will be treated as invalid unrecorded events, HIP will throw
- * error "hipErrorInvalidHandle" from hipEventElapsedTime.
  *
  * @see hipEventCreate, hipEventCreateWithFlags, hipEventQuery, hipEventDestroy, hipEventRecord,
  * hipEventSynchronize
@@ -3333,7 +3423,7 @@ hipError_t hipMemcpyWithStream(void* dst, const void* src, size_t sizeBytes,
  *  @param[in]   src Data being copy from
  *  @param[in]   sizeBytes Data size in bytes
  *
- *  @return #hipSuccess, #hipErrorDeInitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ *  @return #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
  * #hipErrorInvalidValue
  *
  *  @see hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc, hipMemAllocHost,
@@ -3351,7 +3441,7 @@ hipError_t hipMemcpyHtoD(hipDeviceptr_t dst, void* src, size_t sizeBytes);
  *  @param[in]   src Data being copy from
  *  @param[in]   sizeBytes Data size in bytes
  *
- *  @return #hipSuccess, #hipErrorDeInitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ *  @return #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
  * #hipErrorInvalidValue
  *
  *  @see hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc, hipMemAllocHost,
@@ -3369,7 +3459,7 @@ hipError_t hipMemcpyDtoH(void* dst, hipDeviceptr_t src, size_t sizeBytes);
  *  @param[in]   src Data being copy from
  *  @param[in]   sizeBytes Data size in bytes
  *
- *  @return #hipSuccess, #hipErrorDeInitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ *  @return #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
  * #hipErrorInvalidValue
  *
  *  @see hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc, hipMemAllocHost,
@@ -3387,7 +3477,7 @@ hipError_t hipMemcpyDtoD(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeByte
  *  @param[in]   src Data being copy from
  *  @param[in]   sizeBytes Data size in bytes
  *
- *  @return #hipSuccess, #hipErrorDeInitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ *  @return #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
  * #hipErrorInvalidValue
  *
  *  @see hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc, hipMemAllocHost,
@@ -3405,7 +3495,7 @@ hipError_t hipMemcpyHtoDAsync(hipDeviceptr_t dst, void* src, size_t sizeBytes, h
  *  @param[in]   src Data being copy from
  *  @param[in]   sizeBytes Data size in bytes
  *
- *  @return #hipSuccess, #hipErrorDeInitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ *  @return #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
  * #hipErrorInvalidValue
  *
  *  @see hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc, hipMemAllocHost,
@@ -3423,7 +3513,7 @@ hipError_t hipMemcpyDtoHAsync(void* dst, hipDeviceptr_t src, size_t sizeBytes, h
  *  @param[in]   src Data being copy from
  *  @param[in]   sizeBytes Data size in bytes
  *
- *  @return #hipSuccess, #hipErrorDeInitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ *  @return #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
  * #hipErrorInvalidValue
  *
  *  @see hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc, hipMemAllocHost,
@@ -6398,103 +6488,6 @@ hipError_t hipGraphReleaseUserObject(hipGraph_t graph, hipUserObject_t object, u
  * @}
  */
 
-
-/**
- * Memory allocation properties
- */
-typedef struct hipMemAllocationProp {
-    hipMemAllocationType type;                      ///< Memory allocation type
-    hipMemAllocationHandleType requestedHandleType; ///< Requested handle type
-    hipMemLocation location;                        ///< Memory location
-    void* win32HandleMetaData;                      ///< Metadata for Win32 handles
-    struct {
-        unsigned char compressionType;              ///< Compression type
-        unsigned char gpuDirectRDMACapable;         ///< RDMA capable
-        unsigned short usage;                       ///< Usage
-    } allocFlags;
-} hipMemAllocationProp;
-
-/**
- * Generic handle for memory allocation
- */
-typedef struct ihipMemGenericAllocationHandle* hipMemGenericAllocationHandle_t;
-
-/**
- * @brief Flags for granularity
- * @enum
- * @ingroup Enumerations
- */
-typedef enum hipMemAllocationGranularity_flags {
-    hipMemAllocationGranularityMinimum     = 0x0, ///< Minimum granularity
-    hipMemAllocationGranularityRecommended = 0x1  ///< Recommended granularity for performance
-} hipMemAllocationGranularity_flags;
-
-/**
- * @brief Memory handle type
- * @enum
- * @ingroup Enumerations
- */
-typedef enum hipMemHandleType {
-    hipMemHandleTypeGeneric = 0x0 ///< Generic handle type
-} hipMemHandleType;
-
-/**
- * @brief Memory operation types
- * @enum
- * @ingroup Enumerations
- */
-typedef enum hipMemOperationType {
-    hipMemOperationTypeMap   = 0x1, ///< Map operation
-    hipMemOperationTypeUnmap = 0x2  ///< Unmap operation
-} hipMemOperationType;
-
-/**
- * @brief Subresource types for sparse arrays
- * @enum
- * @ingroup Enumerations
- */
-typedef enum hipArraySparseSubresourceType {
-    hipArraySparseSubresourceTypeSparseLevel = 0x0, ///< Sparse level
-    hipArraySparseSubresourceTypeMiptail     = 0x1  ///< Miptail
-} hipArraySparseSubresourceType;
-
-/**
- * Map info for arrays
- */
-typedef struct hipArrayMapInfo {
-     hipResourceType resourceType;                  ///< Resource type
-     union {
-         hipMipmappedArray mipmap;
-         hipArray_t array;
-     } resource;
-     hipArraySparseSubresourceType subresourceType; ///< Sparse subresource type
-     union {
-         struct {
-             unsigned int level;                    ///< For mipmapped arrays must be a valid mipmap level. For arrays must be zero
-             unsigned int layer;                    ///< For layered arrays must be a valid layer index. Otherwise, must be zero
-             unsigned int offsetX;                  ///< X offset in elements
-             unsigned int offsetY;                  ///< Y offset in elements
-             unsigned int offsetZ;                  ///< Z offset in elements
-             unsigned int extentWidth;              ///< Width in elements
-             unsigned int extentHeight;             ///< Height in elements
-             unsigned int extentDepth;              ///< Depth in elements
-         } sparseLevel;
-         struct {
-             unsigned int layer;                    ///< For layered arrays must be a valid layer index. Otherwise, must be zero
-             unsigned long long offset;             ///< Offset within mip tail
-             unsigned long long size;               ///< Extent in bytes
-         } miptail;
-     } subresource;
-     hipMemOperationType memOperationType;          ///< Memory operation type
-     hipMemHandleType memHandleType;                ///< Memory handle type
-     union {
-         hipMemGenericAllocationHandle_t memHandle;
-     } memHandle;
-     unsigned long long offset;                     ///< Offset within the memory
-     unsigned int deviceBitMask;                    ///< Device ordinal bit mask
-     unsigned int flags;                            ///< flags for future use, must be zero now.
-     unsigned int reserved[2];                      ///< Reserved for future use, must be zero now.
-} hipArrayMapInfo;
 
 /**
  *-------------------------------------------------------------------------------------------------
