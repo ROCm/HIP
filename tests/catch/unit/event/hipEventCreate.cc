@@ -21,22 +21,17 @@ THE SOFTWARE.
 */
 /*
 Testcase Scenarios :
-Unit_hipEventCreateWithFlags_Positive - Test simple event creation with hipEventCreateWithFlags api for each flag
+Unit_hipEventCreate_Positive - Test simple event creation with hipEventCreate api
 */
 
 #include <hip_test_common.hh>
 
-TEST_CASE("Unit_hipEventCreateWithFlags_Positive") {
-
-#if HT_AMD
-  const unsigned int flagUnderTest = GENERATE(hipEventDefault, hipEventBlockingSync, hipEventDisableTiming, hipEventInterprocess | hipEventDisableTiming, hipEventReleaseToDevice, hipEventReleaseToSystem);
-#else
-  // On Non-AMD platforms hipEventReleaseToDevice / hipEventReleaseToSystem are not defined
-  const unsigned int flagUnderTest = GENERATE(hipEventDefault, hipEventBlockingSync, hipEventDisableTiming, hipEventInterprocess | hipEventDisableTiming);
-#endif
+TEST_CASE("Unit_hipEventCreate_Positive") {
+  int id = GENERATE(range(0, HipTest::getDeviceCount()));
+  HIP_CHECK(hipSetDevice(id));
 
   hipEvent_t event;
-  HIP_CHECK(hipEventCreateWithFlags(&event, flagUnderTest));
+  HIP_CHECK(hipEventCreate(&event));
   REQUIRE(event != nullptr);
 
   HIP_CHECK(hipEventDestroy(event));

@@ -19,25 +19,29 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-/*
-Testcase Scenarios :
-Unit_hipEventCreateWithFlags_Positive - Test simple event creation with hipEventCreateWithFlags api for each flag
-*/
 
+
+#include "errorEnumerators.h"
 #include <hip_test_common.hh>
+#include <hip/hip_runtime_api.h>
 
-TEST_CASE("Unit_hipEventCreateWithFlags_Positive") {
+TEST_CASE("Unit_hipGetErrorName_Positive_Basic") {
+  const char* error_string = nullptr;
+  const auto enumerator =
+      GENERATE(from_range(std::begin(kErrorEnumerators), std::end(kErrorEnumerators)));
 
-#if HT_AMD
-  const unsigned int flagUnderTest = GENERATE(hipEventDefault, hipEventBlockingSync, hipEventDisableTiming, hipEventInterprocess | hipEventDisableTiming, hipEventReleaseToDevice, hipEventReleaseToSystem);
-#else
-  // On Non-AMD platforms hipEventReleaseToDevice / hipEventReleaseToSystem are not defined
-  const unsigned int flagUnderTest = GENERATE(hipEventDefault, hipEventBlockingSync, hipEventDisableTiming, hipEventInterprocess | hipEventDisableTiming);
+  error_string = hipGetErrorName(enumerator);
+
+  REQUIRE(error_string != nullptr);
+  REQUIRE(strlen(error_string) > 0);
+}
+
+TEST_CASE("Unit_hipGetErrorName_Negative_Parameters") {
+  const char* error_string = hipGetErrorName(static_cast<hipError_t>(-1));
+  REQUIRE(error_string != nullptr);
+#if HT_NVIDIA
+  REQUIRE_THAT(error_string, Catch::Equals("cudaErrorUnknown"));
+#elif HT_AMD
+  REQUIRE_THAT(error_string, Catch::Equals("hipErrorUnknown"));
 #endif
-
-  hipEvent_t event;
-  HIP_CHECK(hipEventCreateWithFlags(&event, flagUnderTest));
-  REQUIRE(event != nullptr);
-
-  HIP_CHECK(hipEventDestroy(event));
 }

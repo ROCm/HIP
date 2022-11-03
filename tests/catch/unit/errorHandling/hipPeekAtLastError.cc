@@ -19,25 +19,30 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-/*
-Testcase Scenarios :
-Unit_hipEventCreateWithFlags_Positive - Test simple event creation with hipEventCreateWithFlags api for each flag
-*/
 
 #include <hip_test_common.hh>
+#include <hip/hip_runtime_api.h>
+#include <threaded_zig_zag_test.hh>
 
-TEST_CASE("Unit_hipEventCreateWithFlags_Positive") {
+TEST_CASE("Unit_hipPeekAtLastError_Positive_Basic") {
+  HIP_CHECK(hipPeekAtLastError());
+  HIP_CHECK_ERROR(hipMalloc(nullptr, 1), hipErrorInvalidValue);
+  HIP_CHECK_ERROR(hipPeekAtLastError(), hipErrorInvalidValue);
+  HIP_CHECK_ERROR(hipGetLastError(), hipErrorInvalidValue);
+  HIP_CHECK(hipPeekAtLastError());
+}
 
-#if HT_AMD
-  const unsigned int flagUnderTest = GENERATE(hipEventDefault, hipEventBlockingSync, hipEventDisableTiming, hipEventInterprocess | hipEventDisableTiming, hipEventReleaseToDevice, hipEventReleaseToSystem);
-#else
-  // On Non-AMD platforms hipEventReleaseToDevice / hipEventReleaseToSystem are not defined
-  const unsigned int flagUnderTest = GENERATE(hipEventDefault, hipEventBlockingSync, hipEventDisableTiming, hipEventInterprocess | hipEventDisableTiming);
-#endif
+TEST_CASE("Unit_hipPeekAtLastError_Positive_Threaded") {
+  class HipPeekAtLastErrorTest : public ThreadedZigZagTest<HipPeekAtLastErrorTest> {
+   public:
+    void TestPart2() { REQUIRE_THREAD(hipMalloc(nullptr, 1) == hipErrorInvalidValue); }
+    void TestPart3() {
+      HIP_CHECK(hipPeekAtLastError());
+      HIP_CHECK(hipGetLastError());
+    }
+    void TestPart4() { REQUIRE_THREAD(hipPeekAtLastError() == hipErrorInvalidValue); }
+  };
 
-  hipEvent_t event;
-  HIP_CHECK(hipEventCreateWithFlags(&event, flagUnderTest));
-  REQUIRE(event != nullptr);
-
-  HIP_CHECK(hipEventDestroy(event));
+  HipPeekAtLastErrorTest test;
+  test.run();
 }
