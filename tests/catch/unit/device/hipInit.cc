@@ -30,7 +30,7 @@ TEST_CASE("Unit_hipInit_Positive") {
 
   // Verify that HIP runtime is successfully initialized by calling a HIP API
   int count = -1;
-  auto res = hipGetDeviceCount(&count);
+  HIP_CHECK(hipGetDeviceCount(&count));
   REQUIRE(count >= 0);
 }
 
