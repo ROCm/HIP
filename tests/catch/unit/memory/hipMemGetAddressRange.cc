@@ -18,8 +18,9 @@ THE SOFTWARE.
 */
 /*
 Testcase Scenarios :
-Unit_hipMemGetAddressRange_Positive - Test hipMemGetAddressRange api for various memory allocation types and offsets
-Unit_hipMemGetAddressRange_Negative - Test unsuccessful execution of hipMemGetAddressRange api when parameters are invalid
+Unit_hipMemGetAddressRange_Positive - Test hipMemGetAddressRange api for various memory allocation
+types and offsets Unit_hipMemGetAddressRange_Negative - Test unsuccessful execution of
+hipMemGetAddressRange api when parameters are invalid
 */
 #include <hip_test_common.hh>
 #include <hip/hip_runtime_api.h>
@@ -36,7 +37,8 @@ TEST_CASE("Unit_hipMemGetAddressRange_Positive") {
     using LA = LinearAllocs;
     LinearAllocGuard<int> host_alloc(LA::hipHostMalloc, allocation_size);
 
-    HIP_CHECK(hipMemGetAddressRange(&base_ptr, &mem_size, reinterpret_cast<hipDeviceptr_t>(host_alloc.ptr() + offset)));
+    HIP_CHECK(hipMemGetAddressRange(&base_ptr, &mem_size,
+                                    reinterpret_cast<hipDeviceptr_t>(host_alloc.ptr() + offset)));
 
     REQUIRE(reinterpret_cast<hipDeviceptr_t>(host_alloc.ptr()) == base_ptr);
     REQUIRE(mem_size == allocation_size);
@@ -46,20 +48,22 @@ TEST_CASE("Unit_hipMemGetAddressRange_Positive") {
     const auto device_allocation_type = GENERATE(LA::hipMalloc, LA::hipMallocManaged);
     LinearAllocGuard<int> device_alloc(device_allocation_type, allocation_size);
 
-    HIP_CHECK(hipMemGetAddressRange(&base_ptr, &mem_size, reinterpret_cast<hipDeviceptr_t>(device_alloc.ptr() + offset)));
+    HIP_CHECK(hipMemGetAddressRange(&base_ptr, &mem_size,
+                                    reinterpret_cast<hipDeviceptr_t>(device_alloc.ptr() + offset)));
 
     REQUIRE(reinterpret_cast<hipDeviceptr_t>(device_alloc.ptr()) == base_ptr);
-    REQUIRE(mem_size == allocation_size);    
+    REQUIRE(mem_size == allocation_size);
   }
   SECTION("Pitch address range") {
     size_t width = 32;
     size_t height = 32;
     LinearAllocGuard2D<int> device_alloc(width, height);
 
-    HIP_CHECK(hipMemGetAddressRange(&base_ptr, &mem_size, reinterpret_cast<hipDeviceptr_t>(device_alloc.ptr() + offset)));
+    HIP_CHECK(hipMemGetAddressRange(&base_ptr, &mem_size,
+                                    reinterpret_cast<hipDeviceptr_t>(device_alloc.ptr() + offset)));
 
     REQUIRE(reinterpret_cast<hipDeviceptr_t>(device_alloc.ptr()) == base_ptr);
-    REQUIRE(mem_size == (device_alloc.pitch() * height));    
+    REQUIRE(mem_size == (device_alloc.pitch() * height));
   }
 }
 
@@ -73,9 +77,13 @@ TEST_CASE("Unit_hipMemGetAddressRange_Negative") {
   hipDeviceptr_t dummy_ptr;
 
   SECTION("Device pointer is invalid") {
-    HIP_CHECK_ERROR(hipMemGetAddressRange(&base_ptr, &mem_size, dummy_ptr), hipErrorInvalidDevicePointer);
+    HIP_CHECK_ERROR(hipMemGetAddressRange(&base_ptr, &mem_size, dummy_ptr),
+                    hipErrorInvalidDevicePointer);
   }
   SECTION("Offset is greater than allocated size") {
-    HIP_CHECK_ERROR(hipMemGetAddressRange(&base_ptr, &mem_size, reinterpret_cast<hipDeviceptr_t>(host_alloc.ptr() + offset)), hipErrorInvalidDevicePointer);
+    HIP_CHECK_ERROR(
+        hipMemGetAddressRange(&base_ptr, &mem_size,
+                              reinterpret_cast<hipDeviceptr_t>(host_alloc.ptr() + offset)),
+        hipErrorInvalidDevicePointer);
   }
 }

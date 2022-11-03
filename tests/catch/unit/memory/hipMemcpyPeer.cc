@@ -18,10 +18,11 @@ THE SOFTWARE.
 */
 /*
 Testcase Scenarios :
-Unit_hipMemcpyPeer_Positive_Default - Test basic P2P memcpy between two devices with hipMemcpyPeer api
-Unit_hipMemcpyPeer_Positive_Synchronization_Behavior - Test synchronization behavior for hipMemcpyPeer api
-Unit_hipMemcpyPeer_Positive_ZeroSize - Test that no data is copied when sizeBytes is set to 0
-Unit_hipMemcpyPeer_Negative_Parameters - Test unsuccessful execution of hipMemcpyPeer api when parameters are invalid
+Unit_hipMemcpyPeer_Positive_Default - Test basic P2P memcpy between two devices with hipMemcpyPeer
+api Unit_hipMemcpyPeer_Positive_Synchronization_Behavior - Test synchronization behavior for
+hipMemcpyPeer api Unit_hipMemcpyPeer_Positive_ZeroSize - Test that no data is copied when sizeBytes
+is set to 0 Unit_hipMemcpyPeer_Negative_Parameters - Test unsuccessful execution of hipMemcpyPeer
+api when parameters are invalid
 */
 #include <hip_test_common.hh>
 #include <hip/hip_runtime_api.h>
@@ -57,14 +58,14 @@ TEST_CASE("Unit_hipMemcpyPeer_Positive_Default") {
     const auto block_count = element_count / thread_count + 1;
     constexpr int expected_value = 22;
     HIP_CHECK(hipSetDevice(src_device));
-    VectorSet<<<block_count, thread_count, 0>>>(src_alloc.ptr(), expected_value,
-                                                             element_count);
+    VectorSet<<<block_count, thread_count, 0>>>(src_alloc.ptr(), expected_value, element_count);
     HIP_CHECK(hipGetLastError());
 
-    HIP_CHECK(hipMemcpyPeer(dst_alloc.ptr(), dst_device, src_alloc.ptr(), src_device, allocation_size));
+    HIP_CHECK(
+        hipMemcpyPeer(dst_alloc.ptr(), dst_device, src_alloc.ptr(), src_device, allocation_size));
 
     HIP_CHECK(
-      hipMemcpy(result.host_ptr(), dst_alloc.ptr(), allocation_size, hipMemcpyDeviceToHost));
+        hipMemcpy(result.host_ptr(), dst_alloc.ptr(), allocation_size, hipMemcpyDeviceToHost));
 
     HIP_CHECK(hipDeviceDisablePeerAccess(dst_device));
 
@@ -127,7 +128,8 @@ TEST_CASE("Unit_hipMemcpyPeer_Positive_ZeroSize") {
     HIP_CHECK(hipDeviceEnablePeerAccess(dst_device, 0));
 
     LinearAllocGuard<int> src_alloc(LinearAllocs::hipMalloc, allocation_size);
-    LinearAllocGuard<int> result(LinearAllocs::hipHostMalloc, allocation_size, hipHostMallocPortable);
+    LinearAllocGuard<int> result(LinearAllocs::hipHostMalloc, allocation_size,
+                                 hipHostMallocPortable);
     HIP_CHECK(hipSetDevice(dst_device));
     LinearAllocGuard<int> dst_alloc(LinearAllocs::hipMalloc, allocation_size);
 
@@ -136,8 +138,7 @@ TEST_CASE("Unit_hipMemcpyPeer_Positive_ZeroSize") {
     const auto block_count = element_count / thread_count + 1;
     constexpr int set_value = 22;
     HIP_CHECK(hipSetDevice(src_device));
-    VectorSet<<<block_count, thread_count, 0>>>(src_alloc.ptr(), set_value,
-                                                             element_count);
+    VectorSet<<<block_count, thread_count, 0>>>(src_alloc.ptr(), set_value, element_count);
     HIP_CHECK(hipGetLastError());
 
     constexpr int expected_value = 21;
@@ -146,7 +147,7 @@ TEST_CASE("Unit_hipMemcpyPeer_Positive_ZeroSize") {
     HIP_CHECK(hipMemcpyPeer(dst_alloc.ptr(), dst_device, src_alloc.ptr(), src_device, 0));
 
     HIP_CHECK(
-      hipMemcpy(result.host_ptr(), dst_alloc.ptr(), allocation_size, hipMemcpyDeviceToHost));
+        hipMemcpy(result.host_ptr(), dst_alloc.ptr(), allocation_size, hipMemcpyDeviceToHost));
 
     HIP_CHECK(hipDeviceDisablePeerAccess(dst_device));
 
@@ -179,23 +180,31 @@ TEST_CASE("Unit_hipMemcpyPeer_Negative_Parameters") {
     HIP_CHECK(hipSetDevice(src_device));
 
     SECTION("Nullptr to Destination Pointer") {
-      HIP_CHECK_ERROR(hipMemcpyPeer(nullptr, dst_device, src_alloc.ptr(), src_device, kPageSize), hipErrorInvalidValue);
+      HIP_CHECK_ERROR(hipMemcpyPeer(nullptr, dst_device, src_alloc.ptr(), src_device, kPageSize),
+                      hipErrorInvalidValue);
     }
 
     SECTION("Nullptr to Source Pointer") {
-      HIP_CHECK_ERROR(hipMemcpyPeer(dst_alloc.ptr(), dst_device, nullptr, src_device, kPageSize), hipErrorInvalidValue);
+      HIP_CHECK_ERROR(hipMemcpyPeer(dst_alloc.ptr(), dst_device, nullptr, src_device, kPageSize),
+                      hipErrorInvalidValue);
     }
 
     SECTION("Passing more than allocated size") {
-      HIP_CHECK_ERROR(hipMemcpyPeer(dst_alloc.ptr(), dst_device, src_alloc.ptr(), src_device, kPageSize + 1), hipErrorInvalidValue);
+      HIP_CHECK_ERROR(
+          hipMemcpyPeer(dst_alloc.ptr(), dst_device, src_alloc.ptr(), src_device, kPageSize + 1),
+          hipErrorInvalidValue);
     }
 
     SECTION("Passing invalid Destination device ID") {
-      HIP_CHECK_ERROR(hipMemcpyPeer(dst_alloc.ptr(), device_count, src_alloc.ptr(), src_device, kPageSize), hipErrorInvalidDevice);
+      HIP_CHECK_ERROR(
+          hipMemcpyPeer(dst_alloc.ptr(), device_count, src_alloc.ptr(), src_device, kPageSize),
+          hipErrorInvalidDevice);
     }
 
     SECTION("Passing invalid Source device ID") {
-      HIP_CHECK_ERROR(hipMemcpyPeer(dst_alloc.ptr(), dst_device, src_alloc.ptr(), device_count, kPageSize), hipErrorInvalidDevice);
+      HIP_CHECK_ERROR(
+          hipMemcpyPeer(dst_alloc.ptr(), dst_device, src_alloc.ptr(), device_count, kPageSize),
+          hipErrorInvalidDevice);
     }
 
     HIP_CHECK(hipDeviceDisablePeerAccess(dst_device));
