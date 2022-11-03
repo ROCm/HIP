@@ -17,6 +17,7 @@ set(TEST_SRC
     hipSetGetDevice.cc
     hipDeviceGetUuid.cc
     hipDeviceGetP2PAttribute.cc
+    hipDeviceGetDefaultMemPool.cc
     hipDeviceCanAccessPeer.cc
     hipDeviceEnableDisablePeerAccess.cc
     hipExtGetLinkTypeAndHopCount.cc
