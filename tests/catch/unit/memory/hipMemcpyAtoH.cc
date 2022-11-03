@@ -18,10 +18,12 @@ THE SOFTWARE.
 */
 /*
 Testcase Scenarios :
-Unit_hipMemcpy2DFromArray_Positive_Default - Test basic memcpy between 2D array and host/device with hipMemcpy2DFromArray api
-Unit_hipMemcpy2DFromArray_Positive_Synchronization_Behavior - Test synchronization behavior for hipMemcpy2DFromArray api
-Unit_hipMemcpy2DFromArray_Positive_ZeroWidthHeight - Test that no data is copied when width/height is set to 0
-Unit_hipMemcpy2DFromArray_Negative_Parameters - Test unsuccessful execution of hipMemcpy2DFromArray api when parameters are invalid
+Unit_hipMemcpy2DFromArray_Positive_Default - Test basic memcpy between 2D array and host/device with
+hipMemcpy2DFromArray api Unit_hipMemcpy2DFromArray_Positive_Synchronization_Behavior - Test
+synchronization behavior for hipMemcpy2DFromArray api
+Unit_hipMemcpy2DFromArray_Positive_ZeroWidthHeight - Test that no data is copied when width/height
+is set to 0 Unit_hipMemcpy2DFromArray_Negative_Parameters - Test unsuccessful execution of
+hipMemcpy2DFromArray api when parameters are invalid
 */
 #include "array_memcpy_tests_common.hh"
 
@@ -46,8 +48,10 @@ TEST_CASE("Unit_hipMemcpyAtoH_Positive_Synchronization_Behavior") {
   const auto height = 0;
   const auto allocation_size = width * sizeof(int);
 
-  MemcpyAtoHPageableSyncBehavior(std::bind(hipMemcpyAtoH, _1, _2, 0, allocation_size), width, height, true);
-  MemcpyAtoHPinnedSyncBehavior(std::bind(hipMemcpyAtoH, _1, _2, 0, allocation_size), width, height, true);
+  MemcpyAtoHPageableSyncBehavior(std::bind(hipMemcpyAtoH, _1, _2, 0, allocation_size), width,
+                                 height, true);
+  MemcpyAtoHPinnedSyncBehavior(std::bind(hipMemcpyAtoH, _1, _2, 0, allocation_size), width, height,
+                               true);
 }
 
 /*
@@ -68,7 +72,8 @@ TEST_CASE("Unit_hipMemcpyAtoH_Positive_ZeroCount") {
 
   int fill_value = 42;
   std::fill_n(host_alloc.host_ptr(), width, fill_value);
-  HIP_CHECK(hipMemcpy2DToArray(array_alloc.ptr(), 0, 0, host_alloc.host_ptr(), sizeof(int)*width, sizeof(int)*width, 1, hipMemcpyHostToDevice));
+  HIP_CHECK(hipMemcpy2DToArray(array_alloc.ptr(), 0, 0, host_alloc.host_ptr(), sizeof(int) * width,
+                               sizeof(int) * width, 1, hipMemcpyHostToDevice));
   fill_value = 41;
   std::fill_n(host_alloc.host_ptr(), width, fill_value);
   HIP_CHECK(hipMemcpyAtoH(host_alloc.ptr(), array_alloc.ptr(), 0, 0));
@@ -90,16 +95,21 @@ TEST_CASE("Unit_hipMemcpyAtoH_Negative_Parameters") {
   LinearAllocGuard<int> host_alloc(LinearAllocs::hipHostMalloc, allocation_size);
 
   SECTION("dst == nullptr") {
-    HIP_CHECK_ERROR(hipMemcpyAtoH(nullptr, array_alloc.ptr(), 0, allocation_size), hipErrorInvalidValue);
+    HIP_CHECK_ERROR(hipMemcpyAtoH(nullptr, array_alloc.ptr(), 0, allocation_size),
+                    hipErrorInvalidValue);
   }
   SECTION("src == nullptr") {
-    HIP_CHECK_ERROR(hipMemcpyAtoH(host_alloc.ptr(), nullptr, 0, allocation_size), hipErrorInvalidValue);
+    HIP_CHECK_ERROR(hipMemcpyAtoH(host_alloc.ptr(), nullptr, 0, allocation_size),
+                    hipErrorInvalidValue);
   }
   SECTION("Offset is greater than allocated size") {
-    HIP_CHECK_ERROR(hipMemcpyAtoH(host_alloc.ptr(), array_alloc.ptr(), allocation_size + 10, allocation_size), hipErrorInvalidValue);
+    HIP_CHECK_ERROR(
+        hipMemcpyAtoH(host_alloc.ptr(), array_alloc.ptr(), allocation_size + 10, allocation_size),
+        hipErrorInvalidValue);
   }
   SECTION("Count is greater than allocated size") {
-    HIP_CHECK_ERROR(hipMemcpyAtoH(host_alloc.ptr(), array_alloc.ptr(), 0, allocation_size + 10), hipErrorInvalidValue);
+    HIP_CHECK_ERROR(hipMemcpyAtoH(host_alloc.ptr(), array_alloc.ptr(), 0, allocation_size + 10),
+                    hipErrorInvalidValue);
   }
   SECTION("2D array is allocated") {
     const auto width_2d = 32;
@@ -108,6 +118,7 @@ TEST_CASE("Unit_hipMemcpyAtoH_Negative_Parameters") {
 
     ArrayAllocGuard<int> array_alloc_2d(make_hipExtent(width_2d, height_2d, 0), flag);
     LinearAllocGuard<int> host_alloc_2d(LinearAllocs::hipHostMalloc, allocation_size_2d);
-    HIP_CHECK_ERROR(hipMemcpyAtoH(host_alloc_2d.ptr(), array_alloc_2d.ptr(), 0, allocation_size_2d), hipErrorInvalidValue);
+    HIP_CHECK_ERROR(hipMemcpyAtoH(host_alloc_2d.ptr(), array_alloc_2d.ptr(), 0, allocation_size_2d),
+                    hipErrorInvalidValue);
   }
 }
