@@ -26,11 +26,13 @@ THE SOFTWARE.
 #include <random>
 #include <thread>
 
-__global__ void addVal(unsigned long long* ptr, size_t index, unsigned long long val) {
+__global__ void addVal(unsigned long long* ptr, size_t index,
+                       unsigned long long val) {
   atomicAdd(ptr + index, val);
 }
 
-// Create a copy constructible AtomicWrap around std::atomic so that we can put it in a vector
+// Create a copy constructible AtomicWrap around std::atomic so that
+// we can put it in a vector
 template <typename T> struct AtomicWrap {
   std::atomic<T> data;
 
@@ -68,18 +70,19 @@ TEST_CASE("Stress_StreamEnqueue_DifferentThreads") {
   constexpr size_t maxWork = 10000;
   constexpr size_t maxVal = 10;
 
-  std::uniform_int_distribution<std::mt19937::result_type> genIndex(0, hwThreads - 1);
+  std::uniform_int_distribution<std::mt19937::result_type> genIndex(0,
+                                                           hwThreads - 1);
   std::uniform_int_distribution<std::mt19937::result_type> genWork(0, maxWork);
   std::uniform_int_distribution<std::mt19937::result_type> genVal(0, maxVal);
 
   auto enqueueKernelThread = [&](hipStream_t stream) {
     auto iter = genWork(engine);  // Generate work to be done via thread
-    for (auto i = 0; i < iter; i++) {
+    for (unsigned long i = 0; i < iter; i++) {
       auto index = genIndex(engine);  // Generate Index to add to
-      auto val = genVal(engine);      // Generate value to add to the destination
+      auto val = genVal(engine);  // Generate value to add to the destination
       hostData[index].data += val;    // Replicate it on host
       addVal<<<1, 1, 0, stream>>>(dPtr, static_cast<size_t>(index),
-                                  static_cast<unsigned long long>(val));  // And on device
+            static_cast<unsigned long long>(val));  // And on device
     }
   };
 
@@ -101,8 +104,8 @@ TEST_CASE("Stress_StreamEnqueue_DifferentThreads") {
   HIP_CHECK(hipStreamDestroy(stream));
 
   auto hPtr = std::make_unique<unsigned long long[]>(hwThreads);
-  HIP_CHECK(
-      hipMemcpy(hPtr.get(), dPtr, sizeof(unsigned long long) * hwThreads, hipMemcpyDeviceToHost));
+  HIP_CHECK(hipMemcpy(hPtr.get(), dPtr, sizeof(unsigned long long) * hwThreads,
+            hipMemcpyDeviceToHost));
 
   HIP_CHECK(hipFree(dPtr));
 
@@ -113,7 +116,7 @@ TEST_CASE("Stress_StreamEnqueue_DifferentThreads") {
   }
 }
 
-__global__ void doOperation(int* dPtr, size_t size, int val) {
+__global__ void doOperation(int* dPtr, int val) {
   auto i = threadIdx.x;
   atomicAdd(dPtr + i, val);
 }
@@ -135,14 +138,15 @@ TEST_CASE("Stress_StreamEnqueue_DifferentThreads_MultiGPU") {
 
   std::vector<hipStream_t> streamPool{};
   streamPool.reserve(deviceCount * streamPerGPU);
-
-  std::map<hipStream_t, int*> streamToDeviceMemory;           // Map of stream and device memory
-  std::map<hipStream_t, AtomicWrap<int>> streamToHostMemory;  // Map of stream and host result
-  std::map<hipStream_t, size_t> streamToDeviceIndex;  // Map of stream and device it was created on
-
+  // Map of stream and device memory
+  std::map<hipStream_t, int*> streamToDeviceMemory;
+  // Map of stream and host result
+  std::map<hipStream_t, AtomicWrap<int>> streamToHostMemory;
+  // Map of stream and device it was created on
+  std::map<hipStream_t, size_t> streamToDeviceIndex;
   constexpr size_t size = 1024;
 
-  for (size_t i = 0; i < deviceCount; i++) {
+  for (int i = 0; i < deviceCount; i++) {
     HIP_CHECK(hipSetDevice(i));
 
     for (size_t j = 0; j < streamPerGPU; j++) {
@@ -155,8 +159,8 @@ TEST_CASE("Stress_StreamEnqueue_DifferentThreads_MultiGPU") {
       HIP_CHECK(hipMalloc(&dPtr, sizeof(int) * size));
       REQUIRE(dPtr != nullptr);
       HIP_CHECK(hipMemset(dPtr, 0, sizeof(int) * size));
-
-      streamToDeviceMemory[stream] = dPtr;  // All streams work on exclusive memory
+      // All streams work on exclusive memory
+      streamToDeviceMemory[stream] = dPtr;
 
       streamToHostMemory[stream] = AtomicWrap<int>(0);  // CPU result
 
@@ -171,8 +175,10 @@ TEST_CASE("Stress_StreamEnqueue_DifferentThreads_MultiGPU") {
   std::random_device device;
   std::mt19937 engine(device());
 
-  std::uniform_int_distribution<std::mt19937::result_type> genVal(-maxVal, maxVal);
-  std::uniform_int_distribution<std::mt19937::result_type> genStream(0, streamPool.size() - 1);
+  std::uniform_int_distribution<std::mt19937::result_type> genVal(-maxVal,
+                                                           maxVal);
+  std::uniform_int_distribution<std::mt19937::result_type> genStream(0,
+                                              streamPool.size() - 1);
 
 #if HT_NVIDIA
   std::mutex ness;  // On nvidia, current device needs to match stream's device
@@ -183,7 +189,8 @@ TEST_CASE("Stress_StreamEnqueue_DifferentThreads_MultiGPU") {
 #if HT_NVIDIA
       std::unique_lock<std::mutex> lock(ness);  // Lock on creation
 #endif
-      hipStream_t stream = streamPool[genStream(engine)];  // Get a random stream
+      // Get a random stream
+      hipStream_t stream = streamPool[genStream(engine)];
 
       // TODO use HIP_CHECK_THREAD when PR#2664 is merged
       if (hipSuccess != hipSetDevice(streamToDeviceIndex[stream])) {
@@ -191,11 +198,10 @@ TEST_CASE("Stress_StreamEnqueue_DifferentThreads_MultiGPU") {
       }
 
       int val = genVal(engine);  // Generate Value to add/sub to
-
-      streamToHostMemory[stream].data.fetch_add(val);  // Replicate result on CPU
+      // Replicate result on CPU
+      streamToHostMemory[stream].data.fetch_add(val);
       auto dPtr = streamToDeviceMemory[stream];
-      doOperation<<<1, 1024, 0, stream>>>(dPtr, size,
-                                          val);  // On GPU
+      doOperation<<<1, 1024, 0, stream>>>(dPtr, val);  // On GPU
     }
   };
 
@@ -219,13 +225,14 @@ TEST_CASE("Stress_StreamEnqueue_DifferentThreads_MultiGPU") {
   for (auto& i : streamPool) {
     HIP_CHECK(hipStreamSynchronize(i));
     auto dResult = std::make_unique<int[]>(size);
-    HIP_CHECK(hipMemcpy(dResult.get(), streamToDeviceMemory[i], sizeof(int) * size,
-                        hipMemcpyDeviceToHost));
+    HIP_CHECK(hipMemcpy(dResult.get(), streamToDeviceMemory[i],
+              sizeof(int) * size, hipMemcpyDeviceToHost));
     HIP_CHECK(hipFree(streamToDeviceMemory[i]));
     HIP_CHECK(hipStreamDestroy(i));
     auto res = streamToHostMemory[i].data.load();
     INFO("Matching CPU: " << res << " GPU: " << dResult[0] << " Dev Ptr: "
-                          << streamToDeviceMemory[i] << " on Device: " << streamToDeviceIndex[i]);
-    REQUIRE(std::all_of(dResult.get(), dResult.get() + size, [=](int r) { return r == res; }));
+    << streamToDeviceMemory[i] << " on Device: " << streamToDeviceIndex[i]);
+    REQUIRE(std::all_of(dResult.get(), dResult.get() + size,
+            [=](int r) { return r == res; }));
   }
 }

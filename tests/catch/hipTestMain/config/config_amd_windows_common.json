@@ -78,6 +78,25 @@
 	   "Unit_hipGraphMemcpyNodeSetParamsToSymbol_Functional",
 	   "Unit_hipStreamQuery_WithPendingWork",
 	   "Unit_hipStreamWaitEvent_DifferentStreams",
-	   "Unit_hipStreamQuery_WithFinishedWork"
+	   "Unit_hipStreamQuery_WithFinishedWork",
+     "Unit_hipDeviceGetCacheConfig_Positive_Basic",
+	   "Unit_hipDeviceGetCacheConfig_Positive_Threaded",
+	   "Unit_hipStreamValue_Wait32_Blocking_Mask_Gte",
+	   "Unit_hipStreamValue_Wait32_Blocking_Mask_Eq_1",
+	   "Unit_hipStreamValue_Wait32_Blocking_Mask_Eq_2",
+	   "Unit_hipStreamValue_Wait32_Blocking_Mask_And",
+	   "Unit_hipStreamValue_Wait32_Blocking_NoMask_Eq",
+	   "Unit_hipStreamValue_Wait32_Blocking_NoMask_Gte",
+	   "Unit_hipStreamValue_Wait32_Blocking_NoMask_And",
+	   "Unit_hipStreamValue_Wait32_Blocking_NoMask_Nor",
+	   "Unit_hipStreamValue_Wait64_Blocking_Mask_Gte_1",
+	   "Unit_hipStreamValue_Wait64_Blocking_Mask_Gte_2",
+	   "Unit_hipStreamValue_Wait64_Blocking_Mask_Eq_1",
+	   "Unit_hipStreamValue_Wait64_Blocking_Mask_Eq_2",
+	   "Unit_hipStreamValue_Wait64_Blocking_Mask_And",
+	   "Unit_hipStreamValue_Wait64_Blocking_NoMask_Gte",
+	   "Unit_hipStreamValue_Wait64_Blocking_NoMask_Eq",
+	   "Unit_hipStreamValue_Wait64_Blocking_NoMask_And",
+	   "Unit_hipStreamValue_Wait64_Blocking_NoMask_Nor"
 	]
 }
