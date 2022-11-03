@@ -1,4 +1,4 @@
-# Copyright (c) 2021 Advanced Micro Devices, Inc. All Rights Reserved.
+# Copyright (c) 2022 Advanced Micro Devices, Inc. All Rights Reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -18,21 +18,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-add_subdirectory(rtc)
-add_subdirectory(deviceLib)
-add_subdirectory(graph)
-add_subdirectory(memory)
-add_subdirectory(stream)
-add_subdirectory(event)
-add_subdirectory(occupancy)
-add_subdirectory(device)
-add_subdirectory(printf)
-add_subdirectory(texture)
-add_subdirectory(streamperthread)
-add_subdirectory(kernel)
-add_subdirectory(multiThread)
-add_subdirectory(compiler)
-add_subdirectory(errorHandling)
-if(HIP_PLATFORM STREQUAL "amd")
-add_subdirectory(clock)
-endif()
+# Common Tests - Test independent of all platforms
+
+set(TEST_SRC
+    hipClockCheck.cc
+)
+
+hip_add_exe_to_target(NAME ClockCheckTest
+                      TEST_SRC ${TEST_SRC}
+                      TEST_TARGET_NAME build_tests)

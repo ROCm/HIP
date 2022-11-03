@@ -57,9 +57,8 @@ static int HmmAttrPrint() {
   return managed;
 }
 
-static void ReleaseResource(int *Hmm, int *Hmm1, hipStream_t *strm) {
+static void ReleaseResource(int *Hmm, hipStream_t *strm) {
   HIP_CHECK(hipFree(Hmm));
-  HIP_CHECK(hipFree(Hmm1));
   HIP_CHECK(hipStreamDestroy(*strm));
 }
 
@@ -70,11 +69,10 @@ static void ReleaseResource(int *Hmm, int *Hmm1, hipStream_t *strm) {
 TEST_CASE("Unit_hipMemPrefetchAsyncOneToAll") {
   int MangdMem = HmmAttrPrint();
   if (MangdMem == 1) {
-    int *Hmm = nullptr, *Hmm1 = nullptr, NumDevs, MemSz = (4096 * 4);
+    int *Hmm1 = nullptr, NumDevs, MemSz = (4096 * 4);
     int InitVal = 123, NumElms = MemSz/4;
     bool IfTestPassed = true;
     HIP_CHECK(hipGetDeviceCount(&NumDevs));
-    HIP_CHECK(hipMallocManaged(&Hmm, MemSz));
     HIP_CHECK(hipMallocManaged(&Hmm1, MemSz));
     for (int i = 0; i < NumElms; ++i) {
       Hmm1[i] = InitVal;
@@ -93,44 +91,40 @@ TEST_CASE("Unit_hipMemPrefetchAsyncOneToAll") {
         // Prefetching memory from i to j
         HIP_CHECK(hipMemPrefetchAsync(Hmm1, MemSz, j, strm));
         HIP_CHECK(hipStreamSynchronize(strm));
-        MemPrftchAsyncKernel<<<(NumElms/32), 32, 0, strm>>>(Hmm, Hmm1, NumElms);
+        MemPrftchAsyncKernel1<<<(NumElms/32), 32, 0, strm>>>(Hmm1, NumElms);
         HIP_CHECK(hipStreamSynchronize(strm));
         // Verifying the result
         for (int m = 0; m < NumElms; ++m) {
-          if (Hmm[m] != (InitVal * InitVal)) {
+          if (Hmm1[m] != (InitVal * InitVal)) {
             IfTestPassed = false;
           }
         }
         if (!IfTestPassed) {
-          ReleaseResource(Hmm, Hmm1, &strm);
+          ReleaseResource(Hmm1, &strm);
           INFO("Did not find expected value!");
           REQUIRE(false);
         }
-        // Resetting the values in Hmm
-        HIP_CHECK(hipMemset(Hmm, 0, MemSz));
         // Prefetching memory from j to i
         HIP_CHECK(hipMemPrefetchAsync(Hmm1, MemSz, i, strm));
         HIP_CHECK(hipStreamSynchronize(strm));
-        MemPrftchAsyncKernel<<<(NumElms/32), 32, 0, strm>>>(Hmm, Hmm1, NumElms);
+        MemPrftchAsyncKernel1<<<(NumElms/32), 32, 0, strm>>>(Hmm1, NumElms);
         HIP_CHECK(hipStreamSynchronize(strm));
         // Verifying the result
         for (int m = 0; m < NumElms; ++m) {
-          if (Hmm[m] != (InitVal * InitVal)) {
+          if (Hmm1[m] != (InitVal * InitVal)) {
             IfTestPassed = false;
           }
         }
         if (!IfTestPassed) {
-          ReleaseResource(Hmm, Hmm1, &strm);
+          ReleaseResource(Hmm1, &strm);
           INFO("Did not find expected value!");
           REQUIRE(false);
         }
-        // Resetting the values in Hmm
-        HIP_CHECK(hipMemset(Hmm, 0, MemSz));
+
         HIP_CHECK(hipStreamDestroy(strm));
       }
     }
     // Releasing the resources in case all the scenarios passed
-    HIP_CHECK(hipFree(Hmm));
     HIP_CHECK(hipFree(Hmm1));
   } else {
     SUCCEED("GPU 0 doesn't support hipDeviceAttributeManagedMemory "
