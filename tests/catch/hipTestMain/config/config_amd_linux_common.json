@@ -3,6 +3,8 @@
 	[
 	   "Unit_hipStreamPerThread_DeviceReset_1",
 	   "Unit_hipMallocManaged_OverSubscription",
+	   "Unit_hipDeviceGetCacheConfig_Positive_Basic",
+	   "Unit_hipDeviceGetCacheConfig_Positive_Threaded",
 	   "Unit_hipDeviceGetPCIBusId_Negative_PartialFill"
 	]
 }
