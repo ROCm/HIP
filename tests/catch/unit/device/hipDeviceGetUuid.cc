@@ -16,7 +16,12 @@ LIABILITY, WHETHER INN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR INN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-
+/*
+Testcase Scenarios :
+Unit_hipDeviceGetUuid_Positive - Check if hipDeviceGetUuid api returns valid UUID
+Unit_hipDeviceGetUuid_Negative - Test unsuccessful execution of hipDeviceGetUuid when nullptr
+                                 or invalid device is set as input parameter
+*/
 /*
  * Conformance test for checking functionality of
  * hipError_t hipDeviceGetUuid(hipUUID* uuid, hipDevice_t device);
@@ -26,26 +31,40 @@ THE SOFTWARE.
 #include <cstdio>
 
 /**
- * hipDeviceGetUuid tests
+ * hipDeviceGetUuid positive test
  * Scenario1: Validates the returned UUID
- * Scenario2: Validates returned error code for UUID = nullptr
- * Scenario3 & 4: Validates returned error code for invalid device
  */
-TEST_CASE("Unit_hipDeviceGetUuid") {
+TEST_CASE("Unit_hipDeviceGetUuid_Positive") {
+  hipDevice_t device;
+  hipUUID uuid;
+
+  const int deviceId = GENERATE(range(0, HipTest::getDeviceCount()));
+  HIP_CHECK(hipDeviceGet(&device, deviceId));
+
+  // Scenario 1
+  HIP_CHECK(hipDeviceGetUuid(&uuid, device));
+  REQUIRE(strcmp(uuid.bytes, "") != 0);
+}
+
+/**
+ * hipDeviceGetUuid negative tests
+ * Scenario2: Validates returned error code for UUID = nullptr
+ * Scenario3: Validates returned error code if device is -1
+ * Scenario4: Validates returned error code if device is out of bounds
+ */
+TEST_CASE("Unit_hipDeviceGetUuid_Negative") {
   int numDevices = 0;
   hipDevice_t device;
   hipUUID uuid;
   HIP_CHECK(hipGetDeviceCount(&numDevices));
-  for (int i = 0; i < numDevices; i++) {
-    HIP_CHECK(hipDeviceGet(&device, i));
-    // Scenario 1
-    HIP_CHECK(hipDeviceGetUuid(&uuid, device));
-    REQUIRE_FALSE(!strcmp(uuid.bytes, ""));
+
+  if (numDevices > 0) {
+    HIP_CHECK(hipDeviceGet(&device, 0));
     // Scenario 2
     REQUIRE_FALSE(hipSuccess == hipDeviceGetUuid(nullptr, device));
+    // Scenario 3
+    REQUIRE_FALSE(hipSuccess == hipDeviceGetUuid(&uuid, -1));
+    // Scenario 4
+    REQUIRE_FALSE(hipSuccess == hipDeviceGetUuid(&uuid, numDevices));
   }
-  // Scenario 3
-  REQUIRE_FALSE(hipSuccess == hipDeviceGetUuid(&uuid, -1));
-  // Scenario 4
-  REQUIRE_FALSE(hipSuccess == hipDeviceGetUuid(&uuid, numDevices));
 }
