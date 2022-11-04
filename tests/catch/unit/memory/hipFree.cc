@@ -22,6 +22,7 @@ THE SOFTWARE.
 
 
 #include <hip_test_common.hh>
+#include <hip_array_common.hh>
 #include "hipArrayCommon.hh"
 #include "DriverContext.hh"
 
