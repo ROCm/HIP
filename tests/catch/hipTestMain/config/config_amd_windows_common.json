@@ -95,6 +95,7 @@
 	   "Unit_hipStreamValue_Wait64_Blocking_NoMask_Gte",
 	   "Unit_hipStreamValue_Wait64_Blocking_NoMask_Eq",
 	   "Unit_hipStreamValue_Wait64_Blocking_NoMask_And",
-	   "Unit_hipStreamValue_Wait64_Blocking_NoMask_Nor"
+	   "Unit_hipStreamValue_Wait64_Blocking_NoMask_Nor",
+	   "Unit_hipIpcOpenMemHandle_Negative_Open_In_Creating_Process"
 	]
 }
