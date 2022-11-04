@@ -135,20 +135,27 @@ TEST_CASE("Unit_hipMemPrefetchAsync_Negative_Parameters") {
   SECTION("dev_ptr == nullptr") {
     HIP_CHECK_ERROR(hipMemPrefetchAsync(nullptr, kPageSize, device), hipErrorInvalidValue);
   }
+
+#if HT_NVIDIA
   SECTION("dev_ptr points to non-managed memory") {
     LinearAllocGuard<void> alloc(LinearAllocs::hipMalloc, kPageSize);
     HIP_CHECK_ERROR(hipMemPrefetchAsync(alloc.ptr(), kPageSize, device), hipErrorInvalidValue);
   }
+#endif
+
   SECTION("count == 0") {
     HIP_CHECK_ERROR(hipMemPrefetchAsync(alloc.ptr(), 0, device), hipErrorInvalidValue);
   }
+
   SECTION("count larger than allocation size") {
     HIP_CHECK_ERROR(hipMemPrefetchAsync(alloc.ptr(), kPageSize + 1, device), hipErrorInvalidValue);
   }
+
   SECTION("Invalid device") {
     HIP_CHECK_ERROR(hipMemPrefetchAsync(alloc.ptr(), kPageSize, hipInvalidDeviceId),
                     hipErrorInvalidDevice);
   }
+
   SECTION("Invalid stream") {
     hipStream_t stream;
     HIP_CHECK(hipStreamCreate(&stream));
