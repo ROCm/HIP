@@ -4,6 +4,8 @@
 	   "Unit_hipStreamPerThread_DeviceReset_1",
 	   "Unit_hipMallocManaged_OverSubscription",
 	   "Unit_hipDeviceGetSharedMemConfig_Positive_Basic",
-	   "Unit_hipDeviceGetSharedMemConfig_Positive_Threaded"
+	   "Unit_hipDeviceGetSharedMemConfig_Positive_Threaded",
+	   "Unit_hipDeviceGetCacheConfig_Positive_Basic",
+	   "Unit_hipDeviceGetCacheConfig_Positive_Threaded"
 	]
 }
