@@ -16,6 +16,11 @@ LIABILITY, WHETHER INN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR INN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+/*
+Testcase Scenarios :
+Unit_hipRuntimeGetVersion_Positive - Test simple reading of HIP runtime version with hipRuntimeGetVersion api
+Unit_hipRuntimeGetVersion_Negative - Test unsuccessful execution of hipRuntimeGetVersion when nullptr is set as input parameter
+*/
 
 /*
  * Conformance test for checking functionality of
@@ -26,9 +31,14 @@ THE SOFTWARE.
  */
 #include <hip_test_common.hh>
 
-TEST_CASE("Unit_hipRuntimeGetVersion_NegAndValTst") {
+TEST_CASE("Unit_hipRuntimeGetVersion_Positive") {
   int runtimeVersion = -1;
-  CHECK_FALSE(hipRuntimeGetVersion(nullptr) == hipSuccess);
   HIP_CHECK(hipRuntimeGetVersion(&runtimeVersion));
-  CHECK_FALSE(runtimeVersion <= 0);
+  REQUIRE(runtimeVersion > 0);
+  INFO("Runtime version " << runtimeVersion);
+}
+
+TEST_CASE("Unit_hipRuntimeGetVersion_Negative") {
+  // If initialization is attempted with nullptr, error shall be reported
+  CHECK_FALSE(hipRuntimeGetVersion(nullptr) == hipSuccess);
 }
