@@ -79,6 +79,8 @@
 	   "Unit_hipStreamQuery_WithPendingWork",
 	   "Unit_hipStreamWaitEvent_DifferentStreams",
 	   "Unit_hipStreamQuery_WithFinishedWork",
+     "Unit_hipDeviceGetCacheConfig_Positive_Basic",
+	   "Unit_hipDeviceGetCacheConfig_Positive_Threaded",
 	   "Unit_hipStreamValue_Wait32_Blocking_Mask_Gte",
 	   "Unit_hipStreamValue_Wait32_Blocking_Mask_Eq_1",
 	   "Unit_hipStreamValue_Wait32_Blocking_Mask_Eq_2",
