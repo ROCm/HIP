@@ -123,7 +123,7 @@ TEST_CASE("Unit_hipDeviceReset_Positive_Threaded") {
     CHECK(cache_config == hipFuncCachePreferNone);
   }
 
-  if (cache_config_ret == hipSuccess) {
+  if (shared_mem_config_ret == hipSuccess) {
     hipSharedMemConfig mem_config_after;
     CHECK(hipDeviceGetSharedMemConfig(&mem_config_after) == hipSuccess);
     CHECK(mem_config_after == mem_config_before);
