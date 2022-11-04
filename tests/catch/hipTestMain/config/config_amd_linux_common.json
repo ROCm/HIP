@@ -2,6 +2,7 @@
     "DisabledTests":
 	[
 	   "Unit_hipStreamPerThread_DeviceReset_1",
-	   "Unit_hipMallocManaged_OverSubscription"
+	   "Unit_hipMallocManaged_OverSubscription",
+	   "Unit_hipDeviceGetPCIBusId_Negative_PartialFill"
 	]
 }
