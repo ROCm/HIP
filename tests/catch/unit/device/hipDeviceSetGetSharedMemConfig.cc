@@ -34,23 +34,29 @@ TEST_CASE("Unit_hipDeviceSetSharedMemConfig_Positive_Basic") {
   const auto mem_config = GENERATE(from_range(std::begin(kMemConfigs), std::end(kMemConfigs)));
   HIP_CHECK(hipSetDevice(device));
   INFO("Current device is " << device);
+
+#if HT_AMD
+  HIP_CHECK_ERROR(hipDeviceSetSharedMemConfig(mem_config), hipErrorNotSupported);
+#elif HT_NVIDIA
   HIP_CHECK(hipDeviceSetSharedMemConfig(mem_config));
+#endif
 }
 
 TEST_CASE("Unit_hipDeviceSetSharedMemConfig_Negative_Parameters") {
 #if HT_AMD
-  HIP_CHECK(hipDeviceSetSharedMemConfig(static_cast<hipSharedMemConfig>(-1)));
+  HIP_CHECK_ERROR(hipDeviceSetSharedMemConfig(static_cast<hipSharedMemConfig>(-1)),
+                  hipErrorNotSupported);
 #elif HT_NVIDIA
   HIP_CHECK_ERROR(hipDeviceSetSharedMemConfig(static_cast<hipSharedMemConfig>(-1)),
                   hipErrorInvalidValue);
 #endif
 }
 
-
 TEST_CASE("Unit_hipDeviceGetSharedMemConfig_Positive_Default") {
   const auto device = GENERATE(range(0, HipTest::getDeviceCount()));
   HIP_CHECK(hipSetDevice(device));
   INFO("Current device is " << device);
+
   hipSharedMemConfig mem_config;
   HIP_CHECK(hipDeviceGetSharedMemConfig(&mem_config));
   REQUIRE(mem_config == hipSharedMemBankSizeFourByte);
@@ -67,9 +73,6 @@ TEST_CASE("Unit_hipDeviceGetSharedMemConfig_Positive_Basic") {
   hipSharedMemConfig returned_mem_config;
   HIP_CHECK(hipDeviceGetSharedMemConfig(&returned_mem_config));
 
-#if HT_AMD
-  REQUIRE(returned_mem_config == hipSharedMemBankSizeFourByte);
-#elif HT_NVIDIA
   int major = -1, minor = -1;
   HIP_CHECK(hipDeviceComputeCapability(&major, &minor, device));
   REQUIRE(major > 0);
@@ -78,7 +81,6 @@ TEST_CASE("Unit_hipDeviceGetSharedMemConfig_Positive_Basic") {
   } else {
     REQUIRE(returned_mem_config == hipSharedMemBankSizeFourByte);
   }
-#endif
 }
 
 TEST_CASE("Unit_hipDeviceGetSharedMemConfig_Positive_Threaded") {
@@ -94,9 +96,6 @@ TEST_CASE("Unit_hipDeviceGetSharedMemConfig_Positive_Threaded") {
       hipSharedMemConfig returned_mem_config;
       HIP_CHECK(hipDeviceGetSharedMemConfig(&returned_mem_config));
 
-#if HT_AMD
-      REQUIRE(returned_mem_config == hipSharedMemBankSizeFourByte);
-#elif HT_NVIDIA
       int major = -1, minor = -1;
       HIP_CHECK(hipDeviceComputeCapability(&major, &minor, 0));
       REQUIRE(major > 0);
@@ -105,7 +104,6 @@ TEST_CASE("Unit_hipDeviceGetSharedMemConfig_Positive_Threaded") {
       } else {
         REQUIRE(returned_mem_config == hipSharedMemBankSizeFourByte);
       }
-#endif
     }
 
    private:
