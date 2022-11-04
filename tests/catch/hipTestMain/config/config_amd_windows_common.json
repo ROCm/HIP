@@ -98,6 +98,7 @@
 	   "Unit_hipStreamValue_Wait64_Blocking_NoMask_Eq",
 	   "Unit_hipStreamValue_Wait64_Blocking_NoMask_And",
 	   "Unit_hipStreamValue_Wait64_Blocking_NoMask_Nor",
-	   "Unit_hipGetDeviceFlags_Positive_Context"
+	   "Unit_hipGetDeviceFlags_Positive_Context",
+	   "Unit_hipIpcCloseMemHandle_Negative_Close_In_Originating_Process"
 	]
 }
