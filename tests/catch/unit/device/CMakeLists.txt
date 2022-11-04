@@ -18,6 +18,8 @@ set(TEST_SRC
     hipDeviceGetUuid.cc
     hipDeviceGetP2PAttribute.cc
     hipDeviceGetDefaultMemPool.cc
+    hipDeviceCanAccessPeer.cc
+    hipDeviceEnableDisablePeerAccess.cc
     hipExtGetLinkTypeAndHopCount.cc
     hipDeviceSetLimit.cc
     hipDeviceSetGetMemPool.cc
