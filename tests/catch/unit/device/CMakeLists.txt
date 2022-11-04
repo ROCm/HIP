@@ -18,12 +18,19 @@ set(TEST_SRC
     hipDeviceGetUuid.cc
     hipDeviceGetP2PAttribute.cc
     hipDeviceGetDefaultMemPool.cc
+    hipDeviceCanAccessPeer.cc
+    hipDeviceEnableDisablePeerAccess.cc
     hipExtGetLinkTypeAndHopCount.cc
     hipDeviceSetLimit.cc
     hipDeviceSetGetMemPool.cc
     hipInit.cc
     hipDriverGetVersion.cc
 )
+
+if(UNIX)
+    set(TEST_SRC ${TEST_SRC}
+                 hipIpcCloseMemHandle.cc)
+endif()
 
 set_source_files_properties(hipGetDeviceCount.cc PROPERTIES COMPILE_FLAGS -std=c++17)
 set_source_files_properties(hipDeviceGetP2PAttribute.cc PROPERTIES COMPILE_FLAGS -std=c++17)
