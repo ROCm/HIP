@@ -56,8 +56,8 @@ TEST_CASE("Unit_hipDeviceReset_Positive_Basic") {
   CHECK(hipFree(ptr) == hipErrorInvalidValue);
 
 // Inconsistent behavior in CUDA, sometimes segfaults, sometimes works
-// Return value mismatch on AMD - 
-#if 0
+// Return value mismatch on AMD - EXSWHTEC-124
+#if HT_NVIDIA
   CHECK(hipStreamDestroy(stream) == hipErrorInvalidHandle);
 #endif
 
@@ -112,8 +112,8 @@ TEST_CASE("Unit_hipDeviceReset_Positive_Threaded") {
   CHECK(hipFree(ptr) == hipErrorInvalidValue);
 
 // Inconsistent behavior in CUDA, sometimes segfaults, sometimes works
-// Return value mismatch on AMD - 
-#if 0
+// Return value mismatch on AMD - EXSWHTEC-124
+#if HT_NVIDIA
   CHECK(hipStreamDestroy(stream) == hipErrorInvalidHandle);
 #endif
 
