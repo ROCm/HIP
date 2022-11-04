@@ -7,6 +7,7 @@
 	   "Unit_hipDeviceGetCacheConfig_Positive_Threaded",
 	   "Unit_hipGetDeviceFlags_Positive_Context",
 	   "Unit_hipIpcCloseMemHandle_Negative_Close_In_Originating_Process",
-	   "Unit_hipDeviceGetPCIBusId_Negative_PartialFill"
+	   "Unit_hipDeviceGetPCIBusId_Negative_PartialFill",
+	   "Unit_hipMemGetAddressRange_Negative"
 	]
 }

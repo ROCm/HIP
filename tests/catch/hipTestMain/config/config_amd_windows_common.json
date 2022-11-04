@@ -79,7 +79,7 @@
 	   "Unit_hipStreamQuery_WithPendingWork",
 	   "Unit_hipStreamWaitEvent_DifferentStreams",
 	   "Unit_hipStreamQuery_WithFinishedWork",
-     "Unit_hipDeviceGetCacheConfig_Positive_Basic",
+	   "Unit_hipDeviceGetCacheConfig_Positive_Basic",
 	   "Unit_hipDeviceGetCacheConfig_Positive_Threaded",
 	   "Unit_hipStreamValue_Wait32_Blocking_Mask_Gte",
 	   "Unit_hipStreamValue_Wait32_Blocking_Mask_Eq_1",
@@ -100,6 +100,7 @@
 	   "Unit_hipStreamValue_Wait64_Blocking_NoMask_Nor",
 	   "Unit_hipGetDeviceFlags_Positive_Context",
 	   "Unit_hipIpcCloseMemHandle_Negative_Close_In_Originating_Process",
-	   "Unit_hipDeviceGetPCIBusId_Negative_PartialFill"
+	   "Unit_hipDeviceGetPCIBusId_Negative_PartialFill",
+	   "Unit_hipMemGetAddressRange_Negative"
 	]
 }
