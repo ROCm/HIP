@@ -80,10 +80,14 @@ TEST_CASE("Unit_hipMemcpyWithStream_Negative_Parameters") {
       StreamGuard sg(Streams::created);
       return sg.stream();
     };
+
+// Disabled on AMD due to defect - EXSWHTEC-129
+#if HT_NVIDIA
     SECTION("Invalid stream") {
       HIP_CHECK_ERROR(hipMemcpyWithStream(dst, src, count, direction, InvalidStream()),
                       hipErrorContextIsDestroyed);
     }
+#endif 
   };
 
   SECTION("Host to device") {

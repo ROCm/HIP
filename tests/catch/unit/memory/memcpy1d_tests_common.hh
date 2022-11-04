@@ -305,8 +305,12 @@ void MemcpyWithDirectionCommonNegativeTests(F f, void* dst, void* src, size_t co
                                             hipMemcpyKind kind) {
   using namespace std::placeholders;
   MemcpyCommonNegativeTests(std::bind(f, _1, _2, _3, kind), dst, src, count);
+
+// Disabled on AMD due to defect - EXSWHTEC-128
+#if HT_NVIDIA
   SECTION("Invalid MemcpyKind") {
     HIP_CHECK_ERROR(f(dst, src, count, static_cast<hipMemcpyKind>(-1)),
                     hipErrorInvalidMemcpyDirection);
   }
+#endif
 }
