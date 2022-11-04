@@ -41,6 +41,7 @@ static inline unsigned int GenerateLinearAllocationFlagCombinations(
       return 0u;
     default:
       assert("Invalid LinearAllocs enumerator");
+      throw std::invalid_argument("Invalid LinearAllocs enumerator");
   }
 }
 
