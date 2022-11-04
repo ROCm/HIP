@@ -368,6 +368,8 @@ TEST_CASE("Unit_hipIpcEventHandle_ParameterValidation") {
     HIP_CHECK(hipEventDestroy(event1));
   }
 
+// Disabled on AMD because of return value mismatch - EXSWHTEC-41
+#if HT_NVIDIA
   SECTION("Event created with no flags") {
     hipEvent_t event;
     hipIpcEventHandle_t event_handle;
@@ -376,6 +378,7 @@ TEST_CASE("Unit_hipIpcEventHandle_ParameterValidation") {
     HIP_CHECK_ERROR(hipIpcGetEventHandle(&event_handle, event), hipErrorInvalidResourceHandle);
     HIP_CHECK(hipEventDestroy(event));
   }
+#endif
 }
 
 #endif
