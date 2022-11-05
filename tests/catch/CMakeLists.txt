@@ -57,13 +57,16 @@ else()
     # Set both compilers else windows cmake complains of mismatch
     cmake_path(SET CMAKE_CXX_COMPILER "${HIP_PATH}/bin/hipcc.bat")
     cmake_path(SET CMAKE_C_COMPILER "${HIP_PATH}/bin/hipcc.bat")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --rocm-path=${ROCM_PATH}")
     set(HIPCONFIG_EXECUTABLE "${HIP_PATH}/bin/hipconfig.bat")
     execute_process(COMMAND ${HIPCONFIG_EXECUTABLE} --version
                     OUTPUT_VARIABLE HIP_VERSION
                     OUTPUT_STRIP_TRAILING_WHITESPACE)
 endif()
-# enforce c++17 for all tests
+if(HIP_PLATFORM STREQUAL "amd")
+    # prioritize -DROCM_PATH over env{ROCM_PATH} for amd platform only
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --rocm-path=${ROCM_PATH}")
+endif()
+# enforce c++17
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++17")
 
 string(REPLACE "." ";" VERSION_LIST ${HIP_VERSION})
