@@ -22,6 +22,7 @@ set(TEST_SRC
     hipDeviceEnableDisablePeerAccess.cc
     hipExtGetLinkTypeAndHopCount.cc
     hipDeviceSetLimit.cc
+    hipDeviceSetGetSharedMemConfig.cc
     hipDeviceSetGetMemPool.cc
     hipInit.cc
     hipDriverGetVersion.cc
@@ -29,7 +30,10 @@ set(TEST_SRC
 
 if(UNIX)
     set(TEST_SRC ${TEST_SRC}
-                 hipIpcCloseMemHandle.cc)
+                 hipIpcOpenMemHandle.cc
+                 hipIpcGetMemHandle.cc
+                 hipIpcCloseMemHandle.cc
+       )
 endif()
 
 set_source_files_properties(hipGetDeviceCount.cc PROPERTIES COMPILE_FLAGS -std=c++17)
