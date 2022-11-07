@@ -87,7 +87,10 @@ TEST_CASE("Unit_hipMemAdvise_Set_Unset_Basic") {
     REQUIRE((advice == hipMemAdviseSetReadMostly ? 0 : hipInvalidDeviceId) == attribute);
   };
 
+// Disabled due to defect - EXSWHTEC-132
+#if HT_NVIDIA
   SECTION("hipMemAdviseSetAccessedBy") { SetUnset(hipMemAdviseSetAccessedBy); }
+#endif
   SECTION("hipMemAdviseSetReadMostly") { SetUnset(hipMemAdviseSetReadMostly); }
   SECTION("hipMemAdviseSetPreferredLocation") { SetUnset(hipMemAdviseSetPreferredLocation); }
 }
@@ -171,7 +174,10 @@ TEST_CASE("Unit_hipMemAdvise_Flags_Do_Not_Cause_Prefetch") {
       GENERATE_COPY(from_range(std::begin(supported_devices), std::end(supported_devices)));
 
   SECTION("hipMemAdviseSetPreferredLocation") { Test(device, hipMemAdviseSetPreferredLocation); }
+// Disabled on AMD due to defect - EXSWHTEC-132
+#if HT_NVIDIA
   SECTION("hipMemAdviseSetAccessedBy") { Test(device, hipMemAdviseSetAccessedBy); }
+#endif
 }
 
 TEST_CASE("Unit_hipMemAdvise_Read_Write_After_Advise") {
@@ -201,13 +207,21 @@ TEST_CASE("Unit_hipMemAdvise_Read_Write_After_Advise") {
     REQUIRE((advice == hipMemAdviseSetReadMostly ? 1 : device) == attribute);
   };
 
+// Disabled on AMD due to defect - EXSWHTEC-133
+#if HT_NVIDIA
   SECTION("ReadMostly") { ReadWriteManagedMemory(hipInvalidDeviceId, hipMemAdviseSetReadMostly); }
+#endif
   supported_devices.push_back(hipCpuDeviceId);
+
   const auto device =
       GENERATE_COPY(from_range(std::begin(supported_devices), std::end(supported_devices)));
   supported_devices.pop_back();
   SECTION("PreferredLocation") { ReadWriteManagedMemory(device, hipMemAdviseSetPreferredLocation); }
+
+// Disabled on AMD due to defect - EXSWHTEC-132
+#if HT_NVIDIA
   SECTION("AccessedBy") { ReadWriteManagedMemory(device, hipMemAdviseSetAccessedBy); }
+#endif
 }
 
 TEST_CASE("Unit_hipMemAdvise_Prefetch_After_Advise") {
@@ -216,8 +230,10 @@ TEST_CASE("Unit_hipMemAdvise_Prefetch_After_Advise") {
     HipTest::HIP_SKIP_TEST("Test needs at least 1 device that supports managed memory");
   }
   supported_devices.push_back(hipCpuDeviceId);
-  const auto advice = GENERATE(hipMemAdviseSetAccessedBy, hipMemAdviseSetReadMostly,
-                               hipMemAdviseSetPreferredLocation);
+  const auto advice = GENERATE(hipMemAdviseSetReadMostly, hipMemAdviseSetPreferredLocation
+                               // Skipped due to defect - EXSWHTEC - 132
+                               // hipMemAdviseSetAccessedBy
+  );
   const auto device = GENERATE_COPY(from_range(supported_devices));
 
   LinearAllocGuard<int> alloc(LinearAllocs::hipMallocManaged, kPageSize);
@@ -266,10 +282,13 @@ TEST_CASE("Unit_hipMemAdvise_Negative_Parameters") {
 
   LinearAllocGuard<void> alloc(LinearAllocs::hipMallocManaged, kPageSize);
 
+// Disabled on NVIDIA due to defect - EXSWHTEC-122
+#if HT_AMD
   SECTION("Invalid advice") {
     HIP_CHECK_ERROR(hipMemAdvise(alloc.ptr(), kPageSize, static_cast<hipMemoryAdvise>(-1), device),
                     hipErrorInvalidValue);
   }
+#endif
 
   const auto advice = GENERATE(hipMemAdviseSetAccessedBy, hipMemAdviseSetReadMostly,
                                hipMemAdviseSetPreferredLocation);
@@ -277,9 +296,12 @@ TEST_CASE("Unit_hipMemAdvise_Negative_Parameters") {
     HIP_CHECK_ERROR(hipMemAdvise(alloc.ptr(), 0, advice, device), hipErrorInvalidValue);
   }
 
+// Disabled due to defect - EXSWHTEC-131
+#if HT_NVIDIA
   SECTION("count larger than allocation size") {
     HIP_CHECK_ERROR(hipMemAdvise(alloc.ptr(), kPageSize + 1, advice, device), hipErrorInvalidValue);
   }
+#endif
 
   SECTION("dev_ptr == nullptr") {
     HIP_CHECK_ERROR(hipMemAdvise(nullptr, kPageSize, advice, device), hipErrorInvalidValue);
@@ -290,8 +312,11 @@ TEST_CASE("Unit_hipMemAdvise_Negative_Parameters") {
     HIP_CHECK_ERROR(hipMemAdvise(alloc.ptr(), kPageSize, advice, device), hipErrorInvalidValue);
   }
 
+// Disabled on AMD due to defect - EXSWHTEC-130
+#if HT_NVIDIA
   SECTION("Invalid device") {
     HIP_CHECK_ERROR(hipMemAdvise(alloc.ptr(), kPageSize, advice, hipInvalidDeviceId),
                     (advice == hipMemAdviseSetReadMostly ? hipSuccess : hipErrorInvalidDevice));
   }
+#endif
 }
