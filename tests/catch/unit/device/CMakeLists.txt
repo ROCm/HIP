@@ -28,6 +28,7 @@ set(TEST_SRC
 
 if(UNIX)
     set(TEST_SRC ${TEST_SRC}
+                 hipIpcOpenMemHandle.cc
                  hipIpcGetMemHandle.cc
                  hipIpcCloseMemHandle.cc
        )
