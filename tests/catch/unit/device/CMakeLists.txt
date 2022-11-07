@@ -22,12 +22,14 @@ set(TEST_SRC
     hipDeviceEnableDisablePeerAccess.cc
     hipExtGetLinkTypeAndHopCount.cc
     hipDeviceSetLimit.cc
+    hipDeviceSetGetSharedMemConfig.cc
     hipDeviceSetGetMemPool.cc
 )
 
 if(UNIX)
     set(TEST_SRC ${TEST_SRC}
                  hipIpcOpenMemHandle.cc
+                 hipIpcGetMemHandle.cc
                  hipIpcCloseMemHandle.cc
        )
 endif()
