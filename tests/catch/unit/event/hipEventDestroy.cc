@@ -95,11 +95,6 @@ TEST_CASE("Unit_hipEventDestroy_WithWaitingStream") {
 }
 
 TEST_CASE("Unit_hipEventDestroy_Negative") {
-#if HT_AMD
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-103");
-  return;
-#endif
-
   SECTION("Invalid Event") {
     hipEvent_t event{nullptr};
     HIP_CHECK_ERROR(hipEventDestroy(event), hipErrorInvalidResourceHandle);

@@ -19,6 +19,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 cmake_minimum_required(VERSION 3.16.8)
+# vc 19.31.31107.0 gives issue while packaging using makefile
+# To avoid error NMAKE : fatal error U1065: invalid option 'w'
+# Windows to use Ninja generator like other projects
+# to skip the simple compiler test
+set(CMAKE_C_COMPILER_WORKS 1)
+set(CMAKE_CXX_COMPILER_WORKS 1)
+
 project(tests)
 
 MACRO(SUBDIRLIST result curdir)
