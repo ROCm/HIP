@@ -501,8 +501,8 @@ void DrvMemcpy3D<T>::HostArray_DrvMemcpy3D(bool device_context_change) {
 /* DeAllocating the memory */
 template <typename T>
 void DrvMemcpy3D<T>::DeAllocateMemory() {
-  hipArrayDestroy(arr);
-  hipArrayDestroy(arr1);
+  HIP_CHECK(hipArrayDestroy(arr));
+  HIP_CHECK(hipArrayDestroy(arr1));
   free(hData);
 }
 

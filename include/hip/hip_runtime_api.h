@@ -153,24 +153,31 @@ typedef struct hipDeviceProp_t {
 } hipDeviceProp_t;
 
 
-/**
- * Memory type (for pointer attributes)
+ /*
+ * @brief HIP Memory type (for pointer attributes)
+ * @enum
+ * @ingroup Enumerations
  */
 typedef enum hipMemoryType {
-    hipMemoryTypeHost,    ///< Memory is physically located on host
-    hipMemoryTypeDevice,  ///< Memory is physically located on device. (see deviceId for specific
-                          ///< device)
-    hipMemoryTypeArray,   ///< Array memory, physically located on device. (see deviceId for specific
-                          ///< device)
-    hipMemoryTypeUnified, ///< Not used currently
-    hipMemoryTypeManaged  ///< Managed memory, automaticallly managed by the unified memory system
+    hipMemoryTypeHost = 0,    ///< Memory is physically located on host
+    hipMemoryTypeDevice = 1,  ///< Memory is physically located on device. (see deviceId for
+                              ///< specific device)
+    hipMemoryTypeArray = 2,   ///< Array memory, physically located on device. (see deviceId for
+                              ///< specific device)
+    hipMemoryTypeUnified = 3, ///< Not used currently
+    hipMemoryTypeManaged = 4  ///< Managed memory, automaticallly managed by the unified
+                              ///< memory system
 } hipMemoryType;
 
 /**
  * Pointer attributes
  */
 typedef struct hipPointerAttribute_t {
-    enum hipMemoryType memoryType;
+  union {
+      // Deprecated, use instead type
+      enum hipMemoryType memoryType;
+      enum hipMemoryType type;
+    };
     int device;
     void* devicePointer;
     void* hostPointer;
@@ -1700,8 +1707,9 @@ hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t* handle, void* devPtr);
  * hipErrorInvalidHandle,
  * hipErrorTooManyPeers
  *
- * @note No guarantees are made about the address returned in @p *devPtr.
- * In particular, multiple processes may not receive the same address for the same @p handle.
+ * @note During multiple processes, using the same memory handle opened by the current context,
+ * there is no guarantee that the same device poiter will be returned in @p *devPtr.
+ * This is diffrent from CUDA.
  *
  */
 hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned int flags);
@@ -6385,7 +6393,7 @@ hipError_t hipGraphRetainUserObject(hipGraph_t graph, hipUserObject_t object, un
  * @warning : This API is marked as beta, meaning, while this is feature complete,
  * it is still open to changes and may have outstanding issues.
  */
-hipError_t hipGraphReleaseUserObject(hipGraph_t graph, hipUserObject_t object, unsigned int count);
+hipError_t hipGraphReleaseUserObject(hipGraph_t graph, hipUserObject_t object, unsigned int count __dparm(1));
 // doxygen end graph API
 /**
  * @}
@@ -6768,6 +6776,148 @@ inline hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
     return hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
         numBlocks, reinterpret_cast<const void*>(f), blockSize, dynSharedMemPerBlk, flags);
 }
+/**
+ * @brief Returns grid and block size that achieves maximum potential occupancy for a device function
+ *
+ * Returns in \p *min_grid_size and \p *block_size a suggested grid /
+ * block size pair that achieves the best potential occupancy
+ * (i.e. the maximum number of active warps on the current device with the smallest number
+ * of blocks for a particular function).
+ *
+ * @param [out] min_grid_size minimum grid size needed to achieve the best potential occupancy
+ * @param [out] block_size    block size required for the best potential occupancy
+ * @param [in]  func          device function symbol
+ * @param [in]  block_size_to_dynamic_smem_size - a unary function/functor that takes block size,
+ * and returns the size, in bytes, of dynamic shared memory needed for a block
+ * @param [in]  block_size_limit the maximum block size \p func is designed to work with. 0 means no limit.
+ * @param [in]  flags         reserved
+ *
+ * @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidDeviceFunction, #hipErrorInvalidValue,
+ * #hipErrorUnknown
+ */
+template<typename UnaryFunction, class T>
+static hipError_t __host__ inline hipOccupancyMaxPotentialBlockSizeVariableSMemWithFlags(
+    int*          min_grid_size,
+    int*          block_size,
+    T             func,
+    UnaryFunction block_size_to_dynamic_smem_size,
+    int           block_size_limit = 0,
+    unsigned int  flags = 0) {
+  if (min_grid_size == nullptr || block_size == nullptr ||
+      reinterpret_cast<const void*>(func) == nullptr) {
+    return hipErrorInvalidValue;
+  }
+
+  int dev;
+  hipError_t status;
+  if ((status = hipGetDevice(&dev)) != hipSuccess) {
+    return status;
+  }
+
+  int max_threads_per_cu;
+  if ((status = hipDeviceGetAttribute(&max_threads_per_cu,
+      hipDeviceAttributeMaxThreadsPerMultiProcessor, dev)) != hipSuccess) {
+    return status;
+  }
+
+  int warp_size;
+  if ((status = hipDeviceGetAttribute(&warp_size,
+      hipDeviceAttributeWarpSize, dev)) != hipSuccess) {
+    return status;
+  }
+
+  int max_cu_count;
+  if ((status = hipDeviceGetAttribute(&max_cu_count,
+      hipDeviceAttributeMultiprocessorCount, dev)) != hipSuccess) {
+    return status;
+  }
+
+  struct hipFuncAttributes attr;
+  if ((status = hipFuncGetAttributes(&attr, reinterpret_cast<const void*>(func))) != hipSuccess) {
+    return status;
+  }
+
+  // Initial limits for the execution
+  const int func_max_threads_per_block = attr.maxThreadsPerBlock;
+  if (block_size_limit == 0) {
+    block_size_limit = func_max_threads_per_block;
+  }
+
+  if (func_max_threads_per_block < block_size_limit) {
+    block_size_limit = func_max_threads_per_block;
+  }
+
+  const int block_size_limit_aligned =
+    ((block_size_limit + (warp_size - 1)) / warp_size) * warp_size;
+
+  // For maximum search
+  int max_threads = 0;
+  int max_block_size{};
+  int max_num_blocks{};
+  for (int block_size_check_aligned = block_size_limit_aligned;
+       block_size_check_aligned > 0;
+       block_size_check_aligned -= warp_size) {
+    // Make sure the logic uses the requested limit and not aligned
+    int block_size_check = (block_size_limit < block_size_check_aligned) ?
+        block_size_limit : block_size_check_aligned;
+
+    size_t dyn_smem_size = block_size_to_dynamic_smem_size(block_size_check);
+    int optimal_blocks;
+    if ((status = hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
+        &optimal_blocks, func, block_size_check, dyn_smem_size, flags)) != hipSuccess) {
+      return status;
+    }
+
+    int total_threads = block_size_check * optimal_blocks;
+    if (total_threads > max_threads) {
+      max_block_size = block_size_check;
+      max_num_blocks = optimal_blocks;
+      max_threads = total_threads;
+    }
+
+    // Break if the logic reached possible maximum
+    if (max_threads_per_cu == max_threads) {
+      break;
+    }
+  }
+
+  // Grid size is the number of blocks per CU * CU count
+  *min_grid_size = max_num_blocks * max_cu_count;
+  *block_size = max_block_size;
+
+  return status;
+}
+
+/**
+ * @brief Returns grid and block size that achieves maximum potential occupancy for a device function
+ *
+ * Returns in \p *min_grid_size and \p *block_size a suggested grid /
+ * block size pair that achieves the best potential occupancy
+ * (i.e. the maximum number of active warps on the current device with the smallest number
+ * of blocks for a particular function).
+ *
+ * @param [out] min_grid_size minimum grid size needed to achieve the best potential occupancy
+ * @param [out] block_size    block size required for the best potential occupancy
+ * @param [in]  func          device function symbol
+ * @param [in]  block_size_to_dynamic_smem_size - a unary function/functor that takes block size,
+ * and returns the size, in bytes, of dynamic shared memory needed for a block
+ * @param [in]  block_size_limit the maximum block size \p func is designed to work with. 0 means no limit.
+ *
+ * @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidDeviceFunction, #hipErrorInvalidValue,
+ * #hipErrorUnknown
+ */
+template<typename UnaryFunction, class T>
+static hipError_t __host__ inline hipOccupancyMaxPotentialBlockSizeVariableSMem(
+    int*          min_grid_size,
+    int*          block_size,
+    T             func,
+    UnaryFunction block_size_to_dynamic_smem_size,
+    int           block_size_limit = 0)
+{
+    return hipOccupancyMaxPotentialBlockSizeVariableSMemWithFlags(min_grid_size, block_size, func,
+      block_size_to_dynamic_smem_size, block_size_limit);
+}
+
 template <typename F>
 inline hipError_t hipOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize,
                                                     F kernel, size_t dynSharedMemPerBlk, uint32_t blockSizeLimit) {
