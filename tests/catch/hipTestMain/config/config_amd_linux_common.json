@@ -9,6 +9,7 @@
 	   "Unit_hipDeviceGetCacheConfig_Positive_Threaded",
 	   "Unit_hipGetDeviceFlags_Positive_Context",
 	   "Unit_hipIpcCloseMemHandle_Negative_Close_In_Originating_Process",
+	   "Unit_hipIpcOpenMemHandle_Negative_Open_In_Creating_Process",
 	   "Unit_hipDeviceGetPCIBusId_Negative_PartialFill",
 	   "Unit_hipMemAdvise_AccessedBy_All_Devices",
 	   "Unit_hipMemAdvise_No_Flag_Interference"
