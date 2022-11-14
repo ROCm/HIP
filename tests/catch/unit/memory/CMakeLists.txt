@@ -97,6 +97,7 @@ set(TEST_SRC
     hipMemsetSync.cc
     hipMemsetAsync.cc
     hipMemAdvise.cc
+    hipMemRangeGetAttributes.cc
     hipMallocMipmappedArray.cc
     hipFreeMipmappedArray.cc
 )
@@ -172,6 +173,9 @@ set(TEST_SRC
     hipMemsetSync.cc
     hipMemsetAsync.cc
     hipMemAdvise.cc
+    hipMemRangeGetAttributes.cc
+    hipMallocMipmappedArray.cc
+    hipFreeMipmappedArray.cc
 )
 endif()
 
