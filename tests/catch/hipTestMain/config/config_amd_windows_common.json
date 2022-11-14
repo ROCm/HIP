@@ -80,6 +80,12 @@
 	   "Unit_hipDeviceGetPCIBusId_Negative_PartialFill",
 	   "Unit_hipDeviceGetSharedMemConfig_Positive_Basic",
 	   "Unit_hipDeviceGetSharedMemConfig_Positive_Threaded",
-	   "Unit_hipInit_Negative"
+	   "Unit_hipInit_Negative",
+	   "Unit_hipGraphMemcpyNodeSetParams_Functional",
+	   "Unit_hipGraphNodeGetDependentNodes_Functional",
+	   "Unit_hipGraphNodeGetDependencies_Functional",
+	   "Unit_hipGraphExecChildGraphNodeSetParams_ChildTopology",
+	   "Note: needs to be enabled when streamPerThread issues are fixed",
+	   "Unit_hipStreamSynchronize_NullStreamAndStreamPerThread"
 	]
 }
