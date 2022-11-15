@@ -1,5 +1,6 @@
 set(TEST_SRC
     vulkan_test.cc
+    hipExternalMemoryGetMappedBuffer.cc
    )
 
 find_package(Vulkan)
