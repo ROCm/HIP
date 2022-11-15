@@ -1,6 +1,7 @@
 set(TEST_SRC
     gl_interop_common.cc
     hipGLGetDevices.cc
+    hipGraphicsMapResources.cc
 )
 
 hip_add_exe_to_target(NAME GLInteropTest
