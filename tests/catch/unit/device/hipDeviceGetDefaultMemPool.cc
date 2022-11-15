@@ -19,25 +19,39 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-/*
-Testcase Scenarios :
-Unit_hipEventCreateWithFlags_Positive - Test simple event creation with hipEventCreateWithFlags api for each flag
-*/
 
 #include <hip_test_common.hh>
+#include <hip/hip_runtime_api.h>
 
-TEST_CASE("Unit_hipEventCreateWithFlags_Positive") {
+TEST_CASE("Unit_hipDeviceGetDefaultMemPool_Positive_Basic") {
+  const int device = GENERATE(range(0, HipTest::getDeviceCount()));
 
-#if HT_AMD
-  const unsigned int flagUnderTest = GENERATE(hipEventDefault, hipEventBlockingSync, hipEventDisableTiming, hipEventInterprocess | hipEventDisableTiming, hipEventReleaseToDevice, hipEventReleaseToSystem);
-#else
-  // On Non-AMD platforms hipEventReleaseToDevice / hipEventReleaseToSystem are not defined
-  const unsigned int flagUnderTest = GENERATE(hipEventDefault, hipEventBlockingSync, hipEventDisableTiming, hipEventInterprocess | hipEventDisableTiming);
-#endif
+  int mem_pool_support = 0;
+  HIP_CHECK(
+      hipDeviceGetAttribute(&mem_pool_support, hipDeviceAttributeMemoryPoolsSupported, device));
+  if (!mem_pool_support) {
+    HipTest::HIP_SKIP_TEST("Test only runs on devices with memory pool support");
+    return;
+  }
 
-  hipEvent_t event;
-  HIP_CHECK(hipEventCreateWithFlags(&event, flagUnderTest));
-  REQUIRE(event != nullptr);
+  hipMemPool_t mem_pool;
+  HIP_CHECK(hipDeviceGetDefaultMemPool(&mem_pool, device));
+  REQUIRE(mem_pool != nullptr);
+}
 
-  HIP_CHECK(hipEventDestroy(event));
+TEST_CASE("Unit_hipDeviceGetDefaultMemPool_Negative_Parameters") {
+  hipMemPool_t mem_pool;
+
+  SECTION("mem_pool == nullptr") {
+    HIP_CHECK_ERROR(hipDeviceGetDefaultMemPool(nullptr, 0), hipErrorInvalidValue);
+  }
+
+  SECTION("device < 0") {
+    HIP_CHECK_ERROR(hipDeviceGetDefaultMemPool(&mem_pool, -1), hipErrorInvalidDevice);
+  }
+
+  SECTION("device ordinance too large") {
+    HIP_CHECK_ERROR(hipDeviceGetDefaultMemPool(&mem_pool, HipTest::getDeviceCount()),
+                    hipErrorInvalidDevice);
+  }
 }
