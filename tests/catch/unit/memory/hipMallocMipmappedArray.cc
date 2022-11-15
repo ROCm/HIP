@@ -166,7 +166,7 @@ TEMPLATE_TEST_CASE("Unit_hipMallocMipmappedArray_happy", "", char, uint2, int4, 
 
     HIP_CHECK(hipMallocMipmappedArray(&array, &desc, extent, numLevels, flags));
     hipArray* hipArray = nullptr;
-    HIP_CHECK(hipMipmappedArrayGetLevel(&hipArray, array, 1));
+    HIP_CHECK(hipGetMipmappedArrayLevel(&hipArray, array, 1));
     checkMipmappedArrayIsExpected(array, hipArray, desc, extent, flags);
     HIP_CHECK(hipFreeMipmappedArray(array));
   }
@@ -213,7 +213,7 @@ TEMPLATE_TEST_CASE("Unit_hipMallocMipmappedArray_MaxTexture", "", int, uint4, us
     if (maxArrayCreateError == hipErrorOutOfMemory) return;
     HIP_CHECK(maxArrayCreateError);
     hipArray* hipArray = nullptr;
-    HIP_CHECK(hipMipmappedArrayGetLevel(&hipArray, array, 1));
+    HIP_CHECK(hipGetMipmappedArrayLevel(&hipArray, array, 1));
     checkMipmappedArrayIsExpected(array, hipArray, desc, extent, flags);
     HIP_CHECK(hipFreeMipmappedArray(array));
   }
@@ -476,11 +476,11 @@ TEST_CASE("Unit_hipGetMipmappedArrayLevel_Negative") {
   HIP_CHECK(hipMallocMipmappedArray(&array, &desc, make_hipExtent(s, s, s), numLevels, hipArrayDefault));
   SECTION("Level is invalid")
   {
-    HIP_CHECK_ERROR(hipMipmappedArrayGetLevel(&level_array, array, 3), hipErrorInvalidValue);
+    HIP_CHECK_ERROR(hipGetMipmappedArrayLevel(&level_array, array, 3), hipErrorInvalidValue);
   }
   SECTION("Mipmapped array is nullptr")
   {
-    HIP_CHECK_ERROR(hipMipmappedArrayGetLevel(&level_array, nullptr, 1), hipErrorInvalidResourceHandle);
+    HIP_CHECK_ERROR(hipGetMipmappedArrayLevel(&level_array, nullptr, 1), hipErrorInvalidResourceHandle);
   }
   HIP_CHECK(hipFreeMipmappedArray(array));
 }
