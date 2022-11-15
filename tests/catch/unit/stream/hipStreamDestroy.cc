@@ -72,12 +72,7 @@ TEST_CASE("Unit_hipStreamDestroy_WithFinishedWork") {
 // of work
 #if HT_AMD /* Disabled because frequency based wait is timing out on nvidia platforms */
 TEST_CASE("Unit_hipStreamDestroy_WithPendingWork") {
-#if HT_AMD
-  HipTest::HIP_SKIP_TEST(
-      "EXSWCPHIPT-44 - expected hipStreamDestroy to return immediately then release the resources "
-      "when the queued jobs are finished");
-  return;
-#endif
+
   hipStream_t stream{};
   HIP_CHECK(hipStreamCreate(&stream));
   constexpr int numDataPoints = 10;

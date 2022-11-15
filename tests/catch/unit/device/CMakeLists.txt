@@ -24,10 +24,13 @@ set(TEST_SRC
     hipDeviceSetLimit.cc
     hipDeviceSetGetSharedMemConfig.cc
     hipDeviceSetGetMemPool.cc
+    hipInit.cc
+    hipDriverGetVersion.cc
 )
 
 if(UNIX)
     set(TEST_SRC ${TEST_SRC}
+                 hipIpcOpenMemHandle.cc
                  hipIpcGetMemHandle.cc
                  hipIpcCloseMemHandle.cc
        )
