@@ -35,4 +35,6 @@ add_subdirectory(compiler)
 add_subdirectory(errorHandling)
 if(HIP_PLATFORM STREQUAL "amd")
 add_subdirectory(clock)
+# Vulkan interop APIs currently undefined for NVIDIA
+add_subdirectory(vulkan_interop)
 endif()
