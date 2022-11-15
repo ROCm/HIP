@@ -18,8 +18,10 @@ THE SOFTWARE.
 */
 /*
 Testcase Scenarios :
-Unit_hipTextureMipmapRef2D_Positive_Check - Test correct execution of hipBindTextureToMipmappedArray api for diffrent mipmapped array sizes and number of levels
-Unit_hipTextureMipmapRef2D_Negative_Parameters - Test unsuccessful execution of hipBindTextureToMipmappedArray api when parameters are invalid
+Unit_hipTextureMipmapRef2D_Positive_Check - Test correct execution of hipBindTextureToMipmappedArray
+api for diffrent mipmapped array sizes and number of levels
+Unit_hipTextureMipmapRef2D_Negative_Parameters - Test unsuccessful execution of
+hipBindTextureToMipmappedArray api when parameters are invalid
 */
 #include <hip_test_common.hh>
 
@@ -57,11 +59,14 @@ static void runMipMapTest(unsigned int width, unsigned int height, unsigned int 
   hipChannelFormatDesc channelDesc = hipCreateChannelDesc<float>();
 
   hipMipmappedArray* mip_array_ptr;
-  HIP_CHECK(hipMallocMipmappedArray(&mip_array_ptr, &channelDesc, make_hipExtent(orig_width, orig_height, 0), 2 * mipmap_level, hipArrayDefault));
+  HIP_CHECK(hipMallocMipmappedArray(&mip_array_ptr, &channelDesc,
+                                    make_hipExtent(orig_width, orig_height, 0), 2 * mipmap_level,
+                                    hipArrayDefault));
 
   hipArray* hipArray = nullptr;
-  HIP_CHECK(hipMipmappedArrayGetLevel(&hipArray, mip_array_ptr, mipmap_level));
-  HIP_CHECK(hipMemcpy2DToArray(hipArray, 0, 0, hData, width * sizeof(float), width * sizeof(float), height, hipMemcpyHostToDevice));
+  HIP_CHECK(hipGetMipmappedArrayLevel(&hipArray, mip_array_ptr, mipmap_level));
+  HIP_CHECK(hipMemcpy2DToArray(hipArray, 0, 0, hData, width * sizeof(float), width * sizeof(float),
+                               height, hipMemcpyHostToDevice));
 
   // Set texture parameters
   texRef.addressMode[0] = hipAddressModeWrap;
@@ -81,7 +86,7 @@ static void runMipMapTest(unsigned int width, unsigned int height, unsigned int 
   dim3 dimGrid(width / dimBlock.x, height / dimBlock.y, 1);
 
   hipLaunchKernelGGL(tex2DKernel, dim3(dimGrid), dim3(dimBlock), 0, 0, dData, width, mipmap_level);
-  HIP_CHECK(hipGetLastError()); 
+  HIP_CHECK(hipGetLastError());
   HIP_CHECK(hipDeviceSynchronize());
 
   // Allocate memory on host and copy result from device to host
@@ -136,7 +141,8 @@ TEST_CASE("Unit_hipTextureMipmapRef2D_Negative_Parameters") {
   hipChannelFormatDesc channelDesc = hipCreateChannelDesc<float>();
 
   hipMipmappedArray* mip_array_ptr;
-  HIP_CHECK(hipMallocMipmappedArray(&mip_array_ptr, &channelDesc, make_hipExtent(width, height, 0), mipmap_level, hipArrayDefault));
+  HIP_CHECK(hipMallocMipmappedArray(&mip_array_ptr, &channelDesc, make_hipExtent(width, height, 0),
+                                    mipmap_level, hipArrayDefault));
 
   texRef.addressMode[0] = hipAddressModeWrap;
   texRef.addressMode[1] = hipAddressModeWrap;
@@ -145,17 +151,16 @@ TEST_CASE("Unit_hipTextureMipmapRef2D_Negative_Parameters") {
 
   SECTION("textureReference is nullptr") {
     ret = hipBindTextureToMipmappedArray(nullptr, mip_array_ptr, &channelDesc)
-    REQUIRE(ret != hipSuccess);
+        REQUIRE(ret != hipSuccess);
   }
 
   SECTION("MipmappedArray is nullptr") {
-    ret = hipBindTextureToMipmappedArray(&texRef, nullptr, &channelDesc)
-    REQUIRE(ret != hipSuccess);
+    ret = hipBindTextureToMipmappedArray(&texRef, nullptr, &channelDesc) REQUIRE(ret != hipSuccess);
   }
 
   SECTION("Channel descriptor is nullptr") {
-    ret = hipBindTextureToMipmappedArray(&texRef, mip_array_ptr, nullptr)
-    REQUIRE(ret != hipSuccess);
+    ret =
+        hipBindTextureToMipmappedArray(&texRef, mip_array_ptr, nullptr) REQUIRE(ret != hipSuccess);
   }
 
   HIP_CHECK(hipFreeMipmappedArray(mip_array_ptr));
