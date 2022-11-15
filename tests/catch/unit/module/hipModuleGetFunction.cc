@@ -44,18 +44,24 @@ TEST_CASE("Unit_hipModuleGetFunction_Negative_Parameters") {
                     hipErrorInvalidValue);
   }
 
+// Disabled on AMD due to defect
+#if HT_NVIDIA
   SECTION("module == nullptr") {
     HIP_CHECK_ERROR(hipModuleGetFunction(&kernel, nullptr, "GlobalKernel"),
                     hipErrorInvalidResourceHandle);
   }
+#endif
 
   SECTION("kname == nullptr") {
     HIP_CHECK_ERROR(hipModuleGetFunction(&kernel, GetModule(), nullptr), hipErrorInvalidValue);
   }
 
+// Disabled on AMD due to defect
+#if HT_NVIDIA
   SECTION("kname == empty string") {
     HIP_CHECK_ERROR(hipModuleGetFunction(&kernel, GetModule(), ""), hipErrorInvalidValue);
   }
+#endif
 
   SECTION("kname == non existent kernel") {
     HIP_CHECK_ERROR(hipModuleGetFunction(&kernel, GetModule(), "NonExistentKernel"),
