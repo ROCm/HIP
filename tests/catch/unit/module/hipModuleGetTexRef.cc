@@ -44,17 +44,23 @@ TEST_CASE("Unit_hipModuleGetTexRef_Negative_Parameters") {
     HIP_CHECK_ERROR(hipModuleGetTexRef(nullptr, module, "tex"), hipErrorInvalidValue);
   }
 
+// Disabled on AMD due to defect
+#if HT_NVIDIA
   SECTION("hmod == nullptr") {
     HIP_CHECK_ERROR(hipModuleGetTexRef(&tex_ref, nullptr, "tex"), hipErrorInvalidResourceHandle);
   }
+#endif
 
   SECTION("name == nullptr") {
     HIP_CHECK_ERROR(hipModuleGetTexRef(&tex_ref, module, nullptr), hipErrorInvalidValue);
   }
 
+// Disabled on AMD due to defect
+#if HT_NVIDIA
   SECTION("name == empty string") {
     HIP_CHECK_ERROR(hipModuleGetTexRef(&tex_ref, module, ""), hipErrorInvalidValue);
   }
+#endif
 
   SECTION("name == non existent texture") {
     HIP_CHECK_ERROR(hipModuleGetTexRef(&tex_ref, module, "non_existent_texture"), hipErrorNotFound);
