@@ -1,5 +1,7 @@
 set(TEST_SRC
     vulkan_test.cc
+    hipImportExternalSemaphore.cc
+    hipDestroyExternalSemaphore.cc
    )
 
 find_package(Vulkan)
