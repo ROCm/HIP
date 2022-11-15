@@ -1,5 +1,7 @@
 set(TEST_SRC
     vulkan_test.cc
+    hipImportExternalMemory.cc
+    hipDestroyExternalMemory.cc
    )
 
 find_package(Vulkan)
