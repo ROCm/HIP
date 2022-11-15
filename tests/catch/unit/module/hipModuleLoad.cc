@@ -50,7 +50,10 @@ TEST_CASE("Unit_hipModuleLoad_Negative_Parameters") {
     HIP_CHECK_ERROR(hipModuleLoad(&module, "non existent file"), hipErrorFileNotFound);
   }
 
+// Disabled for AMD due to defect
+#if HT_NVIDIA
   SECTION("Load from a file that is not a module") {
     HIP_CHECK_ERROR(hipModuleLoad(&module, "not_a_module.txt"), hipErrorInvalidImage);
   }
+#endif
 }

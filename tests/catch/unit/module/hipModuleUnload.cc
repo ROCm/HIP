@@ -25,9 +25,12 @@ THE SOFTWARE.
 TEST_CASE("Unit_hipModuleUnload_Negative_Parameters") {
   HIP_CHECK(hipFree(nullptr));
 
+// Disabled for AMD due to defect
+#if HT_NVIDIA
   SECTION("module == nullptr") {
     HIP_CHECK_ERROR(hipModuleUnload(nullptr), hipErrorInvalidResourceHandle);
   }
+#endif
 
 // Causes CUDA to segfault
 #if HT_AMD

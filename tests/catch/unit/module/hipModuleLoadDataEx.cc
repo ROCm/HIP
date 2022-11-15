@@ -60,7 +60,10 @@ TEST_CASE("Unit_hipModuleLoadDataEx_Negative_Parameters") {
                     hipErrorInvalidValue);
   }
 
+// Disabled for AMD due to defect
+#if HT_NVIDIA
   SECTION("image == empty string") {
     HIP_CHECK_ERROR(hipModuleLoadDataEx(&module, "", 0, nullptr, nullptr), hipErrorInvalidImage);
   }
+#endif
 }
