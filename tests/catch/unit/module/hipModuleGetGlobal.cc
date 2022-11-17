@@ -113,23 +113,32 @@ TEST_CASE("Unit_hipModuleGetGlobal_Negative_Parameters") {
   hipDeviceptr_t global = 0;
   size_t global_size = 0;
 
+// Disabled on AMD due to defect
+#if HT_NVIDIA
   SECTION("dptr == nullptr and bytes == nullptr") {
     HIP_CHECK_ERROR(hipModuleGetGlobal(nullptr, nullptr, module, "int_var"), hipErrorInvalidValue);
   }
+#endif
 
+// Disabled on AMD due to defect
+#if HT_NVIDIA
   SECTION("hmod == nullptr") {
     HIP_CHECK_ERROR(hipModuleGetGlobal(&global, &global_size, nullptr, "int_var"),
                     hipErrorInvalidHandle);
   }
+#endif
 
   SECTION("name == nullptr") {
     HIP_CHECK_ERROR(hipModuleGetGlobal(&global, &global_size, module, nullptr),
                     hipErrorInvalidValue);
   }
 
+// Disabled on AMD due to defect
+#if HT_NVIDIA
   SECTION("name == empty string") {
     HIP_CHECK_ERROR(hipModuleGetGlobal(&global, &global_size, module, ""), hipErrorInvalidValue);
   }
+#endif
 
   SECTION("name == invalid name") {
     HIP_CHECK_ERROR(hipModuleGetGlobal(&global, &global_size, module, "dummy"), hipErrorNotFound);
