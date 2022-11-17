@@ -88,6 +88,8 @@
 		"Unit_hipStreamValue_Wait64_Blocking_NoMask_Gte",
 		"Unit_hipStreamValue_Wait64_Blocking_NoMask_Eq",
 		"Unit_hipStreamValue_Wait64_Blocking_NoMask_And",
-		"Unit_hipStreamValue_Wait64_Blocking_NoMask_Nor" 
+		"Unit_hipStreamValue_Wait64_Blocking_NoMask_Nor",
+		"Unit_hipDeviceGetPCIBusId_Negative_PartialFill",
+		"Unit_hipInit_Negative"
 	]
 }

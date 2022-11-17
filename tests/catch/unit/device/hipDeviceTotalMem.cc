@@ -35,22 +35,21 @@ TEST_CASE("Unit_hipDeviceTotalMem_NegTst") {
 #if HT_NVIDIA
   HIP_CHECK(hipInit(0));
 #endif
+  size_t totMem;
   // Scenario 1
   SECTION("bytes is nullptr") {
     HIP_CHECK_ERROR(hipDeviceTotalMem(nullptr, 0), hipErrorInvalidValue);
   }
 
-  size_t totMem;
   // Scenario 2
   SECTION("device is -1") {
     HIP_CHECK_ERROR(hipDeviceTotalMem(&totMem, -1), hipErrorInvalidDevice);
   }
 
   // Scenario 3
-  SECTION("pi is nullptr") {
+  SECTION("device is out of bounds") {
     int numDevices;
     HIP_CHECK(hipGetDeviceCount(&numDevices));
-    size_t totMem;
     HIP_CHECK_ERROR(hipDeviceTotalMem(&totMem, numDevices), hipErrorInvalidDevice);
   }
 }
