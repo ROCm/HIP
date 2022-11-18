@@ -27,20 +27,18 @@ THE SOFTWARE.
  * HIT_END
  */
 
-#include "test_common.h"
-#include "hip/hip_cooperative_groups.h"
+#include <hip_test_common.hh>
+#include <hip/hip_cooperative_groups.h>
 #include <cmath>
 #include <cstdlib>
 #include <climits>
 
-#define ASSERT_EQUAL(lhs, rhs) assert(lhs == rhs)
-#define ASSERT_LE(lhs, rhs) assert(lhs <= rhs)
-#define ASSERT_GE(lhs, rhs) assert(lhs >= rhs)
-
-constexpr int MaxGPUs = 8;
-int nGpu = 0;
+#define ASSERT_EQUAL(lhs, rhs) HIPASSERT(lhs == rhs)
+#define ASSERT_LE(lhs, rhs) HIPASSERT(lhs <= rhs)
+#define ASSERT_GE(lhs, rhs) HIPASSERT(lhs >= rhs)
 
 using namespace cooperative_groups;
+constexpr int MaxGPUs = 8;
 
 static __global__
 void kernel_cg_multi_grid_group_type_via_public_api(int *sizeTestD,
@@ -71,7 +69,7 @@ void kernel_cg_multi_grid_group_type_via_public_api(int *sizeTestD,
   sync(this_grid());
   // Thread 0 from work-group 0 of current grid (gpu) does grid level reduction
   if (blockIdx.x == 0 && threadIdx.x == 0) {
-    for (int i = 1; i < gridDim.x * blockDim.x; ++i) {
+    for (uint i = 1; i < gridDim.x * blockDim.x; ++i) {
       syncTestD[0] += syncTestD[i];
     }
     syncResultD[this_multi_grid().grid_rank() + 1] = syncTestD[0];
@@ -81,20 +79,20 @@ void kernel_cg_multi_grid_group_type_via_public_api(int *sizeTestD,
   // grid (gpu) 0 does final reduction across all grids (gpus)
   if (this_multi_grid().grid_rank() == 0 && blockIdx.x == 0 && threadIdx.x == 0) {
     syncResultD[0] = 0;
-    for (int i = 1; i <= this_multi_grid().num_grids(); ++i) {
+    for (uint i = 1; i <= this_multi_grid().num_grids(); ++i) {
       syncResultD[0] += syncResultD[i];
     }
   }
 }
 
-static void test_cg_multi_grid_group_type_via_public_api(int blockSize)
+static void test_cg_multi_grid_group_type_via_public_api(int blockSize, int nGpu)
 {
   // Create a stream each device
   hipStream_t stream[MaxGPUs];
   for (int i = 0; i < nGpu; i++) {
-    ASSERT_EQUAL(hipSetDevice(i), hipSuccess);
-    hipDeviceSynchronize();  // Make sure work is done on this device
-    ASSERT_EQUAL(hipStreamCreate(&stream[i]), hipSuccess);
+    HIPCHECK(hipSetDevice(i));
+    HIPCHECK(hipDeviceSynchronize());  // Make sure work is done on this device
+    HIPCHECK(hipStreamCreate(&stream[i]));
   }
 
   // Allocate host and device memory
@@ -105,23 +103,21 @@ static void test_cg_multi_grid_group_type_via_public_api(int blockSize)
   int *isValidTestD[MaxGPUs], *isValidTestH[MaxGPUs];
   int *syncTestD[MaxGPUs], *syncResultD;
   for (int i = 0; i < nGpu; i++) {
-    ASSERT_EQUAL(hipSetDevice(i), hipSuccess);
+    HIPCHECK(hipSetDevice(i));
 
-    ASSERT_EQUAL(hipMalloc(&sizeTestD[i], nBytes), hipSuccess);
-    ASSERT_EQUAL(hipMalloc(&gridRankTestD[i], nBytes), hipSuccess);
-    ASSERT_EQUAL(hipMalloc(&thdRankTestD[i], nBytes), hipSuccess);
-    ASSERT_EQUAL(hipMalloc(&isValidTestD[i], nBytes), hipSuccess);
-    ASSERT_EQUAL(hipMalloc(&syncTestD[i], nBytes), hipSuccess);
+    HIPCHECK(hipMalloc(&sizeTestD[i], nBytes));
+    HIPCHECK(hipMalloc(&gridRankTestD[i], nBytes));
+    HIPCHECK(hipMalloc(&thdRankTestD[i], nBytes));
+    HIPCHECK(hipMalloc(&isValidTestD[i], nBytes));
+    HIPCHECK(hipMalloc(&syncTestD[i], nBytes));
 
-    ASSERT_EQUAL(hipHostMalloc(&sizeTestH[i], nBytes), hipSuccess);
-    ASSERT_EQUAL(hipHostMalloc(&gridRankTestH[i], nBytes), hipSuccess);
-    ASSERT_EQUAL(hipHostMalloc(&thdRankTestH[i], nBytes), hipSuccess);
-    ASSERT_EQUAL(hipHostMalloc(&isValidTestH[i], nBytes), hipSuccess);
+    HIPCHECK(hipHostMalloc(&sizeTestH[i], nBytes));
+    HIPCHECK(hipHostMalloc(&gridRankTestH[i], nBytes));
+    HIPCHECK(hipHostMalloc(&thdRankTestH[i], nBytes));
+    HIPCHECK(hipHostMalloc(&isValidTestH[i], nBytes));
 
     if (i == 0) {
-      ASSERT_EQUAL(
-        hipHostMalloc(&syncResultD, sizeof(int) * (nGpu + 1), hipHostMallocCoherent),
-        hipSuccess);
+      HIPCHECK(hipHostMalloc(&syncResultD, sizeof(int) * (nGpu + 1), hipHostMallocCoherent));
     }
   }
 
@@ -130,7 +126,7 @@ static void test_cg_multi_grid_group_type_via_public_api(int blockSize)
   hipLaunchParams* launchParamsList = new hipLaunchParams[nGpu];
   void* args[MaxGPUs * NumKernelArgs];
   for (int i = 0; i < nGpu; i++) {
-    ASSERT_EQUAL(hipSetDevice(i), hipSuccess);
+    HIPCHECK(hipSetDevice(i));
 
     args[i * NumKernelArgs    ] = &sizeTestD[i];
     args[i * NumKernelArgs + 1] = &gridRankTestD[i];
@@ -150,16 +146,12 @@ static void test_cg_multi_grid_group_type_via_public_api(int blockSize)
 
   // Copy result from device to host
   for (int i = 0; i < nGpu; i++) {
-    ASSERT_EQUAL(hipSetDevice(i), hipSuccess);
+    HIPCHECK(hipSetDevice(i));
 
-    ASSERT_EQUAL(hipMemcpy(sizeTestH[i], sizeTestD[i], nBytes, hipMemcpyDeviceToHost),
-                 hipSuccess);
-    ASSERT_EQUAL(hipMemcpy(gridRankTestH[i], gridRankTestD[i], nBytes, hipMemcpyDeviceToHost),
-                 hipSuccess);
-    ASSERT_EQUAL(hipMemcpy(thdRankTestH[i], thdRankTestD[i], nBytes, hipMemcpyDeviceToHost),
-                 hipSuccess);
-    ASSERT_EQUAL(hipMemcpy(isValidTestH[i], isValidTestD[i], nBytes, hipMemcpyDeviceToHost),
-                 hipSuccess);
+    HIPCHECK(hipMemcpy(sizeTestH[i], sizeTestD[i], nBytes, hipMemcpyDeviceToHost));
+    HIPCHECK(hipMemcpy(gridRankTestH[i], gridRankTestD[i], nBytes, hipMemcpyDeviceToHost));
+    HIPCHECK(hipMemcpy(thdRankTestH[i], thdRankTestD[i], nBytes, hipMemcpyDeviceToHost));
+    HIPCHECK(hipMemcpy(isValidTestH[i], isValidTestD[i], nBytes, hipMemcpyDeviceToHost));
   }
 
   // Validate results
@@ -189,58 +181,50 @@ static void test_cg_multi_grid_group_type_via_public_api(int blockSize)
   // Free host and device memory
   delete [] launchParamsList;
   for (int i = 0; i < nGpu; i++) {
-    ASSERT_EQUAL(hipSetDevice(i), hipSuccess);
+    HIPCHECK(hipSetDevice(i));
 
-    ASSERT_EQUAL(hipFree(sizeTestD[i]), hipSuccess);
-    ASSERT_EQUAL(hipFree(gridRankTestD[i]), hipSuccess);
-    ASSERT_EQUAL(hipFree(thdRankTestD[i]), hipSuccess);
-    ASSERT_EQUAL(hipFree(isValidTestD[i]), hipSuccess);
-    ASSERT_EQUAL(hipFree(syncTestD[i]), hipSuccess);
+    HIPCHECK(hipFree(sizeTestD[i]));
+    HIPCHECK(hipFree(gridRankTestD[i]));
+    HIPCHECK(hipFree(thdRankTestD[i]));
+    HIPCHECK(hipFree(isValidTestD[i]));
+    HIPCHECK(hipFree(syncTestD[i]));
 
     if (i == 0)
-      ASSERT_EQUAL(hipHostFree(syncResultD), hipSuccess);
+      HIPCHECK(hipHostFree(syncResultD));
 
-    ASSERT_EQUAL(hipHostFree(sizeTestH[i]), hipSuccess);
-    ASSERT_EQUAL(hipHostFree(gridRankTestH[i]), hipSuccess);
-    ASSERT_EQUAL(hipHostFree(thdRankTestH[i]), hipSuccess);
-    ASSERT_EQUAL(hipHostFree(isValidTestH[i]), hipSuccess);
+    HIPCHECK(hipHostFree(sizeTestH[i]));
+    HIPCHECK(hipHostFree(gridRankTestH[i]));
+    HIPCHECK(hipHostFree(thdRankTestH[i]));
+    HIPCHECK(hipHostFree(isValidTestH[i]));
   }
 }
 
-int main()
-{
+TEST_CASE("Unit_hipCGMultiGridGroupType_PublicApi") {
   // Set `maxThreadsPerBlock` by taking minimum among all available devices
-  ASSERT_EQUAL(hipGetDeviceCount(&nGpu), hipSuccess);
-  if (nGpu > MaxGPUs) {
-    nGpu = MaxGPUs;
-  }
+  int nGpu = 0;
+  HIPCHECK(hipGetDeviceCount(&nGpu));
+  nGpu = min(nGpu, MaxGPUs);
+
   int maxThreadsPerBlock = INT_MAX;
+  hipDeviceProp_t deviceProperties;
   for (int i = 0; i < nGpu; i++) {
-    hipDeviceProp_t deviceProperties;
-    ASSERT_EQUAL(hipGetDeviceProperties(&deviceProperties, i), hipSuccess);
+    HIPCHECK(hipGetDeviceProperties(&deviceProperties, i));
     if (!deviceProperties.cooperativeMultiDeviceLaunch) {
-      printf("Device doesn't support cooperative launch!");
-      passed();
+      HipTest::HIP_SKIP_TEST("Device doesn't support cooperative launch!");
+      return;
     }
-    int curDeviceMaxThreadsPerBlock = deviceProperties.maxThreadsPerBlock;
-    maxThreadsPerBlock = min(maxThreadsPerBlock, curDeviceMaxThreadsPerBlock);
+    maxThreadsPerBlock = min(maxThreadsPerBlock, deviceProperties.maxThreadsPerBlock);
   }
 
-  // Test block sizes which are powers of 2
-  int i = 0;
-  while (true) {
-    int blockSize = pow(2, i);
-    if (blockSize > maxThreadsPerBlock)
-      break;
-    test_cg_multi_grid_group_type_via_public_api(blockSize);
-    ++i;
+  // Test for blockSizes in powers of 2
+  for (int blockSize = 2; blockSize <= maxThreadsPerBlock; blockSize = blockSize*2) {
+    test_cg_multi_grid_group_type_via_public_api(blockSize, nGpu);
   }
 
-  // Test some random block sizes
-  for(int j = 0; j < 10 ; ++j) {
-    int blockSize = rand() % maxThreadsPerBlock;
-    test_cg_multi_grid_group_type_via_public_api(blockSize);
+  // Test for random blockSizes, but the sequence is the same every execution
+  srand(0);
+  for (int i = 0; i < 10; i++) {
+    // Test fails for 0 thread per block
+    test_cg_multi_grid_group_type_via_public_api(max(2, rand() % maxThreadsPerBlock), nGpu);
   }
-
-  passed();
 }
