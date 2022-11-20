@@ -128,3 +128,29 @@ TEST_CASE("Unit_hipFuncSetAttribute_Negative_Parameters") {
                     hipErrorInvalidValue);
   }
 }
+
+TEST_CASE("Unit_hipFuncSetAttribute_Positive_MaxDynamicSharedMemorySize_Not_Supported") {
+  hipFuncAttributes old_attributes;
+  HIP_CHECK(hipFuncGetAttributes(&old_attributes, reinterpret_cast<void*>(kernel)));
+
+  HIP_CHECK(hipFuncSetAttribute(reinterpret_cast<void*>(kernel),
+                                hipFuncAttributeMaxDynamicSharedMemorySize, 1024));
+
+  hipFuncAttributes new_attributes;
+  HIP_CHECK(hipFuncGetAttributes(&new_attributes, reinterpret_cast<void*>(kernel)));
+
+  REQUIRE(old_attributes.maxDynamicSharedSizeBytes == new_attributes.maxDynamicSharedSizeBytes);
+}
+
+TEST_CASE("Unit_hipFuncSetAttribute_Positive_PreferredSharedMemoryCarveout_Not_Supported") {
+  hipFuncAttributes old_attributes;
+  HIP_CHECK(hipFuncGetAttributes(&old_attributes, reinterpret_cast<void*>(kernel)));
+
+  HIP_CHECK(hipFuncSetAttribute(reinterpret_cast<void*>(kernel),
+                                hipFuncAttributePreferredSharedMemoryCarveout, 50));
+
+  hipFuncAttributes new_attributes;
+  HIP_CHECK(hipFuncGetAttributes(&new_attributes, reinterpret_cast<void*>(kernel)));
+
+  REQUIRE(old_attributes.preferredShmemCarveout == new_attributes.preferredShmemCarveout);
+}

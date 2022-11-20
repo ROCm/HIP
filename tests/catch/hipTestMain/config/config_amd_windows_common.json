@@ -78,6 +78,14 @@
 	   "Unit_hipGraphMemcpyNodeSetParamsToSymbol_Functional",
 	   "Unit_hipStreamQuery_WithPendingWork",
 	   "Unit_hipStreamWaitEvent_DifferentStreams",
-	   "Unit_hipStreamQuery_WithFinishedWork"
+	   "Unit_hipStreamQuery_WithFinishedWork",
+	   "Unit_hipFuncSetCacheConfig_Positive_Basic",
+	   "Unit_hipFuncSetCacheConfig_Negative_Parameters",
+	   "Unit_hipFuncSetSharedMemConfig_Positive_Basic",
+	   "Unit_hipFuncSetSharedMemConfig_Negative_Parameters",
+	   "Unit_hipFuncSetAttribute_Positive_MaxDynamicSharedMemorySize",
+	   "Unit_hipFuncSetAttribute_Positive_PreferredSharedMemoryCarveout",
+	   "Unit_hipFuncSetAttribute_Positive_Parameters",
+	   "Unit_hipFuncSetAttribute_Negative_Parameters"
 	]
 }

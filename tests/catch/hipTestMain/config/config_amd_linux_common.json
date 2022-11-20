@@ -2,6 +2,14 @@
     "DisabledTests":
 	[
 	   "Unit_hipStreamPerThread_DeviceReset_1",
-	   "Unit_hipMallocManaged_OverSubscription"
+	   "Unit_hipMallocManaged_OverSubscription",
+	   "Unit_hipFuncSetCacheConfig_Positive_Basic",
+	   "Unit_hipFuncSetCacheConfig_Negative_Parameters",
+	   "Unit_hipFuncSetSharedMemConfig_Positive_Basic",
+	   "Unit_hipFuncSetSharedMemConfig_Negative_Parameters",
+	   "Unit_hipFuncSetAttribute_Positive_MaxDynamicSharedMemorySize",
+	   "Unit_hipFuncSetAttribute_Positive_PreferredSharedMemoryCarveout",
+	   "Unit_hipFuncSetAttribute_Positive_Parameters",
+	   "Unit_hipFuncSetAttribute_Negative_Parameters"
 	]
 }

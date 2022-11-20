@@ -51,3 +51,9 @@ TEST_CASE("Unit_hipFuncSetSharedMemConfig_Negative_Parameters") {
                     hipErrorInvalidValue);
   }
 }
+
+TEST_CASE("Unit_hipFuncSetSharedMemConfig_Negative_Not_Supported") {
+  HIP_CHECK_ERROR(
+      hipFuncSetSharedMemConfig(reinterpret_cast<void*>(kernel), hipSharedMemBankSizeDefault),
+      hipErrorNotSupported);
+}
