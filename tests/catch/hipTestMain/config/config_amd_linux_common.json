@@ -2,6 +2,8 @@
     "DisabledTests":
 	[
 	   "Unit_hipStreamPerThread_DeviceReset_1",
-	   "Unit_hipMallocManaged_OverSubscription"
+	   "Unit_hipMallocManaged_OverSubscription",
+	   "Unit_hipFuncGetAttributes_Positive_Basic",
+	   "Unit_hipFuncGetAttributes_Negative_Parameters"
 	]
 }
