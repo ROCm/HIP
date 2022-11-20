@@ -1,9 +1,9 @@
 {
     "DisabledTests":
-	[
-       "Unit_hipFuncSetCacheConfig_Negative_Not_Supported",
-       "Unit_hipFuncSetSharedMemConfig_Negative_Not_Supported",
-       "Unit_hipFuncSetAttribute_Positive_MaxDynamicSharedMemorySize_Not_Supported",
-       "Unit_hipFuncSetAttribute_Positive_PreferredSharedMemoryCarveout_Not_Supported"
-	]
+    [
+        "Unit_hipFuncSetCacheConfig_Negative_Not_Supported",
+        "Unit_hipFuncSetSharedMemConfig_Negative_Not_Supported",
+        "Unit_hipFuncSetAttribute_Positive_MaxDynamicSharedMemorySize_Not_Supported",
+        "Unit_hipFuncSetAttribute_Positive_PreferredSharedMemoryCarveout_Not_Supported"
+    ]
 }
