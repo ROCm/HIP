@@ -38,9 +38,13 @@ TEST_CASE("Unit_hipFuncGetAttribute_Positive_Basic") {
 
   SECTION("binaryVersion") {
     HIP_CHECK(hipFuncGetAttribute(&value, HIP_FUNC_ATTRIBUTE_BINARY_VERSION, kernel));
+#if HT_NVIDIA
     const auto major = GetDeviceAttribute(0, hipDeviceAttributeComputeCapabilityMajor);
     const auto minor = GetDeviceAttribute(0, hipDeviceAttributeComputeCapabilityMinor);
     REQUIRE(value == major * 10 + minor);
+#elif HT_AMD
+    REQUIRE(value > 0);
+#endif
   }
 
   SECTION("cacheModeCA") {
@@ -60,7 +64,7 @@ TEST_CASE("Unit_hipFuncGetAttribute_Positive_Basic") {
 
   SECTION("ptxVersion") {
     HIP_CHECK(hipFuncGetAttribute(&value, HIP_FUNC_ATTRIBUTE_PTX_VERSION, kernel));
-    REQUIRE(value >= 0);
+    REQUIRE(value > 0);
   }
 
   SECTION("sharedSizeBytes") {
@@ -86,6 +90,6 @@ TEST_CASE("Unit_hipFuncGetAttribute_Negative_Parameters") {
 
   SECTION("hfunc == nullptr") {
     HIP_CHECK_ERROR(hipFuncGetAttribute(&value, HIP_FUNC_ATTRIBUTE_BINARY_VERSION, nullptr),
-                    hipErrorInvalidValue);
+                    hipErrorInvalidResourceHandle);
   }
 }

@@ -78,6 +78,7 @@
 	   "Unit_hipGraphMemcpyNodeSetParamsToSymbol_Functional",
 	   "Unit_hipStreamQuery_WithPendingWork",
 	   "Unit_hipStreamWaitEvent_DifferentStreams",
-	   "Unit_hipStreamQuery_WithFinishedWork"
+	   "Unit_hipStreamQuery_WithFinishedWork",
+	   "Unit_hipFuncGetAttribute_Negative_Parameters"
 	]
 }
