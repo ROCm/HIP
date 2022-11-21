@@ -44,7 +44,7 @@ TEST_CASE("Unit_hipModuleGetFunction_Negative_Parameters") {
                     hipErrorInvalidValue);
   }
 
-// Disabled on AMD due to defect
+// Disabled on AMD due to defect - EXSWHTEC-154
 #if HT_NVIDIA
   SECTION("module == nullptr") {
     HIP_CHECK_ERROR(hipModuleGetFunction(&kernel, nullptr, "GlobalKernel"),
@@ -56,7 +56,7 @@ TEST_CASE("Unit_hipModuleGetFunction_Negative_Parameters") {
     HIP_CHECK_ERROR(hipModuleGetFunction(&kernel, GetModule(), nullptr), hipErrorInvalidValue);
   }
 
-// Disabled on AMD due to defect
+// Disabled on AMD due to defect - EXSWHTEC-155
 #if HT_NVIDIA
   SECTION("kname == empty string") {
     HIP_CHECK_ERROR(hipModuleGetFunction(&kernel, GetModule(), ""), hipErrorInvalidValue);
