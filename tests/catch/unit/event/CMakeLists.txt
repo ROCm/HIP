@@ -6,6 +6,7 @@ set(TEST_SRC
     Unit_hipEventRecord.cc
     Unit_hipEventIpc.cc
     hipEventDestroy.cc
+    hipEventCreate.cc
     hipEventCreateWithFlags.cc
     hipEventSynchronize.cc
 )
