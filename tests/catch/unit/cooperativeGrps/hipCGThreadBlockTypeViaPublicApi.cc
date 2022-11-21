@@ -27,9 +27,8 @@ THE SOFTWARE.
  * HIT_END
  */
 
-#include "test_common.h"
+#include <hip_test_common.hh>
 #include "hip/hip_cooperative_groups.h"
-#include <cmath>
 #include <cstdlib>
 
 #define ASSERT_EQUAL(lhs, rhs) assert(lhs == rhs)
@@ -37,30 +36,30 @@ THE SOFTWARE.
 using namespace cooperative_groups;
 
 static __global__
-void kernel_cg_thread_block_type_via_base_type(int *sizeTestD,
-                                               int *thdRankTestD,
-                                               int *syncTestD)
+void kernel_cg_thread_block_type_via_public_api(int *sizeTestD,
+                                                int *thdRankTestD,
+                                                int *syncTestD)
 {
-  thread_group tg = this_thread_block();
+  thread_block tb = this_thread_block();
   int gIdx = (blockIdx.x * blockDim.x) + threadIdx.x;
 
-  // Test size
-  sizeTestD[gIdx] = tg.size();
+  // Test group_size api
+  sizeTestD[gIdx] = group_size(tb);
 
-  // Test thread_rank
-  thdRankTestD[gIdx] = tg.thread_rank();
+  // Test thread_rank api
+  thdRankTestD[gIdx] = thread_rank(tb);
 
-  // Test sync
+  // Test sync api
   __shared__ int sm[2];
   if (threadIdx.x == 0)
     sm[0] = 10;
   else if (threadIdx.x == 1)
     sm[1] = 20;
-  tg.sync();
+  sync(tb);
   syncTestD[gIdx] = sm[1] * sm[0];
 }
 
-static void test_cg_thread_block_type_via_base_type(int blockSize)
+static void test_cg_thread_block_type_via_public_api(int blockSize)
 {
   int nBytes = sizeof(int) * 2 * blockSize;
   int *sizeTestD, *sizeTestH;
@@ -68,17 +67,17 @@ static void test_cg_thread_block_type_via_base_type(int blockSize)
   int *syncTestD, *syncTestH;
 
   // Allocate device memory
-  ASSERT_EQUAL(hipMalloc(&sizeTestD, nBytes), hipSuccess);
-  ASSERT_EQUAL(hipMalloc(&thdRankTestD, nBytes), hipSuccess);
-  ASSERT_EQUAL(hipMalloc(&syncTestD, nBytes), hipSuccess);
+  HIPCHECK(hipMalloc(&sizeTestD, nBytes));
+  HIPCHECK(hipMalloc(&thdRankTestD, nBytes));
+  HIPCHECK(hipMalloc(&syncTestD, nBytes));
 
   // Allocate host memory
-  ASSERT_EQUAL(hipHostMalloc(&sizeTestH, nBytes), hipSuccess);
-  ASSERT_EQUAL(hipHostMalloc(&thdRankTestH, nBytes), hipSuccess);
-  ASSERT_EQUAL(hipHostMalloc(&syncTestH, nBytes), hipSuccess);
+  HIPCHECK(hipHostMalloc(&sizeTestH, nBytes));
+  HIPCHECK(hipHostMalloc(&thdRankTestH, nBytes));
+  HIPCHECK(hipHostMalloc(&syncTestH, nBytes));
 
   // Launch Kernel
-  hipLaunchKernelGGL(kernel_cg_thread_block_type_via_base_type,
+  hipLaunchKernelGGL(kernel_cg_thread_block_type_via_public_api,
                      2,
                      blockSize,
                      0,
@@ -88,12 +87,9 @@ static void test_cg_thread_block_type_via_base_type(int blockSize)
                      syncTestD);
 
   // Copy result from device to host
-  ASSERT_EQUAL(hipMemcpy(sizeTestH, sizeTestD, nBytes, hipMemcpyDeviceToHost),
-               hipSuccess);
-  ASSERT_EQUAL(hipMemcpy(thdRankTestH, thdRankTestD, nBytes, hipMemcpyDeviceToHost),
-               hipSuccess);
-  ASSERT_EQUAL(hipMemcpy(syncTestH, syncTestD, nBytes, hipMemcpyDeviceToHost),
-               hipSuccess);
+  HIPCHECK(hipMemcpy(sizeTestH, sizeTestD, nBytes, hipMemcpyDeviceToHost));
+  HIPCHECK(hipMemcpy(thdRankTestH, thdRankTestD, nBytes, hipMemcpyDeviceToHost));
+  HIPCHECK(hipMemcpy(syncTestH, syncTestD, nBytes, hipMemcpyDeviceToHost));
 
   // Validate results for both blocks together
   for (int i = 0; i < 2 * blockSize; ++i) {
@@ -103,50 +99,38 @@ static void test_cg_thread_block_type_via_base_type(int blockSize)
   }
 
   // Free device memory
-  ASSERT_EQUAL(hipFree(sizeTestD), hipSuccess);
-  ASSERT_EQUAL(hipFree(thdRankTestD), hipSuccess);
-  ASSERT_EQUAL(hipFree(syncTestD), hipSuccess);
+  HIPCHECK(hipFree(sizeTestD));
+  HIPCHECK(hipFree(thdRankTestD));
+  HIPCHECK(hipFree(syncTestD));
 
   //Free host memory
-  ASSERT_EQUAL(hipHostFree(sizeTestH), hipSuccess);
-  ASSERT_EQUAL(hipHostFree(thdRankTestH), hipSuccess);
-  ASSERT_EQUAL(hipHostFree(syncTestH), hipSuccess);
+  HIPCHECK(hipHostFree(sizeTestH));
+  HIPCHECK(hipHostFree(thdRankTestH));
+  HIPCHECK(hipHostFree(syncTestH));
 }
 
-int main()
-{
+TEST_CASE("Unit_hipCGThreadBlockType_PublicApi") {
   // Use default device for validating the test
   int deviceId;
-  ASSERT_EQUAL(hipGetDevice(&deviceId), hipSuccess);
   hipDeviceProp_t deviceProperties;
-  ASSERT_EQUAL(hipGetDeviceProperties(&deviceProperties, deviceId), hipSuccess);
-  int maxThreadsPerBlock = deviceProperties.maxThreadsPerBlock;
+  HIPCHECK(hipGetDevice(&deviceId));
+  HIPCHECK(hipGetDeviceProperties(&deviceProperties, deviceId));
 
   if (!deviceProperties.cooperativeLaunch) {
-    std::cout << "info: Device doesn't support cooperative launch! skipping the test!\n";
-    if (hip_skip_tests_enabled()) {
-      return hip_skip_retcode();
-    } else {
-      passed();
-    }
-    return 0;
+    HipTest::HIP_SKIP_TEST("Device doesn't support cooperative launch!");
+    return;
   }
 
-  // Test block sizes which are powers of 2
-  int i = 1;
-  while (true) {
-    int blockSize = pow(2, i);
-    if (blockSize > maxThreadsPerBlock)
-      break;
-    test_cg_thread_block_type_via_base_type(blockSize);
-    ++i;
+  // Test for blockSizes in powers of 2
+  int maxThreadsPerBlock = deviceProperties.maxThreadsPerBlock;
+  for (int blockSize = 2; blockSize <= maxThreadsPerBlock; blockSize = blockSize*2) {
+    test_cg_thread_block_type_via_public_api(blockSize);
   }
 
-  // Test some random block sizes
-  for(int j = 0; j < 10 ; ++j) {
-    int blockSize = rand() % maxThreadsPerBlock;
-    test_cg_thread_block_type_via_base_type(blockSize);
+  // Test for random blockSizes, but the sequence is the same every execution
+  srand(0);
+  for (int i = 0; i < 10; i++) {
+    // Test fails for only 1 thread per block
+    test_cg_thread_block_type_via_public_api(max(2, rand() % maxThreadsPerBlock));
   }
-
-  passed();
 }
