@@ -121,7 +121,7 @@ template <ExtModuleLaunchKernelSig* func> void ModuleLaunchKernelPositiveParamet
 template <ExtModuleLaunchKernelSig* func> void ModuleLaunchKernelNegativeParameters() {
   hipFunction_t f = GetKernel(mg.module(), "NOPKernel");
 
-// Disabled on AMD due to defect
+// Disabled on AMD due to defect - EXSWHTEC-157
 #if HT_NVIDIA
   SECTION("f == nullptr") {
     HIP_CHECK_ERROR(
@@ -160,7 +160,7 @@ template <ExtModuleLaunchKernelSig* func> void ModuleLaunchKernelNegativeParamet
                     hipErrorInvalidValue);
   }
 
-// Disabled on AMD due to defect
+// Disabled on AMD due to defect - EXSWHTEC-158
 #if HT_NVIDIA
   SECTION("gridDimX > maxGridDimX") {
     const unsigned int x = GetDeviceAttribute(0, hipDeviceAttributeMaxGridDimX) + 1u;
@@ -181,7 +181,7 @@ template <ExtModuleLaunchKernelSig* func> void ModuleLaunchKernelNegativeParamet
   }
 #endif
 
-// Disabled on AMD due to defect
+// Disabled on AMD due to defect - EXSWHTEC-156
 #if HT_NVIDIA
   SECTION("blockDimX > maxBlockDimX") {
     const unsigned int x = GetDeviceAttribute(0, hipDeviceAttributeMaxBlockDimX) + 1u;
@@ -202,7 +202,7 @@ template <ExtModuleLaunchKernelSig* func> void ModuleLaunchKernelNegativeParamet
   }
 #endif
 
-// Disabled on AMD due to defect
+// Disabled on AMD due to defect - EXSWHTEC-162
 #if HT_NVIDIA
   SECTION("blockDimX * blockDimY * blockDimZ > MaxThreadsPerBlock") {
     const unsigned int max = GetDeviceAttribute(0, hipDeviceAttributeMaxThreadsPerBlock);
@@ -213,7 +213,7 @@ template <ExtModuleLaunchKernelSig* func> void ModuleLaunchKernelNegativeParamet
   }
 #endif
 
-// Disabled on AMD due to defect
+// Disabled on AMD due to defect - EXSWHTEC-159
 #if HT_NVIDIA
   SECTION("sharedMemBytes > max shared memory per block") {
     const unsigned int max = GetDeviceAttribute(0, hipDeviceAttributeMaxSharedMemoryPerBlock) + 1u;
@@ -222,7 +222,7 @@ template <ExtModuleLaunchKernelSig* func> void ModuleLaunchKernelNegativeParamet
   }
 #endif
 
-// Disabled on AMD due to defect
+// Disabled on AMD due to defect - EXSWHTEC-160
 #if HT_NVIDIA
   SECTION("Invalid stream") {
     hipStream_t stream = nullptr;
@@ -250,7 +250,7 @@ template <ExtModuleLaunchKernelSig* func> void ModuleLaunchKernelNegativeParamet
                     hipErrorInvalidValue);
   }
 
-// Disabled on AMD due to defect
+// Disabled on AMD due to defect - EXSWHTEC-161
 #if HT_NVIDIA
   SECTION("Invalid extra") {
     hipFunction_t f = GetKernel(mg.module(), "Kernel42");
