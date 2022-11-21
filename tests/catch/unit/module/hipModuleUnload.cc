@@ -25,7 +25,7 @@ THE SOFTWARE.
 TEST_CASE("Unit_hipModuleUnload_Negative_Parameters") {
   HIP_CHECK(hipFree(nullptr));
 
-// Disabled for AMD due to defect
+// Disabled for AMD due to defect - EXSWHTEC-152
 #if HT_NVIDIA
   SECTION("module == nullptr") {
     HIP_CHECK_ERROR(hipModuleUnload(nullptr), hipErrorInvalidResourceHandle);
