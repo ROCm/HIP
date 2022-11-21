@@ -44,7 +44,7 @@ TEST_CASE("Unit_hipModuleGetTexRef_Negative_Parameters") {
     HIP_CHECK_ERROR(hipModuleGetTexRef(nullptr, module, "tex"), hipErrorInvalidValue);
   }
 
-// Disabled on AMD due to defect
+// Disabled on AMD due to defect - EXSWHTEC-166
 #if HT_NVIDIA
   SECTION("hmod == nullptr") {
     HIP_CHECK_ERROR(hipModuleGetTexRef(&tex_ref, nullptr, "tex"), hipErrorInvalidResourceHandle);
@@ -55,7 +55,7 @@ TEST_CASE("Unit_hipModuleGetTexRef_Negative_Parameters") {
     HIP_CHECK_ERROR(hipModuleGetTexRef(&tex_ref, module, nullptr), hipErrorInvalidValue);
   }
 
-// Disabled on AMD due to defect
+// Disabled on AMD due to defect - EXSWHTEC-167
 #if HT_NVIDIA
   SECTION("name == empty string") {
     HIP_CHECK_ERROR(hipModuleGetTexRef(&tex_ref, module, ""), hipErrorInvalidValue);
