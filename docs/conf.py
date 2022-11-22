@@ -37,7 +37,7 @@ source_suffix = {
     '.rst': 'restructuredtext'}
 
 # The master toctree document.
-master_doc = 'contents'
+master_doc = 'index'
 
 # General information about the project.
 project = u'HIP'
