@@ -27,18 +27,23 @@ THE SOFTWARE.
 
 #include "GLContextScopeGuard.hh"
 
-TEST_CASE("Unit_hipGraphicsUnregisterResource_Negative_Basic") {
+TEST_CASE("Unit_hipGraphicsUnregisterResource_Negative_Parameters") {
   GLContextScopeGuard gl_context;
 
-  hipGraphicsResource* vbo_resource;
+  GLBufferObject vbo;
 
-  HIP_CHECK_ERROR(hipGraphicsUnregisterResource(vbo_resource), hipErrorInvalidHandle);
+  SECTION("already unregistered resource") {
+    hipGraphicsResource* unregistered_resource;
+    HIP_CHECK(
+        hipGraphicsGLRegisterBuffer(&unregistered_resource, vbo, hipGraphicsRegisterFlagsNone));
+    HIP_CHECK(hipGraphicsUnregisterResource(unregistered_resource));
+    HIP_CHECK_ERROR(hipGraphicsUnregisterResource(unregistered_resource), hipErrorInvalidContext);
+  }
 
-  CreateGLBufferObject();
-
-  HIP_CHECK(hipGraphicsGLRegisterBuffer(&vbo_resource, vbo, hipGraphicsRegisterFlagsNone));
-
-  HIP_CHECK(hipGraphicsUnregisterResource(vbo_resource));
-
-  HIP_CHECK_ERROR(hipGraphicsUnregisterResource(vbo_resource), hipErrorContextIsDestroyed);
+  SECTION("mapped resource") {
+    hipGraphicsResource* mapped_resource;
+    HIP_CHECK(hipGraphicsGLRegisterBuffer(&mapped_resource, vbo, hipGraphicsRegisterFlagsNone));
+    HIP_CHECK(hipGraphicsMapResources(1, &mapped_resource, 0));
+    HIP_CHECK_ERROR(hipGraphicsUnregisterResource(mapped_resource), hipErrorAlreadyMapped);
+  }
 }
