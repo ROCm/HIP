@@ -29,15 +29,12 @@ THE SOFTWARE.
 
 #include <hip_test_common.hh>
 
+static std::once_flag glut_init;
+
 class GLUTContextScopeGuard {
  public:
   GLUTContextScopeGuard() {
-    glutInit(&glut_argc, glut_argv.data());
-    glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
-    glutInitWindowSize(1, 1);
-    glutInitWindowPosition(0, 0);
-    glutCreateWindow("");
-
+    std::call_once(glut_init, &GLUTContextScopeGuard::init);
     REQUIRE(glGetError() == GL_NO_ERROR);
   }
 
@@ -48,11 +45,19 @@ class GLUTContextScopeGuard {
   GLUTContextScopeGuard& operator=(GLUTContextScopeGuard&&) = delete;
 
  private:
-  int glut_argc = 1;
+  static void init() {
+    static int glut_argc = 1;
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wwritable-strings"
-  std::array<char*, 2> glut_argv = {"", nullptr};
+    static std::array<char*, 2> glut_argv = {"", nullptr};
 #pragma GCC diagnostic pop
+
+    glutInit(&glut_argc, glut_argv.data());
+    glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
+    glutInitWindowSize(1, 1);
+    glutInitWindowPosition(0, 0);
+    glutCreateWindow("");
+  }
 };
 
 class EGLContextScopeGuard {
