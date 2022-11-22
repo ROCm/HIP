@@ -30,7 +30,7 @@ THE SOFTWARE.
 TEST_CASE("Unit_hipGraphicsResourceGetMappedPointer_Positive_Basic") {
   GLContextScopeGuard gl_context;
 
-  CreateGLBufferObject();
+  GLBufferObject vbo;
 
   hipGraphicsResource* vbo_resource;
 
@@ -45,7 +45,7 @@ TEST_CASE("Unit_hipGraphicsResourceGetMappedPointer_Positive_Basic") {
                                                 vbo_resource));
 
   REQUIRE(buffer_devptr != nullptr);
-  REQUIRE(size == kWidth * kHeight * 4 * sizeof(float));
+  REQUIRE(size == vbo.kSize);
 
   HIP_CHECK(hipGraphicsUnmapResources(1, &vbo_resource, 0));
 
@@ -55,7 +55,7 @@ TEST_CASE("Unit_hipGraphicsResourceGetMappedPointer_Positive_Basic") {
 TEST_CASE("Unit_hipGraphicsResourceGetMappedPointer_Positive_Parameters") {
   GLContextScopeGuard gl_context;
 
-  CreateGLBufferObject();
+  GLBufferObject vbo;
 
   hipGraphicsResource* vbo_resource;
 
@@ -68,7 +68,7 @@ TEST_CASE("Unit_hipGraphicsResourceGetMappedPointer_Positive_Parameters") {
 
   SECTION("devPtr == nullptr") {
     HIP_CHECK(hipGraphicsResourceGetMappedPointer(nullptr, &size, vbo_resource));
-    REQUIRE(size == kWidth * kHeight * 4 * sizeof(float));
+    REQUIRE(size == vbo.kSize);
   }
 
   SECTION("size == nullptr") {
@@ -85,15 +85,68 @@ TEST_CASE("Unit_hipGraphicsResourceGetMappedPointer_Positive_Parameters") {
 TEST_CASE("Unit_hipGraphicsResourceGetMappedPointer_Negative_Parameters") {
   GLContextScopeGuard gl_context;
 
-  HIP_CHECK(hipFree(0));  // necessary for correct initialization on NVIDIA
+  GLBufferObject vbo;
+
+  hipGraphicsResource* vbo_resource;
+
+  HIP_CHECK(hipGraphicsGLRegisterBuffer(&vbo_resource, vbo, hipGraphicsRegisterFlagsNone));
+
+  HIP_CHECK(hipGraphicsMapResources(1, &vbo_resource, 0));
 
   float* buffer_devptr = nullptr;
   size_t size = 0;
 
-  SECTION("invalid resource") {
-    hipGraphicsResource* invalid_resource;
+  SECTION("non-pointer resource") {
+    GLImageObject tex;
+    hipGraphicsResource* tex_resource;
+
+    HIP_CHECK(hipGraphicsGLRegisterImage(&tex_resource, tex, GL_TEXTURE_2D,
+                                         hipGraphicsRegisterFlagsNone));
+    HIP_CHECK(hipGraphicsMapResources(1, &tex_resource, 0));
+
     HIP_CHECK_ERROR(hipGraphicsResourceGetMappedPointer(reinterpret_cast<void**>(&buffer_devptr),
-                                                        &size, invalid_resource),
-                    hipErrorInvalidHandle);
+                                                        &size, tex_resource),
+                    hipErrorNotMappedAsPointer);
+
+    HIP_CHECK(hipGraphicsUnmapResources(1, &tex_resource, 0));
+    HIP_CHECK(hipGraphicsUnregisterResource(tex_resource));
   }
+
+  SECTION("unregistered resource") {
+    hipGraphicsResource* unregistered_resource;
+    HIP_CHECK(
+        hipGraphicsGLRegisterBuffer(&unregistered_resource, vbo, hipGraphicsRegisterFlagsNone));
+    HIP_CHECK(hipGraphicsUnregisterResource(unregistered_resource));
+    HIP_CHECK_ERROR(hipGraphicsResourceGetMappedPointer(reinterpret_cast<void**>(&buffer_devptr),
+                                                        &size, unregistered_resource),
+                    hipErrorContextIsDestroyed);
+  }
+
+  SECTION("not mapped resource") {
+    hipGraphicsResource* not_mapped_resource;
+    HIP_CHECK(hipGraphicsGLRegisterBuffer(&not_mapped_resource, vbo, hipGraphicsRegisterFlagsNone));
+    HIP_CHECK_ERROR(hipGraphicsResourceGetMappedPointer(reinterpret_cast<void**>(&buffer_devptr),
+                                                        &size, not_mapped_resource),
+                    hipErrorNotMapped);
+    HIP_CHECK(hipGraphicsUnregisterResource(not_mapped_resource));
+  }
+
+  SECTION("unmapped resource") {
+    hipGraphicsResource* unmapped_resource;
+
+    HIP_CHECK(hipGraphicsGLRegisterBuffer(&unmapped_resource, vbo, hipGraphicsRegisterFlagsNone));
+
+    HIP_CHECK(hipGraphicsMapResources(1, &unmapped_resource, 0));
+    HIP_CHECK(hipGraphicsUnmapResources(1, &unmapped_resource, 0));
+
+    HIP_CHECK_ERROR(hipGraphicsResourceGetMappedPointer(reinterpret_cast<void**>(&buffer_devptr),
+                                                        &size, unmapped_resource),
+                    hipErrorNotMapped);
+
+    HIP_CHECK(hipGraphicsUnregisterResource(unmapped_resource));
+  }
+
+  HIP_CHECK(hipGraphicsUnmapResources(1, &vbo_resource, 0));
+
+  HIP_CHECK(hipGraphicsUnregisterResource(vbo_resource));
 }
