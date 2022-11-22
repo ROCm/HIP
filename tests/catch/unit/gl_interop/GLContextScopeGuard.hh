@@ -22,13 +22,42 @@ THE SOFTWARE.
 
 #pragma once
 
+#include <variant>
+
+#include <GL/freeglut.h>
 #include <EGL/egl.h>
 
 #include <hip_test_common.hh>
 
-class GLContextScopeGuard {
+class GLUTContextScopeGuard {
  public:
-  GLContextScopeGuard() {
+  GLUTContextScopeGuard() {
+    glutInit(&glut_argc, glut_argv.data());
+    glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
+    glutInitWindowSize(1, 1);
+    glutInitWindowPosition(0, 0);
+    glutCreateWindow("");
+
+    REQUIRE(glGetError() == GL_NO_ERROR);
+  }
+
+  GLUTContextScopeGuard(const GLUTContextScopeGuard&) = delete;
+  GLUTContextScopeGuard& operator=(const GLUTContextScopeGuard&) = delete;
+
+  GLUTContextScopeGuard(GLUTContextScopeGuard&&) = delete;
+  GLUTContextScopeGuard& operator=(GLUTContextScopeGuard&&) = delete;
+
+ private:
+  int glut_argc = 1;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wwritable-strings"
+  std::array<char*, 2> glut_argv = {"", nullptr};
+#pragma GCC diagnostic pop
+};
+
+class EGLContextScopeGuard {
+ public:
+  EGLContextScopeGuard() {
     // 1. Initialize EGL
     egl_display_ = eglGetDisplay(EGL_DEFAULT_DISPLAY);
 
@@ -49,31 +78,31 @@ class GLContextScopeGuard {
     REQUIRE(eglMakeCurrent(egl_display_, egl_surface_, egl_surface_, egl_context_));
   }
 
-  ~GLContextScopeGuard() {
+  ~EGLContextScopeGuard() {
     // 6. Terminate EGL when finished
     eglTerminate(egl_display_);
   }
 
-  GLContextScopeGuard(const GLContextScopeGuard&) = delete;
-  GLContextScopeGuard& operator=(const GLContextScopeGuard&) = delete;
+  EGLContextScopeGuard(const EGLContextScopeGuard&) = delete;
+  EGLContextScopeGuard& operator=(const EGLContextScopeGuard&) = delete;
 
-  GLContextScopeGuard(GLContextScopeGuard&&) = delete;
-  GLContextScopeGuard& operator=(GLContextScopeGuard&&) = delete;
+  EGLContextScopeGuard(EGLContextScopeGuard&&) = delete;
+  EGLContextScopeGuard& operator=(EGLContextScopeGuard&&) = delete;
 
  private:
-  static constexpr EGLint kConfigAttribs[] = {EGL_SURFACE_TYPE,
-                                              EGL_PBUFFER_BIT,
-                                              EGL_BLUE_SIZE,
-                                              8,
-                                              EGL_GREEN_SIZE,
-                                              8,
-                                              EGL_RED_SIZE,
-                                              8,
-                                              EGL_DEPTH_SIZE,
-                                              8,
-                                              EGL_RENDERABLE_TYPE,
-                                              EGL_OPENGL_BIT,
-                                              EGL_NONE};
+  // clang-format off
+  static constexpr EGLint kConfigAttribs[] = {
+      EGL_SURFACE_TYPE,
+      EGL_PBUFFER_BIT,
+      EGL_BLUE_SIZE, 8,
+      EGL_GREEN_SIZE, 8,
+      EGL_RED_SIZE, 8,
+      EGL_DEPTH_SIZE, 8,
+      EGL_RENDERABLE_TYPE,
+      EGL_OPENGL_BIT,
+      EGL_NONE
+  };
+  // clang-format on
 
   static constexpr int kPbufferWidth = 9;
   static constexpr int kPbufferHeight = 9;
@@ -83,10 +112,49 @@ class GLContextScopeGuard {
   };
 
   EGLDisplay egl_display_;
-  EGLint major_;
-  EGLint minor_;
+  EGLint major_, minor_;
   EGLint num_configs_;
   EGLConfig egl_config_;
   EGLSurface egl_surface_;
   EGLContext egl_context_;
+};
+
+class GLContextScopeGuard {
+ public:
+  using GLUTContextScopeGuardPtr = std::unique_ptr<GLUTContextScopeGuard>;
+  using EGLContextScopeGuardPtr = std::unique_ptr<EGLContextScopeGuard>;
+  using GLContextScopeGuardVariant =
+      std::variant<GLUTContextScopeGuardPtr, EGLContextScopeGuardPtr>;
+
+  static constexpr char kEnvarName[] = "GL_CONTEXT";
+
+  GLContextScopeGuard() {
+    char* val = std::getenv(kEnvarName);
+    std::string val_str = val == NULL ? "" : val;
+
+    ToLower(val_str);
+
+    if (val_str.empty() || val_str == "glut") {
+      gl_context_ = std::make_unique<GLUTContextScopeGuard>();
+    } else if (val_str == "egl") {
+      gl_context_ = std::make_unique<EGLContextScopeGuard>();
+    } else {
+      INFO("Unsupported GL_CONTEXT: " << val_str);
+      REQUIRE(false);
+    }
+  }
+
+  GLContextScopeGuard(const GLContextScopeGuard&) = delete;
+  GLContextScopeGuard& operator=(const GLContextScopeGuard&) = delete;
+
+  GLContextScopeGuard(GLContextScopeGuard&&) = delete;
+  GLContextScopeGuard& operator=(GLContextScopeGuard&&) = delete;
+
+ private:
+  GLContextScopeGuardVariant gl_context_;
+
+  void ToLower(std::string& str) {
+    std::transform(begin(str), end(str), begin(str),
+                   [](unsigned char c) { return std::tolower(c); });
+  }
 };
