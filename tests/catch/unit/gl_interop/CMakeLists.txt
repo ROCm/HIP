@@ -1,5 +1,4 @@
 set(TEST_SRC
-    gl_interop_common.cc
     hipGLGetDevices.cc
     hipGraphicsSubResourceGetMappedArray.cc
 )
@@ -10,4 +9,5 @@ hip_add_exe_to_target(NAME GLInteropTest
                       COMPILE_OPTIONS -std=c++17)
 
 find_package(OpenGL REQUIRED COMPONENTS OpenGL EGL)
-target_link_libraries(GLInteropTest OpenGL::GL OpenGL::EGL)
+find_package(GLUT REQUIRED)
+target_link_libraries(GLInteropTest OpenGL::GL OpenGL::EGL GLUT::GLUT)
