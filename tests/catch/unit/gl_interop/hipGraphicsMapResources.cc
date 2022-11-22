@@ -30,8 +30,8 @@ THE SOFTWARE.
 TEST_CASE("Unit_hipGraphicsMapResources_Positive_Basic") {
   GLContextScopeGuard gl_context;
 
-  CreateGLBufferObject();
-  CreateGLImageObject();
+  GLBufferObject vbo;
+  GLImageObject tex;
 
   std::array<hipGraphicsResource_t, 2> resources;
 
@@ -55,7 +55,7 @@ TEST_CASE("Unit_hipGraphicsMapResources_Positive_Basic") {
 TEST_CASE("Unit_hipGraphicsMapResources_Negative_Parameters") {
   GLContextScopeGuard gl_context;
 
-  CreateGLBufferObject();
+  GLBufferObject vbo;
 
   hipGraphicsResource* vbo_resource;
 
@@ -65,16 +65,15 @@ TEST_CASE("Unit_hipGraphicsMapResources_Negative_Parameters") {
     HIP_CHECK_ERROR(hipGraphicsMapResources(0, &vbo_resource, 0), hipErrorInvalidValue);
   }
 
-  SECTION("count < 0") {
-    HIP_CHECK_ERROR(hipGraphicsMapResources(-1, &vbo_resource, 0), hipErrorInvalidHandle);
-  }
-
   SECTION("resources == nullptr") {
     HIP_CHECK_ERROR(hipGraphicsMapResources(1, nullptr, 0), hipErrorInvalidValue);
   }
 
-  SECTION("non-registered resource") {
+  SECTION("unregistered resource") {
     hipGraphicsResource* unregistered_resource;
+    HIP_CHECK(
+        hipGraphicsGLRegisterBuffer(&unregistered_resource, vbo, hipGraphicsRegisterFlagsNone));
+    HIP_CHECK(hipGraphicsUnregisterResource(unregistered_resource));
     HIP_CHECK_ERROR(hipGraphicsMapResources(1, &unregistered_resource, 0), hipErrorInvalidHandle);
   }
 
@@ -86,7 +85,9 @@ TEST_CASE("Unit_hipGraphicsMapResources_Negative_Parameters") {
 
   SECTION("invalid stream") {
     hipStream_t stream;
-    HIP_CHECK_ERROR(hipGraphicsMapResources(1, &vbo_resource, stream), hipErrorInvalidContext);
+    HIP_CHECK(hipStreamCreate(&stream));
+    HIP_CHECK(hipStreamDestroy(stream));
+    HIP_CHECK_ERROR(hipGraphicsMapResources(1, &vbo_resource, stream), hipErrorContextIsDestroyed);
   }
 
   HIP_CHECK(hipGraphicsUnregisterResource(vbo_resource));
