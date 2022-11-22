@@ -1,5 +1,4 @@
 set(TEST_SRC
-    gl_interop_common.cc
     hipGLGetDevices.cc
 )
 

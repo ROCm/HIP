@@ -25,18 +25,22 @@ THE SOFTWARE.
 #include <variant>
 
 #include <GL/freeglut.h>
+
 #include <EGL/egl.h>
+#include <EGL/eglext.h>
 
 #include <hip_test_common.hh>
 
-static std::once_flag glut_init;
+static std::once_flag glut_init_flag;
 
 class GLUTContextScopeGuard {
  public:
   GLUTContextScopeGuard() {
-    std::call_once(glut_init, &GLUTContextScopeGuard::init);
-    REQUIRE(glGetError() == GL_NO_ERROR);
+    std::call_once(glut_init_flag, &GLUTContextScopeGuard::init);
+    glut_window_ = glutCreateWindow("");
   }
+
+  ~GLUTContextScopeGuard() { glutDestroyWindow(glut_window_); }
 
   GLUTContextScopeGuard(const GLUTContextScopeGuard&) = delete;
   GLUTContextScopeGuard& operator=(const GLUTContextScopeGuard&) = delete;
@@ -45,18 +49,16 @@ class GLUTContextScopeGuard {
   GLUTContextScopeGuard& operator=(GLUTContextScopeGuard&&) = delete;
 
  private:
+  int glut_window_;
+
   static void init() {
+    static char proc_name[] = "";
+    static std::array<char*, 2> glut_argv = {proc_name, nullptr};
     static int glut_argc = 1;
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wwritable-strings"
-    static std::array<char*, 2> glut_argv = {"", nullptr};
-#pragma GCC diagnostic pop
 
     glutInit(&glut_argc, glut_argv.data());
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
-    glutInitWindowSize(1, 1);
-    glutInitWindowPosition(0, 0);
-    glutCreateWindow("");
+    glutInitWindowSize(512, 512);
   }
 };
 
@@ -64,7 +66,17 @@ class EGLContextScopeGuard {
  public:
   EGLContextScopeGuard() {
     // 1. Initialize EGL
-    egl_display_ = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    PFNEGLQUERYDEVICESEXTPROC eglQueryDevicesEXT =
+        (PFNEGLQUERYDEVICESEXTPROC)eglGetProcAddress("eglQueryDevicesEXT");
+
+    eglQueryDevicesEXT(egl_devices_.max_size(), egl_devices_.data(), &num_devices_);
+
+    INFO("Detected " << num_devices_ << " devices");
+
+    PFNEGLGETPLATFORMDISPLAYEXTPROC eglGetPlatformDisplayEXT =
+        (PFNEGLGETPLATFORMDISPLAYEXTPROC)eglGetProcAddress("eglGetPlatformDisplayEXT");
+
+    egl_display_ = eglGetPlatformDisplayEXT(EGL_PLATFORM_DEVICE_EXT, egl_devices_.at(0), 0);
 
     REQUIRE(eglInitialize(egl_display_, &major_, &minor_));
 
@@ -116,6 +128,8 @@ class EGLContextScopeGuard {
       EGL_WIDTH, kPbufferWidth, EGL_HEIGHT, kPbufferHeight, EGL_NONE,
   };
 
+  std::array<EGLDeviceEXT, 8> egl_devices_;
+  EGLint num_devices_;
   EGLDisplay egl_display_;
   EGLint major_, minor_;
   EGLint num_configs_;
@@ -131,20 +145,19 @@ class GLContextScopeGuard {
   using GLContextScopeGuardVariant =
       std::variant<GLUTContextScopeGuardPtr, EGLContextScopeGuardPtr>;
 
-  static constexpr char kEnvarName[] = "GL_CONTEXT";
+  static constexpr char kEnvarName[] = "GL_CONTEXT_TYPE";
 
   GLContextScopeGuard() {
     char* val = std::getenv(kEnvarName);
     std::string val_str = val == NULL ? "" : val;
 
-    ToLower(val_str);
-
-    if (val_str.empty() || val_str == "glut") {
+    if (val_str.empty() || val_str == "GLUT") {
       gl_context_ = std::make_unique<GLUTContextScopeGuard>();
-    } else if (val_str == "egl") {
+    } else if (val_str == "EGL") {
       gl_context_ = std::make_unique<EGLContextScopeGuard>();
     } else {
-      INFO("Unsupported GL_CONTEXT: " << val_str);
+      INFO("Unsupported " << kEnvarName << " value '" << val_str << "'");
+      INFO("Supported values are ['GLUT', 'EGL']");
       REQUIRE(false);
     }
   }
@@ -157,9 +170,4 @@ class GLContextScopeGuard {
 
  private:
   GLContextScopeGuardVariant gl_context_;
-
-  void ToLower(std::string& str) {
-    std::transform(begin(str), end(str), begin(str),
-                   [](unsigned char c) { return std::tolower(c); });
-  }
 };
