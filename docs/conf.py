@@ -6,10 +6,7 @@ read_the_docs_build = os.environ.get('READTHEDOCS', None) == 'True'
 if read_the_docs_build:
     os.environ['HIP_PATH'] = os.path.dirname(os.path.dirname(__file__))
     subprocess.check_call(['doxygen', 'doxygen-input/doxy.cfg'])
-#    add_custom_target(build_doxygen ALL 
-#                  COMMAND HIP_PATH=${HIP_COMMON_DIR} doxygen ${HIP_COMMON_DIR}/docs/doxygen-input/doxy.cfg)
-#    install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/RuntimeAPI/html
-#            DESTINATION share/doc/hip/RuntimeAPI COMPONENT doc)
+    subprocess.check_call(['find', '-type', 'f'])
 
 
 # -- General configuration ------------------------------------------------
