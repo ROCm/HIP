@@ -1,41 +1,4 @@
-# FAQ
-
-<!-- toc -->
-
-- [What APIs and features does HIP support?](#what-apis-and-features-does-hip-support)
-- [What is not supported?](#what-is-not-supported)
-  * [Runtime/Driver API features](#runtimedriver-api-features)
-  * [Kernel language features](#kernel-language-features)
-- [Is HIP a drop-in replacement for CUDA?](#is-hip-a-drop-in-replacement-for-cuda)
-- [What specific version of CUDA does HIP support?](#what-specific-version-of-cuda-does-hip-support)
-- [What libraries does HIP support?](#what-libraries-does-hip-support)
-- [How does HIP compare with OpenCL?](#how-does-hip-compare-with-opencl)
-- [How does porting CUDA to HIP compare to porting CUDA to OpenCL?](#how-does-porting-cuda-to-hip-compare-to-porting-cuda-to-opencl)
-- [What hardware does HIP support?](#what-hardware-does-hip-support)
-- [Do HIPIFY tools automatically convert all source code?](#do-hipify-tools-automatically-convert-all-source-code)
-- [What is NVCC?](#what-is-nvcc)
-- [What is HIP-Clang?](#what-is-hip-clang)
-- [Why use HIP rather than supporting CUDA directly?](#why-use-hip-rather-than-supporting-cuda-directly)
-- [Can I develop HIP code on an Nvidia CUDA platform?](#can-i-develop-hip-code-on-an-nvidia-cuda-platform)
-- [Can I develop HIP code on an AMD HIP-Clang platform?](#can-i-develop-hip-code-on-an-amd-hip-clang-platform)
-- [What is ROCclr?](#what-is-rocclr)
-- [What is hipamd?](#what-is-hipamd)
-- [Can a HIP binary run on both AMD and Nvidia platforms?](#can-a-hip-binary-run-on-both-amd-and-nvidia-platforms)
-- [On HIP-Clang, can I link HIP code with host code compiled with another compiler such as gcc, icc, or clang?](#on-HIP-Clang-can-i-link-hip-code-with-host-code-compiled-with-another-compiler-such-as-gcc-icc-or-clang-)
-- [HIP detected my platform (hip-clang vs nvcc) incorrectly - what should I do?](#hip-detected-my-platform-hip-clang-vs-nvcc-incorrectly---what-should-i-do)
-- [Can I install both CUDA SDK and HIP-clang on same machine?](#can-i-install-both-cuda-sdk-and-hip-clang-on-same-machine)
-- [On CUDA, can I mix CUDA code with HIP code?](#on-cuda-can-i-mix-cuda-code-with-hip-code)
-- [How do I trace HIP application flow?](#how-do-i-trace-hip-application-flow)
-- [What if HIP generates an error of "symbol multiply defined!" only on AMD machine?](#what-if-hip-generates-error-of-symbol-multiply-defined-only-on-amd-machine)
-- [What is maximum limit of Generic kernel launching parameter?](#what-is-maximum-limit-of-generic-kernel-launching-parameter)
-- [Are _shfl_*_sync functions supported on HIP platform?](#are-_shfl_*_sync-functions-supported-on-hip-platform)
-- [How to create a guard for code that is specific to the host or the GPU?](#how-to-create-a-guard-for-code-that-is-specific-to-the-host-or-the-gpu)
-- [Why _OpenMP is undefined when compiling with -fopenmp?](#why-_openmp-is-undefined-when-compiling-with--fopenmp)
-- [Does the HIP-Clang compiler support extern shared declarations?](#does-the-hip-clang-compiler-support-extern-shared-declarations)
-- [I have multiple HIP enabled devices and I am getting an error message hipErrorNoBinaryForGpu: Unable to find code object for all current devices?](#i-have-multiple-hip-enabled-devices-and-i-am-getting-an-error-message-hipErrorNoBinaryForGpu-unable-to-find-code-object-for-all-current-devices)
-- [How to use per-thread default stream in HIP?](#how-to-use-per-thread-default-stream-in-hip)
-- [How can I know the version of HIP?](#how-can-I-know-the-version-of-hip)
-<!-- tocstop -->
+# Frequently asked questions
 
 ### What APIs and features does HIP support?
 HIP provides the following:
@@ -70,7 +33,7 @@ See the [API Support Table](CUDA_Runtime_API_functions_supported_by_HIP.md) for 
 - Virtual functions, indirect functions and try/catch (CUDA 4.0)
 - `__prof_trigger`
 - PTX assembly (CUDA 4.0).  HIP-Clang supports inline GCN assembly.
-- Several kernel features are under development.  See the [HIP Kernel Language](hip_kernel_language.md) for more information.
+- Several kernel features are under development.  See the {doc}`/reference/kernel_language` for more information.
 
 
 ### Is HIP a drop-in replacement for CUDA?
@@ -229,7 +192,7 @@ hipCUResultTohipError
 If platform portability is important, use #ifdef __HIP_PLATFORM_NVIDIA__ to guard the CUDA-specific code.
 
 ### How do I trace HIP application flow?
-See the [HIP Logging](hip_logging.md) for more information.
+See {doc}`/developer_guide/logging` for more information.
 
 ### What is maximum limit of kernel launching parameter?
 Product of block.x, block.y, and block.z should be less than 1024.
