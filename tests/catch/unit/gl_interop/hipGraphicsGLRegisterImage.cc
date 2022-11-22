@@ -39,7 +39,7 @@ TEST_CASE("Unit_hipGraphicsGLRegisterImage_Positive_Basic") {
 
   const auto flags = GENERATE(from_range(begin(kFlags), end(kFlags)));
 
-  CreateGLImageObject();
+  GLImageObject tex;
 
   hipGraphicsResource* tex_resource;
 
@@ -51,7 +51,7 @@ TEST_CASE("Unit_hipGraphicsGLRegisterImage_Positive_Basic") {
 TEST_CASE("Unit_hipGraphicsGLRegisterImage_Positive_Register_Twice") {
   GLContextScopeGuard gl_context;
 
-  CreateGLImageObject();
+  GLImageObject tex;
 
   hipGraphicsResource *tex_resource_1, *tex_resource_2;
 
@@ -67,7 +67,7 @@ TEST_CASE("Unit_hipGraphicsGLRegisterImage_Positive_Register_Twice") {
 TEST_CASE("Unit_hipGraphicsGLRegisterImage_Negative_Parameters") {
   GLContextScopeGuard gl_context;
 
-  CreateGLImageObject();
+  GLImageObject tex;
 
   hipGraphicsResource* tex_resource;
 
@@ -97,7 +97,7 @@ TEST_CASE("Unit_hipGraphicsGLRegisterImage_Negative_Parameters") {
 
   SECTION("invalid flags") {
     HIP_CHECK_ERROR(hipGraphicsGLRegisterImage(&tex_resource, tex, GL_TEXTURE_2D,
-                                               static_cast<unsigned int>(-1)),
+                                               std::numeric_limits<unsigned int>::max()),
                     hipErrorInvalidValue);
   }
 }
