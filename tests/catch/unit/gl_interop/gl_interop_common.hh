@@ -24,13 +24,55 @@ THE SOFTWARE.
 
 #define GL_GLEXT_PROTOTYPES
 #include <GL/gl.h>
+#include <GL/glext.h>
 
-constexpr int kWidth = 512, kHeight = 512;
+#include <hip_test_common.hh>
 
-extern GLuint vbo;
+class GLBufferObject {
+ public:
+  static constexpr size_t kSize = 512 * 512 * 4 * sizeof(float);
 
-void CreateGLBufferObject();
+  GLBufferObject() {
+    glGenBuffers(1, &vbo_);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_);
 
-extern GLuint tex;
+    glBufferData(GL_ARRAY_BUFFER, kSize, 0, GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-void CreateGLImageObject();
+    REQUIRE(glGetError() == GL_NO_ERROR);
+  }
+
+  ~GLBufferObject() { glDeleteBuffers(1, &vbo_); }
+
+  operator GLuint() const { return vbo_; }
+
+ private:
+  GLuint vbo_;
+};
+
+class GLImageObject {
+ public:
+  static constexpr size_t kWidth = 512, kHeight = 512;
+
+  GLImageObject() {
+    glGenTextures(1, &tex_);
+    glBindTexture(GL_TEXTURE_2D, tex_);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8UI_EXT, kWidth, kHeight, 0, GL_RGBA_INTEGER_EXT,
+                 GL_UNSIGNED_BYTE, NULL);
+
+    REQUIRE(glGetError() == GL_NO_ERROR);
+  }
+
+  ~GLImageObject() { glDeleteTextures(1, &tex_); }
+
+  operator GLuint() const { return tex_; }
+
+ private:
+  GLuint tex_;
+};
