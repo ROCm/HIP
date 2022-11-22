@@ -38,7 +38,7 @@ TEST_CASE("Unit_hipGraphicsGLRegisterBuffer_Positive_Basic") {
 
   const auto flags = GENERATE(from_range(begin(kFlags), end(kFlags)));
 
-  CreateGLBufferObject();
+  GLBufferObject vbo;
 
   hipGraphicsResource* vbo_resource;
 
@@ -50,7 +50,7 @@ TEST_CASE("Unit_hipGraphicsGLRegisterBuffer_Positive_Basic") {
 TEST_CASE("Unit_hipGraphicsGLRegisterBuffer_Positive_Register_Twice") {
   GLContextScopeGuard gl_context;
 
-  CreateGLBufferObject();
+  GLBufferObject vbo;
 
   hipGraphicsResource *vbo_resource_1, *vbo_resource_2;
 
@@ -64,7 +64,7 @@ TEST_CASE("Unit_hipGraphicsGLRegisterBuffer_Positive_Register_Twice") {
 TEST_CASE("Unit_hipGraphicsGLRegisterBuffer_Negative_Parameters") {
   GLContextScopeGuard gl_context;
 
-  CreateGLBufferObject();
+  GLBufferObject vbo;
 
   hipGraphicsResource* vbo_resource;
 
@@ -80,8 +80,9 @@ TEST_CASE("Unit_hipGraphicsGLRegisterBuffer_Negative_Parameters") {
   }
 
   SECTION("invalid flags") {
-    HIP_CHECK_ERROR(hipGraphicsGLRegisterBuffer(&vbo_resource, vbo, static_cast<unsigned int>(-1)),
-                    hipErrorInvalidValue);
+    HIP_CHECK_ERROR(
+        hipGraphicsGLRegisterBuffer(&vbo_resource, vbo, std::numeric_limits<unsigned int>::max()),
+        hipErrorInvalidValue);
   }
 
   SECTION("flags == hipGraphicsRegisterFlagsSurfaceLoadStore") {
