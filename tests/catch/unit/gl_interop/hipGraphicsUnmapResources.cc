@@ -27,31 +27,10 @@ THE SOFTWARE.
 
 #include "GLContextScopeGuard.hh"
 
-TEST_CASE("Unit_hipGraphicsUnmapResources_Negative_Different_Streams") {
-  GLContextScopeGuard gl_context;
-
-  CreateGLBufferObject();
-
-  hipGraphicsResource* vbo_resource;
-
-  HIP_CHECK(hipGraphicsGLRegisterBuffer(&vbo_resource, vbo, hipGraphicsRegisterFlagsNone));
-
-  HIP_CHECK(hipGraphicsMapResources(1, &vbo_resource, 0));
-
-  hipStream_t stream;
-  HIP_CHECK(hipStreamCreate(&stream));
-  HIP_CHECK_ERROR(hipGraphicsUnmapResources(1, &vbo_resource, stream), hipErrorNotMapped);
-  HIP_CHECK(hipStreamDestroy(stream));
-
-  HIP_CHECK(hipGraphicsUnmapResources(1, &vbo_resource, 0));
-
-  HIP_CHECK(hipGraphicsUnregisterResource(vbo_resource));
-}
-
 TEST_CASE("Unit_hipGraphicsUnmapResources_Negative_Parameters") {
   GLContextScopeGuard gl_context;
 
-  CreateGLBufferObject();
+  GLBufferObject vbo;
 
   hipGraphicsResource* vbo_resource;
 
@@ -60,34 +39,26 @@ TEST_CASE("Unit_hipGraphicsUnmapResources_Negative_Parameters") {
   HIP_CHECK(hipGraphicsMapResources(1, &vbo_resource, 0));
 
   SECTION("count == 0") {
-    HIP_CHECK_ERROR(hipGraphicsUnmapResources(0, &vbo_resource, 0), hipErrorInvalidHandle);
-  }
-
-  SECTION("count < 0") {
-    HIP_CHECK_ERROR(hipGraphicsUnmapResources(-1, &vbo_resource, 0), hipErrorInvalidHandle);
+    HIP_CHECK_ERROR(hipGraphicsUnmapResources(0, &vbo_resource, 0), hipErrorInvalidValue);
   }
 
   SECTION("resources == nullptr") {
-    HIP_CHECK_ERROR(hipGraphicsUnmapResources(1, nullptr, 0), hipErrorInvalidHandle);
+    HIP_CHECK_ERROR(hipGraphicsUnmapResources(1, nullptr, 0), hipErrorInvalidValue);
   }
 
-  SECTION("non-registered resource") {
-    hipGraphicsResource* unregistered_resource;
-    HIP_CHECK_ERROR(hipGraphicsUnmapResources(1, &unregistered_resource, 0), hipErrorInvalidHandle);
+  SECTION("not mapped resource") {
+    hipGraphicsResource* not_mapped_resource;
+    HIP_CHECK(hipGraphicsGLRegisterBuffer(&not_mapped_resource, vbo, hipGraphicsRegisterFlagsNone));
+    HIP_CHECK_ERROR(hipGraphicsUnmapResources(1, &not_mapped_resource, 0), hipErrorNotMapped);
+    HIP_CHECK(hipGraphicsUnregisterResource(not_mapped_resource));
   }
 
-  SECTION("non-mapped resource") {
-    hipGraphicsResource* unmapped_resource;
-    HIP_CHECK(hipGraphicsGLRegisterBuffer(&unmapped_resource, vbo, hipGraphicsRegisterFlagsNone));
-    HIP_CHECK_ERROR(hipGraphicsUnmapResources(1, &unmapped_resource, 0), hipErrorNotMapped);
-    HIP_CHECK(hipGraphicsUnregisterResource(unmapped_resource));
-  }
-
-  SECTION("different stream") {
+  SECTION("invalid stream") {
     hipStream_t stream;
     HIP_CHECK(hipStreamCreate(&stream));
-    HIP_CHECK_ERROR(hipGraphicsUnmapResources(1, &vbo_resource, stream), hipErrorNotMapped);
     HIP_CHECK(hipStreamDestroy(stream));
+    HIP_CHECK_ERROR(hipGraphicsUnmapResources(1, &vbo_resource, stream),
+                    hipErrorContextIsDestroyed);
   }
 
   HIP_CHECK(hipGraphicsUnmapResources(1, &vbo_resource, 0));
