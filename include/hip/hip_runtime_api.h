@@ -1215,6 +1215,24 @@ typedef enum hipGraphInstantiateFlags {
       1,  ///< Automatically free memory allocated in a graph before relaunching.
 } hipGraphInstantiateFlags;
 
+enum hipGraphDebugDotFlags {
+  hipGraphDebugDotFlagsVerbose = 1
+      << 0, /**< Output all debug data as if every debug flag is enabled */
+  hipGraphDebugDotFlagsKernelNodeParams = 1 << 2, /**< Adds hipKernelNodeParams to output */
+  hipGraphDebugDotFlagsMemcpyNodeParams = 1 << 3, /**< Adds hipMemcpy3DParms to output */
+  hipGraphDebugDotFlagsMemsetNodeParams = 1 << 4, /**< Adds hipMemsetParams to output */
+  hipGraphDebugDotFlagsHostNodeParams = 1 << 5,   /**< Adds hipHostNodeParams to output */
+  hipGraphDebugDotFlagsEventNodeParams = 1
+      << 6, /**< Adds hipEvent_t handle from record and wait nodes to output */
+  hipGraphDebugDotFlagsExtSemasSignalNodeParams = 1
+      << 7, /**< Adds hipExternalSemaphoreSignalNodeParams values to output */
+  hipGraphDebugDotFlagsExtSemasWaitNodeParams = 1
+      << 8, /**< Adds hipExternalSemaphoreWaitNodeParams to output */
+  hipGraphDebugDotFlagsKernelNodeAttributes = 1
+      << 9, /**< Adds hipKernelNodeAttrID values to output */
+  hipGraphDebugDotFlagsHandles = 1
+      << 10 /**< Adds node handles and every kernel function handle to output */
+};
 /**
  * Memory allocation properties
  */
@@ -6435,7 +6453,8 @@ hipError_t hipDeviceGraphMemTrim(int device);
  * @warning : This API is marked as beta, meaning, while this is feature complete,
  * it is still open to changes and may have outstanding issues.
  */
-hipError_t hipUserObjectCreate(hipUserObject_t* object_out, void* ptr, hipHostFn_t destroy, unsigned int initialRefcount, unsigned int flags);
+hipError_t hipUserObjectCreate(hipUserObject_t* object_out, void* ptr, hipHostFn_t destroy,
+                               unsigned int initialRefcount, unsigned int flags);
 
 /**
  * @brief Release number of references to resource.
@@ -6470,7 +6489,8 @@ hipError_t hipUserObjectRetain(hipUserObject_t object, unsigned int count __dpar
  * @warning : This API is marked as beta, meaning, while this is feature complete,
  * it is still open to changes and may have outstanding issues.
  */
-hipError_t hipGraphRetainUserObject(hipGraph_t graph, hipUserObject_t object, unsigned int count __dparm(1), unsigned int flags __dparm(0));
+hipError_t hipGraphRetainUserObject(hipGraph_t graph, hipUserObject_t object,
+                                    unsigned int count __dparm(1), unsigned int flags __dparm(0));
 
 /**
  * @brief Release user object from graphs.
@@ -6482,7 +6502,84 @@ hipError_t hipGraphRetainUserObject(hipGraph_t graph, hipUserObject_t object, un
  * @warning : This API is marked as beta, meaning, while this is feature complete,
  * it is still open to changes and may have outstanding issues.
  */
-hipError_t hipGraphReleaseUserObject(hipGraph_t graph, hipUserObject_t object, unsigned int count __dparm(1));
+hipError_t hipGraphReleaseUserObject(hipGraph_t graph, hipUserObject_t object,
+                                     unsigned int count __dparm(1));
+
+/**
+ * @brief Write a DOT file describing graph structure.
+ *
+ * @param [in] graph - graph object for which DOT file has to be generated.
+ * @param [in] path - path to write the DOT file.
+ * @param [in] flags - Flags from hipGraphDebugDotFlags to get additional node information.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorOperatingSystem
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphDebugDotPrint(hipGraph_t graph, const char* path, unsigned int flags);
+
+/**
+ * @brief Copies attributes from source node to destination node.
+ *
+ * Copies attributes from source node to destination node.
+ * Both node must have the same context.
+ *
+ * @param [out] hDst - Destination node.
+ * @param [in] hSrc - Source node.
+ * For list of attributes see ::hipKernelNodeAttrID.
+ *
+ * @returns #hipSuccess, #hipErrorInvalidContext
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphKernelNodeCopyAttributes(hipGraphNode_t hSrc, hipGraphNode_t hDst);
+
+/**
+ * @brief Enables or disables the specified node in the given graphExec
+ *
+ * Sets hNode to be either enabled or disabled. Disabled nodes are functionally equivalent
+ * to empty nodes until they are reenabled. Existing node parameters are not affected by
+ * disabling/enabling the node.
+ *
+ * The node is identified by the corresponding hNode in the non-executable graph, from which the
+ * executable graph was instantiated.
+ *
+ * hNode must not have been removed from the original graph.
+ *
+ * @note Currently only kernel, memset and memcpy nodes are supported.
+ *
+ * @param [in] hGraphExec - The executable graph in which to set the specified node.
+ * @param [in] hNode      - Node from the graph from which graphExec was instantiated.
+ * @param [in] isEnabled  - Node is enabled if != 0, otherwise the node is disabled.
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue,
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphNodeSetEnabled(hipGraphExec_t hGraphExec, hipGraphNode_t hNode,
+                                  unsigned int isEnabled);
+/**
+ * @brief Query whether a node in the given graphExec is enabled
+ *
+ * Sets isEnabled to 1 if hNode is enabled, or 0 if it is disabled.
+ *
+ * The node is identified by the corresponding node in the non-executable graph, from which the
+ * executable graph was instantiated.
+ *
+ * hNode must not have been removed from the original graph.
+ *
+ * @note Currently only kernel, memset and memcpy nodes are supported.
+ *
+ * @param [in]  hGraphExec - The executable graph in which to set the specified node.
+ * @param [in]  hNode      - Node from the graph from which graphExec was instantiated.
+ * @param [out] isEnabled  - Location to return the enabled status of the node.
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphNodeGetEnabled(hipGraphExec_t hGraphExec, hipGraphNode_t hNode,
+                                  unsigned int* isEnabled);
+
 // doxygen end graph API
 /**
  * @}
