@@ -25,8 +25,6 @@ THE SOFTWARE.
 
 #include "gl_interop_common.hh"
 
-#include "GLContextScopeGuard.hh"
-
 TEST_CASE("Unit_hipGraphicsMapResources_Positive_Basic") {
   GLContextScopeGuard gl_context;
 
