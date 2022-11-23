@@ -25,8 +25,6 @@ THE SOFTWARE.
 
 #include "gl_interop_common.hh"
 
-#include "GLContextScopeGuard.hh"
-
 namespace {
 constexpr std::array<hipGLDeviceList, 3> kDeviceLists{
     hipGLDeviceListAll, hipGLDeviceListCurrentFrame, hipGLDeviceListNextFrame};
