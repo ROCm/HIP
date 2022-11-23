@@ -673,6 +673,7 @@ enum hipLimit_t {
 #define hipArrayCubemap 0x04
 #define hipArrayTextureGather 0x08
 #define hipOccupancyDefault 0x00
+#define hipOccupancyDisableCachingOverride 0x01
 #define hipCooperativeLaunchMultiDeviceNoPreSync 0x01
 #define hipCooperativeLaunchMultiDeviceNoPostSync 0x02
 #define hipCpuDeviceId ((int)-1)
