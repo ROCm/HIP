@@ -25,8 +25,6 @@ THE SOFTWARE.
 
 #include "gl_interop_common.hh"
 
-#include "GLContextScopeGuard.hh"
-
 TEST_CASE("Unit_hipGraphicsUnmapResources_Negative_Parameters") {
   GLContextScopeGuard gl_context;
 
