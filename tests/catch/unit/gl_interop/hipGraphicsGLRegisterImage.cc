@@ -25,8 +25,6 @@ THE SOFTWARE.
 
 #include "gl_interop_common.hh"
 
-#include "GLContextScopeGuard.hh"
-
 namespace {
 constexpr std::array<unsigned int, 5> kFlags{
     hipGraphicsRegisterFlagsNone, hipGraphicsRegisterFlagsReadOnly,
