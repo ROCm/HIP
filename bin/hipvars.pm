@@ -151,7 +151,8 @@ if ($HIP_COMPILER eq "clang") {
 #---
 # Read .hipVersion
 my %hipVersion = ();
-parse_config_file("$hipvars::HIP_PATH/bin/.hipVersion", \%hipVersion);
+$HIP_VERSION_PATH = "$HIP_PATH/bin/.hipVersion";
+parse_config_file("$HIP_VERSION_PATH", \%hipVersion);
 $HIP_VERSION_MAJOR = $hipVersion{'HIP_VERSION_MAJOR'} // $HIP_BASE_VERSION_MAJOR;
 $HIP_VERSION_MINOR = $hipVersion{'HIP_VERSION_MINOR'} // $HIP_BASE_VERSION_MINOR;
 $HIP_VERSION_PATCH = $hipVersion{'HIP_VERSION_PATCH'} // $HIP_BASE_VERSION_PATCH;
