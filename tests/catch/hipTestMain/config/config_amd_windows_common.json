@@ -85,9 +85,12 @@
 	   "Unit_hipGraphNodeGetDependentNodes_Functional",
 	   "Unit_hipGraphNodeGetDependencies_Functional",
 	   "Unit_hipGraphExecChildGraphNodeSetParams_ChildTopology",
+	   "Unit_hipGraphAddEventRecordNode_MultipleRun",
+	   "Unit_hipGraphAddEventRecordNode_Functional_ElapsedTime",
+	   "Unit_hipStreamBeginCapture_captureComplexGraph",
 	   "Note: needs to be enabled when streamPerThread issues are fixed",
 	   "Unit_hipStreamSynchronize_NullStreamAndStreamPerThread",
-	   "Unit_hipGraphAddEventRecordNode_Functional_ElapsedTime",
-	   "Unit_hipStreamBeginCapture_captureComplexGraph"
+	   "Note: intermittent Seg fault failure ",
+	   "Unit_hipGraphAddEventRecordNode_Functional_WithoutFlags"
 	]
 }
