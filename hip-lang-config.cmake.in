@@ -65,17 +65,15 @@ find_dependency(amd_comgr)
 
 include( "${CMAKE_CURRENT_LIST_DIR}/hip-lang-targets.cmake" )
 
-# From hip-lang config directory, do three level up
-get_filename_component(_DIR "${CMAKE_CURRENT_LIST_DIR}" REALPATH)
-get_filename_component(_IMPORT_PREFIX "${_DIR}/../../../" REALPATH)
+# Find the hip-lang config file path with symlinks resolved
+# RealPath: /opt/rocm-ver/lib/cmake/hip-lang/hip-lang-config.cmake
+# Go 4 level up to get IMPORT PREFIX
+get_filename_component(_DIR "${CMAKE_CURRENT_LIST_FILE}" REALPATH)
+get_filename_component(_IMPORT_PREFIX "${_DIR}/../../../../" ABSOLUTE)
 
-
-#need _IMPORT_PREFIX to be set #FILE_REORG_BACKWARD_COMPATIBILITY
-file(GLOB HIP_CLANG_INCLUDE_SEARCH_PATHS "${_IMPORT_PREFIX}/../llvm/lib/clang/*/include")
-file(GLOB HIP_CLANG_INCLUDE_SEARCH_PATHS_REORG "${_IMPORT_PREFIX}/llvm/lib/clang/*/include")
+file(GLOB HIP_CLANG_INCLUDE_SEARCH_PATHS "${_IMPORT_PREFIX}/llvm/lib/clang/*/include")
 find_path(HIP_CLANG_INCLUDE_PATH __clang_cuda_math.h
     HINTS ${HIP_CLANG_INCLUDE_SEARCH_PATHS}
-          ${HIP_CLANG_INCLUDE_SEARCH_PATHS_REORG}
     NO_DEFAULT_PATH)
 get_filename_component(HIP_CLANG_INCLUDE_PATH "${HIP_CLANG_INCLUDE_PATH}" DIRECTORY)
 
@@ -87,7 +85,6 @@ endif()
 #if HSA is not under ROCm then provide CMAKE_PREFIX_PATH=<HSA_PATH>
 find_path(HSA_HEADER hsa/hsa.h
   PATHS
-    "${_IMPORT_PREFIX}/../include" #FILE_REORG_BACKWARD_COMPATIBILITY
     "${_IMPORT_PREFIX}/include"
     "${ROCM_PATH}/include"
 )
