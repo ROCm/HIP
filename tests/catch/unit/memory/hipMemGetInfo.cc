@@ -535,10 +535,6 @@ TEST_CASE("Unit_hipMemGetInfo_ParaMultiSmall") {
 
 
 TEST_CASE("Unit_hipMemGetInfo_Negative") {
-#if HT_AMD
-  HipTest::HIP_SKIP_TEST(" EXSWCPHIPT-61");
-  return;
-#endif
   size_t freeMemInit;
   size_t totalMemInit;
   HIP_CHECK(hipMemGetInfo(&freeMemInit, &totalMemInit));

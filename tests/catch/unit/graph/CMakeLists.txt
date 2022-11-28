@@ -23,6 +23,7 @@ set(TEST_SRC
   hipGraphAddEmptyNode.cc
   hipGraphAddDependencies.cc
   hipGraphAddEventRecordNode.cc
+  hipGraphAddEventWaitNode.cc
   hipGraph.cc
   hipSimpleGraphWithKernel.cc
   hipGraphAddMemcpyNode.cc
@@ -76,6 +77,10 @@ set(TEST_SRC
   hipGraphExecMemcpyNodeSetParamsToSymbol.cc
   hipGraphNodeGetDependentNodes.cc
   hipGraphNodeGetDependencies.cc
+  hipGraphHostNodeGetParams.cc
+  hipGraphExecChildGraphNodeSetParams.cc
+  hipStreamGetCaptureInfo_v2.cc
+  hipUserObjectCreate.cc
   hipThreadExchangeStreamCaptureMode.cc
 )
 

@@ -136,7 +136,7 @@ int main(int argc, char* argv[]) {
   // Therefore the hipStreamSynchronize() in the
   // main thread should hardly take any time to complete.
 
-  if (duration.count() < 100) {
+  if (duration.count() < 200) {
     passed();
   } else {
     failed("hipStreamSynchronize is taking more time than expected after Callback()");

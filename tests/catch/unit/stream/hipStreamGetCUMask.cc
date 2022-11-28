@@ -37,7 +37,7 @@ TEST_CASE("Unit_hipExtStreamGetCUMask_verifyDefaultAndCustomMask") {
   std::vector<uint32_t> cuMask(maxNum);
   hipDeviceProp_t props;
   std::stringstream ss;
-  char* gCUMask{nullptr};
+  std::string gCUMask;
   std::string globalCUMask("");
   std::vector<uint32_t> defaultCUMask;
 
@@ -54,8 +54,8 @@ TEST_CASE("Unit_hipExtStreamGetCUMask_verifyDefaultAndCustomMask") {
          props.name << " with " << props.multiProcessorCount << " CUs");
 
   // Get global CU Mask if exists
-  gCUMask = getenv("ROC_GLOBAL_CU_MASK");
-  if (gCUMask != nullptr && gCUMask[0] != '\0') {
+  gCUMask = TestContext::getEnvVar("ROC_GLOBAL_CU_MASK");
+  if (!gCUMask.empty()) {
     globalCUMask.assign(gCUMask);
 
     for_each(globalCUMask.begin(), globalCUMask.end(), [](char & c) {
@@ -117,9 +117,21 @@ TEST_CASE("Unit_hipExtStreamGetCUMask_verifyDefaultAndCustomMask") {
   }
 
   SECTION("Verify with custom mask set") {
+    hipDeviceProp_t props;
     std::vector<uint32_t> customMask(defaultCUMask);
     hipStream_t stream;
-    customMask[0] = 0xe;
+    int deviceId;
+
+    HIP_CHECK(hipGetDevice(&deviceId));
+    HIP_CHECK(hipGetDeviceProperties(&props, deviceId));
+
+    if (props.major >= 10) {
+      // For gfx >= 10, one work group processor encompasses 2 CUs &
+      // hence the CUs need to be enabled in pair
+      customMask[0] = 0xc;
+    } else {
+      customMask[0] = 0xe;
+    }
 
     HIP_CHECK(hipExtStreamCreateWithCUMask(&stream, customMask.size(),
                                                       customMask.data()));
@@ -143,7 +155,7 @@ TEST_CASE("Unit_hipExtStreamGetCUMask_verifyDefaultAndCustomMask") {
     INFO("info: reading back CU mask 0x" << ss.str() <<
                                                 " for stream " << stream);
 
-    if (!gCUMask) {
+    if (!gCUMask.empty()) {
       for (size_t i = 0; i < customMask.size(); i++) {
         if (customMask[i] != cuMask[i]) {
           INFO("Error! expected CU mask:" << customMask[i]

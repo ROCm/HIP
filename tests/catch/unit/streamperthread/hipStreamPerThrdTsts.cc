@@ -47,9 +47,7 @@ THE SOFTWARE.
 #endif
 
 #include <hip_test_common.hh>
-#ifdef HT_AMD
-  #include "hip/hip_cooperative_groups.h"
-#endif
+#include "hip/hip_cooperative_groups.h"
 using namespace std::chrono;
 using namespace cooperative_groups;
 #if HT_AMD
@@ -69,8 +67,12 @@ __global__ void StreamPerThrd(int *Ad, int *Ad1, size_t n, int Pk_Clk,
     int64_t GpuFrq = (Pk_Clk * 1000);
     int64_t StrtTck = clock64();
     if (index == 0) {
-      // The following while loop checks the value in ptr for around 4 seconds
-      while ((clock64() - StrtTck) <= (6 * GpuFrq)) {
+      // The following while loop holds the execution for ~2 seconds.
+      // Busy sleep on nvidia
+      while ((clock64() - StrtTck) <= (2 * GpuFrq)) {
+        #if HT_AMD
+          __builtin_amdgcn_s_sleep(10);
+        #endif
       }
       if (WaitEvnt == 1) {
         *Ad1 = 1;
@@ -83,8 +85,12 @@ __global__ void StreamPerThrd(int *Ad, int *Ad1, size_t n, int Pk_Clk,
 __global__ void StreamPerThrd1(int *A, int Pk_Clk) {
   int64_t GpuFrq = (Pk_Clk * 1000);
   int64_t StrtTck = clock64();
-  // The following while loop checks the value in ptr for around 3-4 seconds
-  while ((clock64() - StrtTck) <= (3 * GpuFrq)) {
+  // The following while loop holds the execution for ~1 second
+  // Busy sleep on nvidia
+  while ((clock64() - StrtTck) <= (GpuFrq)) {
+    #if HT_AMD
+      __builtin_amdgcn_s_sleep(10);
+    #endif
   }
   *A = 1;
 }
@@ -155,9 +161,7 @@ __global__ void test_gwsPerThrd(uint* buf, uint bufSize, int64_t* tmpBuf,
     }
 }
 #endif
-static const uint BufferSizeInDwords = 256 * 1024 * 1024;
-static constexpr uint NumKernelArgs = 4;
-static constexpr uint MaxGPUs = 8;
+
 // callback function
 static void HIPRT_CB CallBackFunctn(hipStream_t strm, hipError_t err,
                                     void *ChkVal) {
@@ -472,126 +476,3 @@ TEST_CASE("Unit_hipStreamPerThread_CoopLaunch") {
     }
   }
 }
-
-/* Testing hipLaunchCooperativeKernelMultiDevice() with hipStreamPerThread*/
-#if HT_AMD
-TEST_CASE("Unit_hipStreamPerThread_CoopLaunchMDev") {
-  uint* dA[MaxGPUs];
-  int64_t* dB[MaxGPUs];
-  int64_t* dC;
-
-  uint32_t* init = new uint32_t[BufferSizeInDwords];
-  for (uint32_t i = 0; i < BufferSizeInDwords; ++i) {
-    init[i] = i;
-  }
-
-  int nGpu = 0;
-  HIPCHECK(hipGetDeviceCount(&nGpu));
-  size_t copySizeInDwords = BufferSizeInDwords / nGpu;
-  hipDeviceProp_t deviceProp[MaxGPUs];
-
-  for (int i = 0; i < nGpu; i++) {
-    HIPCHECK(hipSetDevice(i));
-
-    // Calculate the device occupancy to know how many blocks can be
-    // run concurrently
-    HIP_CHECK(hipGetDeviceProperties(&deviceProp[i], 0));
-    if (!deviceProp[i].cooperativeMultiDeviceLaunch) {
-      WARN("Device doesn't support cooperative launch!");
-      return;
-    }
-    size_t SIZE = copySizeInDwords * sizeof(uint);
-
-    HIPCHECK(hipMalloc(reinterpret_cast<void**>(&dA[i]), SIZE));
-    HIPCHECK(hipMalloc(reinterpret_cast<void**>(&dB[i]),
-             64 * deviceProp[i].multiProcessorCount * sizeof(int64_t)));
-    if (i == 0) {
-      HIPCHECK(hipHostMalloc(reinterpret_cast<void**>(&dC),
-      (nGpu + 1) * sizeof(int64_t)));
-    }
-    HIPCHECK(hipMemcpy(dA[i], &init[i * copySizeInDwords] , SIZE,
-             hipMemcpyHostToDevice));
-    HIP_CHECK(hipDeviceSynchronize());
-  }
-
-  dim3 dimBlock;
-  dim3 dimGrid;
-  dimGrid.x = 1;
-  dimGrid.y = 1;
-  dimGrid.z = 1;
-  dimBlock.x = 64;
-  dimBlock.y = 1;
-  dimBlock.z = 1;
-
-  int numBlocks = 0;
-  uint workgroups[3] = {64, 128, 256};
-
-  hipLaunchParams* launchParamsList = new hipLaunchParams[nGpu];
-  std::time_t end_time;
-  double time = 0;
-  for (uint set = 0; set < 3; ++set) {
-    void* args[MaxGPUs * NumKernelArgs];
-    WARN("---------- Test#" << set << ", size: "<< BufferSizeInDwords <<
-      " dwords ---------------\n");
-    for (int i = 0; i < nGpu; i++) {
-      HIPCHECK(hipSetDevice(i));
-      dimBlock.x = workgroups[set];
-      HIPCHECK(hipOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocks,
-      test_gwsPerThrd, dimBlock.x * dimBlock.y * dimBlock.z,
-      dimBlock.x * sizeof(int64_t)));
-
-      WARN("GPU(" << i << ") Block size: " << dimBlock.x <<
-        " Num blocks per CU: " << numBlocks << "\n");
-
-      dimGrid.x = deviceProp[i].multiProcessorCount * (std::min)(numBlocks, 32);
-
-      args[i * NumKernelArgs]     = reinterpret_cast<void*>(&dA[i]);
-      args[i * NumKernelArgs + 1] = reinterpret_cast<void*>(&copySizeInDwords);
-      args[i * NumKernelArgs + 2] = reinterpret_cast<void*>(&dB[i]);
-      args[i * NumKernelArgs + 3] = reinterpret_cast<void*>(&dC);
-
-      launchParamsList[i].func = reinterpret_cast<void*>(test_gwsPerThrd);
-      launchParamsList[i].gridDim = dimGrid;
-      launchParamsList[i].blockDim = dimBlock;
-      launchParamsList[i].sharedMem = dimBlock.x * sizeof(int64_t);
-
-      launchParamsList[i].stream = hipStreamPerThread;
-      launchParamsList[i].args = &args[i * NumKernelArgs];
-    }
-
-    system_clock::time_point start = system_clock::now();
-    HIP_CHECK(hipLaunchCooperativeKernelMultiDevice(launchParamsList, nGpu, 0));
-    for (int i = 0; i < nGpu; i++) {
-      HIP_CHECK(hipSetDevice(i));
-      HIP_CHECK(hipDeviceSynchronize());
-    }
-    system_clock::time_point end = system_clock::now();
-    std::chrono::duration<double> elapsed_seconds = end - start;
-    end_time = std::chrono::system_clock::to_time_t(end);
-
-    time += elapsed_seconds.count();
-
-    size_t processedDwords = copySizeInDwords * nGpu;
-    if (*dC != (((int64_t)(processedDwords) * (processedDwords - 1)) / 2)) {
-      WARN("Data validation failed ("<< *dC << " != " <<
-        (((int64_t)(BufferSizeInDwords) * (BufferSizeInDwords - 1)) / 2) <<
-        ") for grid size = " << dimGrid.x << " and block size = " <<
-        dimBlock.x << "\n");
-      WARN("Test failed!");
-    }
-  }
-
-  delete [] launchParamsList;
-
-  WARN("finished computation at " << std::ctime(&end_time));
-  WARN("elapsed time: " << time << "s\n");
-
-  HIP_CHECK(hipSetDevice(0));
-  HIP_CHECK(hipFree(dC));
-  for (int i = 0; i < nGpu; i++) {
-    HIP_CHECK(hipFree(dA[i]));
-    HIP_CHECK(hipFree(dB[i]));
-  }
-  delete [] init;
-}
-#endif

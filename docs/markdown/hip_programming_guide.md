@@ -102,9 +102,6 @@ A stronger system-level fence can be specified when the event is created with hi
 - hipEventReleaseToSystem : Perform a system-scope release operation when the event is recorded.  This will make both Coherent and Non-Coherent host memory visible to other agents in the system, but may involve heavyweight operations such as cache flushing.  Coherent memory will typically use lighter-weight in-kernel synchronization mechanisms such as an atomic operation and thus does not need to use hipEventReleaseToSystem.
 - hipEventDisableTiming: Events created with this flag would not record profiling data and provide best performance if used for synchronization.
 
-Note, for HIP Events used in kernel dispatch using hipExtLaunchKernelGGL/hipExtLaunchKernel, events passed in the API are not explicitly recorded and should only be used to get elapsed time for that specific launch.
-In case events are used across multiple dispatches, for example, start and stop events from different hipExtLaunchKernelGGL/hipExtLaunchKernel calls, they will be treated as invalid unrecorded events, HIP will throw error "hipErrorInvalidHandle" from hipEventElapsedTime.
-
 ### Summary and Recommendations:
 
 - Coherent host memory is the default and is the easiest to use since the memory is visible to the CPU at typical synchronization points.  This memory allows in-kernel synchronization commands such as threadfence_system to work transparently.
@@ -138,6 +135,15 @@ HIP-Clang now supports device-side malloc and free.
 This implementation does not require the use of `hipDeviceSetLimit(hipLimitMallocHeapSize,value)` nor respects any setting. The heap is fully dynamic and can grow until the available free memory on the device is consumed.
 
 The test codes in the link (https://github.com/ROCm-Developer-Tools/HIP/blob/develop/tests/src/deviceLib/hipDeviceMalloc.cpp) show how to implement application using malloc and free functions in device kernels.
+
+## Use of Per-thread default stream
+
+The per-thread default stream is supported in HIP. It is an implicit stream local to both the thread and the current device. This means that the command issued to the per-thread default stream by the thread does not implicitly synchronize with other streams (like explicitly created streams), or default per-thread stream on other threads.
+The per-thread default stream is a blocking stream and will synchronize with the default null stream if both are used in a program.
+The per-thread default stream can be enabled via adding a compilation option,
+“-fgpu-default-stream=per-thread”.
+
+And users can explicitly use "hipStreamPerThread" as per-thread default stream handle as input in API commands. There are test codes as examples in the link (https://github.com/ROCm-Developer-Tools/HIP/tree/develop/tests/catch/unit/streamperthread).
 
 ## Use of Long Double Type
 

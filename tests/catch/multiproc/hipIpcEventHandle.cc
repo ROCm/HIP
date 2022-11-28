@@ -44,7 +44,7 @@ Negative/Argument Validation:
 
 
 #define BUF_SIZE        4096
-#define MAX_DEVICES     8
+#define MAX_DEVICES     16
 
 
 typedef struct ipcEventInfo {
@@ -221,6 +221,7 @@ void runMultiProcKernel(ipcEventInfo_t *shmEventInfo, int index) {
     const dim3 blocks(BUF_SIZE / threads.x, 1);
     hipLaunchKernelGGL(computeKernel, dim3(blocks), dim3(threads), 0, 0,
                                     d_ptr + index *BUF_SIZE, d_ptr, index + 1);
+    HIP_CHECK(hipGetLastError());
     HIP_CHECK(hipEventRecord(event));
 
     // Barrier 2 : Signals that event is recorded
@@ -250,7 +251,7 @@ TEST_CASE("Unit_hipIpcEventHandle_Functional") {
     return;
   }
 
-  g_processCnt = shmDevices->count;
+  g_processCnt = (shmDevices->count > MAX_DEVICES) ? MAX_DEVICES : shmDevices->count;
 
   // Barrier is used to synchronize processes created.
   g_Barrier = reinterpret_cast<ipcBarrier_t *> (mmap(NULL, sizeof(*g_Barrier),
@@ -320,6 +321,10 @@ TEST_CASE("Unit_hipIpcEventHandle_ParameterValidation") {
     REQUIRE(ret == hipErrorInvalidValue);
   }
 
+  SECTION("Get event handle with handle == nullptr and event == nullptr") {
+    HIP_CHECK_ERROR(hipIpcGetEventHandle(nullptr, nullptr), hipErrorInvalidValue);
+  }
+
   SECTION("Get event handle with invalid event object") {
     hipEvent_t eventUninit{};
     ret = hipIpcGetEventHandle(&eventHandle, eventUninit);
@@ -353,6 +358,27 @@ TEST_CASE("Unit_hipIpcEventHandle_ParameterValidation") {
       REQUIRE(false);
     }
   }
+
+  SECTION("Open handle in process that created it") {
+    hipIpcEventHandle_t event_handle;
+    hipEvent_t event1, event2;
+    HIP_CHECK(hipEventCreateWithFlags(&event1, hipEventDisableTiming | hipEventInterprocess));
+    HIP_CHECK(hipIpcGetEventHandle(&event_handle, event1));
+    HIP_CHECK_ERROR(hipIpcOpenEventHandle(&event2, event_handle), hipErrorInvalidContext);
+    HIP_CHECK(hipEventDestroy(event1));
+  }
+
+// Disabled on AMD because of return value mismatch - EXSWHTEC-41
+#if HT_NVIDIA
+  SECTION("Event created with no flags") {
+    hipEvent_t event;
+    hipIpcEventHandle_t event_handle;
+
+    HIP_CHECK(hipEventCreate(&event));
+    HIP_CHECK_ERROR(hipIpcGetEventHandle(&event_handle, event), hipErrorInvalidResourceHandle);
+    HIP_CHECK(hipEventDestroy(event));
+  }
+#endif
 }
 
 #endif

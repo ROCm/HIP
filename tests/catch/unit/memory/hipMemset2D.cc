@@ -78,7 +78,7 @@ TEST_CASE("Unit_hipMemset2D_BasicFunctional") {
     }
   }
 
-  hipFree(A_d);
+  HIP_CHECK(hipFree(A_d));
   free(A_h);
 }
 
@@ -120,7 +120,7 @@ TEST_CASE("Unit_hipMemset2DAsync_BasicFunctional") {
     }
   }
 
-  hipFree(A_d);
+  HIP_CHECK(hipFree(A_d));
   HIP_CHECK(hipStreamDestroy(stream));
   free(A_h);
 }
@@ -169,7 +169,7 @@ TEST_CASE("Unit_hipMemset2D_UniqueWidthHeight") {
     }
   }
 
-  hipFree(A_d);
+  HIP_CHECK(hipFree(A_d));
   free(A_h);
 }
 

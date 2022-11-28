@@ -39,20 +39,12 @@ __global__ void unsafeAtomicMax_FlatMem(double* addr, double* result) {
   __shared__ double int_val;
   int_val = 5;
   double comp = 10;
-  if (__builtin_amdgcn_is_shared(
-        (const __attribute__((address_space(0))) void*)(&int_val)))
-    *result = __builtin_amdgcn_flat_atomic_fmax_f64(&int_val, comp);
-  else
-    *result = __builtin_amdgcn_global_atomic_fmax_f64(&int_val, comp);
+  *result = unsafeAtomicMax(&int_val, comp);
   *addr = int_val;
 }
 __global__ void unsafeAtomicMax_GlobalMem(double* addr, double* result) {
   double comp = 10;
-  if (__builtin_amdgcn_is_shared(
-        (const __attribute__((address_space(0))) void*)(addr)))
-    *result =  __builtin_amdgcn_flat_atomic_fmax_f64(addr, comp);
-  else
-    *result =  __builtin_amdgcn_global_atomic_fmax_f64(addr, comp);
+  *result = unsafeAtomicMax(addr, comp);
 }
 static constexpr auto fmaxFlatMem {
 R"(
@@ -61,11 +53,7 @@ __global__ void unsafeAtomicMax_FlatMem(double* addr, double* result) {
   __shared__ double int_val;
   int_val = 5;
   double comp = 10;
-  if (__builtin_amdgcn_is_shared(
-        (const __attribute__((address_space(0))) void*)(&int_val)))
-    *result = __builtin_amdgcn_flat_atomic_fmax_f64(&int_val, comp);
-  else
-    *result = __builtin_amdgcn_global_atomic_fmax_f64(&int_val, comp);
+  *result = unsafeAtomicMax(&int_val, comp);
   *addr = int_val;
 }
 )"};
@@ -75,11 +63,7 @@ R"(
 extern "C"
 __global__ void unsafeAtomicMax_GlobalMem(double* addr, double* result) {
   double comp = 10;
-  if (__builtin_amdgcn_is_shared(
-        (const __attribute__((address_space(0))) void*)(addr)))
-    *result =  __builtin_amdgcn_flat_atomic_fmax_f64(addr, comp);
-  else
-    *result =  __builtin_amdgcn_global_atomic_fmax_f64(addr, comp);
+  *result = unsafeAtomicMax(addr, comp);
 }
 )"};
 
@@ -112,6 +96,7 @@ TEST_CASE("Unit_BuiltinAtomics_fmaxCoherentGlobalMem") {
       HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&result), sizeof(double)));
       hipLaunchKernelGGL(unsafeAtomicMax_GlobalMem, dim3(1), dim3(1),
           0, 0, static_cast<double* >(A_d), result);
+      HIP_CHECK(hipGetLastError()); 
       HIP_CHECK(hipDeviceSynchronize());
       HIP_CHECK(hipMemcpy(B_h, result, sizeof(double), hipMemcpyDeviceToHost));
       REQUIRE(*B_h == 0);
@@ -159,9 +144,11 @@ TEST_CASE("Unit_BuiltinAtomics_fmaxNonCoherentGlobalFlatMem") {
       if (mem_type) {
         hipLaunchKernelGGL(unsafeAtomicMax_GlobalMem, dim3(1), dim3(1),
             0, 0, static_cast<double* >(A_d), result);
+        HIP_CHECK(hipGetLastError()); 
       } else {
         hipLaunchKernelGGL(unsafeAtomicMax_FlatMem, dim3(1), dim3(1),
             0, 0, static_cast<double* >(A_d), result);
+        HIP_CHECK(hipGetLastError()); 
       }
       HIP_CHECK(hipDeviceSynchronize());
       HIP_CHECK(hipMemcpy(B_h, result, sizeof(double), hipMemcpyDeviceToHost));

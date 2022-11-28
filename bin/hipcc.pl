@@ -41,8 +41,6 @@ use Cwd 'abs_path';
 # Other environment variable controls:
 # HIP_PATH       : Path to HIP directory, default is one dir level above location of this script.
 # CUDA_PATH      : Path to CUDA SDK (default /usr/local/cuda). Used on NVIDIA platforms only.
-# HSA_PATH       : Path to HSA dir (defaults to ../../hsa relative to abs_path
-#                  of this script). Used on AMD platforms only.
 # HIP_ROCCLR_HOME : Path to HIP/ROCclr directory. Used on AMD platforms only.
 # HIP_CLANG_PATH : Path to HIP-Clang (default to ../../llvm/bin relative to this
 #                  script's abs_path). Used on AMD platforms only.
@@ -50,6 +48,19 @@ use Cwd 'abs_path';
 if(scalar @ARGV == 0){
     print "No Arguments passed, exiting ...\n";
     exit(-1);
+}
+
+# retrieve --rocm-path hipcc option from command line.
+# We need to respect this over the env var ROCM_PATH for this compilation.
+sub get_rocm_path_option {
+  my $rocm_path="";
+  my @CLArgs = @ARGV;
+  foreach $arg (@CLArgs) {
+    if (index($arg,"--rocm-path=") != -1) {
+      ($rocm_path) = $arg=~ /=\s*(.*)\s*$/;
+    }
+  }
+  return $rocm_path;
 }
 
 $verbose = $ENV{'HIPCC_VERBOSE'} // 0;
@@ -88,12 +99,18 @@ sub delete_temp_dirs {
 }
 
 my $base_dir;
+my $rocmPath;
 BEGIN {
     $base_dir = dirname(Cwd::realpath(__FILE__) );
+    $rocmPath = get_rocm_path_option();
+    if ($rocmPath ne '') {
+      # --rocm-path takes precedence over ENV{ROCM_PATH}
+      $ENV{ROCM_PATH}=$rocmPath;
+    }
 }
 use lib "$base_dir/";
-use hipvars;
 
+use hipvars;
 $isWindows      =   $hipvars::isWindows;
 $HIP_RUNTIME    =   $hipvars::HIP_RUNTIME;
 $HIP_PLATFORM   =   $hipvars::HIP_PLATFORM;
@@ -103,7 +120,6 @@ $CUDA_PATH      =   $hipvars::CUDA_PATH;
 $HIP_PATH       =   $hipvars::HIP_PATH;
 $ROCM_PATH      =   $hipvars::ROCM_PATH;
 $HIP_VERSION    =   $hipvars::HIP_VERSION;
-$HSA_PATH       =   $hipvars::HSA_PATH;
 $HIP_ROCCLR_HOME =   $hipvars::HIP_ROCCLR_HOME;
 
 if ($HIP_PLATFORM eq "amd") {
@@ -163,11 +179,8 @@ if ($HIP_PLATFORM eq "amd") {
 
     # Figure out the target with which llvm is configured
     $HIP_CLANG_TARGET = `$HIPCC -print-target-triple`;
-    $HIP_CLANG_TARGET = chomp($HIP_CLANG_TARGET);
+    chomp($HIP_CLANG_TARGET);
 
-    if (! defined $HIP_CLANG_INCLUDE_PATH) {
-        $HIP_CLANG_INCLUDE_PATH = abs_path("$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION/include");
-    }
     if (! defined $HIP_INCLUDE_PATH) {
         $HIP_INCLUDE_PATH = "$HIP_PATH/include";
     }
@@ -180,15 +193,12 @@ if ($HIP_PLATFORM eq "amd") {
             print ("HIP_ROCCLR_HOME=$HIP_ROCCLR_HOME\n");
         }
         print ("HIP_CLANG_PATH=$HIP_CLANG_PATH\n");
-        print ("HIP_CLANG_INCLUDE_PATH=$HIP_CLANG_INCLUDE_PATH\n");
         print ("HIP_INCLUDE_PATH=$HIP_INCLUDE_PATH\n");
         print ("HIP_LIB_PATH=$HIP_LIB_PATH\n");
         print ("DEVICE_LIB_PATH=$DEVICE_LIB_PATH\n");
         print ("HIP_CLANG_TARGET=$HIP_CLANG_TARGET\n");
     }
 
-    $HIPCXXFLAGS .= " -isystem \"$HIP_CLANG_INCLUDE_PATH/..\"";
-    $HIPCFLAGS .= " -isystem \"$HIP_CLANG_INCLUDE_PATH/..\"";
     $HIPLDFLAGS .= " -L\"$HIP_LIB_PATH\"";
     if ($isWindows) {
       $HIPLDFLAGS .= " -lamdhip64";
@@ -197,13 +207,6 @@ if ($HIP_PLATFORM eq "amd") {
         ## Allow __fp16 as function parameter and return type.
         $HIPCXXFLAGS .= " -Xclang -fallow-half-arguments-and-returns -D__HIP_HCC_COMPAT_MODE__=1";
     }
-
-    if (not $isWindows) {
-        $HSA_PATH=$ENV{'HSA_PATH'} // "$ROCM_PATH/hsa";
-        $HIPCXXFLAGS .= " -isystem $HSA_PATH/include";
-        $HIPCFLAGS .= " -isystem $HSA_PATH/include";
-    }
-
 } elsif ($HIP_PLATFORM eq "nvidia") {
     $CUDA_PATH=$ENV{'CUDA_PATH'} // '/usr/local/cuda';
     $HIP_INCLUDE_PATH = "$HIP_PATH/include";
@@ -321,6 +324,9 @@ foreach $arg (@ARGV)
     # Check target selection option: --offload-arch= and --amdgpu-target=...
     foreach my $targetOpt (@targetOpts) {
         if (substr($arg, 0, length($targetOpt)) eq $targetOpt) {
+             if ($targetOpt eq '--amdgpu-target=') {
+                print "Warning: The --amdgpu-target option has been deprecated and will be removed in the future.  Use --offload-arch instead.\n";
+             }
              # If targets string is not empty, add a comma before adding new target option value.
              $targetsStr .= ($targetsStr ? ',' : '');
              $targetsStr .=  substr($arg, length($targetOpt));
@@ -355,10 +361,6 @@ foreach $arg (@ARGV)
         $compileOnly = 1;
         $buildDeps = 1;
     }
-    if($trimarg eq '-use_fast_math') {
-        $HIPCXXFLAGS .= " -DHIP_FAST_MATH ";
-        $HIPCFLAGS .= " -DHIP_FAST_MATH ";
-    }
     if(($trimarg eq '-use-staticlib') and ($setLinkType eq 0))
     {
         $linkType = 0;
@@ -376,6 +378,7 @@ foreach $arg (@ARGV)
     }
     if($arg =~ '--amdhsa-code-object-version=')
     {
+        print "Warning: The --amdhsa-code-object-version option has been deprecated and will be removed in the future.  Use -mllvm -mcode-object-version instead.\n";
         $arg =~ s/--amdhsa-code-object-version=//;
         $hsacoVersion = $arg;
         $swallowArg = 1;
@@ -475,7 +478,7 @@ foreach $arg (@ARGV)
             my $fileType = `file $obj`;
             my $isObj = ($fileType =~ m/ELF/ or $fileType =~ m/COFF/);
             if ($fileType =~ m/ELF/) {
-                my $sections = `readelf -e -W $obj`;
+                my $sections = `$HIP_CLANG_PATH/llvm-readelf -e -W $obj`;
                 $isObj = !($sections =~ m/__CLANG_OFFLOAD_BUNDLE__/);
             }
             $allIsObj = ($allIsObj and $isObj);
@@ -534,12 +537,11 @@ foreach $arg (@ARGV)
         # Process HIPCC options here:
         if ($arg =~ m/^--hipcc/) {
             $swallowArg = 1;
-            #if $arg eq "--hipcc_profile") {  # Example argument here, hipcc
-            #
-            #}
             if ($arg eq "--hipcc-func-supp") {
+              print "Warning: The --hipcc-func-supp option has been deprecated and will be removed in the future.\n";
               $funcSupp = 1;
             } elsif ($arg eq "--hipcc-no-func-supp") {
+              print "Warning: The --hipcc-no-func-supp option has been deprecated and will be removed in the future.\n";
               $funcSupp = 0;
             }
         } else {
@@ -708,7 +710,7 @@ if ($HIP_PLATFORM eq "amd") {
       if ($linkType eq 0) {
         $toolArgs = " -L$HIP_LIB_PATH -lamdhip64 -L$ROCM_PATH/lib -lhsa-runtime64 -ldl -lnuma " . ${toolArgs};
       } else {
-        $toolArgs = ${toolArgs} . " -Wl,--enable-new-dtags -Wl,-rpath=$HIP_LIB_PATH:$ROCM_PATH/lib -lamdhip64 ";
+        $toolArgs = ${toolArgs} . " -Wl,-rpath=$HIP_LIB_PATH:$ROCM_PATH/lib -lamdhip64 ";
       }
       # To support __fp16 and _Float16, explicitly link with compiler-rt
       $HIP_CLANG_BUILTIN_LIB="$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION/lib/$HIP_CLANG_TARGET/libclang_rt.builtins.a";
