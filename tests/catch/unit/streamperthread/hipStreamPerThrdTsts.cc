@@ -47,9 +47,7 @@ THE SOFTWARE.
 #endif
 
 #include <hip_test_common.hh>
-#ifdef HT_AMD
-  #include "hip/hip_cooperative_groups.h"
-#endif
+#include "hip/hip_cooperative_groups.h"
 using namespace std::chrono;
 using namespace cooperative_groups;
 #if HT_AMD
@@ -69,8 +67,12 @@ __global__ void StreamPerThrd(int *Ad, int *Ad1, size_t n, int Pk_Clk,
     int64_t GpuFrq = (Pk_Clk * 1000);
     int64_t StrtTck = clock64();
     if (index == 0) {
-      // The following while loop checks the value in ptr for around 4 seconds
-      while ((clock64() - StrtTck) <= (6 * GpuFrq)) {
+      // The following while loop holds the execution for ~2 seconds.
+      // Busy sleep on nvidia
+      while ((clock64() - StrtTck) <= (2 * GpuFrq)) {
+        #if HT_AMD
+          __builtin_amdgcn_s_sleep(10);
+        #endif
       }
       if (WaitEvnt == 1) {
         *Ad1 = 1;
@@ -83,8 +85,12 @@ __global__ void StreamPerThrd(int *Ad, int *Ad1, size_t n, int Pk_Clk,
 __global__ void StreamPerThrd1(int *A, int Pk_Clk) {
   int64_t GpuFrq = (Pk_Clk * 1000);
   int64_t StrtTck = clock64();
-  // The following while loop checks the value in ptr for around 3-4 seconds
-  while ((clock64() - StrtTck) <= (3 * GpuFrq)) {
+  // The following while loop holds the execution for ~1 second
+  // Busy sleep on nvidia
+  while ((clock64() - StrtTck) <= (GpuFrq)) {
+    #if HT_AMD
+      __builtin_amdgcn_s_sleep(10);
+    #endif
   }
   *A = 1;
 }
