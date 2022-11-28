@@ -61,6 +61,9 @@ __global__ void vector_square(float* C_d, float* A_d, size_t N_elmts) {
 float *A_h, *C_h;
 
 static void HIPRT_CB Callback1(hipStream_t stream, hipError_t status, void* userData) {
+  (void)stream;
+  (void)status;
+  (void)userData;
   // Validate the data
   for (size_t i = 0; i < N_elmts; i++) {
     if (C_h[i] != A_h[i] * A_h[i]) {
@@ -80,7 +83,6 @@ static void HIPRT_CB Callback1(hipStream_t stream, hipError_t status, void* user
 TEST_CASE("Unit_hipStreamAddCallback_StrmSyncTiming") {
   float *A_d, *C_d;
   size_t Nbytes = N_elmts * sizeof(float);
-  float tElapsed = 1.0f;
 
   A_h = (float*)malloc(Nbytes);
   HIPCHECK(A_h == 0 ? hipErrorOutOfMemory : hipSuccess);
@@ -134,6 +136,3 @@ TEST_CASE("Unit_hipStreamAddCallback_StrmSyncTiming") {
   // main thread should hardly take any time to complete.
   REQUIRE(duration.count() < 100);
 }
-
-
-
