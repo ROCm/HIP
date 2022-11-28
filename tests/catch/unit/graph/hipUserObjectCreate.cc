@@ -45,7 +45,6 @@ struct BoxStruct {
 };
 
 class BoxClass {
-  int count;
  public:
   BoxClass() {
     INFO("Constructor called for Class!\n");
@@ -117,7 +116,7 @@ static void hipUserObjectCreate_Functional_2(void *object,
   int refCount = 5;
   hipUserObject_t hObject;
   HIP_CHECK(hipUserObjectCreate(&hObject, object,
-                                  destroyIntObj,
+                                  destroyObj,
                                   refCount, hipUserObjectNoDestructorSync));
   REQUIRE(hObject != nullptr);
   HIP_CHECK(hipUserObjectRelease(hObject, refCount));
@@ -152,7 +151,7 @@ static void hipUserObjectCreate_Functional_3(void *object,
                                              void destroyObj(void *)) {
   hipUserObject_t hObject;
   HIP_CHECK(hipUserObjectCreate(&hObject, object,
-                                  destroyIntObj,
+                                  destroyObj,
                                   1, hipUserObjectNoDestructorSync));
   REQUIRE(hObject != nullptr);
   HIP_CHECK(hipUserObjectRetain(hObject));
@@ -192,7 +191,7 @@ static void hipUserObjectCreate_Functional_4(void *object,
   int refCountRetain = 8;
   hipUserObject_t hObject;
   HIP_CHECK(hipUserObjectCreate(&hObject, object,
-                                  destroyFloatObj,
+                                  destroyObj,
                                   refCount, hipUserObjectNoDestructorSync));
   REQUIRE(hObject != nullptr);
   HIP_CHECK(hipUserObjectRetain(hObject, refCountRetain));
