@@ -80,6 +80,7 @@ set(TEST_SRC
   hipGraphHostNodeGetParams.cc
   hipGraphExecChildGraphNodeSetParams.cc
   hipStreamGetCaptureInfo_v2.cc
+  hipUserObjectCreate.cc
   hipGraphCreate.cc
   hipGraphDestroy.cc
   hipGraphExecDestroy.cc
