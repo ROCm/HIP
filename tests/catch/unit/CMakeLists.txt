@@ -33,8 +33,9 @@ add_subdirectory(kernel)
 add_subdirectory(multiThread)
 add_subdirectory(compiler)
 add_subdirectory(errorHandling)
+add_subdirectory(cooperativeGrps)
 if(HIP_PLATFORM STREQUAL "amd")
-add_subdirectory(clock)
-# Vulkan interop APIs currently undefined for NVIDIA
+#add_subdirectory(clock)
+# Semaphore and Memory HandleType enums currently undefined on NVIDIA
 add_subdirectory(vulkan_interop)
 endif()
