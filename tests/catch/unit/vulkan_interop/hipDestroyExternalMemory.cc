@@ -29,7 +29,8 @@ TEST_CASE("Unit_hipDestroyExternalMemory_Vulkan_Negative_Parameters") {
   }
 
 // Segfaults in CUDA
-#if HT_AMD
+// Disabled on AMD due to defect - EXSWHTEC-187
+#if HT_AMD && 0
   SECTION("Double free") {
     VulkanTest vkt(enable_validation);
     const auto storage = vkt.CreateMappedStorage<int>(1, VK_BUFFER_USAGE_TRANSFER_DST_BIT, true);

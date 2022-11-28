@@ -29,28 +29,43 @@ TEST_CASE("Unit_hipImportExternalMemory_Vulkan_Negative_Parameters") {
   auto desc = vkt.BuildMemoryDescriptor(storage.memory, sizeof(*storage.host_ptr));
   hipExternalMemory_t ext_memory;
 
+// Disabled due to defect - EXSWHTEC-182
+#if HT_NVIDIA
   SECTION("extMem_out == nullptr") {
     HIP_CHECK_ERROR(hipImportExternalMemory(nullptr, &desc), hipErrorInvalidValue);
   }
+#endif
 
+// Disabled due to defect - EXSWHTEC-183
+#if HT_NVIDIA
   SECTION("memHandleDesc == nullptr") {
     HIP_CHECK_ERROR(hipImportExternalMemory(&ext_memory, nullptr), hipErrorInvalidValue);
   }
+#endif
 
+// Disabled due to defect - EXSWHTEC-185
+#if HT_NVIDIA
   SECTION("memHandleDesc.size == 0") {
     desc.size = 0;
     HIP_CHECK_ERROR(hipImportExternalMemory(&ext_memory, &desc), hipErrorInvalidValue);
   }
+#endif
 
+// Disabled due to defect - EXSWHTEC-186
+#if HT_NVIDIA
   SECTION("Invalid memHandleDesc.flags") {
     desc.flags = 2;
     HIP_CHECK_ERROR(hipImportExternalMemory(&ext_memory, &desc), hipErrorInvalidValue);
   }
+#endif
 
+// Disabled due to defect - EXSWHTEC-184
+#if HT_NVIDIA
   SECTION("Invalid memHandleDesc.type") {
     desc.type = static_cast<hipExternalMemoryHandleType>(-1);
     HIP_CHECK_ERROR(hipImportExternalMemory(&ext_memory, &desc), hipErrorInvalidValue);
   }
+#endif
 
 #ifdef _WIN32
   SECTION("memHandleDesc.handle == NULL") {
