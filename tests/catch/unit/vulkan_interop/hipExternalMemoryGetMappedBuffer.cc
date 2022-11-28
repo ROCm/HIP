@@ -62,12 +62,14 @@ TEST_CASE("Unit_hipExternalMemoryGetMappedBuffer_Vulkan_Positive_Read_Write") {
   REQUIRE(42 == vk_storage.host_ptr[1]);
   REQUIRE(43 == vk_storage.host_ptr[2]);
 
-  // Does not segfault in cuda, moreover cuda documentation prescribes the memory be freed
+  // Defect - EXSWHTEC-181
   // HIP_CHECK(hipFree(hip_dev_ptr));
   HIP_CHECK(hipDestroyExternalMemory(hip_ext_memory));
 }
 
-TEST_CASE("Unit_hipExternalMemoryGetMappedBuffer_Vulkan_Positive_Offset") {
+// Disabled on AMD due to defect - EXSWHTEC-175
+#if HT_NVIDIA
+TEST_CASE("Unit_hipExternalMemoryGetMappedBuffer_Vulkan_Positive_Read_Write_With_Offset") {
   VulkanTest vkt(enable_validation);
   using type = uint8_t;
   constexpr uint32_t count = 2;
@@ -94,9 +96,11 @@ TEST_CASE("Unit_hipExternalMemoryGetMappedBuffer_Vulkan_Positive_Offset") {
   HIP_CHECK(hipMemcpy(&read_val, hip_dev_ptr, 1, hipMemcpyDeviceToHost));
   REQUIRE(42 == read_val);
 
-  HIP_CHECK(hipFree(hip_dev_ptr));
+  // Defect - EXSWHTEC-181
+  // HIP_CHECK(hipFree(hip_dev_ptr));
   HIP_CHECK(hipDestroyExternalMemory(hip_ext_memory));
 }
+#endif
 
 TEST_CASE("Unit_hipExternalMemoryGetMappedBuffer_Vulkan_Negative_Parameters") {
   VulkanTest vkt(enable_validation);
@@ -110,38 +114,40 @@ TEST_CASE("Unit_hipExternalMemoryGetMappedBuffer_Vulkan_Negative_Parameters") {
   external_mem_buffer_desc.size = vk_storage.size;
   void* hip_dev_ptr = nullptr;
 
+// Disabled on AMD due to defect - EXSWHTEC-176
+#if HT_NVIDIA
   SECTION("devPtr == nullptr") {
     HIP_CHECK_ERROR(
         hipExternalMemoryGetMappedBuffer(nullptr, hip_ext_memory, &external_mem_buffer_desc),
         hipErrorInvalidValue);
   }
-
-// Segfaults in CUDA
-#if HT_AMD
-  SECTION("extMem is destroyed") {
-    HIP_CHECK(hipDestroyExternalMemory(hip_ext_memory));
-    HIP_CHECK_ERROR(
-        hipExternalMemoryGetMappedBuffer(&hip_dev_ptr, hip_ext_memory, &external_mem_buffer_desc),
-        hipErrorInvalidValue);
-  }
 #endif
 
+// Disabled on AMD due to defect - EXSWHTEC-177
+#if HT_NVIDIA
   SECTION("bufferDesc == nullptr") {
     HIP_CHECK_ERROR(hipExternalMemoryGetMappedBuffer(&hip_dev_ptr, hip_ext_memory, nullptr),
                     hipErrorInvalidValue);
   }
+#endif
 
+// Disabled on AMD due to defect - EXSWHTEC-179
+#if HT_NVIDIA
   SECTION("bufferDesc.flags != 0") {
     external_mem_buffer_desc.flags = 1;
     HIP_CHECK_ERROR(
         hipExternalMemoryGetMappedBuffer(&hip_dev_ptr, hip_ext_memory, &external_mem_buffer_desc),
         hipErrorInvalidValue);
   }
+#endif
 
+// Disabled on AMD due to defect - EXSWHTEC-180
+#if HT_NVIDIA
   SECTION("bufferDesc.offset + bufferDesc.size > hipExternalMemHandleDesc.size") {
     external_mem_buffer_desc.offset = 1;
     HIP_CHECK_ERROR(
         hipExternalMemoryGetMappedBuffer(&hip_dev_ptr, hip_ext_memory, &external_mem_buffer_desc),
         hipErrorInvalidValue);
   }
+#endif
 }
