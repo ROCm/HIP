@@ -36,6 +36,6 @@ add_subdirectory(errorHandling)
 add_subdirectory(cooperativeGrps)
 if(HIP_PLATFORM STREQUAL "amd")
 #add_subdirectory(clock)
-# Semaphore and Memory HandleType enums currently undefined on NVIDIA
+# Semaphore and Memory HandleType enums currently undefined for Nvidia
 add_subdirectory(vulkan_interop)
 endif()
