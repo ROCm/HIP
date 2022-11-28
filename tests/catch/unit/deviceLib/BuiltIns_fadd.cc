@@ -34,14 +34,14 @@ This testfile verifies __builtin_amdgcn_global_atomic_fadd_f64 API scenarios
 #define INITIAL_VAL 5
 __global__ void AtomicAdd_GlobalMem(double* addr, double* result) {
   double inc_val = 10;
-  *result = __builtin_amdgcn_global_atomic_fadd_f64(addr, inc_val);
+  *result = unsafeAtomicAdd(addr, inc_val);
 }
 static constexpr auto AtomicAddGlobalMem{
 R"(
 extern "C"
 __global__ void AtomicAdd_GlobalMem(double* addr, double* result) {
   double inc_val = 10;
-  *result = __builtin_amdgcn_global_atomic_fadd_f64(addr, inc_val);
+  *result = unsafeAtomicAdd(addr, inc_val);
 }
 )"};
 /*
@@ -76,6 +76,7 @@ TEST_CASE("Unit_BuiltInAtomicAdd_CoherentGlobalMem") {
       hipLaunchKernelGGL(AtomicAdd_GlobalMem, dim3(1), dim3(1),
                          0, 0, A_d,
                          result);
+      HIP_CHECK(hipGetLastError()); 
        std::cout << "test 1" << std::endl;
       HIP_CHECK(hipDeviceSynchronize());
       REQUIRE(A_h[0] == INITIAL_VAL);
@@ -118,6 +119,7 @@ TEST_CASE("Unit_BuiltInAtomicAdd_NonCoherentGlobalMem") {
       hipLaunchKernelGGL(AtomicAdd_GlobalMem, dim3(1), dim3(1),
                          0, 0, static_cast<double* >(A_d),
                          static_cast<double* >(result));
+      HIP_CHECK(hipGetLastError()); 
       HIP_CHECK(hipDeviceSynchronize());
       HIP_CHECK(hipMemcpy(B_h, result, sizeof(double), hipMemcpyDeviceToHost));
       REQUIRE(A_h[0] == INITIAL_VAL + INC_VAL);

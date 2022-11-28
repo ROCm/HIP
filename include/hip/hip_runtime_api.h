@@ -153,24 +153,31 @@ typedef struct hipDeviceProp_t {
 } hipDeviceProp_t;
 
 
-/**
- * Memory type (for pointer attributes)
+ /*
+ * @brief HIP Memory type (for pointer attributes)
+ * @enum
+ * @ingroup Enumerations
  */
 typedef enum hipMemoryType {
-    hipMemoryTypeHost,    ///< Memory is physically located on host
-    hipMemoryTypeDevice,  ///< Memory is physically located on device. (see deviceId for specific
-                          ///< device)
-    hipMemoryTypeArray,   ///< Array memory, physically located on device. (see deviceId for specific
-                          ///< device)
-    hipMemoryTypeUnified, ///< Not used currently
-    hipMemoryTypeManaged  ///< Managed memory, automaticallly managed by the unified memory system
+    hipMemoryTypeHost = 0,    ///< Memory is physically located on host
+    hipMemoryTypeDevice = 1,  ///< Memory is physically located on device. (see deviceId for
+                              ///< specific device)
+    hipMemoryTypeArray = 2,   ///< Array memory, physically located on device. (see deviceId for
+                              ///< specific device)
+    hipMemoryTypeUnified = 3, ///< Not used currently
+    hipMemoryTypeManaged = 4  ///< Managed memory, automaticallly managed by the unified
+                              ///< memory system
 } hipMemoryType;
 
 /**
  * Pointer attributes
  */
 typedef struct hipPointerAttribute_t {
-    enum hipMemoryType memoryType;
+  union {
+      // Deprecated, use instead type
+      enum hipMemoryType memoryType;
+      enum hipMemoryType type;
+    };
     int device;
     void* devicePointer;
     void* hostPointer;
@@ -1208,6 +1215,120 @@ typedef enum hipGraphInstantiateFlags {
       1,  ///< Automatically free memory allocated in a graph before relaunching.
 } hipGraphInstantiateFlags;
 
+enum hipGraphDebugDotFlags {
+  hipGraphDebugDotFlagsVerbose = 1
+      << 0, /**< Output all debug data as if every debug flag is enabled */
+  hipGraphDebugDotFlagsKernelNodeParams = 1 << 2, /**< Adds hipKernelNodeParams to output */
+  hipGraphDebugDotFlagsMemcpyNodeParams = 1 << 3, /**< Adds hipMemcpy3DParms to output */
+  hipGraphDebugDotFlagsMemsetNodeParams = 1 << 4, /**< Adds hipMemsetParams to output */
+  hipGraphDebugDotFlagsHostNodeParams = 1 << 5,   /**< Adds hipHostNodeParams to output */
+  hipGraphDebugDotFlagsEventNodeParams = 1
+      << 6, /**< Adds hipEvent_t handle from record and wait nodes to output */
+  hipGraphDebugDotFlagsExtSemasSignalNodeParams = 1
+      << 7, /**< Adds hipExternalSemaphoreSignalNodeParams values to output */
+  hipGraphDebugDotFlagsExtSemasWaitNodeParams = 1
+      << 8, /**< Adds hipExternalSemaphoreWaitNodeParams to output */
+  hipGraphDebugDotFlagsKernelNodeAttributes = 1
+      << 9, /**< Adds hipKernelNodeAttrID values to output */
+  hipGraphDebugDotFlagsHandles = 1
+      << 10 /**< Adds node handles and every kernel function handle to output */
+};
+/**
+ * Memory allocation properties
+ */
+typedef struct hipMemAllocationProp {
+    hipMemAllocationType type;                       ///< Memory allocation type
+    hipMemAllocationHandleType requestedHandleType;  ///< Requested handle type
+    hipMemLocation location;                         ///< Memory location
+    void* win32HandleMetaData;                       ///< Metadata for Win32 handles
+    struct {
+        unsigned char compressionType;               ///< Compression type
+        unsigned char gpuDirectRDMACapable;          ///< RDMA capable
+        unsigned short usage;                        ///< Usage
+    } allocFlags;
+} hipMemAllocationProp;
+
+/**
+ * Generic handle for memory allocation
+ */
+typedef struct ihipMemGenericAllocationHandle* hipMemGenericAllocationHandle_t;
+
+/**
+ * @brief Flags for granularity
+ * @enum
+ * @ingroup Enumerations
+ */
+typedef enum hipMemAllocationGranularity_flags {
+    hipMemAllocationGranularityMinimum     = 0x0,  ///< Minimum granularity
+    hipMemAllocationGranularityRecommended = 0x1   ///< Recommended granularity for performance
+} hipMemAllocationGranularity_flags;
+
+/**
+ * @brief Memory handle type
+ * @enum
+ * @ingroup Enumerations
+ */
+typedef enum hipMemHandleType {
+    hipMemHandleTypeGeneric = 0x0  ///< Generic handle type
+} hipMemHandleType;
+
+/**
+ * @brief Memory operation types
+ * @enum
+ * @ingroup Enumerations
+ */
+typedef enum hipMemOperationType {
+    hipMemOperationTypeMap   = 0x1,   ///< Map operation
+    hipMemOperationTypeUnmap = 0x2    ///< Unmap operation
+} hipMemOperationType;
+
+/**
+ * @brief Subresource types for sparse arrays
+ * @enum
+ * @ingroup Enumerations
+ */
+typedef enum hipArraySparseSubresourceType {
+    hipArraySparseSubresourceTypeSparseLevel = 0x0, ///< Sparse level
+    hipArraySparseSubresourceTypeMiptail     = 0x1  ///< Miptail
+} hipArraySparseSubresourceType;
+
+/**
+ * Map info for arrays
+ */
+typedef struct hipArrayMapInfo {
+     hipResourceType resourceType;                   ///< Resource type
+     union {
+         hipMipmappedArray mipmap;
+         hipArray_t array;
+     } resource;
+     hipArraySparseSubresourceType subresourceType;  ///< Sparse subresource type
+     union {
+         struct {
+             unsigned int level;   ///< For mipmapped arrays must be a valid mipmap level. For arrays must be zero
+             unsigned int layer;   ///< For layered arrays must be a valid layer index. Otherwise, must be zero
+             unsigned int offsetX;                   ///< X offset in elements
+             unsigned int offsetY;                   ///< Y offset in elements
+             unsigned int offsetZ;                   ///< Z offset in elements
+             unsigned int extentWidth;               ///< Width in elements
+             unsigned int extentHeight;              ///< Height in elements
+             unsigned int extentDepth;               ///< Depth in elements
+         } sparseLevel;
+         struct {
+             unsigned int layer;   ///< For layered arrays must be a valid layer index. Otherwise, must be zero
+             unsigned long long offset;              ///< Offset within mip tail
+             unsigned long long size;                ///< Extent in bytes
+         } miptail;
+     } subresource;
+     hipMemOperationType memOperationType;           ///< Memory operation type
+     hipMemHandleType memHandleType;                 ///< Memory handle type
+     union {
+         hipMemGenericAllocationHandle_t memHandle;
+     } memHandle;
+     unsigned long long offset;                      ///< Offset within the memory
+     unsigned int deviceBitMask;                     ///< Device ordinal bit mask
+     unsigned int flags;                             ///< flags for future use, must be zero now.
+     unsigned int reserved[2];                       ///< Reserved for future use, must be zero now.
+} hipArrayMapInfo;
 // Doxygen end group GlobalDefs
 /**  @} */
 //-------------------------------------------------------------------------------------------------
@@ -1246,7 +1367,7 @@ hipError_t hipInit(unsigned int flags);
  *
  * @param [out] driverVersion
  *
- * @returns #hipSuccess, #hipErrorInavlidValue
+ * @returns #hipSuccess, #hipErrorInvalidValue
  *
  * @warning The HIP feature set does not correspond to an exact CUDA SDK driver revision.
  * This function always set *driverVersion to 4 as an approximation though HIP supports
@@ -1262,7 +1383,7 @@ hipError_t hipDriverGetVersion(int* driverVersion);
  *
  * @param [out] runtimeVersion
  *
- * @returns #hipSuccess, #hipErrorInavlidValue
+ * @returns #hipSuccess, #hipErrorInvalidValue
  *
  * @warning The version definition of HIP runtime is different from CUDA.
  * On AMD platform, the function returns HIP runtime version,
@@ -1277,7 +1398,7 @@ hipError_t hipRuntimeGetVersion(int* runtimeVersion);
  * @param [out] device
  * @param [in] ordinal
  *
- * @returns #hipSuccess, #hipErrorInavlidDevice
+ * @returns #hipSuccess, #hipErrorInvalidDevice
  */
 hipError_t hipDeviceGet(hipDevice_t* device, int ordinal);
 
@@ -1287,7 +1408,7 @@ hipError_t hipDeviceGet(hipDevice_t* device, int ordinal);
  * @param [out] minor
  * @param [in] device
  *
- * @returns #hipSuccess, #hipErrorInavlidDevice
+ * @returns #hipSuccess, #hipErrorInvalidDevice
  */
 hipError_t hipDeviceComputeCapability(int* major, int* minor, hipDevice_t device);
 /**
@@ -1296,7 +1417,7 @@ hipError_t hipDeviceComputeCapability(int* major, int* minor, hipDevice_t device
  * @param [in] len
  * @param [in] device
  *
- * @returns #hipSuccess, #hipErrorInavlidDevice
+ * @returns #hipSuccess, #hipErrorInvalidDevice
  */
 hipError_t hipDeviceGetName(char* name, int len, hipDevice_t device);
 /**
@@ -1308,7 +1429,7 @@ hipError_t hipDeviceGetName(char* name, int len, hipDevice_t device);
  * it is still open to changes and may have outstanding issues.
  *
  * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue, #hipErrorNotInitialized,
- * #hipErrorDeInitialized
+ * #hipErrorDeinitialized
  */
 hipError_t hipDeviceGetUuid(hipUUID* uuid, hipDevice_t device);
 /**
@@ -1318,7 +1439,7 @@ hipError_t hipDeviceGetUuid(hipUUID* uuid, hipDevice_t device);
  * @param [in] srcDevice
  * @param [in] dstDevice
  *
- * @returns #hipSuccess, #hipErrorInavlidDevice
+ * @returns #hipSuccess, #hipErrorInvalidDevice
  */
 hipError_t hipDeviceGetP2PAttribute(int* value, hipDeviceP2PAttr attr,
                                     int srcDevice, int dstDevice);
@@ -1328,7 +1449,7 @@ hipError_t hipDeviceGetP2PAttribute(int* value, hipDeviceP2PAttr attr,
  * @param [in] len
  * @param [in] device
  *
- * @returns #hipSuccess, #hipErrorInavlidDevice
+ * @returns #hipSuccess, #hipErrorInvalidDevice
  */
 hipError_t hipDeviceGetPCIBusId(char* pciBusId, int len, int device);
 /**
@@ -1336,7 +1457,7 @@ hipError_t hipDeviceGetPCIBusId(char* pciBusId, int len, int device);
  * @param [out] device handle
  * @param [in] PCI Bus ID
  *
- * @returns #hipSuccess, #hipErrorInavlidDevice, #hipErrorInvalidValue
+ * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
  */
 hipError_t hipDeviceGetByPCIBusId(int* device, const char* pciBusId);
 /**
@@ -1344,7 +1465,7 @@ hipError_t hipDeviceGetByPCIBusId(int* device, const char* pciBusId);
  * @param [out] bytes
  * @param [in] device
  *
- * @returns #hipSuccess, #hipErrorInavlidDevice
+ * @returns #hipSuccess, #hipErrorInvalidDevice
  */
 hipError_t hipDeviceTotalMem(size_t* bytes, hipDevice_t device);
 // doxygen end initialization
@@ -1700,8 +1821,9 @@ hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t* handle, void* devPtr);
  * hipErrorInvalidHandle,
  * hipErrorTooManyPeers
  *
- * @note No guarantees are made about the address returned in @p *devPtr.
- * In particular, multiple processes may not receive the same address for the same @p handle.
+ * @note During multiple processes, using the same memory handle opened by the current context,
+ * there is no guarantee that the same device poiter will be returned in @p *devPtr.
+ * This is diffrent from CUDA.
  *
  */
 hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned int flags);
@@ -2373,13 +2495,6 @@ hipError_t hipEventSynchronize(hipEvent_t event);
  * recorded on one or both events (that is, hipEventQuery() would return #hipErrorNotReady on at
  * least one of the events), then #hipErrorNotReady is returned.
  *
- * Note, for HIP Events used in kernel dispatch using hipExtLaunchKernelGGL/hipExtLaunchKernel,
- * events passed in hipExtLaunchKernelGGL/hipExtLaunchKernel are not explicitly recorded and should
- * only be used to get elapsed time for that specific launch. In case events are used across
- * multiple dispatches, for example, start and stop events from different hipExtLaunchKernelGGL/
- * hipExtLaunchKernel calls, they will be treated as invalid unrecorded events, HIP will throw
- * error "hipErrorInvalidHandle" from hipEventElapsedTime.
- *
  * @see hipEventCreate, hipEventCreateWithFlags, hipEventQuery, hipEventDestroy, hipEventRecord,
  * hipEventSynchronize
  */
@@ -2391,9 +2506,9 @@ hipError_t hipEventElapsedTime(float* ms, hipEvent_t start, hipEvent_t stop);
  * @returns #hipSuccess, #hipErrorNotReady, #hipErrorInvalidHandle, #hipErrorInvalidValue,
  * #hipErrorNotInitialized, #hipErrorLaunchFailure
  *
- * Query the status of the specified event.  This function will return #hipErrorNotReady if all
+ * Query the status of the specified event.  This function will return #hipSuccess if all
  * commands in the appropriate stream (specified to hipEventRecord()) have completed.  If that work
- * has not completed, or if hipEventRecord() was not called on the event, then #hipSuccess is
+ * has not completed, or if hipEventRecord() was not called on the event, then #hipErrorNotReady is
  * returned.
  *
  * @see hipEventCreate, hipEventCreateWithFlags, hipEventRecord, hipEventDestroy,
@@ -3326,7 +3441,7 @@ hipError_t hipMemcpyWithStream(void* dst, const void* src, size_t sizeBytes,
  *  @param[in]   src Data being copy from
  *  @param[in]   sizeBytes Data size in bytes
  *
- *  @return #hipSuccess, #hipErrorDeInitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ *  @return #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
  * #hipErrorInvalidValue
  *
  *  @see hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc, hipMemAllocHost,
@@ -3344,7 +3459,7 @@ hipError_t hipMemcpyHtoD(hipDeviceptr_t dst, void* src, size_t sizeBytes);
  *  @param[in]   src Data being copy from
  *  @param[in]   sizeBytes Data size in bytes
  *
- *  @return #hipSuccess, #hipErrorDeInitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ *  @return #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
  * #hipErrorInvalidValue
  *
  *  @see hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc, hipMemAllocHost,
@@ -3362,7 +3477,7 @@ hipError_t hipMemcpyDtoH(void* dst, hipDeviceptr_t src, size_t sizeBytes);
  *  @param[in]   src Data being copy from
  *  @param[in]   sizeBytes Data size in bytes
  *
- *  @return #hipSuccess, #hipErrorDeInitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ *  @return #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
  * #hipErrorInvalidValue
  *
  *  @see hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc, hipMemAllocHost,
@@ -3380,7 +3495,7 @@ hipError_t hipMemcpyDtoD(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeByte
  *  @param[in]   src Data being copy from
  *  @param[in]   sizeBytes Data size in bytes
  *
- *  @return #hipSuccess, #hipErrorDeInitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ *  @return #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
  * #hipErrorInvalidValue
  *
  *  @see hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc, hipMemAllocHost,
@@ -3398,7 +3513,7 @@ hipError_t hipMemcpyHtoDAsync(hipDeviceptr_t dst, void* src, size_t sizeBytes, h
  *  @param[in]   src Data being copy from
  *  @param[in]   sizeBytes Data size in bytes
  *
- *  @return #hipSuccess, #hipErrorDeInitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ *  @return #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
  * #hipErrorInvalidValue
  *
  *  @see hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc, hipMemAllocHost,
@@ -3416,7 +3531,7 @@ hipError_t hipMemcpyDtoHAsync(void* dst, hipDeviceptr_t src, size_t sizeBytes, h
  *  @param[in]   src Data being copy from
  *  @param[in]   sizeBytes Data size in bytes
  *
- *  @return #hipSuccess, #hipErrorDeInitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ *  @return #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
  * #hipErrorInvalidValue
  *
  *  @see hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc, hipMemAllocHost,
@@ -4483,6 +4598,8 @@ hipError_t hipDevicePrimaryCtxSetFlags(hipDevice_t dev, unsigned int flags);
  * @param [in] fname
  * @param [out] module
  *
+ * @warning File/memory resources allocated in this function are released only in hipModuleUnload.
+ *
  * @returns hipSuccess, hipErrorInvalidValue, hipErrorInvalidContext, hipErrorFileNotFound,
  * hipErrorOutOfMemory, hipErrorSharedObjectInitFailed, hipErrorNotInitialized
  *
@@ -4957,7 +5074,10 @@ hipError_t hipBindTextureToMipmappedArray(
  * @param [in] pTexDesc  pointer to texture descriptor
  * @param [in] pResViewDesc  pointer to resource view descriptor
  *
- * @returns hipSuccess, hipErrorInvalidValue
+ * @returns hipSuccess, hipErrorInvalidValue, hipErrorNotSupported, hipErrorOutOfMemory
+ *
+ * @note 3D liner filter isn't supported on GFX90A boards, on which the API @p hipCreateTextureObject will
+ * return hipErrorNotSupported.
  *
  */
 hipError_t hipCreateTextureObject(
@@ -5302,10 +5422,6 @@ hipError_t hipMipmappedArrayGetLevel(
  *  @{
  *  This section describes the callback/Activity of HIP runtime API.
  */
-hipError_t hipRegisterApiCallback(uint32_t id, void* fun, void* arg);
-hipError_t hipRemoveApiCallback(uint32_t id);
-hipError_t hipRegisterActivityCallback(uint32_t id, void* fun, void* arg);
-hipError_t hipRemoveActivityCallback(uint32_t id);
 const char* hipApiName(uint32_t id);
 const char* hipKernelNameRef(const hipFunction_t f);
 const char* hipKernelNameRefByPtr(const void* hostFunction, hipStream_t stream);
@@ -6337,7 +6453,8 @@ hipError_t hipDeviceGraphMemTrim(int device);
  * @warning : This API is marked as beta, meaning, while this is feature complete,
  * it is still open to changes and may have outstanding issues.
  */
-hipError_t hipUserObjectCreate(hipUserObject_t* object_out, void* ptr, hipHostFn_t destroy, unsigned int initialRefcount, unsigned int flags);
+hipError_t hipUserObjectCreate(hipUserObject_t* object_out, void* ptr, hipHostFn_t destroy,
+                               unsigned int initialRefcount, unsigned int flags);
 
 /**
  * @brief Release number of references to resource.
@@ -6348,7 +6465,7 @@ hipError_t hipUserObjectCreate(hipUserObject_t* object_out, void* ptr, hipHostFn
  * @warning : This API is marked as beta, meaning, while this is feature complete,
  * it is still open to changes and may have outstanding issues.
  */
-hipError_t hipUserObjectRelease(hipUserObject_t object, unsigned int count);
+hipError_t hipUserObjectRelease(hipUserObject_t object, unsigned int count __dparm(1));
 
 /**
  * @brief Retain number of references to resource.
@@ -6359,7 +6476,7 @@ hipError_t hipUserObjectRelease(hipUserObject_t object, unsigned int count);
  * @warning : This API is marked as beta, meaning, while this is feature complete,
  * it is still open to changes and may have outstanding issues.
  */
-hipError_t hipUserObjectRetain(hipUserObject_t object, unsigned int count);
+hipError_t hipUserObjectRetain(hipUserObject_t object, unsigned int count __dparm(1));
 
 /**
  * @brief Retain user object for graphs.
@@ -6372,7 +6489,8 @@ hipError_t hipUserObjectRetain(hipUserObject_t object, unsigned int count);
  * @warning : This API is marked as beta, meaning, while this is feature complete,
  * it is still open to changes and may have outstanding issues.
  */
-hipError_t hipGraphRetainUserObject(hipGraph_t graph, hipUserObject_t object, unsigned int count, unsigned int flags);
+hipError_t hipGraphRetainUserObject(hipGraph_t graph, hipUserObject_t object,
+                                    unsigned int count __dparm(1), unsigned int flags __dparm(0));
 
 /**
  * @brief Release user object from graphs.
@@ -6384,109 +6502,89 @@ hipError_t hipGraphRetainUserObject(hipGraph_t graph, hipUserObject_t object, un
  * @warning : This API is marked as beta, meaning, while this is feature complete,
  * it is still open to changes and may have outstanding issues.
  */
-hipError_t hipGraphReleaseUserObject(hipGraph_t graph, hipUserObject_t object, unsigned int count);
+hipError_t hipGraphReleaseUserObject(hipGraph_t graph, hipUserObject_t object,
+                                     unsigned int count __dparm(1));
+
+/**
+ * @brief Write a DOT file describing graph structure.
+ *
+ * @param [in] graph - graph object for which DOT file has to be generated.
+ * @param [in] path - path to write the DOT file.
+ * @param [in] flags - Flags from hipGraphDebugDotFlags to get additional node information.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorOperatingSystem
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphDebugDotPrint(hipGraph_t graph, const char* path, unsigned int flags);
+
+/**
+ * @brief Copies attributes from source node to destination node.
+ *
+ * Copies attributes from source node to destination node.
+ * Both node must have the same context.
+ *
+ * @param [out] hDst - Destination node.
+ * @param [in] hSrc - Source node.
+ * For list of attributes see ::hipKernelNodeAttrID.
+ *
+ * @returns #hipSuccess, #hipErrorInvalidContext
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphKernelNodeCopyAttributes(hipGraphNode_t hSrc, hipGraphNode_t hDst);
+
+/**
+ * @brief Enables or disables the specified node in the given graphExec
+ *
+ * Sets hNode to be either enabled or disabled. Disabled nodes are functionally equivalent
+ * to empty nodes until they are reenabled. Existing node parameters are not affected by
+ * disabling/enabling the node.
+ *
+ * The node is identified by the corresponding hNode in the non-executable graph, from which the
+ * executable graph was instantiated.
+ *
+ * hNode must not have been removed from the original graph.
+ *
+ * @note Currently only kernel, memset and memcpy nodes are supported.
+ *
+ * @param [in] hGraphExec - The executable graph in which to set the specified node.
+ * @param [in] hNode      - Node from the graph from which graphExec was instantiated.
+ * @param [in] isEnabled  - Node is enabled if != 0, otherwise the node is disabled.
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue,
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphNodeSetEnabled(hipGraphExec_t hGraphExec, hipGraphNode_t hNode,
+                                  unsigned int isEnabled);
+/**
+ * @brief Query whether a node in the given graphExec is enabled
+ *
+ * Sets isEnabled to 1 if hNode is enabled, or 0 if it is disabled.
+ *
+ * The node is identified by the corresponding node in the non-executable graph, from which the
+ * executable graph was instantiated.
+ *
+ * hNode must not have been removed from the original graph.
+ *
+ * @note Currently only kernel, memset and memcpy nodes are supported.
+ *
+ * @param [in]  hGraphExec - The executable graph in which to set the specified node.
+ * @param [in]  hNode      - Node from the graph from which graphExec was instantiated.
+ * @param [out] isEnabled  - Location to return the enabled status of the node.
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphNodeGetEnabled(hipGraphExec_t hGraphExec, hipGraphNode_t hNode,
+                                  unsigned int* isEnabled);
+
 // doxygen end graph API
 /**
  * @}
  */
 
-
-/**
- * Memory allocation properties
- */
-typedef struct hipMemAllocationProp {
-    hipMemAllocationType type;                      ///< Memory allocation type
-    hipMemAllocationHandleType requestedHandleType; ///< Requested handle type
-    hipMemLocation location;                        ///< Memory location
-    void* win32HandleMetaData;                      ///< Metadata for Win32 handles
-    struct {
-        unsigned char compressionType;              ///< Compression type
-        unsigned char gpuDirectRDMACapable;         ///< RDMA capable
-        unsigned short usage;                       ///< Usage
-    } allocFlags;
-} hipMemAllocationProp;
-
-/**
- * Generic handle for memory allocation
- */
-typedef struct ihipMemGenericAllocationHandle* hipMemGenericAllocationHandle_t;
-
-/**
- * @brief Flags for granularity
- * @enum
- * @ingroup Enumerations
- */
-typedef enum hipMemAllocationGranularity_flags {
-    hipMemAllocationGranularityMinimum     = 0x0, ///< Minimum granularity
-    hipMemAllocationGranularityRecommended = 0x1  ///< Recommended granularity for performance
-} hipMemAllocationGranularity_flags;
-
-/**
- * @brief Memory handle type
- * @enum
- * @ingroup Enumerations
- */
-typedef enum hipMemHandleType {
-    hipMemHandleTypeGeneric = 0x0 ///< Generic handle type
-} hipMemHandleType;
-
-/**
- * @brief Memory operation types
- * @enum
- * @ingroup Enumerations
- */
-typedef enum hipMemOperationType {
-    hipMemOperationTypeMap   = 0x1, ///< Map operation
-    hipMemOperationTypeUnmap = 0x2  ///< Unmap operation
-} hipMemOperationType;
-
-/**
- * @brief Subresource types for sparse arrays
- * @enum
- * @ingroup Enumerations
- */
-typedef enum hipArraySparseSubresourceType {
-    hipArraySparseSubresourceTypeSparseLevel = 0x0, ///< Sparse level
-    hipArraySparseSubresourceTypeMiptail     = 0x1  ///< Miptail
-} hipArraySparseSubresourceType;
-
-/**
- * Map info for arrays
- */
-typedef struct hipArrayMapInfo {
-     hipResourceType resourceType;                  ///< Resource type
-     union {
-         hipMipmappedArray mipmap;
-         hipArray_t array;
-     } resource;
-     hipArraySparseSubresourceType subresourceType; ///< Sparse subresource type
-     union {
-         struct {
-             unsigned int level;                    ///< For mipmapped arrays must be a valid mipmap level. For arrays must be zero
-             unsigned int layer;                    ///< For layered arrays must be a valid layer index. Otherwise, must be zero
-             unsigned int offsetX;                  ///< X offset in elements
-             unsigned int offsetY;                  ///< Y offset in elements
-             unsigned int offsetZ;                  ///< Z offset in elements
-             unsigned int extentWidth;              ///< Width in elements
-             unsigned int extentHeight;             ///< Height in elements
-             unsigned int extentDepth;              ///< Depth in elements
-         } sparseLevel;
-         struct {
-             unsigned int layer;                    ///< For layered arrays must be a valid layer index. Otherwise, must be zero
-             unsigned long long offset;             ///< Offset within mip tail
-             unsigned long long size;               ///< Extent in bytes
-         } miptail;
-     } subresource;
-     hipMemOperationType memOperationType;          ///< Memory operation type
-     hipMemHandleType memHandleType;                ///< Memory handle type
-     union {
-         hipMemGenericAllocationHandle_t memHandle;
-     } memHandle;
-     unsigned long long offset;                     ///< Offset within the memory
-     unsigned int deviceBitMask;                    ///< Device ordinal bit mask
-     unsigned int flags;                            ///< flags for future use, must be zero now.
-     unsigned int reserved[2];                      ///< Reserved for future use, must be zero now.
-} hipArrayMapInfo;
 
 /**
  *-------------------------------------------------------------------------------------------------
@@ -6767,6 +6865,148 @@ inline hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
     return hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
         numBlocks, reinterpret_cast<const void*>(f), blockSize, dynSharedMemPerBlk, flags);
 }
+/**
+ * @brief Returns grid and block size that achieves maximum potential occupancy for a device function
+ *
+ * Returns in \p *min_grid_size and \p *block_size a suggested grid /
+ * block size pair that achieves the best potential occupancy
+ * (i.e. the maximum number of active warps on the current device with the smallest number
+ * of blocks for a particular function).
+ *
+ * @param [out] min_grid_size minimum grid size needed to achieve the best potential occupancy
+ * @param [out] block_size    block size required for the best potential occupancy
+ * @param [in]  func          device function symbol
+ * @param [in]  block_size_to_dynamic_smem_size - a unary function/functor that takes block size,
+ * and returns the size, in bytes, of dynamic shared memory needed for a block
+ * @param [in]  block_size_limit the maximum block size \p func is designed to work with. 0 means no limit.
+ * @param [in]  flags         reserved
+ *
+ * @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidDeviceFunction, #hipErrorInvalidValue,
+ * #hipErrorUnknown
+ */
+template<typename UnaryFunction, class T>
+static hipError_t __host__ inline hipOccupancyMaxPotentialBlockSizeVariableSMemWithFlags(
+    int*          min_grid_size,
+    int*          block_size,
+    T             func,
+    UnaryFunction block_size_to_dynamic_smem_size,
+    int           block_size_limit = 0,
+    unsigned int  flags = 0) {
+  if (min_grid_size == nullptr || block_size == nullptr ||
+      reinterpret_cast<const void*>(func) == nullptr) {
+    return hipErrorInvalidValue;
+  }
+
+  int dev;
+  hipError_t status;
+  if ((status = hipGetDevice(&dev)) != hipSuccess) {
+    return status;
+  }
+
+  int max_threads_per_cu;
+  if ((status = hipDeviceGetAttribute(&max_threads_per_cu,
+      hipDeviceAttributeMaxThreadsPerMultiProcessor, dev)) != hipSuccess) {
+    return status;
+  }
+
+  int warp_size;
+  if ((status = hipDeviceGetAttribute(&warp_size,
+      hipDeviceAttributeWarpSize, dev)) != hipSuccess) {
+    return status;
+  }
+
+  int max_cu_count;
+  if ((status = hipDeviceGetAttribute(&max_cu_count,
+      hipDeviceAttributeMultiprocessorCount, dev)) != hipSuccess) {
+    return status;
+  }
+
+  struct hipFuncAttributes attr;
+  if ((status = hipFuncGetAttributes(&attr, reinterpret_cast<const void*>(func))) != hipSuccess) {
+    return status;
+  }
+
+  // Initial limits for the execution
+  const int func_max_threads_per_block = attr.maxThreadsPerBlock;
+  if (block_size_limit == 0) {
+    block_size_limit = func_max_threads_per_block;
+  }
+
+  if (func_max_threads_per_block < block_size_limit) {
+    block_size_limit = func_max_threads_per_block;
+  }
+
+  const int block_size_limit_aligned =
+    ((block_size_limit + (warp_size - 1)) / warp_size) * warp_size;
+
+  // For maximum search
+  int max_threads = 0;
+  int max_block_size{};
+  int max_num_blocks{};
+  for (int block_size_check_aligned = block_size_limit_aligned;
+       block_size_check_aligned > 0;
+       block_size_check_aligned -= warp_size) {
+    // Make sure the logic uses the requested limit and not aligned
+    int block_size_check = (block_size_limit < block_size_check_aligned) ?
+        block_size_limit : block_size_check_aligned;
+
+    size_t dyn_smem_size = block_size_to_dynamic_smem_size(block_size_check);
+    int optimal_blocks;
+    if ((status = hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
+        &optimal_blocks, func, block_size_check, dyn_smem_size, flags)) != hipSuccess) {
+      return status;
+    }
+
+    int total_threads = block_size_check * optimal_blocks;
+    if (total_threads > max_threads) {
+      max_block_size = block_size_check;
+      max_num_blocks = optimal_blocks;
+      max_threads = total_threads;
+    }
+
+    // Break if the logic reached possible maximum
+    if (max_threads_per_cu == max_threads) {
+      break;
+    }
+  }
+
+  // Grid size is the number of blocks per CU * CU count
+  *min_grid_size = max_num_blocks * max_cu_count;
+  *block_size = max_block_size;
+
+  return status;
+}
+
+/**
+ * @brief Returns grid and block size that achieves maximum potential occupancy for a device function
+ *
+ * Returns in \p *min_grid_size and \p *block_size a suggested grid /
+ * block size pair that achieves the best potential occupancy
+ * (i.e. the maximum number of active warps on the current device with the smallest number
+ * of blocks for a particular function).
+ *
+ * @param [out] min_grid_size minimum grid size needed to achieve the best potential occupancy
+ * @param [out] block_size    block size required for the best potential occupancy
+ * @param [in]  func          device function symbol
+ * @param [in]  block_size_to_dynamic_smem_size - a unary function/functor that takes block size,
+ * and returns the size, in bytes, of dynamic shared memory needed for a block
+ * @param [in]  block_size_limit the maximum block size \p func is designed to work with. 0 means no limit.
+ *
+ * @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidDeviceFunction, #hipErrorInvalidValue,
+ * #hipErrorUnknown
+ */
+template<typename UnaryFunction, class T>
+static hipError_t __host__ inline hipOccupancyMaxPotentialBlockSizeVariableSMem(
+    int*          min_grid_size,
+    int*          block_size,
+    T             func,
+    UnaryFunction block_size_to_dynamic_smem_size,
+    int           block_size_limit = 0)
+{
+    return hipOccupancyMaxPotentialBlockSizeVariableSMemWithFlags(min_grid_size, block_size, func,
+      block_size_to_dynamic_smem_size, block_size_limit);
+}
+
 template <typename F>
 inline hipError_t hipOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize,
                                                     F kernel, size_t dynSharedMemPerBlk, uint32_t blockSizeLimit) {

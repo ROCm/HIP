@@ -6,6 +6,10 @@ set(TEST_SRC
     Unit_hipEventRecord.cc
     Unit_hipEventIpc.cc
     hipEventDestroy.cc
+    hipEventCreate.cc
+    hipEventCreateWithFlags.cc
+    hipEventSynchronize.cc
+    Unit_hipEventMGpuMThreads.cc
 )
 
 # The test used wait mechanism and doesnt play well with all arch of nvidia

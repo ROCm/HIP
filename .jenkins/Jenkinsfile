@@ -59,9 +59,9 @@ def hipBuildTest(String backendLabel) {
                         # Check if backend label contains string "amd" or backend host is a server with amd gpu
                         if [[ $backendLabel =~ amd ]]; then
                             sleep 120
-                            LLVM_PATH=/opt/rocm/llvm ctest -E 'cooperative_streams_least_capacity.tst|cooperative_streams_half_capacity.tst|cooperative_streams_full_capacity.tst|grid_group_data_sharing.tst|hipIpcMemAccessTest.tst|p2p_copy_coherency.tst'
+                            LLVM_PATH=/opt/rocm/llvm ctest --overwrite BuildDirectory=. --output-junit hiptest_output_hit_amd.xml -E 'cooperative_streams_least_capacity.tst|cooperative_streams_half_capacity.tst|cooperative_streams_full_capacity.tst|grid_group_data_sharing.tst|hipIpcMemAccessTest.tst|p2p_copy_coherency.tst'
                         else
-                            make test
+                            ctest --overwrite BuildDirectory=. --output-junit hiptest_output_hit_nvidia.xml
                         fi
                         """
                 }
@@ -77,7 +77,7 @@ def hipBuildTest(String backendLabel) {
                     # Check if backend label contains string "amd" or backend host is a server with amd gpu
                     if [[ $backendLabel =~ amd ]]; then
                         export HT_CONFIG_FILE="$HIP_DIR/tests/catch/hipTestMain/config/config_amd_linux.json"
-                        cmake -DHIP_CATCH_TEST=1 -DHIP_PATH=\$PWD/install -DHIP_COMMON_DIR=$HIP_DIR -DAMD_OPENCL_PATH=\$OPENCL_DIR -DROCCLR_PATH=\$ROCclr_DIR -DCMAKE_PREFIX_PATH="/opt/rocm/" -DCMAKE_INSTALL_PREFIX=\$PWD/install ..
+                        cmake -DHIP_CATCH_TEST=1 -DCI_DISABLE_TESTBUILD=1 -DHIP_PATH=\$PWD/install -DHIP_COMMON_DIR=$HIP_DIR -DAMD_OPENCL_PATH=\$OPENCL_DIR -DROCCLR_PATH=\$ROCclr_DIR -DCMAKE_PREFIX_PATH="/opt/rocm/" -DCMAKE_INSTALL_PREFIX=\$PWD/install ..
                     else
                         export HIP_PLATFORM=nvidia
                         export HIP_COMPILER=nvcc
@@ -102,9 +102,9 @@ def hipBuildTest(String backendLabel) {
                         if [[ $backendLabel =~ amd ]]; then
                             sleep 120
                             export HT_CONFIG_FILE="$HIP_DIR/tests/catch/hipTestMain/config/config_amd_linux.json"
-                            LLVM_PATH=/opt/rocm/llvm ctest -E 'Unit_hipGraphChildGraphNodeGetGraph_Functional|Unit_hipGraphExecMemcpyNodeSetParamsFromSymbol_Negative|Unit_hipPtrGetAttribute_Simple|Unit_hipStreamPerThread_DeviceReset_2'
+                            LLVM_PATH=/opt/rocm/llvm ctest --overwrite BuildDirectory=. --output-junit hiptest_output_catch_amd.xml -E 'Unit_hipGraphChildGraphNodeGetGraph_Functional|Unit_hipGraphExecMemcpyNodeSetParamsFromSymbol_Negative|Unit_hipPtrGetAttribute_Simple|Unit_hipStreamPerThread_DeviceReset_2'
                         else
-                            make test
+                            ctest --overwrite BuildDirectory=. --output-junit hiptest_output_catch_nvidia.xml
                         fi
                         """
                 }

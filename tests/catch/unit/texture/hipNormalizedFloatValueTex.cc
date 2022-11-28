@@ -118,6 +118,7 @@ static void textureTest(texture<T, hipTextureType1D,
 
   hipLaunchKernelGGL(normalizedValTextureTest<T>, dim3(1, 1, 1),
                      dim3(SIZE, 1, 1), 0, 0, SIZE, dOutputData);
+  HIP_CHECK(hipGetLastError()); 
 
   float *hOutputData = new float[SIZE];
   REQUIRE(hOutputData != nullptr);

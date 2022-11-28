@@ -20,8 +20,10 @@
 /* Test Case Description:
    1) This testcase verifies the hipMallocManaged basic scenario - supported on
      all devices
-   2) This testcase verifies the hipMallocManaged basic scenario - supported
-       only on HMM enabled devices
+   2) This testcase verifies the hipMallocManaged advanced scenario - supported
+     only on HMM enabled devices
+   3) This testcase verifies that hipMallocManaged returns an OutOfMemory error
+     for allocations much larger than the available memory - supported on all devices
 */
 
 #include "hipMallocManagedCommon.hh"
@@ -114,6 +116,7 @@ TEST_CASE("Unit_hipMallocManaged_Advanced") {
   HIP_CHECK(hipEventRecord(event0, 0));
   hipLaunchKernelGGL(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock), 0, 0,
                      static_cast<const float*>(A), static_cast<const float*>(B), C, numElements);
+  HIP_CHECK(hipGetLastError());
   HIP_CHECK(hipEventRecord(event1, 0));
   HIP_CHECK(hipDeviceSynchronize());
   float time = 0.0f;
@@ -136,4 +139,20 @@ TEST_CASE("Unit_hipMallocManaged_Advanced") {
   HIP_CHECK(hipFree(A));
   HIP_CHECK(hipFree(B));
   REQUIRE(maxError != 0.0f);
+}
+
+/*
+   This testcase verifies that hipMallocManaged returns an OutOfMemory error for allocations much
+   larger than the available memory - supported on all devices
+ */
+TEST_CASE("Unit_hipMallocManaged_Large") {
+  auto managed = HmmAttrPrint();
+  if (managed != 1) {
+    WARN(
+        "GPU doesn't support hipDeviceAttributeManagedMemory attribute so defaulting to system "
+        "memory.");
+  }
+
+  float* A;
+  HIP_CHECK_ERROR(hipMallocManaged(&A, std::numeric_limits<size_t>::max()), hipErrorOutOfMemory);
 }

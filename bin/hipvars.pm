@@ -26,7 +26,7 @@ use Cwd;
 use File::Basename;
 
 $HIP_BASE_VERSION_MAJOR = "5";
-$HIP_BASE_VERSION_MINOR = "3";
+$HIP_BASE_VERSION_MINOR = "5";
 $HIP_BASE_VERSION_PATCH = "0";
 
 #---
@@ -74,15 +74,14 @@ $isWindows =  ($^O eq 'MSWin32' or $^O eq 'msys');
 # ROCM_PATH is defined relative to HIP_PATH else it is hardcoded to /opt/rocm.
 #
 $HIP_PATH=$ENV{'HIP_PATH'} // dirname(Cwd::abs_path("$0/../")); # use parent directory of hipcc
-if (-e "$HIP_PATH/../bin/rocm_agent_enumerator") {
-    $ROCM_PATH=$ENV{'ROCM_PATH'} // dirname("$HIP_PATH"); # use parent directory of HIP_PATH ,FILE_REORG
-}elsif (-e "$HIP_PATH/bin/rocm_agent_enumerator") {
+if (-e "$HIP_PATH/bin/rocm_agent_enumerator") {
     $ROCM_PATH=$ENV{'ROCM_PATH'} // "$HIP_PATH"; # use HIP_PATH
+}elsif (-e "$HIP_PATH/../bin/rocm_agent_enumerator") { # case for backward compatibility
+    $ROCM_PATH=$ENV{'ROCM_PATH'} // dirname("$HIP_PATH"); # use parent directory of HIP_PATH
 } else {
     $ROCM_PATH=$ENV{'ROCM_PATH'} // "/opt/rocm";
 }
 $CUDA_PATH=$ENV{'CUDA_PATH'} // '/usr/local/cuda';
-$HSA_PATH=$ENV{'HSA_PATH'} // "$ROCM_PATH/hsa";
 
 # Windows has a different structure, all binaries are inside hip/bin
 if ($isWindows) {
