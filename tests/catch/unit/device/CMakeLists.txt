@@ -25,6 +25,8 @@ set(TEST_SRC
     hipDeviceSetGetSharedMemConfig.cc
     hipDeviceReset.cc
     hipDeviceSetGetMemPool.cc
+    hipInit.cc
+    hipDriverGetVersion.cc
 )
 
 if(UNIX)
