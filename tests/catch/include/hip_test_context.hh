@@ -32,6 +32,7 @@ THE SOFTWARE.
 #include <set>
 #include <unordered_map>
 
+// OS Check
 #if defined(_WIN32)
 #define HT_WIN 1
 #define HT_LINUX 0
@@ -42,6 +43,7 @@ THE SOFTWARE.
 #error "OS not recognized"
 #endif
 
+// Platform check
 #if defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)
 #define HT_AMD 1
 #define HT_NVIDIA 0
@@ -51,16 +53,6 @@ THE SOFTWARE.
 #else
 #error "Platform not recognized"
 #endif
-
-static int _log_enable = (std::getenv("HT_LOG_ENABLE") ? 1 : 0);
-
-#define LogPrintf(format, ...)                                                                     \
-  {                                                                                                \
-    if (_log_enable) {                                                                             \
-      printf(format, __VA_ARGS__);                                                                 \
-      printf("%c", '\n');                                                                          \
-    }                                                                                              \
-  }
 
 typedef struct Config_ {
   std::vector<std::string> json_files;  // Json files
@@ -124,6 +116,26 @@ class TestContext {
     return instance;
   }
 
+  static std::string getEnvVar(std::string var) {
+    #if defined(_WIN32)
+    rsize_t MAX_LEN = 4096;
+    char dstBuf[MAX_LEN];
+    size_t dstSize;
+    if (!::getenv_s(&dstSize, dstBuf, MAX_LEN, var.c_str())) {
+      return std::string(dstBuf);
+    }
+    #elif defined(__linux__)
+    char* val = std::getenv(var.c_str());
+    if (val != NULL) {
+      return std::string(val);
+    }
+    #else
+    #error "OS not recognized"
+    #endif
+    return std::string("");
+  }
+
+
   bool isWindows() const;
   bool isLinux() const;
   bool isNvidia() const;
@@ -171,3 +183,14 @@ class TestContext {
 
   ~TestContext();
 };
+
+static bool _log_enable = (!TestContext::getEnvVar("HT_LOG_ENABLE").empty() ? true : false);
+
+// printing logs
+#define LogPrintf(format, ...)                                                                   \
+{                                                                                                \
+  if(_log_enable) {                                                                              \
+    printf(format, __VA_ARGS__);                                                                 \
+    printf("%c", '\n');                                                                          \
+  }                                                                                              \
+}

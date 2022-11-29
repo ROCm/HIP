@@ -9,6 +9,7 @@ set(TEST_SRC
     hipEventCreate.cc
     hipEventCreateWithFlags.cc
     hipEventSynchronize.cc
+    Unit_hipEventMGpuMThreads.cc
 )
 
 # The test used wait mechanism and doesnt play well with all arch of nvidia

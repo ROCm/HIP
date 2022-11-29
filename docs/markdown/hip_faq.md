@@ -105,14 +105,15 @@ However, we can provide a rough summary of the features included in each CUDA SD
     - Cooperative Launch, Surface Object Management, Version Management
 
 ### What libraries does HIP support?
-HIP includes growing support for the four key math libraries using hcBlas, hcFft, hcrng and hcsparse, as well as MIOpen for machine intelligence applications.
+HIP includes growing support for the four key math libraries using hipBlas, hipFFt, hipRAND and hipSPARSE, as well as MIOpen for machine intelligence applications.
 These offer pointer-based memory interfaces (as opposed to opaque buffers) and can be easily interfaced with other HIP applications.
 The hip interfaces support both ROCm and CUDA paths, with familiar library interfaces.
 
 - [hipBlas](https://github.com/ROCmSoftwarePlatform/hipBLAS), which utilizes [rocBlas](https://github.com/ROCmSoftwarePlatform/rocBLAS).
-- [hipfft](https://github.com/ROCmSoftwarePlatform/hcFFT)
-- [hipsparse](https://github.com/ROCmSoftwarePlatform/hcSPARSE)
-- [hiprng](https://github.com/ROCmSoftwarePlatform/hcrng)
+- [hipFFt](https://github.com/ROCmSoftwarePlatform/hipfft)
+- [hipsSPARSE](https://github.com/ROCmSoftwarePlatform/hipsparse)
+- [hipRAND](https://github.com/ROCmSoftwarePlatform/hipRAND)
+- [MIOpen](https://github.com/ROCmSoftwarePlatform/MIOpen)
 
 Additionally, some of the cublas routines are automatically converted to hipblas equivalents by the HIPIFY tools. These APIs use cublas or hcblas depending on the platform and replace the need to use conditional compilation.
 
