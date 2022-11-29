@@ -23,7 +23,6 @@ endif()
 # AMD only tests
 set(AMD_TEST_SRC
     unsafeAtomicAdd.cc
-    vectorTypesDevice.cc
     mbcnt.cc
     bitExtract.cc
     bitInsert.cc
