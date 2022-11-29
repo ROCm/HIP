@@ -316,9 +316,8 @@ TEST_CASE("Unit_hipPointerGetAttribute_Negative") {
         == hipErrorInvalidValue);
   }
   SECTION("Pass invalid attribute") {
-    hipPointer_attribute attr{HIP_POINTER_ATTRIBUTE_DEVICE_POINTER};
-    REQUIRE(hipPointerGetAttribute(&data, attr,
-          reinterpret_cast<hipDeviceptr_t>(A_h)) == hipErrorInvalidValue);
+    REQUIRE(hipPointerGetAttribute(&data, static_cast<hipPointer_attribute>(-1),
+                                   reinterpret_cast<hipDeviceptr_t>(A_h)) == hipErrorInvalidValue);
   }
 #if HT_AMD
   SECTION("Pass HIP_POINTER_ATTRIBUTE_IS_GPU_DIRECT_RDMA_CAPABLE"

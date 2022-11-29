@@ -27,9 +27,10 @@ This testfile verifies the following scenarios of hipHostRegister API
 2. hipHostRegister and perform hipMemcpy on it.
 */
 
+#include "hip/hip_runtime_api.h"
 #include <hip_test_common.hh>
 #include <hip_test_helper.hh>
-#include "hip/hip_runtime_api.h"
+#include <utils.hh>
 
 #define OFFSET 128
 static constexpr auto LEN{1024 * 1024};
@@ -63,9 +64,7 @@ void doMemCopy(size_t numElements, int offset, T* A, T* Bh, T* Bd, bool internal
   HIP_CHECK(hipMemcpy(Bh, Bd, sizeBytes, hipMemcpyDeviceToHost));
 
   // Make sure the copy worked
-  for (size_t i = 0; i < numElements; i++) {
-    REQUIRE(Bh[i] == A[i]);
-  }
+  ArrayMismatch(A, Bh, numElements);
 
   if (internalRegister) {
     HIP_CHECK(hipHostUnregister(A));

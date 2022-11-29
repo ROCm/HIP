@@ -68,6 +68,12 @@ TEST_CASE("Unit_hipHostUnregister_NullPtr") {
   HIP_CHECK_ERROR(hipHostUnregister(nullptr), hipErrorInvalidValue);
 }
 
+TEST_CASE("Unit_hipHostUnregister_Ptr_Different_Than_Specified_To_Register") {
+  std::vector<int> alloc(2);
+  HIP_CHECK(hipHostRegister(alloc.data(), alloc.size(), 0));
+  HIP_CHECK_ERROR(hipHostUnregister(&alloc.data()[1]), hipErrorHostMemoryNotRegistered);
+}
+
 TEST_CASE("Unit_hipHostUnregister_NotRegisteredPointer") {
   auto x = std::unique_ptr<int>(new int);
   HIP_CHECK_ERROR(hipHostUnregister(x.get()), hipErrorHostMemoryNotRegistered);
