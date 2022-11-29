@@ -11,7 +11,7 @@ if doxygen_dir is None:
 
 read_the_docs_build = os.environ.get('READTHEDOCS', None) == 'True'
 if read_the_docs_build:
-    subprocess.check_call(['doxygen', 'docs/Doxyfile'])
+    subprocess.check_call(['doxygen', 'docs/Doxyfile'], cwd=root_dir)
 
 # -- General configuration ------------------------------------------------
 
