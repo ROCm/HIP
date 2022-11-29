@@ -6,7 +6,7 @@ root_dir = os.path.dirname(os.path.dirname(__file__))
 
 doxygen_dir = os.environ.get('HIP_DOXYGEN_OUTDIR', None)
 if doxygen_dir is None:
-    doxygen_dir = os.join(root_dir, 'build', 'docs', 'doxygen')
+    doxygen_dir = os.path.join(root_dir, 'build', 'docs', 'doxygen')
     os.environ['HIP_DOXYGEN_OUTDIR'] = doxygen_dir
 
 read_the_docs_build = os.environ.get('READTHEDOCS', None) == 'True'
