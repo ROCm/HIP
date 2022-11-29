@@ -1,0 +1,9 @@
+root: index
+subtrees:
+- entries:
+  - file: api/index
+- entries:
+  - file: userguide/index
+- caption: Other Documents
+  entries:
+    - glob: markdown/*

@@ -2,29 +2,41 @@ import os
 import sys
 import subprocess
 
+root_dir = os.path.dirname(os.path.dirname(__file__))
+
+doxygen_dir = os.environ.get('HIP_DOXYGEN_OUTDIR', None)
+if doxygen_dir is None:
+    doxygen_dir = os.join(root_dir, 'build', 'docs', 'doxygen')
+    os.environ['HIP_DOXYGEN_OUTDIR'] = doxygen_dir
+
 read_the_docs_build = os.environ.get('READTHEDOCS', None) == 'True'
 if read_the_docs_build:
-    os.environ['HIP_PATH'] = os.path.dirname(os.path.dirname(__file__))
-    subprocess.check_call(['doxygen', 'doxygen-input/doxy.cfg'])
-    subprocess.check_call(['find', '-type', 'f'])
-
+    subprocess.check_call(['doxygen', 'docs/Doxyfile'])
 
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
 #
-# needs_sphinx = '1.0'
+needs_sphinx = '4.0'
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-#extensions = ['breathe']
-#breathe_projects = { "HIP": "../docBin/xml" }
-#breathe_default_project = "HIP"
-#breathe_domain_by_extension = {
-#  "h" : "c",
-#  "hpp" : "cpp",
-#}
+extensions = [
+    'breathe',
+#    'sphinx_book_theme',
+    'sphinx_external_toc',
+    'm2r2',
+]
+
+breathe_projects = { 'HIP': os.path.join(doxygen_dir, 'xml') }
+breathe_default_project = 'HIP'
+breathe_domain_by_extension = {
+    'h' : 'c',
+    'hpp' : 'cpp',
+}
+
+external_toc_path = '_toc.yml'
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -32,12 +44,14 @@ templates_path = ['_templates']
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 #
-# source_suffix = ['.rst', '.md']
+#source_suffix = ['.rst', '.md']
 source_suffix = {
-    '.rst': 'restructuredtext'}
+    '.rst': 'restructuredtext',
+    '.md': 'markdown',
+}
 
-# The master toctree document.
-master_doc = 'index'
+# The root toctree document.
+root_doc = 'index'
 
 # General information about the project.
 project = u'HIP'
@@ -71,14 +85,20 @@ pygments_style = 'sphinx'
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
 
-html_extra_path = ['RuntimeAPI/html']
-
 # -- Options for HTML output ----------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
 # html_theme = 'alabaster'
+#html_theme = 'sphinx_book_theme'
+#html_title = project
+#html_theme_options = {
+#    'home_page_in_toc': True,
+#    'use_edit_page_button': True,
+#    'repository_url': 'https://github.com/ROCm-Developer-Tools/HIP',
+#    'path_to_docs': 'docs',
+#}
 
 #if read_the_docs_build:
 #    html_theme = 'default'
@@ -91,12 +111,12 @@ html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
-html_theme_options = {
-    'navigation_depth': 4,
-    'prev_next_buttons_location': 'both',
-    'display_version': True,
-    'collapse_navigation': False,
-}
+#html_theme_options = {
+#   'navigation_depth': 4,
+#   'prev_next_buttons_location': 'both',
+#   'display_version': True,
+#   'collapse_navigation': False,
+#
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -143,7 +163,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'hip.tex', u'HIP Documentation',
+    (root_doc, 'hip.tex', u'HIP Documentation',
      u'Advanced Micro Devices', 'manual'),
 ]
 
@@ -153,7 +173,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'hip', u'HIP Documentation',
+    (root_doc, 'hip', u'HIP Documentation',
      [author], 1)
 ]
 
@@ -164,7 +184,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'HIP', u'HIP Documentation',
+    (root_doc, 'HIP', u'HIP Documentation',
      author, 'HIP development team', 'C++ Heterogeneous-Compute Interface for Portability',
      'Miscellaneous'),
 ]
