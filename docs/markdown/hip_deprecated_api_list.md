@@ -51,32 +51,32 @@ Should use roctracer/rocTX instead
 
 ## HIP Texture Management APIs
 
-###hipGetTextureReference
-###hipTexRefSetAddressMode
-###hipTexRefSetArray
-###hipTexRefSetFilterMode
-###hipTexRefSetFlags
-###hipTexRefSetFormat
-###hipBindTexture
-###hipBindTexture2D
-###hipBindTextureToArray
-###hipGetTextureAlignmentOffset
-###hipUnbindTexture
-###hipTexRefGetAddress
-###hipTexRefGetAddressMode
-###hipTexRefGetFilterMode
-###hipTexRefGetFlags
-###hipTexRefGetFormat
-###hipTexRefGetMaxAnisotropy
-###hipTexRefGetMipmapFilterMode
-###hipTexRefGetMipmapLevelBias
-###hipTexRefGetMipmapLevelClamp
-###hipTexRefGetMipMappedArray
-###hipTexRefSetAddress
-###hipTexRefSetAddress2D
-###hipTexRefSetMaxAnisotropy
-###hipTexRefSetBorderColor
-###hipTexRefSetMipmapFilterMode
-###hipTexRefSetMipmapLevelBias
-###hipTexRefSetMipmapLevelClamp
-###hipTexRefSetMipmappedArray
+### hipGetTextureReference
+### hipTexRefSetAddressMode
+### hipTexRefSetArray
+### hipTexRefSetFilterMode
+### hipTexRefSetFlags
+### hipTexRefSetFormat
+### hipBindTexture
+### hipBindTexture2D
+### hipBindTextureToArray
+### hipGetTextureAlignmentOffset
+### hipUnbindTexture
+### hipTexRefGetAddress
+### hipTexRefGetAddressMode
+### hipTexRefGetFilterMode
+### hipTexRefGetFlags
+### hipTexRefGetFormat
+### hipTexRefGetMaxAnisotropy
+### hipTexRefGetMipmapFilterMode
+### hipTexRefGetMipmapLevelBias
+### hipTexRefGetMipmapLevelClamp
+### hipTexRefGetMipMappedArray
+### hipTexRefSetAddress
+### hipTexRefSetAddress2D
+### hipTexRefSetMaxAnisotropy
+### hipTexRefSetBorderColor
+### hipTexRefSetMipmapFilterMode
+### hipTexRefSetMipmapLevelBias
+### hipTexRefSetMipmapLevelClamp
+### hipTexRefSetMipmappedArray
