@@ -41,12 +41,8 @@ __global__ void unsafeAtomicMin_FlatMem(double* addr, double* result) {
   __shared__ double int_val;
   int_val = 5;
   double comp = 10;
-  if (__builtin_amdgcn_is_shared(
-          (const __attribute__((address_space(0))) void*)(&int_val)))
-     *result = __builtin_amdgcn_flat_atomic_fmin_f64(&int_val, comp);
-  else
-     *result = __builtin_amdgcn_global_atomic_fmin_f64(&int_val, comp);
-     *addr = int_val;
+  *result = unsafeAtomicMin(&int_val, comp);
+  *addr = int_val;
 }
 )"};
 
@@ -55,11 +51,7 @@ R"(
 extern "C"
 __global__ void unsafeAtomicMin_GlobalMem(double* addr, double* result) {
   double comp = 10;
-  if (__builtin_amdgcn_is_shared(
-          (const __attribute__((address_space(0))) void*)(addr)))
-     *result =  __builtin_amdgcn_flat_atomic_fmin_f64(addr, comp);
-  else
-     *result =  __builtin_amdgcn_global_atomic_fmin_f64(addr, comp);
+  *result = unsafeAtomicMin(addr, comp);   
 }
 )"};
 
@@ -67,20 +59,12 @@ __global__ void unsafeAtomicMin_FlatMem(double* addr, double* result) {
   __shared__ double int_val;
   int_val = 5;
   double comp = 10;
-  if (__builtin_amdgcn_is_shared(
-          (const __attribute__((address_space(0))) void*)(&int_val)))
-     *result = __builtin_amdgcn_flat_atomic_fmin_f64(&int_val, comp);
-  else
-     *result = __builtin_amdgcn_global_atomic_fmin_f64(&int_val, comp);
+  *result = unsafeAtomicMin(&int_val, comp);
   *addr = int_val;
 }
 __global__ void unsafeAtomicMin_GlobalMem(double* addr, double* result) {
   double comp = 10;
-  if (__builtin_amdgcn_is_shared(
-          (const __attribute__((address_space(0))) void*)(addr)))
-     *result =  __builtin_amdgcn_flat_atomic_fmin_f64(addr, comp);
-  else
-     *result =  __builtin_amdgcn_global_atomic_fmin_f64(addr, comp);
+  *result = unsafeAtomicMin(addr, comp);   
 }
 
 /*
