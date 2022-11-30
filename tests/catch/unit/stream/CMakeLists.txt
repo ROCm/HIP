@@ -18,6 +18,7 @@ set(TEST_SRC
     hipStreamQuery.cc
     hipStreamWaitEvent.cc
     hipDeviceGetStreamPriorityRange.cc
+    hipStreamACb_StrmSyncTiming.cc
     )
 else()
 set(TEST_SRC
@@ -38,6 +39,7 @@ set(TEST_SRC
     hipStreamSynchronize.cc
     hipStreamQuery.cc
     hipDeviceGetStreamPriorityRange.cc
+    hipStreamACb_StrmSyncTiming.cc
     )
 endif()
 

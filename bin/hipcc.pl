@@ -41,8 +41,6 @@ use Cwd 'abs_path';
 # Other environment variable controls:
 # HIP_PATH       : Path to HIP directory, default is one dir level above location of this script.
 # CUDA_PATH      : Path to CUDA SDK (default /usr/local/cuda). Used on NVIDIA platforms only.
-# HSA_PATH       : Path to HSA dir (defaults to ../../hsa relative to abs_path
-#                  of this script). Used on AMD platforms only.
 # HIP_ROCCLR_HOME : Path to HIP/ROCclr directory. Used on AMD platforms only.
 # HIP_CLANG_PATH : Path to HIP-Clang (default to ../../llvm/bin relative to this
 #                  script's abs_path). Used on AMD platforms only.
@@ -122,7 +120,6 @@ $CUDA_PATH      =   $hipvars::CUDA_PATH;
 $HIP_PATH       =   $hipvars::HIP_PATH;
 $ROCM_PATH      =   $hipvars::ROCM_PATH;
 $HIP_VERSION    =   $hipvars::HIP_VERSION;
-$HSA_PATH       =   $hipvars::HSA_PATH;
 $HIP_ROCCLR_HOME =   $hipvars::HIP_ROCCLR_HOME;
 
 if ($HIP_PLATFORM eq "amd") {
@@ -210,13 +207,6 @@ if ($HIP_PLATFORM eq "amd") {
         ## Allow __fp16 as function parameter and return type.
         $HIPCXXFLAGS .= " -Xclang -fallow-half-arguments-and-returns -D__HIP_HCC_COMPAT_MODE__=1";
     }
-
-    if (not $isWindows) {
-        $HSA_PATH=$ENV{'HSA_PATH'} // "$ROCM_PATH/hsa";
-        $HIPCXXFLAGS .= " -isystem $HSA_PATH/include";
-        $HIPCFLAGS .= " -isystem $HSA_PATH/include";
-    }
-
 } elsif ($HIP_PLATFORM eq "nvidia") {
     $CUDA_PATH=$ENV{'CUDA_PATH'} // '/usr/local/cuda';
     $HIP_INCLUDE_PATH = "$HIP_PATH/include";
@@ -403,121 +393,7 @@ foreach $arg (@ARGV)
         $swallowArg = 1;
     }
 
-    ## process linker response file for hip-clang
-    ## extract object files from static library and pass them directly to
-    ## hip-clang in command line.
-    ## ToDo: Remove this after hip-clang switch to lto and lld is able to
-    ## handle clang-offload-bundler bundles.
-    if (($arg =~ m/^-Wl,@/ or $arg =~ m/^@/) and
-        $HIP_PLATFORM eq 'amd') {
-        my @split_arg = (split /\@/, $arg); # arg will have options type(-Wl,@ or @) and filename
-        my $file = $split_arg[1];
-        open my $in, "<:encoding(utf8)", $file or die "$file: $!";
-        my $new_arg = "";
-        my $tmpdir = get_temp_dir ();
-        my $new_file = "$tmpdir/response_file";
-        open my $out, ">", $new_file or die "$new_file: $!";
-        while (my $line = <$in>) {
-            chomp $line;
-            if ($line =~ m/\.a$/ || $line =~ m/\.lo$/) {
-                my $libFile = $line;
-                my $path = abs_path($line);
-                my @objs = split ('\n', `cd $tmpdir; ar xv $path`);
-                ## Check if all files in .a are object files.
-                my $allIsObj = 1;
-                my $realObjs = "";
-                foreach my $obj (@objs) {
-                    chomp $obj;
-                    $obj =~ s/^x - //;
-                    $obj = "$tmpdir/$obj";
-                    my $fileType = `file $obj`;
-                    my $isObj = ($fileType =~ m/ELF/ or $fileType =~ m/COFF/);
-                    $allIsObj = ($allIsObj and $isObj);
-                    if ($isObj) {
-                        $realObjs = ($realObjs . " " . $obj);
-                    } else {
-                        push (@inputs, $obj);
-                        $new_arg = "$new_arg $obj";
-                    }
-                }
-                chomp $realObjs;
-                if ($allIsObj) {
-                    print $out "$line\n";
-                } elsif ($realObjs) {
-                    my($libBaseName, $libDir, $libExt) = fileparse($libFile);
-                    $libBaseName = mktemp($libBaseName . "XXXX") . $libExt;
-                    system("cd $tmpdir; ar rc $libBaseName $realObjs");
-                    print $out "$tmpdir/$libBaseName\n";
-                }
-            } elsif ($line =~ m/\.o$/) {
-                my $fileType = `file $line`;
-                my $isObj = ($fileType =~ m/ELF/ or $fileType =~ m/COFF/);
-                if ($isObj) {
-                    print $out "$line\n";
-                } else {
-                    push (@inputs, $line);
-                    $new_arg = "$new_arg $line";
-                }
-            } else {
-                print $out "$line\n";
-            }
-        }
-        close $in;
-        close $out;
-        $arg = "$new_arg $split_arg[0]\@$new_file";
-        $escapeArg = 0;
-    } elsif (($arg =~ m/\.a$/ || $arg =~ m/\.lo$/) &&
-              $HIP_PLATFORM eq 'amd') {
-        ## process static library for hip-clang
-        ## extract object files from static library and pass them directly to
-        ## hip-clang.
-        ## ToDo: Remove this after hip-clang switch to lto and lld is able to
-        ## handle clang-offload-bundler bundles.
-        my $new_arg = "";
-        my $tmpdir = get_temp_dir ();
-        my $libFile = $arg;
-        my $path = abs_path($arg);
-        my @objs = split ('\n', `cd $tmpdir; ar xv $path`);
-        ## Check if all files in .a are object files.
-        my $allIsObj = 1;
-        my $realObjs = "";
-        foreach my $obj (@objs) {
-            chomp $obj;
-            $obj =~ s/^x - //;
-            $obj = "$tmpdir/$obj";
-            my $fileType = `file $obj`;
-            my $isObj = ($fileType =~ m/ELF/ or $fileType =~ m/COFF/);
-            if ($fileType =~ m/ELF/) {
-                my $sections = `readelf -e -W $obj`;
-                $isObj = !($sections =~ m/__CLANG_OFFLOAD_BUNDLE__/);
-            }
-            $allIsObj = ($allIsObj and $isObj);
-            if ($isObj) {
-                $realObjs = ($realObjs . " " . $obj);
-            } else {
-                push (@inputs, $obj);
-                if ($new_arg ne "") {
-                    $new_arg .= " ";
-                }
-                $new_arg .= "$obj";
-            }
-        }
-        chomp $realObjs;
-        if ($allIsObj) {
-            $new_arg = $arg;
-        } elsif ($realObjs) {
-            my($libBaseName, $libDir, $libExt) = fileparse($libFile);
-            $libBaseName = mktemp($libBaseName . "XXXX") . $libExt;
-            system("cd $tmpdir; ar rc $libBaseName $realObjs");
-            $new_arg .= " $tmpdir/$libBaseName";
-        }
-        $arg = "$new_arg";
-        $escapeArg = 0;
-        if ($toolArgs =~ m/-Xlinker$/) {
-            $toolArgs = substr $toolArgs, 0, -8;
-            chomp $toolArgs;
-        }
-    } elsif ($arg eq '-x') {
+    if ($arg eq '-x') {
         $fileTypeFlag = 1;
     } elsif (($arg eq 'c' and $prevArg eq '-x') or ($arg eq '-xc')) {
         $fileTypeFlag = 1;

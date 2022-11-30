@@ -29,8 +29,7 @@ Unit_hipEventCreateWithFlags_Positive - Test simple event creation with hipEvent
 TEST_CASE("Unit_hipEventCreateWithFlags_Positive") {
 
 #if HT_AMD
-  // On AMD platform, hipEventInterprocess support is under development. Use of this flag will return an error. Omitted
-  const unsigned int flagUnderTest = GENERATE(hipEventDefault, hipEventBlockingSync, hipEventDisableTiming, hipEventReleaseToDevice, hipEventReleaseToSystem);
+  const unsigned int flagUnderTest = GENERATE(hipEventDefault, hipEventBlockingSync, hipEventDisableTiming, hipEventInterprocess | hipEventDisableTiming, hipEventReleaseToDevice, hipEventReleaseToSystem);
 #else
   // On Non-AMD platforms hipEventReleaseToDevice / hipEventReleaseToSystem are not defined
   const unsigned int flagUnderTest = GENERATE(hipEventDefault, hipEventBlockingSync, hipEventDisableTiming, hipEventInterprocess | hipEventDisableTiming);

@@ -21,14 +21,13 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_PLATFORM nvidia
+ * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_PLATFORM nvidia amd
  * TEST: %t
  * HIT_END
  */
 
 #include <hip/hip_vector_types.h>
 
-#include "vector_test_common.h"
 #include "test_common.h"
 
 #include <memory>
