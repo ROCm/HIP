@@ -57,9 +57,9 @@ void ArrayFindIfNot(T* const array, const T expected_value, const size_t num_ele
 template <typename T, typename F>
 void PitchedMemoryVerify(T* const ptr, const size_t pitch, const size_t width, const size_t height,
                          const size_t depth, F expected_value_generator) {
-  for (int z = 0; z < depth; ++z) {
-    for (int y = 0; y < height; ++y) {
-      for (int x = 0; x < width; ++x) {
+  for (size_t z = 0; z < depth; ++z) {
+    for (size_t y = 0; y < height; ++y) {
+      for (size_t x = 0; x < width; ++x) {
         const auto slice = reinterpret_cast<uint8_t*>(ptr) + pitch * height * z;
         const auto row = slice + pitch * y;
         if (reinterpret_cast<T*>(row)[x] != expected_value_generator(x, y, z)) {
@@ -74,9 +74,9 @@ void PitchedMemoryVerify(T* const ptr, const size_t pitch, const size_t width, c
 template <typename T, typename F>
 void PitchedMemorySet(T* const ptr, const size_t pitch, const size_t width, const size_t height,
                       const size_t depth, F expected_value_generator) {
-  for (int z = 0; z < depth; ++z) {
-    for (int y = 0; y < height; ++y) {
-      for (int x = 0; x < width; ++x) {
+  for (size_t z = 0; z < depth; ++z) {
+    for (size_t y = 0; y < height; ++y) {
+      for (size_t x = 0; x < width; ++x) {
         const auto slice = reinterpret_cast<uint8_t*>(ptr) + pitch * height * z;
         const auto row = slice + pitch * y;
         reinterpret_cast<T*>(row)[x] = expected_value_generator(x, y, z);

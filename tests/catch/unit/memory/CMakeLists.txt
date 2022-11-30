@@ -98,6 +98,7 @@ set(TEST_SRC
     hipMemsetAsync.cc
     hipMemAdvise.cc
     hipMemRangeGetAttributes.cc
+    hipGetSymbolSizeAddress.cc
     hipStreamAttachMemAsync.cc
 )
 else()
@@ -173,6 +174,7 @@ set(TEST_SRC
     hipMemsetAsync.cc
     hipMemAdvise.cc
     hipMemRangeGetAttributes.cc
+    hipGetSymbolSizeAddress.cc
     hipStreamAttachMemAsync.cc
 )
 endif()
