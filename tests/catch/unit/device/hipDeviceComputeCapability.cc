@@ -16,6 +16,12 @@ LIABILITY, WHETHER INN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR INN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+/*
+Testcase Scenarios :
+Unit_hipDeviceComputeCapability_ValidateVersion - Check if hipDeviceComputeCapability api returns valid Major and Minor versions
+Unit_hipDeviceComputeCapability_Negative - Test unsuccessful execution of hipDeviceComputeCapability when nullptr
+                                           or invalid device is set as input parameter
+*/
 
 /*
  * Conformance test for checking functionality of
@@ -24,14 +30,13 @@ THE SOFTWARE.
 #include <hip_test_common.hh>
 
 /**
- * hipDeviceComputeCapability tests
+ * hipDeviceComputeCapability negative tests
  * Scenario1: Validates if &major = nullptr returns error code
  * Scenario2: Validates if &minor = nullptr returns error code
- * Scenario3: Check if Major and Minor Versions are valid
+ * Scenario3: Validates if device is -1
+ * Scenario4: Validates if device is out of bounds
  */
-
-// Scenario 1 and 2
-TEST_CASE("Unit_hipDeviceComputeCapability_NegTst") {
+TEST_CASE("Unit_hipDeviceComputeCapability_Negative") {
   int major, minor, numDevices;
   hipDevice_t device;
 
@@ -51,12 +56,22 @@ TEST_CASE("Unit_hipDeviceComputeCapability_NegTst") {
       REQUIRE_FALSE(hipDeviceComputeCapability(&major, nullptr, device)
                           == hipSuccess);
     }
+    // Scenario3
+    SECTION("device is -1") {
+      REQUIRE_FALSE(hipDeviceComputeCapability(&major, &minor, -1)
+                          == hipSuccess);
+    }
+    // Scenario4
+    SECTION("device is out of bounds") {
+      REQUIRE_FALSE(hipDeviceComputeCapability(&major, &minor, numDevices)
+                          == hipSuccess);
+    }
   } else {
     WARN("Test skipped as no gpu devices available");
   }
 }
 
-// Scenario 3 : Check whether major and minor version value is valid.
+// Scenario 5 : Check whether major and minor version value is valid.
 TEST_CASE("Unit_hipDeviceComputeCapability_ValidateVersion") {
   int major, minor;
   hipDevice_t device;
