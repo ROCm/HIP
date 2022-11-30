@@ -125,14 +125,6 @@ TEST_CASE("Unit_abs_int64_Verification") {
 }
 
 /**
-  Verification of __fp16 operation performed at device.
- */
-TEST_CASE("Unit__fp16_Verification") {
-  CHECK_SIMPLE([]__device__(){ return max<__fp16>(1.0f, 2.0f); }, 2.0f);
-  CHECK_SIMPLE([]__device__(){ return min<__fp16>(1.0f, 2.0f); }, 1.0f);
-}
-
-/**
   Verification of pow operations performed at device.
  */
 TEST_CASE("Unit_pown_Verification") {
