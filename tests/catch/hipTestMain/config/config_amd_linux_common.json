@@ -10,6 +10,7 @@
 	   "Unit_hipGetDeviceFlags_Positive_Context",
 	   "Unit_hipIpcCloseMemHandle_Negative_Close_In_Originating_Process",
 	   "Unit_hipIpcOpenMemHandle_Negative_Open_In_Creating_Process",
-	   "Unit_hipDeviceGetPCIBusId_Negative_PartialFill"
+	   "Unit_hipDeviceGetPCIBusId_Negative_PartialFill",
+	   "Unit_hipInit_Negative"
 	]
 }
