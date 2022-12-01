@@ -34,14 +34,14 @@ This testfile verifies __builtin_amdgcn_global_atomic_fadd_f64 API scenarios
 #define INITIAL_VAL 5
 __global__ void AtomicAdd_GlobalMem(double* addr, double* result) {
   double inc_val = 10;
-  *result = __builtin_amdgcn_global_atomic_fadd_f64(addr, inc_val);
+  *result = unsafeAtomicAdd(addr, inc_val);
 }
 static constexpr auto AtomicAddGlobalMem{
 R"(
 extern "C"
 __global__ void AtomicAdd_GlobalMem(double* addr, double* result) {
   double inc_val = 10;
-  *result = __builtin_amdgcn_global_atomic_fadd_f64(addr, inc_val);
+  *result = unsafeAtomicAdd(addr, inc_val);
 }
 )"};
 /*
