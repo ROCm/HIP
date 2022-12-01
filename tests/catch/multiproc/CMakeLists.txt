@@ -15,6 +15,7 @@ set(LINUX_TEST_SRC
     hipIpcMemAccessTest.cc
     deviceAllocationMproc.cc
     hipNoGpuTsts.cc
+    hipMemGetInfo.cc
 )
 
 add_custom_target(dummy_kernel.code COMMAND ${CMAKE_CXX_COMPILER} --genco ${CMAKE_CURRENT_SOURCE_DIR}/dummy_kernel.cpp -o ${CMAKE_CURRENT_BINARY_DIR}/../multiproc/dummy_kernel.code -I${CMAKE_CURRENT_SOURCE_DIR}/../../../../include/ -I${CMAKE_CURRENT_SOURCE_DIR}/../../include)
