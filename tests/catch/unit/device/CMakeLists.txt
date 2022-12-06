@@ -23,6 +23,7 @@ set(TEST_SRC
     hipExtGetLinkTypeAndHopCount.cc
     hipDeviceSetLimit.cc
     hipDeviceSetGetSharedMemConfig.cc
+    hipDeviceReset.cc
     hipDeviceSetGetMemPool.cc
     hipInit.cc
     hipDriverGetVersion.cc

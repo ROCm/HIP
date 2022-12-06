@@ -20,6 +20,7 @@ THE SOFTWARE.
 #include <limits>
 #include "DriverContext.hh"
 #include "hipArrayCommon.hh"
+#include "hip_array_common.hh"
 #include "hip_test_common.hh"
 
 namespace {

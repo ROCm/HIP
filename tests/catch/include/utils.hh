@@ -54,6 +54,37 @@ void ArrayFindIfNot(T* const array, const T expected_value, const size_t num_ele
   ArrayFindIfNot(array, array + num_elements, expected_value);
 }
 
+template <typename T, typename F>
+void PitchedMemoryVerify(T* const ptr, const size_t pitch, const size_t width, const size_t height,
+                         const size_t depth, F expected_value_generator) {
+  for (size_t z = 0; z < depth; ++z) {
+    for (size_t y = 0; y < height; ++y) {
+      for (size_t x = 0; x < width; ++x) {
+        const auto slice = reinterpret_cast<uint8_t*>(ptr) + pitch * height * z;
+        const auto row = slice + pitch * y;
+        if (reinterpret_cast<T*>(row)[x] != expected_value_generator(x, y, z)) {
+          INFO("Mismatch at indices: " << x << ", " << y << ", " << z);
+          REQUIRE(reinterpret_cast<T*>(row)[x] == expected_value_generator(x, y, z));
+        }
+      }
+    }
+  }
+}
+
+template <typename T, typename F>
+void PitchedMemorySet(T* const ptr, const size_t pitch, const size_t width, const size_t height,
+                      const size_t depth, F expected_value_generator) {
+  for (size_t z = 0; z < depth; ++z) {
+    for (size_t y = 0; y < height; ++y) {
+      for (size_t x = 0; x < width; ++x) {
+        const auto slice = reinterpret_cast<uint8_t*>(ptr) + pitch * height * z;
+        const auto row = slice + pitch * y;
+        reinterpret_cast<T*>(row)[x] = expected_value_generator(x, y, z);
+      }
+    }
+  }
+}
+
 template <typename T>
 __global__ void VectorIncrement(T* const vec, const T increment_value, size_t N) {
   size_t offset = (blockIdx.x * blockDim.x + threadIdx.x);
@@ -79,6 +110,18 @@ static __global__ void Delay(uint32_t interval, const uint32_t ticks_per_ms) {
     uint64_t start = clock();
     while (clock() - start < ticks_per_ms) {
     }
+  }
+}
+
+template <typename T>
+__global__ void Iota(T* const out, size_t pitch, size_t w, size_t h, size_t d) {
+  const auto x = blockIdx.x * blockDim.x + threadIdx.x;
+  const auto y = blockIdx.y * blockDim.y + threadIdx.y;
+  const auto z = blockIdx.z * blockDim.z + threadIdx.z;
+  if (x < w && y < h && z < d) {
+    char* const slice = reinterpret_cast<char*>(out) + pitch * h * z;
+    char* const row = slice + pitch * y;
+    reinterpret_cast<T*>(row)[x] = z * w * h + y * w + x;
   }
 }
 

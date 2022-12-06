@@ -19,6 +19,7 @@ THE SOFTWARE.
 
 #pragma once
 
+#include <hip_array_common.hh>
 #include <hip_test_common.hh>
 #include <hip/hip_runtime_api.h>
 
@@ -80,15 +81,119 @@ template <typename T> class LinearAllocGuard {
     }
   }
 
-  T* ptr() { return ptr_; };
-  T* const ptr() const { return ptr_; };
-  T* host_ptr() { return host_ptr_; }
-  T* const host_ptr() const { return host_ptr(); }
+  T* ptr() const { return ptr_; };
+  T* host_ptr() const { return host_ptr_; }
 
  private:
   const LinearAllocs allocation_type_;
   T* ptr_ = nullptr;
   T* host_ptr_ = nullptr;
+};
+
+template <typename T> class LinearAllocGuardMultiDim {
+ protected:
+  LinearAllocGuardMultiDim(hipExtent extent) : extent_{extent} {}
+
+  ~LinearAllocGuardMultiDim() { static_cast<void>(hipFree(pitched_ptr_.ptr)); }
+
+ public:
+  T* ptr() const { return reinterpret_cast<T*>(pitched_ptr_.ptr); };
+
+  size_t pitch() const { return pitched_ptr_.pitch; }
+
+  hipExtent extent() const { return extent_; }
+
+  hipPitchedPtr pitched_ptr() const { return pitched_ptr_; }
+
+  size_t width() const { return extent_.width; }
+
+  size_t width_logical() const { return extent_.width / sizeof(T); }
+
+  size_t height() const { return extent_.height; }
+
+ public:
+  hipPitchedPtr pitched_ptr_;
+  const hipExtent extent_;
+};
+
+template <typename T> class LinearAllocGuard2D : public LinearAllocGuardMultiDim<T> {
+ public:
+  LinearAllocGuard2D(const size_t width_logical, const size_t height)
+      : LinearAllocGuardMultiDim<T>{make_hipExtent(width_logical * sizeof(T), height, 1)} {
+    HIP_CHECK(hipMallocPitch(&this->pitched_ptr_.ptr, &this->pitched_ptr_.pitch,
+                             this->extent_.width, this->extent_.height));
+  }
+
+  LinearAllocGuard2D(const LinearAllocGuard2D&) = delete;
+  LinearAllocGuard2D(LinearAllocGuard2D&&) = delete;
+};
+
+template <typename T> class LinearAllocGuard3D : public LinearAllocGuardMultiDim<T> {
+ public:
+  LinearAllocGuard3D(const size_t width_logical, const size_t height, const size_t depth)
+      : LinearAllocGuardMultiDim<T>{make_hipExtent(width_logical * sizeof(T), height, depth)} {
+    HIP_CHECK(hipMalloc3D(&this->pitched_ptr_, this->extent_));
+  }
+
+  LinearAllocGuard3D(const hipExtent extent) : LinearAllocGuardMultiDim<T>(extent) {
+    HIP_CHECK(hipMalloc3D(&this->pitched_ptr_, this->extent_));
+  }
+
+  LinearAllocGuard3D(const LinearAllocGuard3D&) = delete;
+  LinearAllocGuard3D(LinearAllocGuard3D&&) = delete;
+
+  size_t depth() const { return this->extent_.depth; }
+};
+
+template <typename T> class ArrayAllocGuard {
+ public:
+  // extent should contain logical width
+  ArrayAllocGuard(const hipExtent extent, const unsigned int flags = 0u) : extent_{extent} {
+    hipChannelFormatDesc desc = hipCreateChannelDesc<T>();
+    HIP_CHECK(hipMalloc3DArray(&ptr_, &desc, extent_, flags));
+  }
+
+  ~ArrayAllocGuard() { static_cast<void>(hipFreeArray(ptr_)); }
+
+  ArrayAllocGuard(const ArrayAllocGuard&) = delete;
+  ArrayAllocGuard(ArrayAllocGuard&&) = delete;
+
+  hipArray_t ptr() const { return ptr_; }
+
+  hipExtent extent() const { return extent_; }
+
+ private:
+  hipArray_t ptr_ = nullptr;
+  const hipExtent extent_;
+};
+
+template <typename T> class DrvArrayAllocGuard {
+ public:
+  // extent should contain width in bytes
+  DrvArrayAllocGuard(const hipExtent extent, const unsigned int flags = 0u) : extent_{extent} {
+    HIP_ARRAY3D_DESCRIPTOR desc{};
+    using vec_info = vector_info<T>;
+    desc.Format = vec_info::format;
+    desc.NumChannels = vec_info::size;
+    desc.Width = extent_.width / sizeof(T);
+    desc.Height = extent_.height;
+    desc.Depth = extent_.depth;
+    desc.Flags = flags;
+    HIP_CHECK(hipArray3DCreate(&ptr_, &desc));
+  }
+
+  ~DrvArrayAllocGuard() { static_cast<void>(hipArrayDestroy(ptr_)); }
+
+  DrvArrayAllocGuard(const DrvArrayAllocGuard&) = delete;
+  DrvArrayAllocGuard(DrvArrayAllocGuard&&) = delete;
+
+  hiparray ptr() const { return ptr_; }
+
+  hipExtent extent() const { return extent_; }
+
+ private:
+  hiparray ptr_ = nullptr;
+  const hipExtent extent_;
 };
 
 enum class Streams { nullstream, perThread, created };

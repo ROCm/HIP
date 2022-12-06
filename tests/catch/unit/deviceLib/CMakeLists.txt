@@ -27,6 +27,7 @@ set(AMD_TEST_SRC
     bitExtract.cc
     bitInsert.cc
     floatTM.cc
+    hipMathFunctions.cc
 )
 set(AMD_ARCH_SPEC_TEST_SRC
     AtomicAdd_Coherent_withunsafeflag.cc
@@ -76,6 +77,7 @@ if(${ARCH_CHECK} GREATER_EQUAL 0)
     set_source_files_properties(unsafeAtomicAdd_NonCoherent_withunsafeflag.cc PROPERTIES COMPILE_OPTIONS "-munsafe-fp-atomics")
     set_source_files_properties(unsafeAtomicAdd_Coherent_withnounsafeflag.cc PROPERTIES COMPILE_OPTIONS "-mno-unsafe-fp-atomics")
     set_source_files_properties(unsafeAtomicAdd_NonCoherent_withnounsafeflag.cc PROPERTIES COMPILE_OPTIONS "-mno-unsafe-fp-atomics")
+    set_source_files_properties(hipMathFunctions.cc PROPERTIES COMPILE_FLAGS "-Xclang -fallow-half-arguments-and-returns")
     file(GLOB AtomicAdd_files *AtomicAdd_*_*.cc)
     set_property(SOURCE ${AtomicAdd_files} PROPERTY COMPILE_FLAGS --save-temps)
     file(GLOB unsafeAtomicAdd_files *unsafeAtomicAdd_*_*.cc)
