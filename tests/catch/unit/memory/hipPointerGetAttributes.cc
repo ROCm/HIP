@@ -260,8 +260,6 @@ TEST_CASE("Unit_hipPointerGetAttributes_Basic") {
     REQUIRE(attribs.devicePointer != attribs2.devicePointer);
   }
   HIP_CHECK(hipFree(A_d));
-  e = hipPointerGetAttributes(&attribs, A_d);
-  REQUIRE(e == hipErrorInvalidValue);
 
   // Device-visible host memory
   printf("\nDevice-visible host memory (hipHostMalloc)\n");
@@ -272,15 +270,10 @@ TEST_CASE("Unit_hipPointerGetAttributes_Basic") {
   char* ptr1 = reinterpret_cast<char*>(attribs.hostPointer);
   REQUIRE((ptr1 + Nbytes / 2) == reinterpret_cast<char*>(attribs2.hostPointer));
 
-
   HIP_CHECK(hipHostFree(A_Pinned_h));
-  e = hipPointerGetAttributes(&attribs, A_Pinned_h);
-  REQUIRE(e == hipErrorInvalidValue);
 
   // OS memory
   printf("\nOS-allocated memory (malloc)\n");
-  e = hipPointerGetAttributes(&attribs, A_OSAlloc_h);
-  REQUIRE(e == hipErrorInvalidValue);
 }
 
 TEST_CASE("Unit_hipPointerGetAttributes_ClusterAlloc") {
