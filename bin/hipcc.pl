@@ -41,6 +41,8 @@ use Cwd 'abs_path';
 # Other environment variable controls:
 # HIP_PATH       : Path to HIP directory, default is one dir level above location of this script.
 # CUDA_PATH      : Path to CUDA SDK (default /usr/local/cuda). Used on NVIDIA platforms only.
+# HSA_PATH       : Path to HSA dir (defaults to ../.. relative to abs_path
+#                  of this script). Used on AMD platforms only.
 # HIP_ROCCLR_HOME : Path to HIP/ROCclr directory. Used on AMD platforms only.
 # HIP_CLANG_PATH : Path to HIP-Clang (default to ../../llvm/bin relative to this
 #                  script's abs_path). Used on AMD platforms only.
@@ -120,6 +122,7 @@ $CUDA_PATH      =   $hipvars::CUDA_PATH;
 $HIP_PATH       =   $hipvars::HIP_PATH;
 $ROCM_PATH      =   $hipvars::ROCM_PATH;
 $HIP_VERSION    =   $hipvars::HIP_VERSION;
+$HSA_PATH       =   $hipvars::HSA_PATH;
 $HIP_ROCCLR_HOME =   $hipvars::HIP_ROCCLR_HOME;
 
 if ($HIP_PLATFORM eq "amd") {
@@ -207,6 +210,12 @@ if ($HIP_PLATFORM eq "amd") {
         ## Allow __fp16 as function parameter and return type.
         $HIPCXXFLAGS .= " -Xclang -fallow-half-arguments-and-returns -D__HIP_HCC_COMPAT_MODE__=1";
     }
+    if (not $isWindows) {
+        $HSA_PATH=$ENV{'HSA_PATH'} // "$ROCM_PATH";
+        $HIPCXXFLAGS .= " -isystem $HSA_PATH/include";
+        $HIPCFLAGS .= " -isystem $HSA_PATH/include";
+    }
+
 } elsif ($HIP_PLATFORM eq "nvidia") {
     $CUDA_PATH=$ENV{'CUDA_PATH'} // '/usr/local/cuda';
     $HIP_INCLUDE_PATH = "$HIP_PATH/include";
