@@ -46,7 +46,6 @@ $CUDA_PATH      =   $hipvars::CUDA_PATH;
 $HIP_PATH       =   $hipvars::HIP_PATH;
 $ROCM_PATH      =   $hipvars::ROCM_PATH;
 $HIP_VERSION    =   $hipvars::HIP_VERSION;
-$HSA_PATH       =   $hipvars::HSA_PATH;
 
 Getopt::Long::Configure ( qw{bundling no_ignore_case});
 GetOptions(
@@ -81,7 +80,7 @@ if ($HIP_COMPILER eq "clang") {
     if($isWindows) {
         $CPP_CONFIG .= " -I\"$HIP_PATH_INCLUDE\" -I\"$HIP_CLANG_INCLUDE\"";
     } else {
-        $CPP_CONFIG .= " -I$HIP_PATH_INCLUDE -I$HIP_CLANG_INCLUDE -I$HSA_PATH/include";
+        $CPP_CONFIG .= " -I$HIP_PATH_INCLUDE -I$HIP_CLANG_INCLUDE ";
     }
 }
 if ($HIP_PLATFORM eq "nvidia") {
@@ -162,9 +161,6 @@ if (!$printed or $p_full) {
         if ($HIP_COMPILER eq "clang")
         {
             print "== hip-clang\n";
-            if (not $isWindows) {
-                print ("HSA_PATH         : $HSA_PATH\n");
-            }
             print ("HIP_CLANG_PATH   : $HIP_CLANG_PATH\n");
             if ($isWindows) {
                 system("\"$HIP_CLANG_PATH/clang++\" --version");
@@ -201,10 +197,10 @@ if (!$printed or $p_full) {
     print "=== Environment Variables\n";
     if ($isWindows) {
         print ("PATH=$ENV{PATH}\n");
-        system("set | findstr //B //C:\"HIP\" //C:\"HSA\" //C:\"CUDA\" //C:\"LD_LIBRARY_PATH\"");
+        system("set | findstr //B //C:\"HIP\" //C:\"CUDA\" //C:\"LD_LIBRARY_PATH\"");
     } else {
         system("echo PATH=\$PATH");
-        system("env | egrep '^HIP|^HSA|^CUDA|^LD_LIBRARY_PATH'");
+        system("env | egrep '^HIP|^CUDA|^LD_LIBRARY_PATH'");
     }
 
 
@@ -237,18 +233,6 @@ if ($p_check) {
         print "FAIL\n";
     } else {
         printf "good\n";
-    }
-
-    if ($HIP_PLATFORM eq "amd")  {
-        $LD_LIBRARY_PATH=$ENV{'LD_LIBRARY_PATH'};
-        printf("%-70s", "check LD_LIBRARY_PATH ($LD_LIBRARY_PATH) contains HSA_PATH ($HSA_PATH)...");
-        if (index($LD_LIBRARY_PATH, $HSA_PATH) == -1) {
-            print "FAIL\n";
-        } else {
-            printf "good\n";
-        }
-
-        # TODO - check hipcc / nvcc found and executable.
     }
 }
 
