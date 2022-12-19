@@ -5007,6 +5007,20 @@ hipError_t hipLaunchKernel(const void* function_address,
                            void** args,
                            size_t sharedMemBytes __dparm(0),
                            hipStream_t stream __dparm(0));
+
+/**
+ * @brief Enqueues a host function call in a stream.
+ *
+ * @param [in] stream - stream to enqueue work to.
+ * @param [in] fn - function to call once operations enqueued preceeding are complete.
+ * @param [in] userData - User-specified data to be passed to the function.
+ * @returns #hipSuccess, #hipErrorInvalidResourceHandle, #hipErrorInvalidValue,
+ * #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipLaunchHostFunc(hipStream_t stream, hipHostFn_t fn, void* userData);
+
 /**
  * Copies memory for 2D arrays.
  *
@@ -5535,19 +5549,6 @@ hipError_t hipStreamIsCapturing(hipStream_t stream, hipStreamCaptureStatus* pCap
 hipError_t hipStreamUpdateCaptureDependencies(hipStream_t stream, hipGraphNode_t* dependencies,
                                               size_t numDependencies,
                                               unsigned int flags __dparm(0));
-
-/**
- * @brief Enqueues a host function call in a stream.
- *
- * @param [in] stream - stream to enqueue work to.
- * @param [in] fn - function to call once operations enqueued preceeding are complete.
- * @param [in] userData - User-specified data to be passed to the function.
- * @returns #hipSuccess, #hipErrorInvalidResourceHandle, #hipErrorInvalidValue,
- * #hipErrorNotSupported
- * @warning : This API is marked as beta, meaning, while this is feature complete,
- * it is still open to changes and may have outstanding issues.
- */
-hipError_t hipLaunchHostFunc(hipStream_t stream, hipHostFn_t fn, void* userData);
 
 /**
  * @brief Swaps the stream capture mode of a thread.
