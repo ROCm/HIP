@@ -160,7 +160,7 @@ if ($HIP_PLATFORM eq "amd") {
     $execExtension = "";
     if($isWindows) {
         $execExtension = ".exe";
-    } 
+    }
     $HIPCC="$HIP_CLANG_PATH/clang++" . $execExtension;
 
     # If $HIPCC clang++ is not compiled, use clang instead
@@ -177,13 +177,9 @@ if ($HIP_PLATFORM eq "amd") {
         $HIPCC =~ s/\s/\\$&/g;
     }
 
-    $HIP_CLANG_VERSION = `$HIPCC --version`;
-    $HIP_CLANG_VERSION=~/.*clang version (\S+).*/;
-    $HIP_CLANG_VERSION=$1;
-
-    # Figure out the target with which llvm is configured
-    $HIP_CLANG_TARGET = `$HIPCC -print-target-triple`;
-    chomp($HIP_CLANG_TARGET);
+    # get Clang RT Builtin path 
+    $HIP_CLANG_RT_LIB = `$HIPCC --print-runtime-dir`;
+    chomp($HIP_CLANG_RT_LIB);
 
     if (! defined $HIP_INCLUDE_PATH) {
         $HIP_INCLUDE_PATH = "$HIP_PATH/include";
@@ -200,7 +196,7 @@ if ($HIP_PLATFORM eq "amd") {
         print ("HIP_INCLUDE_PATH=$HIP_INCLUDE_PATH\n");
         print ("HIP_LIB_PATH=$HIP_LIB_PATH\n");
         print ("DEVICE_LIB_PATH=$DEVICE_LIB_PATH\n");
-        print ("HIP_CLANG_TARGET=$HIP_CLANG_TARGET\n");
+        print ("HIP_CLANG_RT_LIB=$HIP_CLANG_RT_LIB\n");
     }
 
     $HIPLDFLAGS .= " -L\"$HIP_LIB_PATH\"";
@@ -602,13 +598,8 @@ if ($HIP_PLATFORM eq "amd") {
       } else {
         $toolArgs = ${toolArgs} . " -Wl,-rpath=$HIP_LIB_PATH:$ROCM_PATH/lib -lamdhip64 ";
       }
-      # To support __fp16 and _Float16, explicitly link with compiler-rt
-      $HIP_CLANG_BUILTIN_LIB="$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION/lib/$HIP_CLANG_TARGET/libclang_rt.builtins.a";
-      if (-e $HIP_CLANG_BUILTIN_LIB) {
-        $toolArgs .= " -L$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION/lib/$HIP_CLANG_TARGET -lclang_rt.builtins "
-      } else {
-        $toolArgs .= " -L$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION/lib/linux -lclang_rt.builtins-x86_64 "
-      }
+
+      $toolArgs .= " -L$HIP_CLANG_RT_LIB -lclang_rt.builtins-x86_64 "
     }
 }
 
