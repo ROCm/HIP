@@ -172,6 +172,9 @@ if ($HIP_PLATFORM eq "amd") {
     if($isWindows) {
         $HIPLDFLAGS .= " -fuse-ld=lld";
         $HIPLDFLAGS .= " --ld-path=$HIP_CLANG_PATH/lld-link.exe";
+
+        # escape possible spaces in path name
+        $HIPCC =~ s/\s/\\$&/g;
     }
 
     # get Clang RT Builtin path 
