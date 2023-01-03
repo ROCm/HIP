@@ -585,6 +585,10 @@ enum hipLimit_t {
 /** Event can support IPC. hipEventDisableTiming also must be set.*/
 #define hipEventInterprocess 0x4
 
+/** Disable any system scope releases for events. May improve performance.
+ * The flag is a no-op on CUDA platforms.*/
+#define hipEventDisableReleaseToSystem 0x20000000
+
 /** Use a device-scope release when recording this event. This flag is useful to obtain more
  * precise timings of commands between events.  The flag is a no-op on CUDA platforms.*/
 #define hipEventReleaseToDevice  0x40000000
@@ -2416,6 +2420,9 @@ hipError_t hipStreamWriteValue64(hipStream_t stream, void* ptr, uint64_t value, 
  would not record profiling data and provide best performance if used for synchronization.
  * #hipEventInterprocess : The event can be used as an interprocess event. hipEventDisableTiming
  flag also must be set when hipEventInterprocess flag is set.
+ * #hipEventDisableReleaseToSystem : Disable releasing any cached memory to system scope. This may
+ improve performance but device memory may not be visible to the host and other devices
+ if this flag is set.
  *
  * @returns #hipSuccess, #hipErrorNotInitialized, #hipErrorInvalidValue,
  #hipErrorLaunchFailure, #hipErrorOutOfMemory
