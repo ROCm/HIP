@@ -1096,18 +1096,20 @@ typedef struct hipUserObject* hipUserObject_t;
  *
  */
 typedef enum hipGraphNodeType {
-  hipGraphNodeTypeKernel = 0, ///< GPU kernel node
-  hipGraphNodeTypeMemcpy = 1, ///< Memcpy node
-  hipGraphNodeTypeMemset = 2, ///< Memset node
-  hipGraphNodeTypeHost = 3, ///< Host (executable) node
-  hipGraphNodeTypeGraph = 4, ///< Node which executes an embedded graph
-  hipGraphNodeTypeEmpty = 5, ///< Empty (no-op) node
-  hipGraphNodeTypeWaitEvent = 6, ///< External event wait node
-  hipGraphNodeTypeEventRecord = 7, ///< External event record node
+  hipGraphNodeTypeKernel = 0,             ///< GPU kernel node
+  hipGraphNodeTypeMemcpy = 1,             ///< Memcpy node
+  hipGraphNodeTypeMemset = 2,             ///< Memset node
+  hipGraphNodeTypeHost = 3,               ///< Host (executable) node
+  hipGraphNodeTypeGraph = 4,              ///< Node which executes an embedded graph
+  hipGraphNodeTypeEmpty = 5,              ///< Empty (no-op) node
+  hipGraphNodeTypeWaitEvent = 6,          ///< External event wait node
+  hipGraphNodeTypeEventRecord = 7,        ///< External event record node
   hipGraphNodeTypeExtSemaphoreSignal = 8, ///< External Semaphore signal node
-  hipGraphNodeTypeExtSemaphoreWait = 9, ///< External Semaphore wait node
-  hipGraphNodeTypeMemcpyFromSymbol = 10, ///< MemcpyFromSymbol node
-  hipGraphNodeTypeMemcpyToSymbol = 11, ///< MemcpyToSymbol node
+  hipGraphNodeTypeExtSemaphoreWait = 9,   ///< External Semaphore wait node
+  hipGraphNodeTypeMemAlloc = 10,          ///< Memory alloc node
+  hipGraphNodeTypeMemFree = 11,           ///< Memory free node
+  hipGraphNodeTypeMemcpyFromSymbol = 12,  ///< MemcpyFromSymbol node
+  hipGraphNodeTypeMemcpyToSymbol = 13,    ///< MemcpyToSymbol node
   hipGraphNodeTypeCount
 } hipGraphNodeType;
 
@@ -1132,6 +1134,16 @@ typedef struct hipMemsetParams {
   unsigned int value;
   size_t width;
 } hipMemsetParams;
+
+typedef struct hipMemAllocNodeParams {
+    hipMemPoolProps poolProps;          ///< Pool properties, which contain where
+                                        ///< the location should reside
+    const hipMemAccessDesc* accessDescs;///< The number of memory access descriptors.
+                                        ///< Must not be bigger than the number of GPUs
+    size_t  accessDescCount;            ///< The number of access descriptors
+    size_t  bytesize;                   ///< The size of the requested allocation in bytes
+    void*   dptr;                       ///< Returned device address of the allocation
+} hipMemAllocNodeParams;
 
 /**
  * @brief hipKernelNodeAttrID
@@ -6409,6 +6421,58 @@ hipError_t hipGraphEventWaitNodeSetEvent(hipGraphNode_t node, hipEvent_t event);
  */
 hipError_t hipGraphExecEventWaitNodeSetEvent(hipGraphExec_t hGraphExec, hipGraphNode_t hNode,
                                              hipEvent_t event);
+
+/**
+ * @brief Creates a memory allocation node and adds it to a graph
+ *
+ * @param [out] pGraphNode      - Pointer to the graph node to create and add to the graph
+ * @param [in] graph            - Instane of the graph the node to be added
+ * @param [in] pDependencies    - Const pointer to the node dependenties
+ * @param [in] numDependencies  - The number of dependencies
+ * @param [in] pNodeParams      - Node parameters for memory allocation
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphAddMemAllocNode(hipGraphNode_t* pGraphNode, hipGraph_t graph,
+    const hipGraphNode_t* pDependencies, size_t numDependencies, hipMemAllocNodeParams* pNodeParams);
+
+/**
+ * @brief Returns parameters for memory allocation node
+ *
+ * @param [in] node         - Memory allocation node for a query
+ * @param [out] pNodeParams - Parameters for the specified memory allocation node
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphMemAllocNodeGetParams(hipGraphNode_t node, hipMemAllocNodeParams* pNodeParams);
+
+/**
+ * @brief Creates a memory free node and adds it to a graph
+ *
+ * @param [out] pGraphNode      - Pointer to the graph node to create and add to the graph
+ * @param [in] graph            - Instane of the graph the node to be added
+ * @param [in] pDependencies    - Const pointer to the node dependenties
+ * @param [in] numDependencies  - The number of dependencies
+ * @param [in] dev_ptr          - Pointer to the memory to be freed
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphAddMemFreeNode(hipGraphNode_t* pGraphNode, hipGraph_t graph,
+    const hipGraphNode_t* pDependencies, size_t numDependencies, void* dev_ptr);
+
+/**
+ * @brief Returns parameters for memory free node
+ *
+ * @param [in] node     - Memory free node for a query
+ * @param [out] dev_ptr - Device pointer for the specified memory free node
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphMemFreeNodeGetParams(hipGraphNode_t node, void* dev_ptr);
 
 /**
  * @brief Get the mem attribute for graphs.
