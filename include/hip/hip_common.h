@@ -26,7 +26,7 @@ THE SOFTWARE.
 // Common code included at start of every hip file.
 // Auto enable __HIP_PLATFORM_AMD__ if compiling on AMD platform
 // Other compiler (GCC,ICC,etc) need to set one of these macros explicitly
-#if defined(__clang__) && defined(__HIP__)
+#if defined(__clang__) && defined(__HIP__) && !defined(__HIP_PLATFORM_SPIRV__)
 // The following macro will be removed after upstream updation
 #ifndef __HIP_PLATFORM_HCC__
 #define __HIP_PLATFORM_HCC__
@@ -38,7 +38,7 @@ THE SOFTWARE.
 #endif  // defined(__clang__) && defined(__HIP__)
 
 // Auto enable __HIP_PLATFORM_NVIDIA__ if compiling with NVIDIA platform
-#if defined(__NVCC__) || (defined(__clang__) && defined(__CUDA__) && !defined(__HIP__))
+#if defined(__NVCC__) || (defined(__clang__) && defined(__CUDA__) && !defined(__HIP__)) && !defined(__HIP_PLATFORM_SPIRV__)
 // The following macro will be removed after upstream updation
 #ifndef __HIP_PLATFORM_NVCC__
 #define __HIP_PLATFORM_NVCC__
