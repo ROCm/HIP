@@ -71,11 +71,6 @@ include( "${CMAKE_CURRENT_LIST_DIR}/hip-lang-targets.cmake" )
 get_filename_component(_DIR "${CMAKE_CURRENT_LIST_FILE}" REALPATH)
 get_filename_component(_IMPORT_PREFIX "${_DIR}/../../../../" ABSOLUTE)
 
-file(GLOB HIP_CLANG_INCLUDE_SEARCH_PATHS "${_IMPORT_PREFIX}/llvm/lib/clang/*/include")
-find_path(HIP_CLANG_INCLUDE_PATH __clang_cuda_math.h
-    HINTS ${HIP_CLANG_INCLUDE_SEARCH_PATHS}
-    NO_DEFAULT_PATH)
-get_filename_component(HIP_CLANG_INCLUDE_PATH "${HIP_CLANG_INCLUDE_PATH}" DIRECTORY)
 
 #If HIP isnot installed under ROCm, need this to find HSA assuming HSA is under ROCm
 if( DEFINED ENV{ROCM_PATH} )
@@ -93,18 +88,10 @@ if (NOT HSA_HEADER)
   message (FATAL_ERROR "HSA header not found! ROCM_PATH environment not set")
 endif()
 
-get_filename_component(HIP_COMPILER_INSTALL_PATH ${CMAKE_HIP_COMPILER} DIRECTORY)
-file(GLOB HIP_CLANGRT_LIB_SEARCH_PATHS "${HIP_COMPILER_INSTALL_PATH}/../lib/clang/*/lib/*")
-find_library(CLANGRT_BUILTINS
-    NAMES
-      clang_rt.builtins
-      clang_rt.builtins-x86_64
-    PATHS
-      ${HIP_CLANGRT_LIB_SEARCH_PATHS}
-      ${HIP_CLANG_INCLUDE_PATH}/../lib/linux)
+
 set_target_properties(hip-lang::device PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "$<$<COMPILE_LANGUAGE:HIP>:${_IMPORT_PREFIX}/include;${HIP_CLANG_INCLUDE_PATH}>"
-  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "$<$<COMPILE_LANGUAGE:HIP>:${_IMPORT_PREFIX}/include;${HIP_CLANG_INCLUDE_PATH}>"
+  INTERFACE_INCLUDE_DIRECTORIES "$<$<COMPILE_LANGUAGE:HIP>:${_IMPORT_PREFIX}/include>"
+  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "$<$<COMPILE_LANGUAGE:HIP>:${_IMPORT_PREFIX}/include>"
 )
 
 set_target_properties(hip-lang::amdhip64 PROPERTIES
@@ -130,13 +117,33 @@ set_property(TARGET hip-lang::device APPEND PROPERTY
   INTERFACE_LINK_OPTIONS "$<$<LINK_LANGUAGE:HIP>:--hip-link>"
 )
 
+# Approach: Check CLANGRT LIB support for CMAKE_HIP_COMPILER
+# Use CMAKE_HIP_COMPILER option -print-libgcc-file-name --rtlib=compiler-rt
+# Note: For Linux add additional option -unwindlib=libgcc also
+# To fetch the compiler rt library file name and confirm.
+# If unsuccessful in getting clangrt using this option then
+# FATAL_ERROR message send since compiler-rt linkage dependency is mandatory.
+# If successful then --rtlib=compiler-rt (and -unwindlib=libgcc for non windows)
+# added to Target's INTERFACE_LINK_LIBRARIES property
+if (NOT WIN32)
+  set(CLANGRT_LINUX_OPTION "-unwindlib=libgcc")
+endif()
+
+execute_process(
+  COMMAND ${CMAKE_HIP_COMPILER} -print-libgcc-file-name --rtlib=compiler-rt ${CLANGRT_LINUX_OPTION}
+  OUTPUT_VARIABLE CLANGRT_BUILTINS
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+  RESULT_VARIABLE CLANGRT_BUILTINS_FETCH_EXIT_CODE)
+
 # Add support for __fp16 and _Float16, explicitly link with compiler-rt
-if(NOT CLANGRT_BUILTINS)
-    message(FATAL_ERROR "clangrt builtins lib not found")
-else()
+if( "${CLANGRT_BUILTINS_FETCH_EXIT_CODE}" STREQUAL "0" )
   set_property(TARGET hip-lang::device APPEND PROPERTY
-    INTERFACE_LINK_LIBRARIES "$<$<LINK_LANGUAGE:HIP>:${CLANGRT_BUILTINS}>"
+    INTERFACE_LINK_OPTIONS $<$<LINK_LANGUAGE:HIP>:--rtlib=compiler-rt ${CLANGRT_LINUX_OPTION}>
   )
+else()
+  # FATAL_ERROR send if not successfull on compiler-rt linkage dependency
+  message(FATAL_ERROR
+	"${CMAKE_FIND_PACKAGE_NAME} Error:${CLANGRT_BUILTINS_FETCH_EXIT_CODE} - clangrt builtins lib could not be found.")
 endif()
 
 # Approved by CMake to use this name. This is used so that HIP can
