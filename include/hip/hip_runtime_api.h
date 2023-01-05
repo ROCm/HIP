@@ -98,7 +98,7 @@ typedef struct hipUUID_t {
 } hipUUID;
 
 //---
-// Common headers for both NVCC and HIP-Clang paths:
+// Common headers for SPIRV, NVCC and HCC paths:
 
 #define hipGetDeviceProperties hipGetDevicePropertiesR0600
 #define hipDeviceProp_t hipDeviceProp_tR0600
@@ -632,6 +632,10 @@ enum hipComputeMode {
   hipComputeModeExclusiveProcess = 3
 };
 
+/**
+ * @}
+ */
+
 enum hipFlushGPUDirectRDMAWritesOptions {
   hipFlushGPUDirectRDMAWritesOptionHost = 1 << 0,
   hipFlushGPUDirectRDMAWritesOptionMemOps = 1 << 1
@@ -643,12 +647,30 @@ enum hipGPUDirectRDMAWritesOrdering {
   hipGPUDirectRDMAWritesOrderingAllDevices = 200
 };
 
-#if defined(__HIP_PLATFORM_AMD__) && !defined(__HIP_PLATFORM_NVIDIA__)
+
+#if (defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) &&                            \
+    !(defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__)) &&                       \
+    !(defined(__HIP_PLATFORM_CLANG__) || defined(__HIP_PLATFORM_SPIRV__))
+#include <hip/amd_detail/host_defines.h>
+
+#elif (defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__)) &&                      \
+    !(defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) &&                           \
+    !(defined(__HIP_PLATFORM_CLANG__) || defined(__HIP_PLATFORM_SPIRV__))
+#include <hip/nvidia_detail/nvidia_hip_runtime_api.h>
+
+#elif (defined(__HIP_PLATFORM_CLANG__) || defined(__HIP_PLATFORM_SPIRV__)) &&                      \
+    !(defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) &&                           \
+    !(defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__))
+#include <hip/spirv_hip.hh>
+
+#else
+#error("Must define exactly one of __HIP_PLATFORM_AMD__, __HIP_PLATFORM_NVIDIA__ or __HIP_PLATFORM_SPIRV__");
+#endif // HIP PLATFORM SELECTION
 
 #ifndef GENERIC_GRID_LAUNCH
 #define GENERIC_GRID_LAUNCH 1
-#endif
-#include <hip/amd_detail/host_defines.h>
+#endif // GENERIC_GRID_LAUNCH
+
 #include <hip/driver_types.h>
 #include <hip/texture_types.h>
 #include <hip/surface_types.h>
@@ -1084,6 +1106,7 @@ typedef struct hipBatchMemOpNodeParams {
 // Stream per thread
 /** Implicit stream per application thread.*/
 #define hipStreamPerThread ((hipStream_t)2)
+#define hipStreamLegacy ((hipStream_t)3)
 
 #define hipStreamLegacy ((hipStream_t)1)
 
@@ -10353,13 +10376,6 @@ static inline __host__ hipError_t hipLaunchKernelEx(const hipLaunchConfig_t* con
 #endif
 
 
-#elif !defined(__HIP_PLATFORM_AMD__) && defined(__HIP_PLATFORM_NVIDIA__)
-#include "hip/nvidia_detail/nvidia_hip_runtime_api.h"
-#else
-#error ("Must define exactly one of __HIP_PLATFORM_AMD__ or __HIP_PLATFORM_NVIDIA__");
-#endif
-
-
 /**
  * @brief: C++ wrapper for hipMalloc
  * @ingroup Memory
@@ -10445,13 +10461,11 @@ static inline hipError_t hipMallocManaged(T** devPtr, size_t size,
 
 
 #endif
-#endif
-// doxygen end HIP API
-/**
- * @}
- */
-#include <hip/amd_detail/amd_hip_runtime_pt_api.h>
+#if (defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) && !(defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__))
+#include "hip/amd_detail/amd_hip_runtime_pt_api.h"
+#endif // TODO
 
 #if USE_PROF_API
-#include <hip/amd_detail/hip_prof_str.h>
+#include "hip/amd_detail/hip_prof_str.h"
 #endif
+#endif // HIP_INCLUDE_HIP_HIP_RUNTIME_API_H
