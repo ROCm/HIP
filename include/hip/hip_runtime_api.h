@@ -2546,6 +2546,23 @@ hipError_t hipEventQuery(hipEvent_t event);
  *
  *
  */
+
+/**
+ *  @brief Sets information on the specified pointer.[BETA]
+ *
+ *  @param [in]      value     sets pointer attribute value
+ *  @param [in]      atribute attribute to set
+ *  @param [in]      ptr      pointer to set attributes for
+ *
+ *  @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
+ *
+ *  @beta This API is marked as beta, meaning, while this is feature complete,
+ *  it is still open to changes and may have outstanding issues.
+ *
+ */
+hipError_t hipPointerSetAttribute(const void* value, hipPointer_attribute attribute,
+                                  hipDeviceptr_t ptr);
+
 /**
  *  @brief Return attributes for the specified pointer
  *
