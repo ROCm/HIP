@@ -99,11 +99,11 @@ hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
  * @param [in] sharedMemBytes  Amount of dynamic shared memory to allocate for this kernel.
  * HIP-Clang compiler provides support for extern shared declarations.
  * @param [in] stream  Stream where the kernel should be dispatched.
+ * May be 0, in which case the default stream is used with associated synchronization rules.
  * @param [in] startEvent  If non-null, specified event will be updated to track the start time of
  * the kernel launch. The event must be created before calling this API.
  * @param [in] stopEvent  If non-null, specified event will be updated to track the stop time of
  * the kernel launch. The event must be created before calling this API.
- * May be 0, in which case the default stream is used with associated synchronization rules.
  * @param [in] flags. The value of hipExtAnyOrderLaunch, signifies if kernel can be
  * launched in any order.
  * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue.
