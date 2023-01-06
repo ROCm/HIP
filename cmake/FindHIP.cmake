@@ -48,6 +48,29 @@ mark_as_advanced(HIP_HOST_COMPILATION_CPP)
 # FIND: HIP and associated helper binaries
 ###############################################################################
 
+if(NOT HIP_CXX_COMPILER)
+  set(HIP_CXX_COMPILER ${CMAKE_CXX_COMPILER})
+endif()
+
+# Approach: To find HIP_CLANG_PATH using HIP_CXX_COMPILER options
+# Using --version option of HIP_CXX_COMPILER get the Install Directory
+# This install directory is set as the HIP_CLANG_PATH.
+# IF not successful in getting the Install Directory using HIP_CXX_COMPILER
+# fallback to Old Method to find HIP_CLANG_PATH from ENV Vars, ROCMPATH, HIPPATH etc.
+execute_process(COMMAND ${HIP_CXX_COMPILER} --version
+             OUTPUT_STRIP_TRAILING_WHITESPACE
+             OUTPUT_VARIABLE HIP_CXX_COMPILER_VERSION_OUTPUT)
+if(HIP_CXX_COMPILER MATCHES ".*hipcc")
+  if(HIP_CXX_COMPILER_VERSION_OUTPUT MATCHES "InstalledDir:[ \t]*([^\n]*)")
+    get_filename_component(HIP_CLANG_INSTALL_DIR "${CMAKE_MATCH_1}" DIRECTORY)
+  endif()
+elseif (HIP_CXX_COMPILER MATCHES ".*clang\\+\\+")
+  get_filename_component(_HIP_CLANG_REAL_PATH "${HIP_CXX_COMPILER}" REALPATH)
+  get_filename_component(_HIP_CLANG_BIN_PATH "${_HIP_CLANG_REAL_PATH}" DIRECTORY)
+  get_filename_component(HIP_CLANG_INSTALL_DIR "${_HIP_CLANG_BIN_PATH}" DIRECTORY)
+endif()
+
+
 get_filename_component(_IMPORT_PREFIX "${CMAKE_CURRENT_LIST_DIR}/../" REALPATH)
 
 # HIP is currently not supported for apple
@@ -230,6 +253,10 @@ if("${HIP_COMPILER}" STREQUAL "nvcc")
 elseif("${HIP_COMPILER}" STREQUAL "clang")
     #Set HIP_CLANG_PATH
     if("x${HIP_CLANG_PATH}" STREQUAL "x")
+      # IF HIP_CLANG_INSTALL_DIR is Found
+      if( HIP_CLANG_INSTALL_DIR )
+        set(HIP_CLANG_PATH ${HIP_CLANG_INSTALL_DIR})
+      else() # IF HIP_CLANG_INSTALL_DIR is not found
         if(DEFINED ENV{HIP_CLANG_PATH})
             set(HIP_CLANG_PATH $ENV{HIP_CLANG_PATH})
         elseif(DEFINED ENV{ROCM_PATH})
@@ -252,7 +279,9 @@ elseif("${HIP_COMPILER}" STREQUAL "clang")
         else()
             message(FATAL_ERROR "Unable to find the clang compiler path. Set ROCM_PATH or HIP_PATH in env ")
         endif()
-    endif()
+      endif() # HIP_CLANG_INSTALL_DIR Check
+    endif() # Set HIP_CLANG_PATH
+
     #Number of parallel jobs by default is 1
     if(NOT DEFINED HIP_CLANG_NUM_PARALLEL_JOBS)
       set(HIP_CLANG_NUM_PARALLEL_JOBS 1)
@@ -660,6 +689,10 @@ macro(HIP_ADD_EXECUTABLE hip_target)
     endif()
     if("${HIP_COMPILER}" STREQUAL "clang")
         if("x${HIP_CLANG_PATH}" STREQUAL "x")
+          # IF HIP_CLANG_INSTALL_DIR is Found
+          if( HIP_CLANG_INSTALL_DIR )
+            set(HIP_CLANG_PATH ${HIP_CLANG_INSTALL_DIR})
+          else() # IF HIP_CLANG_INSTALL_DIR is not found
             if(DEFINED ENV{HIP_CLANG_PATH})
                 set(HIP_CLANG_PATH $ENV{HIP_CLANG_PATH})
             elseif(DEFINED ENV{ROCM_PATH})
@@ -682,7 +715,9 @@ macro(HIP_ADD_EXECUTABLE hip_target)
             else()
                 message(FATAL_ERROR "Unable to find the clang compiler path. Set ROCM_PATH or HIP_PATH in env")
             endif()
+          endif() # HIP_CLANG_INSTALL_DIR Check
         endif()
+
         set(CMAKE_HIP_LINK_EXECUTABLE "${HIP_HIPCC_CMAKE_LINKER_HELPER} ${HIP_CLANG_PATH} ${HIP_CLANG_PARALLEL_BUILD_LINK_OPTIONS} <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
     else()
         set(CMAKE_HIP_LINK_EXECUTABLE "${HIP_HIPCC_CMAKE_LINKER_HELPER} <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
