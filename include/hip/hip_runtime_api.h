@@ -2546,6 +2546,23 @@ hipError_t hipEventQuery(hipEvent_t event);
  *
  *
  */
+
+/**
+ *  @brief Sets information on the specified pointer.[BETA]
+ *
+ *  @param [in]      value     sets pointer attribute value
+ *  @param [in]      atribute attribute to set
+ *  @param [in]      ptr      pointer to set attributes for
+ *
+ *  @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
+ *
+ *  @beta This API is marked as beta, meaning, while this is feature complete,
+ *  it is still open to changes and may have outstanding issues.
+ *
+ */
+hipError_t hipPointerSetAttribute(const void* value, hipPointer_attribute attribute,
+                                  hipDeviceptr_t ptr);
+
 /**
  *  @brief Return attributes for the specified pointer
  *
@@ -5054,11 +5071,11 @@ hipError_t hipDrvMemcpy2DUnaligned(const hip_Memcpy2D* pCopy);
  * @param [in] sharedMemBytes  Amount of dynamic shared memory to allocate for this kernel.
  * HIP-Clang compiler provides support for extern shared declarations.
  * @param [in] stream  Stream where the kernel should be dispatched.
+ * May be 0, in which case the default stream is used with associated synchronization rules.
  * @param [in] startEvent  If non-null, specified event will be updated to track the start time of
  * the kernel launch. The event must be created before calling this API.
  * @param [in] stopEvent  If non-null, specified event will be updated to track the stop time of
  * the kernel launch. The event must be created before calling this API.
- * May be 0, in which case the default stream is used with associated synchronization rules.
  * @param [in] flags. The value of hipExtAnyOrderLaunch, signifies if kernel can be
  * launched in any order.
  * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue.
