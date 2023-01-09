@@ -2116,8 +2116,7 @@ hipError_t hipDeviceGetStreamPriorityRange(int* leastPriority, int* greatestPrio
 /**
  * @brief Destroys the specified stream.
  *
- * @param[in, out] stream Valid pointer to hipStream_t.  This function writes the memory with the
- * newly created stream.
+ * @param[in] stream stream identifier.
  * @return #hipSuccess #hipErrorInvalidHandle
  *
  * Destroys the specified stream.
