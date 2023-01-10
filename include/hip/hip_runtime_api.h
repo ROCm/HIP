@@ -6919,7 +6919,7 @@ hipError_t hipMemUnmap(void* ptr, size_t size);
  *-------------------------------------------------------------------------------------------------
  *  @defgroup GL Interop
  *  @{
- *  This section describes Stream Memory Wait and Write functions of HIP runtime API.
+ *  This section describes the OpenGL and graphics interoperability functions of HIP runtime API.
  */
 typedef unsigned int GLuint;
 typedef unsigned int GLenum;
