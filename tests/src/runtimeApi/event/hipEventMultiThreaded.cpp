@@ -44,10 +44,20 @@ extern "C" __global__ void WaitKernel(int *Ad, int clockrate) {
   *Ad = 1;
 }
 
+extern "C" __global__ void WaitKernel_gfx11(int *Ad, int clockrate) {
+#ifdef __HIP_PLATFORM_AMD__
+  uint64_t wait_t = 500,
+  start = wall_clock64()/clockrate, cycles;
+  do { cycles = wall_clock64()/clockrate-start;} while (cycles < wait_t);
+  *Ad = 1;
+#endif
+}
+
 void t1(hipEvent_t start, hipStream_t stream1, int clkRate, int *A, int *Ad) {
   *A = 0;
 
-  hipLaunchKernelGGL(HIP_KERNEL_NAME(WaitKernel), dim3(1), dim3(1), 0, stream1, Ad, clkRate);
+  auto WaitKernel_used = IsGfx11() ? WaitKernel_gfx11 : WaitKernel;
+  hipLaunchKernelGGL(HIP_KERNEL_NAME(WaitKernel_used), dim3(1), dim3(1), 0, stream1, Ad, clkRate);
 
   HIPCHECK(hipEventRecord(start, stream1));
 
@@ -69,7 +79,11 @@ int main(int argc, char* argv[]) {
     HIPCHECK(hipHostGetDevicePointer((void**)&Ad[i], A[i], 0));
   }
 
-  HIPCHECK(hipDeviceGetAttribute(&clkRate, hipDeviceAttributeClockRate, 0));
+  if (IsGfx11()) {
+    HIPCHECK(hipDeviceGetAttribute(&clkRate, hipDeviceAttributeWallClockRate, 0));
+  } else {
+    HIPCHECK(hipDeviceGetAttribute(&clkRate, hipDeviceAttributeClockRate, 0));
+  }
   hipStream_t stream1;
   hipStreamCreate(&stream1);
   hipEvent_t start;

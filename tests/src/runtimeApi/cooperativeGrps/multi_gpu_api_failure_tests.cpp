@@ -192,6 +192,20 @@ __global__ void second_test_kernel(long long *array) {
     array[rank] += clock64();
 }
 
+__global__ void test_kernel_gfx11(long long *array) {
+#ifdef __HIP_PLATFORM_AMD__
+    unsigned int rank = blockIdx.x * blockDim.x + threadIdx.x;
+    array[rank] += wall_clock64();
+#endif
+}
+
+__global__ void second_test_kernel_gfx11(long long *array) {
+#ifdef __HIP_PLATFORM_AMD__
+    unsigned int rank = blockIdx.x * blockDim.x + threadIdx.x;
+    array[rank] += wall_clock64();
+#endif
+}
+
 int main(int argc, char** argv) {
   hipError_t err;
   /*************************************************************************/
@@ -245,8 +259,9 @@ int main(int argc, char** argv) {
     int max_blocks_per_sm = INT_MAX;
     for (int i = 0; i < 2; i++) {
       HIPCHECK(hipSetDevice((dev + i)));
+      auto test_kernel_used = IsGfx11() ? test_kernel_gfx11 : test_kernel; 
       HIPCHECK(hipOccupancyMaxActiveBlocksPerMultiprocessor(
-               &max_blocks_per_sm_arr[i], test_kernel, warp_size, 0));
+               &max_blocks_per_sm_arr[i], test_kernel_used, warp_size, 0));
       if (max_blocks_per_sm_arr[i] < max_blocks_per_sm) {
           max_blocks_per_sm = max_blocks_per_sm_arr[i];
       }
@@ -293,7 +308,8 @@ int main(int argc, char** argv) {
     for (int i = 0; i < 2; i++) {
       dev_params[i][0] = reinterpret_cast<void*>(&bad_dev_array[i]);
 
-      md_params[i].func = reinterpret_cast<void*>(test_kernel);
+      auto test_kernel_used = IsGfx11() ? test_kernel_gfx11 : test_kernel;
+      md_params[i].func = reinterpret_cast<void*>(test_kernel_used);
       md_params[i].gridDim = 2 * desired_blocks;
       md_params[i].blockDim = warp_size;
       md_params[i].sharedMem = 0;
@@ -370,7 +386,8 @@ int main(int argc, char** argv) {
         supports_sep_kernels = false;
       }
     }
-    md_params[1].func = reinterpret_cast<void*>(second_test_kernel);
+    auto second_test_kernel_used = IsGfx11() ? second_test_kernel_gfx11 : second_test_kernel;
+    md_params[1].func = reinterpret_cast<void*>(second_test_kernel_used);
     err = hipLaunchCooperativeKernelMultiDevice(md_params, 2, 0);
     if ((supports_sep_kernels && err != hipSuccess) ||
         (!supports_sep_kernels && err != hipErrorInvalidValue)) {
@@ -405,7 +422,8 @@ int main(int argc, char** argv) {
     std::cout << "different grid sizes." << std::endl;
     bool supports_sep_sizes = true;
     for (int i = 0; i < 2; i++) {
-      md_params[i].func = reinterpret_cast<void*>(test_kernel);
+      auto test_kernel_used = IsGfx11() ? test_kernel_gfx11 : test_kernel;
+      md_params[i].func = reinterpret_cast<void*>(test_kernel_used);
       md_params[i].gridDim = i+1;
       if (!support_for_separate_grid_sizes((dev + i))) {
         supports_sep_sizes = false;

@@ -106,6 +106,29 @@ __global__ void test_kernel(uint32_t loops, unsigned long long *array, long long
   }
 }
 
+__global__ void test_kernel_gfx11(uint32_t loops, unsigned long long *array, long long totalTicks) {
+#ifdef __HIP_PLATFORM_AMD__
+  cooperative_groups::thread_block tb = cooperative_groups::this_thread_block();
+  unsigned int rank = blockIdx.x * blockDim.x + threadIdx.x;
+
+  for (int i = 0; i < loops; i++) {
+    long long time_diff = 0;
+    long long last_clock = wall_clock64();
+    do {
+      long long cur_clock = wall_clock64();
+      if (cur_clock > last_clock) {
+        time_diff += (cur_clock - last_clock);
+      }
+      // If it rolls over, we don't know how much to add to catch up.
+      // So just ignore those slipped cycles.
+      last_clock = cur_clock;
+    } while(time_diff < totalTicks);
+    tb.sync();
+    array[rank] += wall_clock64();
+  }
+#endif
+}
+
 template<typename T>
 bool verifyLeastCapacity(T& single_kernel_time, T& double_kernel_time, T& triple_kernel_time)
 {
@@ -256,8 +279,8 @@ int main(int argc, char** argv) {
     long long totalTicks = device_properties.clockRate ;
     int max_blocks_per_sm = 0;
     // Calculate the device occupancy to know how many blocks can be run.
-    HIPCHECK(hipOccupancyMaxActiveBlocksPerMultiprocessor(&max_blocks_per_sm,
-                                                          test_kernel,
+    auto test_kernel_used = IsGfx11() ? test_kernel_gfx11 : test_kernel;
+    HIPCHECK(hipOccupancyMaxActiveBlocksPerMultiprocessor(&max_blocks_per_sm, test_kernel_used,
                                                           warp_size, 0));
     int max_active_blocks = max_blocks_per_sm * num_sms;
     int coop_blocks = 0;
@@ -325,9 +348,10 @@ int main(int argc, char** argv) {
     }
 
     // Verify over capacity
-    HIPCHECK_API(hipLaunchCooperativeKernel(reinterpret_cast<void*>(test_kernel),
+    HIPCHECK_API(hipLaunchCooperativeKernel(reinterpret_cast<void*>(test_kernel_used),
                                      max_active_blocks + 1, warp_size,
-                                     coop_params[0], 0, streams[0]), hipErrorCooperativeLaunchTooLarge);
+                                     coop_params[0], 0, streams[0]),
+                                     hipErrorCooperativeLaunchTooLarge);
 
     std::cout << "Launching an initial single cooperative kernel..." << std::endl;
     // We need exclude the the initial launching as it will need time to load code obj.
