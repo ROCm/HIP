@@ -90,11 +90,11 @@ def hipBuildTest(String backendLabel) {
                     """
             }
         }
-        timeout(time: 1, unit: 'HOURS') {
-            stage("HIP Unit Tests - Catch2 framework ${backendLabel}") {
-                dir("${WORKSPACE}/hip-tests") {
-                    env.HIP_PATH = "${HIPAMD_DIR}" + "/build/install"
-                    sh  """#!/usr/bin/env bash
+        stage("Build - HIP TESTS") {
+            // Running the build on HIP TESTS workspace
+            dir("${WORKSPACE}/hip-tests") {
+                env.HIP_PATH = "${HIPAMD_DIR}" + "/build/install"
+                sh  """#!/usr/bin/env bash
                     set -x
                     rm -rf build
                     mkdir -p build
@@ -109,7 +109,17 @@ def hipBuildTest(String backendLabel) {
                     fi
                     make -j\$(nproc) build_tests
                     """
-                }
+            }
+        }
+        timeout(time: 1, unit: 'HOURS') {
+            stage('HIP Unit Tests - Catch2 framework') {
+                dir("${WORKSPACE}/hip-tests") {
+                    sh  """#!/usr/bin/env bash
+                        set -x
+                        cd build
+                    ctest
+                    """
+               }
             }
         }
     }
