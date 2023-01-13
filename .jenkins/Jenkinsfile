@@ -12,6 +12,7 @@ def hipBuildTest(String backendLabel) {
             dir("${WORKSPACE}/hipamd") {
               git branch: 'develop',
               url: 'https://github.com/ROCm-Developer-Tools/hipamd'
+              env.HIPAMD_DIR = "${WORKSPACE}" + "/hipamd"
             }
             
             dir("${WORKSPACE}/hip-tests") {
