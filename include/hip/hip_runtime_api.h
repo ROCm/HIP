@@ -635,6 +635,9 @@ enum hipLimit_t {
 /** Memory represents a HSA signal.*/
 #define hipMallocSignalMemory 0x2
 
+/** Memory allocated will be uncached. */
+#define hipDeviceMallocUncached 0x3
+
 //Flags that can be used with hipHostRegister.
 /** Memory is Mapped and Portable.*/
 #define hipHostRegisterDefault 0x0
