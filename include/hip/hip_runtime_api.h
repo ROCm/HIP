@@ -2221,6 +2221,17 @@ hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int* flags);
  */
 hipError_t hipStreamGetPriority(hipStream_t stream, int* priority);
 /**
+ * @brief Get the device assocaited with the stream
+ *
+ * @param[in] stream stream to be queried
+ * @param[out] hipDevice_t device associated with the stream
+ * @return #hipSuccess, #hipErrorInvalidValue, #hipErrorContextIsDestroyed, #hipErrorInvalidHandle,
+ * #hipErrorNotInitialized, #hipErrorDeinitialized, #hipErrorInvalidContext
+ *
+ * @see hipStreamCreate, hipStreamDestroy, hipDeviceGetStreamPriorityRange
+ */
+hipError_t hipStreamGetDevice(hipStream_t stream, hipDevice_t* device);
+/**
  * @brief Create an asynchronous stream with the specified CU mask.
  *
  * @param[in, out] stream Pointer to new stream

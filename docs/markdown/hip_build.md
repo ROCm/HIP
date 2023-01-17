@@ -101,6 +101,26 @@ By default, release version of AMDHIP is built.
 
 After make install command, make sure HIP_PATH is pointed to $PWD/install/hip.
 
+## Generating profiling header after adding/changing a HIP API
+
+When you add or change a HIP API, you might need to generate a new `hip_prof_str.h` header. This header is used by rocm tools to track HIP APIs like rocprofiler/roctracer etc.
+To generate the header after your change, use the tool `hip_prof_gen.py` present in `hipamd/src`.
+
+Usage:
+
+`hip_prof_gen.py [-v] <input HIP API .h file> <patched srcs path> <previous output> [<output>]`
+
+Flags:
+
+  * -v - verbose messages
+  * -r - process source directory recursively
+  * -t - API types matching check
+  * --priv - private API check
+  * -e - on error exit mode
+  * -p - HIP_INIT_API macro patching mode
+
+Example Usage: `hip_prof_gen.py -v -p -t --priv <hip>/include/hip/hip_runtime_api.h <hipamd>/src <hipamd>/include/hip/amd_detail/hip_prof_str.h <hipamd>/include/hip/amd_detail/hip_prof_str.h.new`
+
 ## Build HIP tests
 
 ### Build HIP directed tests
