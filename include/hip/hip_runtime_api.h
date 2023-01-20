@@ -3818,7 +3818,7 @@ hipError_t hipMemsetD32(hipDeviceptr_t dest, int value, size_t count);
  *  @brief Fills the first sizeBytes bytes of the memory area pointed to by dev with the constant
  * byte value value.
  *
- *  hipMemsetAsync() is asynchronous with respect to the host, so the call may return before the
+ * hipMemsetAsync() is asynchronous with respect to the host, so the call may return before the
  * memset is complete. The operation can optionally be associated to a stream by passing a non-zero
  * stream argument. If stream is non-zero, the operation may overlap with operations in other
  * streams.
@@ -3891,14 +3891,22 @@ hipError_t hipMemset3D(hipPitchedPtr pitchedDevPtr, int  value, hipExtent extent
 hipError_t hipMemset3DAsync(hipPitchedPtr pitchedDevPtr, int  value, hipExtent extent ,hipStream_t stream __dparm(0));
 /**
  * @brief Query memory info.
- * Return snapshot of free memory, and total allocatable memory on the device.
  *
- * Returns in *free a snapshot of the current free memory.
- * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
- * @warning On HCC, the free memory only accounts for memory allocated by this process and may be
- *optimistic.
+ * On ROCM, this function gets the actual free memory left on the current device, so supports
+ * the cases while running multi-workload (such as multiple processes, multiple threads, and
+ * multiple GPUs).
+ *
+ * @warning On Windows, the free memory only accounts for memory allocated by this process and may
+ * be optimistic.
+ *
+ * @param[out] free returns free memory on the current device in bytes
+ * @param[out] total returns total allocatable memory on the current device in bytes
+ *
+ * @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
+ *
  **/
 hipError_t hipMemGetInfo(size_t* free, size_t* total);
+
 hipError_t hipMemPtrGetInfo(void* ptr, size_t* size);
 /**
  *  @brief Allocate an array on the device.
