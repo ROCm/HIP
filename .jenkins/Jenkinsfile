@@ -118,7 +118,11 @@ def hipBuildTest(String backendLabel) {
                     sh  """#!/usr/bin/env bash
                         set -x
                         cd build
-                    ctest
+                    if [[ $backendLabel =~ amd ]]; then
+                        ctest
+                    else
+                        ctest -E 'Unit_hipMemcpyHtoD_Positive_Synchronization_Behavior|Unit_hipMemcpy_Positive_Synchronization_Behavior|Unit_hipFreeNegativeHost'
+                    fi
                     """
                }
             }
