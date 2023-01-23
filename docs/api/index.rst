@@ -2,4 +2,8 @@
 API Reference
 =============
 
-.. doxygenindex::
+.. toctree::
+   :maxdepth: 5
+
+   api/constants
+   api/initialization
