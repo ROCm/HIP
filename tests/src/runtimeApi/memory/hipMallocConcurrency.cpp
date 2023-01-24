@@ -58,7 +58,7 @@ Testcase Scenarios :
 */
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS --std=c++11
+ * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS --std=c++11 LINK_OPTIONS -lpthread
  * TEST_NAMED: %t hipMalloc_ArgValidation  --tests 1
  * TEST_NAMED: %t hipMalloc_LoopRegression_AllocFreeCycle --tests 2
  * TEST_NAMED: %t hipMalloc_LoopRegression_AllocPool --tests 3

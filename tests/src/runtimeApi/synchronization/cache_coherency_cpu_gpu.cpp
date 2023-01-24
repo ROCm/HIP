@@ -19,7 +19,7 @@ THE SOFTWARE.
 // Simple test for Fine Grained CPU-GPU coherency.
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp HIPCC_OPTIONS -std=c++11 -lpthread EXCLUDE_HIP_PLATFORM nvidia
+ * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvidia LINK_OPTIONS -lpthread
  * TEST: %t
  * HIT_END
  */
