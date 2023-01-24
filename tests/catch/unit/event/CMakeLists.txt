@@ -20,6 +20,10 @@ if(HIP_PLATFORM MATCHES "amd")
   set(TEST_SRC ${TEST_SRC} ${AMD_SRC})
 endif()
 
+if (UNIX)
+  set(__LINKER_LIBS__ pthread)
+endif()
+
 hip_add_exe_to_target(NAME EventTest
                       TEST_SRC ${TEST_SRC}
                       TEST_TARGET_NAME build_tests)

@@ -6,7 +6,12 @@ set(TEST_SRC
     hipPeekAtLastError.cc
 )
 
+if (UNIX)
+  set(__LINKER_LIBS__ pthread)
+endif()
+
 hip_add_exe_to_target(NAME ErrorHandlingTest
                       TEST_SRC ${TEST_SRC}
                       TEST_TARGET_NAME build_tests
-                      COMPILE_OPTIONS -std=c++14)
+		      LINKER_LIBS ${__LINKER_LIBS__}
+		      COMPILE_OPTIONS -std=c++14)
