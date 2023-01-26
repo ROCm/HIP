@@ -38,15 +38,15 @@ Install Nvidia driver and pre-build packages (see HIP Installation Guide at http
 
 ## Branch of repository
 
-Before get HIP source code, set the expected branch of repository at the variable HIP_BRANCH.
+Before get HIP source code, set the expected branch of repository at the variable ROCM_BRANCH.
 For example, for ROCm5.0 release branch, set
 ```
-export HIP_BRANCH=rocm-5.0.x
+export ROCM_BRANCH=rocm-5.0.x
 ```
 
-ROCm5.1 release branch, set
+ROCm5.4 release branch, set
 ```
-export HIP_BRANCH=rocm-5.1.x
+export ROCM_BRANCH=rocm-5.4.x
 ```
 Similiar format for future branches.
 
@@ -59,9 +59,10 @@ ROCM_PATH is path where ROCM is installed. BY default ROCM_PATH is at /opt/rocm.
 ## Get HIP source code
 
 ```
-git clone -b $HIP_BRANCH https://github.com/ROCm-Developer-Tools/hipamd.git
-git clone -b $HIP_BRANCH https://github.com/ROCm-Developer-Tools/hip.git
-git clone -b $HIP_BRANCH https://github.com/ROCm-Developer-Tools/ROCclr.git
+git clone -b "$ROCM_BRANCH" https://github.com/ROCm-Developer-Tools/hipamd.git
+git clone -b "$ROCM_BRANCH" https://github.com/ROCm-Developer-Tools/hip.git
+git clone -b "$ROCM_BRANCH" https://github.com/ROCm-Developer-Tools/ROCclr.git
+git clone -b "$ROCM_BRANCH" https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime.git
 ```
 
 ## Set the environment variables
@@ -136,42 +137,45 @@ Please note, the integrated HIP directed tests, will be deprecated in future rel
 
 ### Build HIP catch tests
 
-After build and install HIP commands, catch tests can be built via the following instructions,
+HIP catch tests, with new architectured Catch2, are official seperated from HIP project, exist in HIP tests repository, can be built via the following instructions.
+
+#### Get HIP tests source code
 
 ```
-cd "$HIP_DIR"
+git clone -b "$ROCM_BRANCH" https://github.com/ROCm-Developer-Tools/hip-tests.git
+```
+#### Build HIP tests from source
+
+```
+export HIP_TESTS_DIR="$(readlink -f hip-tests)"
+cd "$HIP_TESTS_DIR"
 mkdir -p build; cd build
-export HIP_PATH=$HIPAMD_DIR/build/install
-cmake  ../tests/catch/ -DHIP_PLATFORM=amd
+export HIP_PATH=$HIPAMD_DIR/build/install (or any path where HIP is installed, for example, /opt/rocm)
+cmake ../catch/ -DHIP_PLATFORM=amd
 make -j$(nproc) build_tests
 ctest # run tests
 ```
+HIP catch tests are built under the folder $HIP_TESTS_DIR/build.
 
-HIP catch tests are built under the folder $HIP_DIR/build.
-
-To run a single catch test, the following is an example,
+To run any single catch test, the following is an example,
 
 ```
-cd $HIP_DIR/build/unit/texture
+cd $HIP_TESTS_DIR/build/catch_tests/unit/texture
 ./TextureTest
 ```
 
-### Build HIP Catch2 standalone test
+#### Build HIP Catch2 standalone test
 
 HIP Catch2 supports build a standalone test, for example,
 
 ```
-export PATH=$HIP_DIR/bin:$PATH
-export HIP_PATH=$HIPAMD_DIR/build/install
-
-hipcc $HIP_DIR/tests/catch/unit/memory/hipPointerGetAttributes.cc -I ./tests/catch/include ./tests/catch/hipTestMain/standalone_main.cc -I ./tests/catch/external/Catch2 -g -o hipPointerGetAttributes
+cd "$HIP_TESTS_DIR"
+hipcc $HIP_TESTS_DIR/catch/unit/memory/hipPointerGetAttributes.cc -I ./catch/include ./catch/hipTestMain/standalone_main.cc -I ./catch/external/Catch2 -o hipPointerGetAttributes
 ./hipPointerGetAttributes
 ...
 
 All tests passed
 ```
-
-HIP catch tests, especially new architectured Catch2, will be official HIP tests in the repository and can be built alone as with the instructions shown above.
 
 # Build HIP on NVIDIA platform
 
@@ -179,8 +183,8 @@ HIP catch tests, especially new architectured Catch2, will be official HIP tests
 ## Get HIP source code
 
 ```
-git clone -b $HIP_BRANCH https://github.com/ROCm-Developer-Tools/hip.git
-git clone -b $HIP_BRANCH https://github.com/ROCm-Developer-Tools/hipamd.git
+git clone -b "$ROCM_BRANCH" https://github.com/ROCm-Developer-Tools/hip.git
+git clone -b "$ROCM_BRANCH" https://github.com/ROCm-Developer-Tools/hipamd.git
 ```
 
 ## Set the environment variables
