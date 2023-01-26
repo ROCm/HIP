@@ -160,6 +160,9 @@ if ($HIP_PLATFORM eq "amd") {
 
         # escape possible spaces in path name
         $HIPCC =~ s/\s/\\$&/g;
+        
+        # put hipcc path in quotes on windows
+        $HIPCC = "\"$HIPCC\""
     }
 
     # get Clang RT Builtin path 
@@ -196,6 +199,12 @@ if ($HIP_PLATFORM eq "amd") {
     }
 
     $HIPCC="$CUDA_PATH/bin/nvcc";
+    
+    if($isWindows) {
+        # put hipcc path in quotes on windows
+        $HIPCC = "\"$HIPCC\""
+    }
+
     $HIPCXXFLAGS .= " -Wno-deprecated-gpu-targets ";
     $HIPCXXFLAGS .= " -isystem $CUDA_PATH/include";
     $HIPCFLAGS .= " -isystem $CUDA_PATH/include";

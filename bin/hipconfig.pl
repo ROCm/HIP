@@ -188,8 +188,9 @@ if (!$printed or $p_full) {
     if ($HIP_PLATFORM eq "nvidia")  {
         print "\n" ;
         print "== nvcc\n";
+        $NVCC = $isWindows ? "\"$CUDA_PATH/bin/nvcc\"" : "$CUDA_PATH/bin/nvcc";
         print "CUDA_PATH   : ", $CUDA_PATH, "\n";
-        system("$CUDA_PATH/bin/nvcc --version");
+        system("$NVCC --version");
 
     }
     print "\n" ;
@@ -197,7 +198,7 @@ if (!$printed or $p_full) {
     print "=== Environment Variables\n";
     if ($isWindows) {
         print ("PATH=$ENV{PATH}\n");
-        system("set | findstr //B //C:\"HIP\" //C:\"CUDA\" //C:\"LD_LIBRARY_PATH\"");
+        system("set | findstr //B //C:\"HIP\" //C:\"CUDA\" //C:\"LD_LIBRARY_PATH\" 2> null");
     } else {
         system("echo PATH=\$PATH");
         system("env | egrep '^HIP|^CUDA|^LD_LIBRARY_PATH'");
@@ -208,7 +209,7 @@ if (!$printed or $p_full) {
     if ($isWindows) {
         print "== Windows Display Drivers\n";
         print "Hostname     : "; system ("hostname");
-        system ("wmic path win32_VideoController get AdapterCompatibility,InstalledDisplayDrivers,Name | findstr //B //C:\"Advanced Micro Devices\"");
+        system ("wmic path win32_VideoController get AdapterCompatibility,InstalledDisplayDrivers,Name | findstr //B //C:\"Advanced Micro Devices\" //C:\"NVIDIA\" 2> null");
     } else {
         print "== Linux Kernel\n";
         print "Hostname     : "; system ("hostname");
