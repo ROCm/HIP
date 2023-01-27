@@ -635,6 +635,9 @@ enum hipLimit_t {
 /** Memory represents a HSA signal.*/
 #define hipMallocSignalMemory 0x2
 
+/** Memory allocated will be uncached. */
+#define hipDeviceMallocUncached 0x3
+
 //Flags that can be used with hipHostRegister.
 /** Memory is Mapped and Portable.*/
 #define hipHostRegisterDefault 0x0
@@ -673,6 +676,7 @@ enum hipLimit_t {
 #define hipArrayCubemap 0x04
 #define hipArrayTextureGather 0x08
 #define hipOccupancyDefault 0x00
+#define hipOccupancyDisableCachingOverride 0x01
 #define hipCooperativeLaunchMultiDeviceNoPreSync 0x01
 #define hipCooperativeLaunchMultiDeviceNoPostSync 0x02
 #define hipCpuDeviceId ((int)-1)
@@ -688,6 +692,9 @@ enum hipLimit_t {
 // Stream per thread
 /** Implicit stream per application thread.*/
 #define hipStreamPerThread ((hipStream_t)2)
+
+// Indicates that the external memory object is a dedicated resource
+#define hipExternalMemoryDedicated 0x1
 /*
  * @brief HIP Memory Advise values
  * @enum
@@ -954,6 +961,18 @@ typedef struct hipLaunchParams_t {
     size_t sharedMem;       ///< Shared memory
     hipStream_t stream;     ///< Stream identifier
 } hipLaunchParams;
+typedef struct hipFunctionLaunchParams_t {
+    hipFunction_t function;      ///< Kernel to launch
+    unsigned int gridDimX;       ///< Width(X) of grid in blocks
+    unsigned int gridDimY;       ///< Height(Y) of grid in blocks
+    unsigned int gridDimZ;       ///< Depth(Z) of grid in blocks
+    unsigned int blockDimX;      ///< X dimension of each thread block
+    unsigned int blockDimY;      ///< Y dimension of each thread block
+    unsigned int blockDimZ;      ///< Z dimension of each thread block
+    unsigned int sharedMemBytes; ///< Shared memory
+    hipStream_t hStream;         ///< Stream identifier
+    void **kernelParams;         ///< Kernel parameters
+} hipFunctionLaunchParams;
 typedef enum hipExternalMemoryHandleType_enum {
   hipExternalMemoryHandleTypeOpaqueFd = 1,
   hipExternalMemoryHandleTypeOpaqueWin32 = 2,
@@ -1096,18 +1115,20 @@ typedef struct hipUserObject* hipUserObject_t;
  *
  */
 typedef enum hipGraphNodeType {
-  hipGraphNodeTypeKernel = 0, ///< GPU kernel node
-  hipGraphNodeTypeMemcpy = 1, ///< Memcpy node
-  hipGraphNodeTypeMemset = 2, ///< Memset node
-  hipGraphNodeTypeHost = 3, ///< Host (executable) node
-  hipGraphNodeTypeGraph = 4, ///< Node which executes an embedded graph
-  hipGraphNodeTypeEmpty = 5, ///< Empty (no-op) node
-  hipGraphNodeTypeWaitEvent = 6, ///< External event wait node
-  hipGraphNodeTypeEventRecord = 7, ///< External event record node
+  hipGraphNodeTypeKernel = 0,             ///< GPU kernel node
+  hipGraphNodeTypeMemcpy = 1,             ///< Memcpy node
+  hipGraphNodeTypeMemset = 2,             ///< Memset node
+  hipGraphNodeTypeHost = 3,               ///< Host (executable) node
+  hipGraphNodeTypeGraph = 4,              ///< Node which executes an embedded graph
+  hipGraphNodeTypeEmpty = 5,              ///< Empty (no-op) node
+  hipGraphNodeTypeWaitEvent = 6,          ///< External event wait node
+  hipGraphNodeTypeEventRecord = 7,        ///< External event record node
   hipGraphNodeTypeExtSemaphoreSignal = 8, ///< External Semaphore signal node
-  hipGraphNodeTypeExtSemaphoreWait = 9, ///< External Semaphore wait node
-  hipGraphNodeTypeMemcpyFromSymbol = 10, ///< MemcpyFromSymbol node
-  hipGraphNodeTypeMemcpyToSymbol = 11, ///< MemcpyToSymbol node
+  hipGraphNodeTypeExtSemaphoreWait = 9,   ///< External Semaphore wait node
+  hipGraphNodeTypeMemAlloc = 10,          ///< Memory alloc node
+  hipGraphNodeTypeMemFree = 11,           ///< Memory free node
+  hipGraphNodeTypeMemcpyFromSymbol = 12,  ///< MemcpyFromSymbol node
+  hipGraphNodeTypeMemcpyToSymbol = 13,    ///< MemcpyToSymbol node
   hipGraphNodeTypeCount
 } hipGraphNodeType;
 
@@ -1132,6 +1153,16 @@ typedef struct hipMemsetParams {
   unsigned int value;
   size_t width;
 } hipMemsetParams;
+
+typedef struct hipMemAllocNodeParams {
+    hipMemPoolProps poolProps;          ///< Pool properties, which contain where
+                                        ///< the location should reside
+    const hipMemAccessDesc* accessDescs;///< The number of memory access descriptors.
+                                        ///< Must not be bigger than the number of GPUs
+    size_t  accessDescCount;            ///< The number of access descriptors
+    size_t  bytesize;                   ///< The size of the requested allocation in bytes
+    void*   dptr;                       ///< Returned device address of the allocation
+} hipMemAllocNodeParams;
 
 /**
  * @brief hipKernelNodeAttrID
@@ -1645,9 +1676,10 @@ hipError_t hipGetDeviceProperties(hipDeviceProp_t* prop, int deviceId);
  *
  * @param [in] cacheConfig
  *
- * @returns #hipSuccess, #hipErrorNotInitialized
- * Note: AMD devices and some Nvidia GPUS do not support reconfigurable cache.  This hint is ignored
- * on those architectures.
+ * @returns #hipSuccess, #hipErrorNotInitialized, #hipErrorNotSupported
+ *
+ * Note: AMD devices do not support reconfigurable cache. This API is not implemented
+ * on AMD platform. If the function is called, it will return hipErrorNotSupported.
  *
  */
 hipError_t hipDeviceSetCacheConfig(hipFuncCache_t cacheConfig);
@@ -1657,8 +1689,8 @@ hipError_t hipDeviceSetCacheConfig(hipFuncCache_t cacheConfig);
  * @param [out] cacheConfig
  *
  * @returns #hipSuccess, #hipErrorNotInitialized
- * Note: AMD devices and some Nvidia GPUS do not support reconfigurable cache.  This hint is ignored
- * on those architectures.
+ * Note: AMD devices do not support reconfigurable cache. This hint is ignored
+ * on these architectures.
  *
  */
 hipError_t hipDeviceGetCacheConfig(hipFuncCache_t* cacheConfig);
@@ -2532,6 +2564,23 @@ hipError_t hipEventQuery(hipEvent_t event);
  *
  *
  */
+
+/**
+ *  @brief Sets information on the specified pointer.[BETA]
+ *
+ *  @param [in]      value     sets pointer attribute value
+ *  @param [in]      atribute attribute to set
+ *  @param [in]      ptr      pointer to set attributes for
+ *
+ *  @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
+ *
+ *  @beta This API is marked as beta, meaning, while this is feature complete,
+ *  it is still open to changes and may have outstanding issues.
+ *
+ */
+hipError_t hipPointerSetAttribute(const void* value, hipPointer_attribute attribute,
+                                  hipDeviceptr_t ptr);
+
 /**
  *  @brief Return attributes for the specified pointer
  *
@@ -4715,6 +4764,53 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f, unsigned int gridDimX, unsigne
                                  void** kernelParams, void** extra);
 /**
  * @brief launches kernel f with launch parameters and shared memory on stream with arguments passed
+ * to kernelParams, where thread blocks can cooperate and synchronize as they execute
+ *
+ * @param [in] f              Kernel to launch.
+ * @param [in] gridDimX       X grid dimension specified as multiple of blockDimX.
+ * @param [in] gridDimY       Y grid dimension specified as multiple of blockDimY.
+ * @param [in] gridDimZ       Z grid dimension specified as multiple of blockDimZ.
+ * @param [in] blockDimX      X block dimension specified in work-items.
+ * @param [in] blockDimY      Y block dimension specified in work-items.
+ * @param [in] blockDimZ      Z block dimension specified in work-items.
+ * @param [in] sharedMemBytes Amount of dynamic shared memory to allocate for this kernel. The
+ * HIP-Clang compiler provides support for extern shared declarations.
+ * @param [in] stream         Stream where the kernel should be dispatched. May be 0,
+ * in which case the default stream is used with associated synchronization rules.
+ * @param [in] kernelParams   A list of kernel arguments.
+ *
+ * Please note, HIP does not support kernel launch with total work items defined in dimension with
+ * size gridDim x blockDim >= 2^32.
+ *
+ * @returns hipSuccess, hipErrorDeinitialized, hipErrorNotInitialized, hipErrorInvalidContext,
+ * hipErrorInvalidHandle, hipErrorInvalidImage, hipErrorInvalidValue, hipInvalidDevice,
+ * hipErrorInvalidConfiguration, hipErrorLaunchFailure, hipErrorLaunchOutOfResources,
+ * hipErrorLaunchTimeOut, hipErrorCooperativeLaunchTooLarge, hipErrorSharedObjectInitFailed
+ */
+hipError_t hipModuleLaunchCooperativeKernel(hipFunction_t f, unsigned int gridDimX,
+                                            unsigned int gridDimY, unsigned int gridDimZ,
+                                            unsigned int blockDimX, unsigned int blockDimY,
+                                            unsigned int blockDimZ, unsigned int sharedMemBytes,
+                                            hipStream_t stream, void** kernelParams);
+/**
+ * @brief Launches kernels on multiple devices where thread blocks can cooperate and
+ * synchronize as they execute.
+ *
+ * @param [in] launchParamsList         List of launch parameters, one per device.
+ * @param [in] numDevices               Size of the launchParamsList array.
+ * @param [in] flags                    Flags to control launch behavior.
+ *
+ * @returns hipSuccess, hipErrorDeinitialized, hipErrorNotInitialized, hipErrorInvalidContext,
+ * hipErrorInvalidHandle, hipErrorInvalidImage, hipErrorInvalidValue, hipInvalidDevice,
+ * hipErrorInvalidConfiguration, hipErrorInvalidResourceHandle, hipErrorLaunchFailure,
+ * hipErrorLaunchOutOfResources, hipErrorLaunchTimeOut, hipErrorCooperativeLaunchTooLarge,
+ * hipErrorSharedObjectInitFailed
+ */
+hipError_t hipModuleLaunchCooperativeKernelMultiDevice(hipFunctionLaunchParams* launchParamsList,
+                                                       unsigned int numDevices,
+                                                       unsigned int flags);
+/**
+ * @brief launches kernel f with launch parameters and shared memory on stream with arguments passed
  * to kernelparams or extra, where thread blocks can cooperate and synchronize as they execute
  *
  * @param [in] f         Kernel to launch.
@@ -5007,6 +5103,20 @@ hipError_t hipLaunchKernel(const void* function_address,
                            void** args,
                            size_t sharedMemBytes __dparm(0),
                            hipStream_t stream __dparm(0));
+
+/**
+ * @brief Enqueues a host function call in a stream.
+ *
+ * @param [in] stream - stream to enqueue work to.
+ * @param [in] fn - function to call once operations enqueued preceeding are complete.
+ * @param [in] userData - User-specified data to be passed to the function.
+ * @returns #hipSuccess, #hipErrorInvalidResourceHandle, #hipErrorInvalidValue,
+ * #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipLaunchHostFunc(hipStream_t stream, hipHostFn_t fn, void* userData);
+
 /**
  * Copies memory for 2D arrays.
  *
@@ -5026,11 +5136,11 @@ hipError_t hipDrvMemcpy2DUnaligned(const hip_Memcpy2D* pCopy);
  * @param [in] sharedMemBytes  Amount of dynamic shared memory to allocate for this kernel.
  * HIP-Clang compiler provides support for extern shared declarations.
  * @param [in] stream  Stream where the kernel should be dispatched.
+ * May be 0, in which case the default stream is used with associated synchronization rules.
  * @param [in] startEvent  If non-null, specified event will be updated to track the start time of
  * the kernel launch. The event must be created before calling this API.
  * @param [in] stopEvent  If non-null, specified event will be updated to track the stop time of
  * the kernel launch. The event must be created before calling this API.
- * May be 0, in which case the default stream is used with associated synchronization rules.
  * @param [in] flags. The value of hipExtAnyOrderLaunch, signifies if kernel can be
  * launched in any order.
  * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue.
@@ -5535,19 +5645,6 @@ hipError_t hipStreamIsCapturing(hipStream_t stream, hipStreamCaptureStatus* pCap
 hipError_t hipStreamUpdateCaptureDependencies(hipStream_t stream, hipGraphNode_t* dependencies,
                                               size_t numDependencies,
                                               unsigned int flags __dparm(0));
-
-/**
- * @brief Enqueues a host function call in a stream.
- *
- * @param [in] stream - stream to enqueue work to.
- * @param [in] fn - function to call once operations enqueued preceeding are complete.
- * @param [in] userData - User-specified data to be passed to the function.
- * @returns #hipSuccess, #hipErrorInvalidResourceHandle, #hipErrorInvalidValue,
- * #hipErrorNotSupported
- * @warning : This API is marked as beta, meaning, while this is feature complete,
- * it is still open to changes and may have outstanding issues.
- */
-hipError_t hipLaunchHostFunc(hipStream_t stream, hipHostFn_t fn, void* userData);
 
 /**
  * @brief Swaps the stream capture mode of a thread.
@@ -6407,6 +6504,58 @@ hipError_t hipGraphEventWaitNodeSetEvent(hipGraphNode_t node, hipEvent_t event);
  */
 hipError_t hipGraphExecEventWaitNodeSetEvent(hipGraphExec_t hGraphExec, hipGraphNode_t hNode,
                                              hipEvent_t event);
+
+/**
+ * @brief Creates a memory allocation node and adds it to a graph
+ *
+ * @param [out] pGraphNode      - Pointer to the graph node to create and add to the graph
+ * @param [in] graph            - Instane of the graph the node to be added
+ * @param [in] pDependencies    - Const pointer to the node dependenties
+ * @param [in] numDependencies  - The number of dependencies
+ * @param [in] pNodeParams      - Node parameters for memory allocation
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphAddMemAllocNode(hipGraphNode_t* pGraphNode, hipGraph_t graph,
+    const hipGraphNode_t* pDependencies, size_t numDependencies, hipMemAllocNodeParams* pNodeParams);
+
+/**
+ * @brief Returns parameters for memory allocation node
+ *
+ * @param [in] node         - Memory allocation node for a query
+ * @param [out] pNodeParams - Parameters for the specified memory allocation node
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphMemAllocNodeGetParams(hipGraphNode_t node, hipMemAllocNodeParams* pNodeParams);
+
+/**
+ * @brief Creates a memory free node and adds it to a graph
+ *
+ * @param [out] pGraphNode      - Pointer to the graph node to create and add to the graph
+ * @param [in] graph            - Instane of the graph the node to be added
+ * @param [in] pDependencies    - Const pointer to the node dependenties
+ * @param [in] numDependencies  - The number of dependencies
+ * @param [in] dev_ptr          - Pointer to the memory to be freed
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphAddMemFreeNode(hipGraphNode_t* pGraphNode, hipGraph_t graph,
+    const hipGraphNode_t* pDependencies, size_t numDependencies, void* dev_ptr);
+
+/**
+ * @brief Returns parameters for memory free node
+ *
+ * @param [in] node     - Memory free node for a query
+ * @param [out] dev_ptr - Device pointer for the specified memory free node
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphMemFreeNodeGetParams(hipGraphNode_t node, void* dev_ptr);
 
 /**
  * @brief Get the mem attribute for graphs.

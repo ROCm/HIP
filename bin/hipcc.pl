@@ -160,7 +160,7 @@ if ($HIP_PLATFORM eq "amd") {
     $execExtension = "";
     if($isWindows) {
         $execExtension = ".exe";
-    } 
+    }
     $HIPCC="$HIP_CLANG_PATH/clang++" . $execExtension;
 
     # If $HIPCC clang++ is not compiled, use clang instead
@@ -172,14 +172,14 @@ if ($HIP_PLATFORM eq "amd") {
     if($isWindows) {
         $HIPLDFLAGS .= " -fuse-ld=lld";
         $HIPLDFLAGS .= " --ld-path=$HIP_CLANG_PATH/lld-link.exe";
-    }
-    $HIP_CLANG_VERSION = `$HIPCC --version`;
-    $HIP_CLANG_VERSION=~/.*clang version (\S+).*/;
-    $HIP_CLANG_VERSION=$1;
 
-    # Figure out the target with which llvm is configured
-    $HIP_CLANG_TARGET = `$HIPCC -print-target-triple`;
-    chomp($HIP_CLANG_TARGET);
+        # escape possible spaces in path name
+        $HIPCC =~ s/\s/\\$&/g;
+    }
+
+    # get Clang RT Builtin path 
+    $HIP_CLANG_RT_LIB = `$HIPCC --print-runtime-dir`;
+    chomp($HIP_CLANG_RT_LIB);
 
     if (! defined $HIP_INCLUDE_PATH) {
         $HIP_INCLUDE_PATH = "$HIP_PATH/include";
@@ -196,7 +196,7 @@ if ($HIP_PLATFORM eq "amd") {
         print ("HIP_INCLUDE_PATH=$HIP_INCLUDE_PATH\n");
         print ("HIP_LIB_PATH=$HIP_LIB_PATH\n");
         print ("DEVICE_LIB_PATH=$DEVICE_LIB_PATH\n");
-        print ("HIP_CLANG_TARGET=$HIP_CLANG_TARGET\n");
+        print ("HIP_CLANG_RT_LIB=$HIP_CLANG_RT_LIB\n");
     }
 
     $HIPLDFLAGS .= " -L\"$HIP_LIB_PATH\"";
@@ -393,121 +393,7 @@ foreach $arg (@ARGV)
         $swallowArg = 1;
     }
 
-    ## process linker response file for hip-clang
-    ## extract object files from static library and pass them directly to
-    ## hip-clang in command line.
-    ## ToDo: Remove this after hip-clang switch to lto and lld is able to
-    ## handle clang-offload-bundler bundles.
-    if (($arg =~ m/^-Wl,@/ or $arg =~ m/^@/) and
-        $HIP_PLATFORM eq 'amd') {
-        my @split_arg = (split /\@/, $arg); # arg will have options type(-Wl,@ or @) and filename
-        my $file = $split_arg[1];
-        open my $in, "<:encoding(utf8)", $file or die "$file: $!";
-        my $new_arg = "";
-        my $tmpdir = get_temp_dir ();
-        my $new_file = "$tmpdir/response_file";
-        open my $out, ">", $new_file or die "$new_file: $!";
-        while (my $line = <$in>) {
-            chomp $line;
-            if ($line =~ m/\.a$/ || $line =~ m/\.lo$/) {
-                my $libFile = $line;
-                my $path = abs_path($line);
-                my @objs = split ('\n', `cd $tmpdir; ar xv $path`);
-                ## Check if all files in .a are object files.
-                my $allIsObj = 1;
-                my $realObjs = "";
-                foreach my $obj (@objs) {
-                    chomp $obj;
-                    $obj =~ s/^x - //;
-                    $obj = "$tmpdir/$obj";
-                    my $fileType = `file $obj`;
-                    my $isObj = ($fileType =~ m/ELF/ or $fileType =~ m/COFF/);
-                    $allIsObj = ($allIsObj and $isObj);
-                    if ($isObj) {
-                        $realObjs = ($realObjs . " " . $obj);
-                    } else {
-                        push (@inputs, $obj);
-                        $new_arg = "$new_arg $obj";
-                    }
-                }
-                chomp $realObjs;
-                if ($allIsObj) {
-                    print $out "$line\n";
-                } elsif ($realObjs) {
-                    my($libBaseName, $libDir, $libExt) = fileparse($libFile);
-                    $libBaseName = mktemp($libBaseName . "XXXX") . $libExt;
-                    system("cd $tmpdir; ar rc $libBaseName $realObjs");
-                    print $out "$tmpdir/$libBaseName\n";
-                }
-            } elsif ($line =~ m/\.o$/) {
-                my $fileType = `file $line`;
-                my $isObj = ($fileType =~ m/ELF/ or $fileType =~ m/COFF/);
-                if ($isObj) {
-                    print $out "$line\n";
-                } else {
-                    push (@inputs, $line);
-                    $new_arg = "$new_arg $line";
-                }
-            } else {
-                print $out "$line\n";
-            }
-        }
-        close $in;
-        close $out;
-        $arg = "$new_arg $split_arg[0]\@$new_file";
-        $escapeArg = 0;
-    } elsif (($arg =~ m/\.a$/ || $arg =~ m/\.lo$/) &&
-              $HIP_PLATFORM eq 'amd') {
-        ## process static library for hip-clang
-        ## extract object files from static library and pass them directly to
-        ## hip-clang.
-        ## ToDo: Remove this after hip-clang switch to lto and lld is able to
-        ## handle clang-offload-bundler bundles.
-        my $new_arg = "";
-        my $tmpdir = get_temp_dir ();
-        my $libFile = $arg;
-        my $path = abs_path($arg);
-        my @objs = split ('\n', `cd $tmpdir; ar xv $path`);
-        ## Check if all files in .a are object files.
-        my $allIsObj = 1;
-        my $realObjs = "";
-        foreach my $obj (@objs) {
-            chomp $obj;
-            $obj =~ s/^x - //;
-            $obj = "$tmpdir/$obj";
-            my $fileType = `file $obj`;
-            my $isObj = ($fileType =~ m/ELF/ or $fileType =~ m/COFF/);
-            if ($fileType =~ m/ELF/) {
-                my $sections = `$HIP_CLANG_PATH/llvm-readelf -e -W $obj`;
-                $isObj = !($sections =~ m/__CLANG_OFFLOAD_BUNDLE__/);
-            }
-            $allIsObj = ($allIsObj and $isObj);
-            if ($isObj) {
-                $realObjs = ($realObjs . " " . $obj);
-            } else {
-                push (@inputs, $obj);
-                if ($new_arg ne "") {
-                    $new_arg .= " ";
-                }
-                $new_arg .= "$obj";
-            }
-        }
-        chomp $realObjs;
-        if ($allIsObj) {
-            $new_arg = $arg;
-        } elsif ($realObjs) {
-            my($libBaseName, $libDir, $libExt) = fileparse($libFile);
-            $libBaseName = mktemp($libBaseName . "XXXX") . $libExt;
-            system("cd $tmpdir; ar rc $libBaseName $realObjs");
-            $new_arg .= " $tmpdir/$libBaseName";
-        }
-        $arg = "$new_arg";
-        $escapeArg = 0;
-        if ($toolArgs =~ m/-Xlinker$/) {
-            $toolArgs = substr $toolArgs, 0, -8;
-            chomp $toolArgs;
-        }
-    } elsif ($arg eq '-x') {
+    if ($arg eq '-x') {
         $fileTypeFlag = 1;
     } elsif (($arg eq 'c' and $prevArg eq '-x') or ($arg eq '-xc')) {
         $fileTypeFlag = 1;
@@ -712,13 +598,8 @@ if ($HIP_PLATFORM eq "amd") {
       } else {
         $toolArgs = ${toolArgs} . " -Wl,-rpath=$HIP_LIB_PATH:$ROCM_PATH/lib -lamdhip64 ";
       }
-      # To support __fp16 and _Float16, explicitly link with compiler-rt
-      $HIP_CLANG_BUILTIN_LIB="$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION/lib/$HIP_CLANG_TARGET/libclang_rt.builtins.a";
-      if (-e $HIP_CLANG_BUILTIN_LIB) {
-        $toolArgs .= " -L$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION/lib/$HIP_CLANG_TARGET -lclang_rt.builtins "
-      } else {
-        $toolArgs .= " -L$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION/lib/linux -lclang_rt.builtins-x86_64 "
-      }
+
+      $toolArgs .= " -L$HIP_CLANG_RT_LIB -lclang_rt.builtins-x86_64 "
     }
 }
 
