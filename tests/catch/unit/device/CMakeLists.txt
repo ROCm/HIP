@@ -43,10 +43,15 @@ set_source_files_properties(hipDeviceGetP2PAttribute.cc PROPERTIES COMPILE_FLAGS
 add_executable(getDeviceCount EXCLUDE_FROM_ALL getDeviceCount_exe.cc)
 add_executable(hipDeviceGetP2PAttribute EXCLUDE_FROM_ALL hipDeviceGetP2PAttribute_exe.cc)
 
+if (UNIX)
+  set(__LINKER_LIBS__ pthread)
+endif()
+
 hip_add_exe_to_target(NAME DeviceTest
                       TEST_SRC ${TEST_SRC}
                       TEST_TARGET_NAME build_tests
-                      COMPILE_OPTIONS -std=c++14)
+                      COMPILE_OPTIONS -std=c++14
+                      LINKER_LIBS ${__LINKER_LIBS__})
 
 add_dependencies(DeviceTest getDeviceCount)
 add_dependencies(DeviceTest hipDeviceGetP2PAttribute)
