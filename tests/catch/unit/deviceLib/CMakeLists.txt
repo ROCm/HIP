@@ -18,6 +18,7 @@ set(TEST_SRC
 if(UNIX)
     set(TEST_SRC ${TEST_SRC}
         deviceAllocation.cc)
+    set(__LINKER_LIBS__ pthread)
 endif()
 
 # AMD only tests
@@ -86,7 +87,7 @@ endif()
     hip_add_exe_to_target(NAME UnitDeviceTests
                       TEST_SRC ${TEST_SRC}
                       TEST_TARGET_NAME build_tests
-                      LINKER_LIBS hiprtc)
+                      LINKER_LIBS hiprtc ${__LINKER_LIBS__})
 elseif(HIP_PLATFORM MATCHES "nvidia")
     hip_add_exe_to_target(NAME UnitDeviceTests
                       TEST_SRC ${TEST_SRC}

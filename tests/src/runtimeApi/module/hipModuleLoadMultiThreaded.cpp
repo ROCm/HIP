@@ -19,7 +19,7 @@ THE SOFTWARE.
 
 /* HIT_START
  * BUILD_CMD: empty_kernel.code %hc --genco %S/empty_kernel.cpp -o empty_kernel.code
- * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11
+ * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11 LINK_OPTIONS -lpthread
  * TEST: %t
  * HIT_END
  */

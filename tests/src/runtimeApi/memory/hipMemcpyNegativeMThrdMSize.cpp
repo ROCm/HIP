@@ -24,7 +24,7 @@ THE SOFTWARE.
 // of 8 hipmemcpy apis
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS --std=c++11
+ * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS --std=c++11 LINK_OPTIONS -lpthread
  * TEST_NAMED: %t hipMemcpyNegativeMThrdMSize_Negative_tests  --tests 1
  * TEST_NAMED: %t hipMemcpyNegativeMThrdMSize_MultiThread_tests --tests 2
  * TEST_NAMED: %t hipMemcpyNegativeMThrdMSize_MultiSize_singleType --tests 3 --memcpyPeersOnly 0 --testAllTypes 0
