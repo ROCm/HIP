@@ -237,23 +237,21 @@ typedef struct hipDeviceProp_t {
  /**
  * hipMemoryType (for pointer attributes)
  *
- * @note hipMemoryType enum values are different from cudaMemoryType enum values.
- * In this case, memory type translation for hipPointerGetAttributes needs to be handled properly
- * on nvidia platform to get the correct memory type in CUDA. Developers should use #ifdef in order
- * to assign the correct enum values depending on Nvidia or AMD platform.
+ * @note hipMemoryType enum values are combination of cudaMemoryType and cuMemoryType and AMD specific enum values.
  *
- * @note cudaMemoryTypeUnregistered is currently not supported due to HIP functionality backward
- * compatibility.
  */
 typedef enum hipMemoryType {
-    hipMemoryTypeHost = 0,    ///< Memory is physically located on host
-    hipMemoryTypeDevice = 1,  ///< Memory is physically located on device. (see deviceId for
-                              ///< specific device)
-    hipMemoryTypeArray = 2,   ///< Array memory, physically located on device. (see deviceId for
-                              ///< specific device)
-    hipMemoryTypeUnified = 3, ///< Not used currently
-    hipMemoryTypeManaged = 4  ///< Managed memory, automaticallly managed by the unified
-                              ///< memory system
+    hipMemoryTypeUnregistered = 0,  ///< Unregistered memory
+    hipMemoryTypeHost         = 1,  ///< Memory is physically located on host
+    hipMemoryTypeDevice       = 2,  ///< Memory is physically located on device. (see deviceId for
+                                    ///< specific device)
+    hipMemoryTypeManaged      = 3,  ///< Managed memory, automaticallly managed by the unified
+                                    ///< memory system
+                                    ///< place holder for new values.
+    hipMemoryTypeArray        = 10, ///< Array memory, physically located on device. (see deviceId for
+                                    ///< specific device)
+    hipMemoryTypeUnified      = 11  ///< unified address space
+
 } hipMemoryType;
 
 /**
