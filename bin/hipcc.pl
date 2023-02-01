@@ -123,24 +123,9 @@ $HIP_VERSION    =   $hipvars::HIP_VERSION;
 $HIP_ROCCLR_HOME =   $hipvars::HIP_ROCCLR_HOME;
 
 if ($HIP_PLATFORM eq "amd") {
-  # If using ROCclr runtime, need to find HIP_ROCCLR_HOME
-  if (!defined $DEVICE_LIB_PATH and -e "$HIP_ROCCLR_HOME/lib/bitcode") {
-    $DEVICE_LIB_PATH = "$HIP_ROCCLR_HOME/lib/bitcode";
-  }
   $HIP_INCLUDE_PATH = "$HIP_ROCCLR_HOME/include";
   if (!defined $HIP_LIB_PATH) {
     $HIP_LIB_PATH = "$HIP_ROCCLR_HOME/lib";
-  }
-
-  if (!defined $DEVICE_LIB_PATH) {
-    if (-e "$ROCM_PATH/amdgcn/bitcode") {
-      $DEVICE_LIB_PATH = "$ROCM_PATH/amdgcn/bitcode";
-    }
-    else {
-      # This path is to support an older build of the device library
-      # TODO: To be removed in the future.
-      $DEVICE_LIB_PATH = "$ROCM_PATH/lib";
-    }
   }
 }
 
@@ -567,7 +552,7 @@ if ($HIP_PLATFORM eq "amd") {
     }
 
     if ($hasHIP) {
-        if ($DEVICE_LIB_PATH ne "$ROCM_PATH/amdgcn/bitcode") {
+        if (defined $DEVICE_LIB_PATH) {
             $HIPCXXFLAGS .= " --hip-device-lib-path=\"$DEVICE_LIB_PATH\"";
         }
     }
