@@ -563,6 +563,10 @@ if ($HIP_PLATFORM eq "amd") {
     }
 
     if (!$compileOnly) {
+        if ($ENV{'HIP_PATH'} or $ENV{'HIP_LIB_PATH'}) {
+            # Add -L to the runtime if using a HIP at a non-default location
+            $HIPLDFLAGS .= " -L \"$HIP_LIB_PATH\""
+        }
         $HIPLDFLAGS .= " --hip-link";
         if ($rdc) {
             $HIPLDFLAGS .= $HIPLDARCHFLAGS;
