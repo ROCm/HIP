@@ -1695,21 +1695,25 @@ hipError_t hipDeviceSetCacheConfig(hipFuncCache_t cacheConfig);
  */
 hipError_t hipDeviceGetCacheConfig(hipFuncCache_t* cacheConfig);
 /**
- * @brief Get Resource limits of current device
+ * @brief Gets resource limits of current device
+ * The funtion querys the size of limit value, as required input enum hipLimit_t, can be either
+ * hipLimitStackSize, or hipLimitMallocHeapSize.
  *
- * @param [out] pValue
- * @param [in]  limit
+ * @param [out] pValue returns the size of the limit in bytes
+ * @param [in]  limit the limit to query
  *
  * @returns #hipSuccess, #hipErrorUnsupportedLimit, #hipErrorInvalidValue
- * Note: Currently, only hipLimitMallocHeapSize is available
  *
  */
 hipError_t hipDeviceGetLimit(size_t* pValue, enum hipLimit_t limit);
 /**
- * @brief Set Resource limits of current device
- *
- * @param [in] limit
- * @param [in] value
+ * @brief Sets resource limits of current device
+ * As the input enum limit, hipLimitStackSize sets the limit value of the stack size on current
+ * GPU devie, hipLimitMallocHeapSize sets the limit value of the heap used by the malloc()/free()
+ * calls. 
+ * 
+ * @param [in] limit enum of hipLimit_t to set
+ * @param [in] value the size of limit value in bytes
  *
  * @returns #hipSuccess, #hipErrorUnsupportedLimit, #hipErrorInvalidValue
  *
