@@ -585,9 +585,15 @@ enum hipLimit_t {
 /** Event can support IPC. hipEventDisableTiming also must be set.*/
 #define hipEventInterprocess 0x4
 
-/** Disable any system scope releases for events. May improve performance.
- * The flag is a no-op on CUDA platforms.*/
-#define hipEventDisableReleaseToSystem 0x20000000
+/** Disable performing a system scope sequentially consistent memory fence when the event
+ * transitions from recording to recorded.  This can be used for events that are only being
+ * used to measure timing, and do not require the event inspection operations
+ * (see ::hipEventSynchronize, ::hipEventQuery, and ::hipEventElapsedTime) to synchronize-with
+ * the work on which the recorded event (see ::hipEventRecord) is waiting.
+ * On some AMD GPU devices this can improve the accuracy of timing measurements by avoiding the
+ * cost of cache writeback and invalidation, and the performance impact of those actions on the
+ * execution of following work. */
+#define hipEventDisableSystemFence 0x20000000
 
 /** Use a device-scope release when recording this event. This flag is useful to obtain more
  * precise timings of commands between events.  The flag is a no-op on CUDA platforms.*/
@@ -2420,7 +2426,7 @@ hipError_t hipStreamWriteValue64(hipStream_t stream, void* ptr, uint64_t value, 
  would not record profiling data and provide best performance if used for synchronization.
  * #hipEventInterprocess : The event can be used as an interprocess event. hipEventDisableTiming
  flag also must be set when hipEventInterprocess flag is set.
- * #hipEventDisableReleaseToSystem : Disable releasing any cached memory to system scope. This may
+ * #hipEventDisableSystemFence : Disable acquire and release system scope fence. This may
  improve performance but device memory may not be visible to the host and other devices
  if this flag is set.
  *
