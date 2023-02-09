@@ -862,8 +862,9 @@ Output Constraints are specified by an `"="` prefix as shown above ("=v"). This 
 ## C++ Support
 The following C++ features are not supported:
 - Run-time-type information (RTTI)
-- Virtual functions
 - Try/catch
+- Virtual functions
+Virtual functions are not supported if objects containing virtual function tables are passed between GPU's of different offload arch's, e.g. between gfx906 and gfx1030. Otherwise virtual functions are supported.
 
 ## Kernel Compilation
 hipcc now supports compiling C++/HIP kernels to binary code objects.
