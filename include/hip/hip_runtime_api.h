@@ -2126,8 +2126,7 @@ hipError_t hipDeviceGetStreamPriorityRange(int* leastPriority, int* greatestPrio
 /**
  * @brief Destroys the specified stream.
  *
- * @param[in, out] stream Valid pointer to hipStream_t.  This function writes the memory with the
- * newly created stream.
+ * @param[in] stream stream identifier.
  * @return #hipSuccess #hipErrorInvalidHandle
  *
  * Destroys the specified stream.
@@ -2594,11 +2593,15 @@ hipError_t hipEventQuery(hipEvent_t event);
 hipError_t hipPointerSetAttribute(const void* value, hipPointer_attribute attribute,
                                   hipDeviceptr_t ptr);
 
+
 /**
  *  @brief Return attributes for the specified pointer
  *
  *  @param [out]  attributes  attributes for the specified pointer
  *  @param [in]   ptr         pointer to get attributes for
+ *
+ *  Note: To get pointer's memory type, the parameter attributes has 'type' as member variable.
+ *  The 'type' indicates input pointer is allocated on device or host.
  *
  *  @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
  *
@@ -2786,10 +2789,11 @@ hipError_t hipMemAllocHost(void** ptr, size_t size);
  *  @brief Allocate device accessible page locked host memory
  *
  *  @param[out] ptr Pointer to the allocated host pinned memory
- *  @param[in]  size Requested memory size
+ *  @param[in]  size Requested memory size in bytes
  *  @param[in]  flags Type of host memory allocation
  *
  *  If size is 0, no memory is allocated, *ptr returns nullptr, and hipSuccess is returned.
+ *  If no input for flags, it will be the default pinned memory allocation on the host.
  *
  *  @return #hipSuccess, #hipErrorOutOfMemory
  *
@@ -3304,7 +3308,7 @@ hipError_t hipMemPoolImportPointer(
  *  @brief Allocate device accessible page locked host memory [Deprecated]
  *
  *  @param[out] ptr Pointer to the allocated host pinned memory
- *  @param[in]  size Requested memory size
+ *  @param[in]  size Requested memory size in bytes
  *  @param[in]  flags Type of host memory allocation
  *
  *  If size is 0, no memory is allocated, *ptr returns nullptr, and hipSuccess is returned.
