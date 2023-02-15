@@ -90,6 +90,7 @@ typedef struct hipArray {
     unsigned int NumChannels;
     bool isDrv;
     unsigned int textureType;
+    unsigned int flags;
 }hipArray;
 #if !defined(__HIPCC_RTC__)
 typedef struct hip_Memcpy2D {

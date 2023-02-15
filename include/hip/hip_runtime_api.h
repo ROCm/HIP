@@ -4000,6 +4000,56 @@ hipError_t hipGetMipmappedArrayLevel(
     hipMipmappedArray_const_t mipmappedArray,
     unsigned int level);
 /**
+ * @brief Gets info about the specified array
+ *
+ * @param[out] desc   - Returned array type
+ * @param[out] extent - Returned array shape. 2D arrays will have depth of zero
+ * @param[out] flags  - Returned array flags
+ * @param[in]  array  - The HIP array to get info for
+ *
+ * @return #hipSuccess, #hipErrorInvalidValue #hipErrorInvalidHandle
+ *
+ * @see hipArrayGetDescriptor, hipArray3DGetDescriptor
+ */
+hipError_t hipArrayGetInfo(hipChannelFormatDesc* desc, hipExtent* extent, unsigned int* flags,
+                           hipArray* array);
+/**
+ * @brief Gets a 1D or 2D array descriptor
+ *
+ * @param[out] pArrayDescriptor - Returned array descriptor
+ * @param[in]  array            - Array to get descriptor of
+ *
+ * @return #hipSuccess, #hipErrorDeInitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ * #hipErrorInvalidValue #hipErrorInvalidHandle
+ *
+ * @see hipArray3DCreate, hipArray3DGetDescriptor, hipArrayCreate, hipArrayDestroy, hipMemAlloc,
+ * hipMemAllocHost, hipMemAllocPitch, hipMemcpy2D, hipMemcpy2DAsync, hipMemcpy2DUnaligned,
+ * hipMemcpy3D, hipMemcpy3DAsync, hipMemcpyAtoA, hipMemcpyAtoD, hipMemcpyAtoH, hipMemcpyAtoHAsync,
+ * hipMemcpyDtoA, hipMemcpyDtoD, hipMemcpyDtoDAsync, hipMemcpyDtoH, hipMemcpyDtoHAsync,
+ * hipMemcpyHtoA, hipMemcpyHtoAAsync, hipMemcpyHtoD, hipMemcpyHtoDAsync, hipMemFree,
+ * hipMemFreeHost, hipMemGetAddressRange, hipMemGetInfo, hipMemHostAlloc,
+ * hipMemHostGetDevicePointer, hipMemsetD8, hipMemsetD16, hipMemsetD32, hipArrayGetInfo
+ */
+hipError_t hipArrayGetDescriptor(HIP_ARRAY_DESCRIPTOR* pArrayDescriptor, hipArray* array);
+/**
+ * @brief Gets a 3D array descriptor
+ *
+ * @param[out] pArrayDescriptor - Returned 3D array descriptor
+ * @param[in]  array            - 3D array to get descriptor of
+ *
+ * @return #hipSuccess, #hipErrorDeInitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ * #hipErrorInvalidValue #hipErrorInvalidHandle, #hipErrorContextIsDestroyed
+ *
+ * @see hipArray3DCreate, hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc,
+ * hipMemAllocHost, hipMemAllocPitch, hipMemcpy2D, hipMemcpy2DAsync, hipMemcpy2DUnaligned,
+ * hipMemcpy3D, hipMemcpy3DAsync, hipMemcpyAtoA, hipMemcpyAtoD, hipMemcpyAtoH, hipMemcpyAtoHAsync,
+ * hipMemcpyDtoA, hipMemcpyDtoD, hipMemcpyDtoDAsync, hipMemcpyDtoH, hipMemcpyDtoHAsync,
+ * hipMemcpyHtoA, hipMemcpyHtoAAsync, hipMemcpyHtoD, hipMemcpyHtoDAsync, hipMemFree,
+ * hipMemFreeHost, hipMemGetAddressRange, hipMemGetInfo, hipMemHostAlloc,
+ * hipMemHostGetDevicePointer, hipMemsetD8, hipMemsetD16, hipMemsetD32, hipArrayGetInfo
+ */
+hipError_t hipArray3DGetDescriptor(HIP_ARRAY3D_DESCRIPTOR* pArrayDescriptor, hipArray* array);
+/**
  *  @brief Copies data between host and device.
  *
  *  @param[in]   dst    Destination memory address
