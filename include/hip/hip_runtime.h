@@ -37,8 +37,8 @@ THE SOFTWARE.
 #ifndef HIP_INCLUDE_HIP_HIP_RUNTIME_H
 #define HIP_INCLUDE_HIP_HIP_RUNTIME_H
 
-#if (__gfx1010__ || __gfx1011__ || __gfx1012__ || __gfx1030__ || __gfx1031__) && __AMDGCN_WAVEFRONT_SIZE == 64
-#error HIP is not supported on GFX10 with wavefront size 64
+#if __HIP_DEVICE_COMPILE__ && !__GFX8__ && !__GFX9__ && __AMDGCN_WAVEFRONT_SIZE == 64
+#error HIP is not supported on the specified GPU ARCH with wavefront size 64
 #endif
 
 #if !defined(__HIPCC_RTC__)
