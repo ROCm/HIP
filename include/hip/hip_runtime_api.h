@@ -1406,7 +1406,7 @@ hipError_t hipInit(unsigned int flags);
 /**
  * @brief Returns the approximate HIP driver version.
  *
- * @param [out] driverVersion
+ * @param [out] driverVersion driver version
  *
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
@@ -1422,7 +1422,7 @@ hipError_t hipDriverGetVersion(int* driverVersion);
 /**
  * @brief Returns the approximate HIP Runtime version.
  *
- * @param [out] runtimeVersion
+ * @param [out] runtimeVersion HIP runtime version
  *
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
@@ -1436,8 +1436,8 @@ hipError_t hipDriverGetVersion(int* driverVersion);
 hipError_t hipRuntimeGetVersion(int* runtimeVersion);
 /**
  * @brief Returns a handle to a compute device
- * @param [out] device
- * @param [in] ordinal
+ * @param [out] device Handle of device
+ * @param [in] ordinal Device ordinal
  *
  * @returns #hipSuccess, #hipErrorInvalidDevice
  */
@@ -1445,26 +1445,26 @@ hipError_t hipDeviceGet(hipDevice_t* device, int ordinal);
 
 /**
  * @brief Returns the compute capability of the device
- * @param [out] major
- * @param [out] minor
- * @param [in] device
+ * @param [out] major Major compute capability version number
+ * @param [out] minor Minor compute capability version number
+ * @param [in] device Device ordinal
  *
  * @returns #hipSuccess, #hipErrorInvalidDevice
  */
 hipError_t hipDeviceComputeCapability(int* major, int* minor, hipDevice_t device);
 /**
  * @brief Returns an identifer string for the device.
- * @param [out] name
- * @param [in] len
- * @param [in] device
+ * @param [out] name String of the device name
+ * @param [in] len Maximum length of string to store in device name
+ * @param [in] device Device ordinal
  *
  * @returns #hipSuccess, #hipErrorInvalidDevice
  */
 hipError_t hipDeviceGetName(char* name, int len, hipDevice_t device);
 /**
  * @brief Returns an UUID for the device.[BETA]
- * @param [out] uuid
- * @param [in] device
+ * @param [out] uuid UUID for the device
+ * @param [in] device device ordinal
  *
  * @beta This API is marked as beta, meaning, while this is feature complete,
  * it is still open to changes and may have outstanding issues.
@@ -1474,11 +1474,11 @@ hipError_t hipDeviceGetName(char* name, int len, hipDevice_t device);
  */
 hipError_t hipDeviceGetUuid(hipUUID* uuid, hipDevice_t device);
 /**
- * @brief Returns a value for attr of link between two devices
- * @param [out] value
- * @param [in] attr
- * @param [in] srcDevice
- * @param [in] dstDevice
+ * @brief Returns a value for attribute of link between two devices
+ * @param [out] value Pointer of the value for the attrubute
+ * @param [in] attr enum of hipDeviceP2PAttr to query
+ * @param [in] srcDevice The source device of the link
+ * @param [in] dstDevice The destination device of the link
  *
  * @returns #hipSuccess, #hipErrorInvalidDevice
  */
@@ -1486,25 +1486,25 @@ hipError_t hipDeviceGetP2PAttribute(int* value, hipDeviceP2PAttr attr,
                                     int srcDevice, int dstDevice);
 /**
  * @brief Returns a PCI Bus Id string for the device, overloaded to take int device ID.
- * @param [out] pciBusId
- * @param [in] len
- * @param [in] device
+ * @param [out] pciBusId The string of PCI Bus Id format for the device 
+ * @param [in] len Maximum length of string
+ * @param [in] device The device ordinal
  *
  * @returns #hipSuccess, #hipErrorInvalidDevice
  */
 hipError_t hipDeviceGetPCIBusId(char* pciBusId, int len, int device);
 /**
  * @brief Returns a handle to a compute device.
- * @param [out] device handle
- * @param [in] PCI Bus ID
+ * @param [out] device The handle of the device
+ * @param [in] PCI The string of PCI Bus Id for the device
  *
  * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
  */
 hipError_t hipDeviceGetByPCIBusId(int* device, const char* pciBusId);
 /**
  * @brief Returns the total amount of memory on the device.
- * @param [out] bytes
- * @param [in] device
+ * @param [out] bytes The size of memory in bytes, on the device
+ * @param [in] device The ordinal of the device
  *
  * @returns #hipSuccess, #hipErrorInvalidDevice
  */
@@ -1684,7 +1684,7 @@ hipError_t hipGetDeviceProperties(hipDeviceProp_t* prop, int deviceId);
 /**
  * @brief Set L1/Shared cache partition.
  *
- * @param [in] cacheConfig
+ * @param [in] cacheConfig Cache configuration
  *
  * @returns #hipSuccess, #hipErrorNotInitialized, #hipErrorNotSupported
  *
@@ -1696,7 +1696,7 @@ hipError_t hipDeviceSetCacheConfig(hipFuncCache_t cacheConfig);
 /**
  * @brief Get Cache configuration for a specific Device
  *
- * @param [out] cacheConfig
+ * @param [out] cacheConfig Pointer of cache configuration
  *
  * @returns #hipSuccess, #hipErrorNotInitialized
  * Note: AMD devices do not support reconfigurable cache. This hint is ignored
@@ -1705,21 +1705,25 @@ hipError_t hipDeviceSetCacheConfig(hipFuncCache_t cacheConfig);
  */
 hipError_t hipDeviceGetCacheConfig(hipFuncCache_t* cacheConfig);
 /**
- * @brief Get Resource limits of current device
+ * @brief Gets resource limits of current device
+ * The funtion querys the size of limit value, as required input enum hipLimit_t, can be either
+ * hipLimitStackSize, or hipLimitMallocHeapSize.
  *
- * @param [out] pValue
- * @param [in]  limit
+ * @param [out] pValue returns the size of the limit in bytes
+ * @param [in]  limit the limit to query
  *
  * @returns #hipSuccess, #hipErrorUnsupportedLimit, #hipErrorInvalidValue
- * Note: Currently, only hipLimitMallocHeapSize is available
  *
  */
 hipError_t hipDeviceGetLimit(size_t* pValue, enum hipLimit_t limit);
 /**
- * @brief Set Resource limits of current device
- *
- * @param [in] limit
- * @param [in] value
+ * @brief Sets resource limits of current device
+ * As the input enum limit, hipLimitStackSize sets the limit value of the stack size on current
+ * GPU devie, hipLimitMallocHeapSize sets the limit value of the heap used by the malloc()/free()
+ * calls. 
+ * 
+ * @param [in] limit enum of hipLimit_t to set
+ * @param [in] value the size of limit value in bytes
  *
  * @returns #hipSuccess, #hipErrorUnsupportedLimit, #hipErrorInvalidValue
  *
@@ -1728,7 +1732,7 @@ hipError_t hipDeviceSetLimit ( enum hipLimit_t limit, size_t value );
 /**
  * @brief Returns bank width of shared memory for current device
  *
- * @param [out] pConfig
+ * @param [out] pConfig The pointer of the bank width for shared memory 
  *
  * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized
  *
@@ -1740,7 +1744,7 @@ hipError_t hipDeviceGetSharedMemConfig(hipSharedMemConfig* pConfig);
 /**
  * @brief Gets the flags set for current device
  *
- * @param [out] flags
+ * @param [out] flags Pointer of the flags 
  *
  * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
  */
@@ -1748,7 +1752,7 @@ hipError_t hipGetDeviceFlags(unsigned int* flags);
 /**
  * @brief The bank width of shared memory on current device is set
  *
- * @param [in] config
+ * @param [in] config Configuration for the bank width of shared memory
  *
  * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized
  *
@@ -1760,7 +1764,7 @@ hipError_t hipDeviceSetSharedMemConfig(hipSharedMemConfig config);
 /**
  * @brief The current device behavior is changed according the flags passed.
  *
- * @param [in] flags
+ * @param [in] flags Flag to set on the current device 
  *
  * The schedule flags impact how HIP waits for the completion of a command running on a device.
  * hipDeviceScheduleSpin         : HIP runtime will actively spin in the thread which submitted the
@@ -1785,8 +1789,8 @@ hipError_t hipSetDeviceFlags(unsigned flags);
 /**
  * @brief Device which matches hipDeviceProp_t is returned
  *
- * @param [out] device ID
- * @param [in]  device properties pointer
+ * @param [out] device Pointer of the device
+ * @param [in]  prop Pointer of the properties
  *
  * @returns #hipSuccess, #hipErrorInvalidValue
  */
@@ -1936,9 +1940,9 @@ hipError_t hipIpcOpenEventHandle(hipEvent_t* event, hipIpcEventHandle_t handle);
 /**
  * @brief Set attribute for a specific function
  *
- * @param [in] func;
- * @param [in] attr;
- * @param [in] value;
+ * @param [in] func Pointer of the function
+ * @param [in] attr Attribute to set
+ * @param [in] value Value to set
  *
  * @returns #hipSuccess, #hipErrorInvalidDeviceFunction, #hipErrorInvalidValue
  *
@@ -1950,7 +1954,7 @@ hipError_t hipFuncSetAttribute(const void* func, hipFuncAttribute attr, int valu
 /**
  * @brief Set Cache configuration for a specific function
  *
- * @param [in] config;
+ * @param [in] config Configuration to set
  *
  * @returns #hipSuccess, #hipErrorNotInitialized
  * Note: AMD devices and some Nvidia GPUS do not support reconfigurable cache.  This hint is ignored
@@ -1961,8 +1965,8 @@ hipError_t hipFuncSetCacheConfig(const void* func, hipFuncCache_t config);
 /**
  * @brief Set shared memory configuation for a specific function
  *
- * @param [in] func
- * @param [in] config
+ * @param [in] func Pointer of the function
+ * @param [in] config Configuration
  *
  * @returns #hipSuccess, #hipErrorInvalidDeviceFunction, #hipErrorInvalidValue
  *
@@ -3995,6 +3999,56 @@ hipError_t hipGetMipmappedArrayLevel(
     hipArray_t *levelArray,
     hipMipmappedArray_const_t mipmappedArray,
     unsigned int level);
+/**
+ * @brief Gets info about the specified array
+ *
+ * @param[out] desc   - Returned array type
+ * @param[out] extent - Returned array shape. 2D arrays will have depth of zero
+ * @param[out] flags  - Returned array flags
+ * @param[in]  array  - The HIP array to get info for
+ *
+ * @return #hipSuccess, #hipErrorInvalidValue #hipErrorInvalidHandle
+ *
+ * @see hipArrayGetDescriptor, hipArray3DGetDescriptor
+ */
+hipError_t hipArrayGetInfo(hipChannelFormatDesc* desc, hipExtent* extent, unsigned int* flags,
+                           hipArray* array);
+/**
+ * @brief Gets a 1D or 2D array descriptor
+ *
+ * @param[out] pArrayDescriptor - Returned array descriptor
+ * @param[in]  array            - Array to get descriptor of
+ *
+ * @return #hipSuccess, #hipErrorDeInitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ * #hipErrorInvalidValue #hipErrorInvalidHandle
+ *
+ * @see hipArray3DCreate, hipArray3DGetDescriptor, hipArrayCreate, hipArrayDestroy, hipMemAlloc,
+ * hipMemAllocHost, hipMemAllocPitch, hipMemcpy2D, hipMemcpy2DAsync, hipMemcpy2DUnaligned,
+ * hipMemcpy3D, hipMemcpy3DAsync, hipMemcpyAtoA, hipMemcpyAtoD, hipMemcpyAtoH, hipMemcpyAtoHAsync,
+ * hipMemcpyDtoA, hipMemcpyDtoD, hipMemcpyDtoDAsync, hipMemcpyDtoH, hipMemcpyDtoHAsync,
+ * hipMemcpyHtoA, hipMemcpyHtoAAsync, hipMemcpyHtoD, hipMemcpyHtoDAsync, hipMemFree,
+ * hipMemFreeHost, hipMemGetAddressRange, hipMemGetInfo, hipMemHostAlloc,
+ * hipMemHostGetDevicePointer, hipMemsetD8, hipMemsetD16, hipMemsetD32, hipArrayGetInfo
+ */
+hipError_t hipArrayGetDescriptor(HIP_ARRAY_DESCRIPTOR* pArrayDescriptor, hipArray* array);
+/**
+ * @brief Gets a 3D array descriptor
+ *
+ * @param[out] pArrayDescriptor - Returned 3D array descriptor
+ * @param[in]  array            - 3D array to get descriptor of
+ *
+ * @return #hipSuccess, #hipErrorDeInitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ * #hipErrorInvalidValue #hipErrorInvalidHandle, #hipErrorContextIsDestroyed
+ *
+ * @see hipArray3DCreate, hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc,
+ * hipMemAllocHost, hipMemAllocPitch, hipMemcpy2D, hipMemcpy2DAsync, hipMemcpy2DUnaligned,
+ * hipMemcpy3D, hipMemcpy3DAsync, hipMemcpyAtoA, hipMemcpyAtoD, hipMemcpyAtoH, hipMemcpyAtoHAsync,
+ * hipMemcpyDtoA, hipMemcpyDtoD, hipMemcpyDtoDAsync, hipMemcpyDtoH, hipMemcpyDtoHAsync,
+ * hipMemcpyHtoA, hipMemcpyHtoAAsync, hipMemcpyHtoD, hipMemcpyHtoDAsync, hipMemFree,
+ * hipMemFreeHost, hipMemGetAddressRange, hipMemGetInfo, hipMemHostAlloc,
+ * hipMemHostGetDevicePointer, hipMemsetD8, hipMemsetD16, hipMemsetD32, hipArrayGetInfo
+ */
+hipError_t hipArray3DGetDescriptor(HIP_ARRAY3D_DESCRIPTOR* pArrayDescriptor, hipArray* array);
 /**
  *  @brief Copies data between host and device.
  *
