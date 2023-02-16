@@ -134,7 +134,7 @@
 
 |   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|:----------------:|
-| `cudaArrayGetInfo`                                        |                               |
+| `cudaArrayGetInfo`                                        | `hipArrayGetInfo`             |
 | `cudaFree`                                                | `hipFree`                     |
 | `cudaFreeArray`                                           | `hipFreeArray`                |
 | `cudaFreeHost`                                            | `hipHostFree`                 |
