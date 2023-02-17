@@ -244,7 +244,12 @@ if($HIP_PLATFORM eq "nvidia"){
     if($ARGV[0] eq "--genco"){
         foreach $isaarg (@ARGV[1..$#ARGV]){
             $ISACMD .= " ";
-            $ISACMD .= $isaarg;
+            # ignore --rocm-path=xxxx on nvcc nvidia platform
+            if ($isaarg !~ /--rocm-path/) {
+              $ISACMD .= $isaarg;
+            } else {
+              print "Ignoring --rocm-path= on nvidia nvcc platform.\n";
+            }
         }
         if ($verbose & 0x1) {
             print "hipcc-cmd: ", $ISACMD, "\n";
