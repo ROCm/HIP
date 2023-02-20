@@ -157,9 +157,6 @@ if ($HIP_PLATFORM eq "amd") {
     if($isWindows) {
         $HIPLDFLAGS .= " -fuse-ld=lld";
         $HIPLDFLAGS .= " --ld-path=$HIP_CLANG_PATH/lld-link.exe";
-
-        # escape possible spaces in path name
-        $HIPCC =~ s/\s/\\$&/g;
         
         # put hipcc path in quotes on windows
         $HIPCC = "\"$HIPCC\""
