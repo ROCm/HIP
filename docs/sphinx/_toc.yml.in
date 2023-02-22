@@ -5,5 +5,4 @@ subtrees:
 - entries:
   - file: userguide/index
 - caption: Other Documents
-  entries:
-    - glob: /*
+
