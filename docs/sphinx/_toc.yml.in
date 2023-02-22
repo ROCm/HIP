@@ -6,4 +6,4 @@ subtrees:
   - file: userguide/index
 - caption: Other Documents
   entries:
-    - glob: *
+    - glob: /*
