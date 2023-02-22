@@ -4,5 +4,5 @@ subtrees:
   - file: api/index
 - entries:
   - file: userguide/index
-- caption: Other Documents
+
 
