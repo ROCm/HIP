@@ -1,8 +1,8 @@
 root: index
 subtrees:
 - entries:
+  - file: programming_manual
   - file: api/index
-- entries:
   - file: userguide/index
 
 

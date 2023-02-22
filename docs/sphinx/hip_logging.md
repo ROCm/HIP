@@ -1,4 +1,4 @@
-## What is HIP logging for? ###
+# Logging Mechanisms
 
 HIP provides a logging mechanism, which is a convinient way of printing important information so as to trace HIP API and runtime codes during the execution of HIP application.
 It assists HIP development team in the development of HIP runtime, and is useful for HIP application developers as well.
@@ -6,7 +6,7 @@ Depending on the setting of logging level and logging mask, HIP logging will pri
 
 ## HIP Logging Level:
 
-By Default, HIP logging is disabled, it can be enabled via environment setting,
+By default, HIP logging is disabled, it can be enabled via an environment variable,
   - AMD_LOG_LEVEL
 
 The value of the setting controls different logging level,

@@ -1,4 +1,4 @@
-# HIP Programming Guide
+# HIP Programming Manual
 
 ## Host Memory
 
