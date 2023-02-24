@@ -113,7 +113,7 @@ bool compareHipDeviceGetPCIBusIdWithLspci() {
   char const *command = "lspci -D | grep controller | grep NVIDIA | "
                         "cut -d ' ' -f 1";
 #else
-  char const *command = "lspci -D | grep controller | grep AMD/ATI | "
+  char const *command = "lspci -D | grep -e controller -e accelerator | grep AMD/ATI | "
                         "cut -d ' ' -f 1";
 #endif
   fpipe = popen(command, "r");
