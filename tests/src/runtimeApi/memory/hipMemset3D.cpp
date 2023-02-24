@@ -132,6 +132,7 @@ bool testhipMemset3DAsync(int memsetval,int p_gpuDevice)
 
 int main(int argc, char *argv[])
 {
+    checkImageSupport();
     HipTest::parseStandardArguments(argc, argv, true);
     HIPCHECK(hipSetDevice(p_gpuDevice));
     bool testResult = true;
