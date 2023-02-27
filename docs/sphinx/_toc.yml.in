@@ -6,6 +6,10 @@ subtrees:
     - entries:
       - file: programming_manual/logging
   - file: api/index
+    subtrees:
+    - entries:
+      - file: api/constants
+      - file: api/initialization
   - file: userguide/index
 
 
