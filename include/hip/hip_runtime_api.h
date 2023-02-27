@@ -662,6 +662,9 @@ enum hipLimit_t {
 /** Not supported.*/
 #define hipHostRegisterIoMemory 0x4
 
+/** This flag is ignored On AMD devices.*/
+#define hipHostRegisterReadOnly 0x08
+
 /** Coarse Grained host memory lock.*/
 #define hipExtHostRegisterCoarseGrained 0x8
 
