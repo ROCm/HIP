@@ -5,7 +5,7 @@ subtrees:
     subtrees:
     - entries:
       - file: programming_manual/logging
-  - file: api/index
+  - file: api/api_index
     subtrees:
     - entries:
       - file: api/constants
