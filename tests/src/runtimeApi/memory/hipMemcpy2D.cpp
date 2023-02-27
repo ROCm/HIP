@@ -315,6 +315,7 @@ bool Memcpy2D::Memcpy2D_NegativeTest_SizeCheck() {
 
 int main(int argc, char* argv[]) {
   bool TestPassed = true;
+  checkImageSupport();
   Memcpy2D Memcpy2DObj;
   HipTest::parseStandardArguments(argc, argv, false);
   if (p_tests == 1) {
