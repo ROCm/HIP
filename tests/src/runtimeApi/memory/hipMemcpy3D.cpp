@@ -100,6 +100,7 @@ void runTest(int width,int height,int depth, hipChannelFormatKind formatKind)
 
 int main(int argc, char **argv)
 {
+    checkImageSupport();
     for(int i=1;i<25;i++)
     {
         runTest<float>(i,i,i, hipChannelFormatKindFloat);

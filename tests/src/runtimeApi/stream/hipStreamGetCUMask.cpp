@@ -32,7 +32,7 @@ using namespace std;
 
 int main(int argc, char* argv[]) {
   hipStream_t stream;
-  vector<uint32_t> cuMask(6);
+  vector<uint32_t> cuMask(8);
   stringstream ss;
 
   int nGpu = 0;
