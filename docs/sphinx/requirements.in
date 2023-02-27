@@ -1,11 +1,1 @@
-docutils==0.16
-sphinx==4.3.1
-breathe==4.34.0
-sphinx-design==0.3.0
-sphinx-copybutton==0.5.1
-sphinx_external_toc==0.3.1
-sphinx-book-theme==0.3.3
-myst_nb==0.17.1
-myst-parser[linkify]==0.18.1
-gitpython==3.1.30
 git+https://github.com/RadeonOpenCompute/rocm-docs-core.git
