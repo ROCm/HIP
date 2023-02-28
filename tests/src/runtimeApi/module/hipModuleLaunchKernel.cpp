@@ -251,9 +251,9 @@ bool Module_GridBlock_Corner_Tests() {
   unsigned int maxgridY = deviceProp.maxGridSize[1];
   unsigned int maxgridZ = deviceProp.maxGridSize[2];
 #else
-  unsigned int maxgridX = UINT32_MAX;
-  unsigned int maxgridY = UINT32_MAX;
-  unsigned int maxgridZ = UINT32_MAX;
+  unsigned int maxgridX = INT32_MAX;
+  unsigned int maxgridY = UINT16_MAX;
+  unsigned int maxgridZ = UINT16_MAX;
 #endif
   struct gridblockDim test[6] = {{1, 1, 1, maxblockX, 1, 1},
                                  {1, 1, 1, 1, maxblockY, 1},
