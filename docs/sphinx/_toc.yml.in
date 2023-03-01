@@ -10,6 +10,7 @@ subtrees:
     - entries:
       - file: api/constants
       - file: api/initialization
+      - file: api/device_management
   - file: userguide/index
 
 
