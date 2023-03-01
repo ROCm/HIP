@@ -1639,7 +1639,7 @@ hipError_t hipDeviceSetCacheConfig(hipFuncCache_t cacheConfig);
  * @param [out] cacheConfig
  *
  * @returns #hipSuccess, #hipErrorNotInitialized
- * Note: AMD devices and some Nvidia GPUS do not support reconfigurable cache.  This hint is ignored
+ * Note: AMD devices and some Nvidia GPUs do not support reconfigurable cache.  This hint is ignored
  * on those architectures.
  *
  */
