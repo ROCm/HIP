@@ -1,6 +1,5 @@
-****************************
-Device Management
-****************************
+# Device Management
+   
+:::{doxygenfunction} device
 
-.. doxygengroup:: Device
-   :members:
+:::
