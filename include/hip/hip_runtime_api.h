@@ -7665,7 +7665,7 @@ hipError_t hipGraphicsUnmapResources(int count, hipGraphicsResource_t* resources
  * @brief Unregisters a graphics resource.
  *
  * @param [in] resource - Graphics resources to unregister.
- * 
+ *
  * @returns #hipSuccess
  *
  */
@@ -7675,7 +7675,40 @@ hipError_t hipGraphicsUnregisterResource(hipGraphicsResource_t resource);
  * @}
  */
 
+/**
+ *-------------------------------------------------------------------------------------------------
+ *-------------------------------------------------------------------------------------------------
+ * @defgroup Surface Surface Object
+ * @{
+ *
+ *  This section describes surface object functions of HIP runtime API.
+ *
+ *  @note  APIs in this section are under development.
+ *
+ */
 
+/**
+ * @brief Create a surface object.
+ *
+ * @param [out] pSurfObject  Pointer of surface object to be created.
+ * @param [in] pResDesc  Pointer of suface object descriptor.
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ */
+hipError_t hipCreateSurfaceObject(hipSurfaceObject_t* pSurfObject, const hipResourceDesc* pResDesc);
+/**
+ * @brief Destroy a surface object.
+ *
+ * @param [in] surfaceObject  Surface object to be destroyed.
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ */
+hipError_t hipDestroySurfaceObject(hipSurfaceObject_t surfaceObject);
+// end of surface
+/**
+* @}
+*/
 #ifdef __cplusplus
 } /* extern "c" */
 #endif
@@ -8032,42 +8065,6 @@ inline hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchPara
                                                      unsigned int  numDevices, unsigned int  flags = 0) {
     return hipExtLaunchMultiKernelMultiDevice(launchParamsList, numDevices, flags);
 }
-
-/**
- *-------------------------------------------------------------------------------------------------
- *-------------------------------------------------------------------------------------------------
- * @defgroup Surface Surface Object
- * @{
- *
- *  This section describes surface object functions of HIP runtime API.
- *
- *  @note  APIs in this section are under development.
- *
- */
-
-/**
- * @brief Create a surface object.
- *
- * @param [out] pSurfObject  Pointer of surface object to be created.
- * @param [in] pResDesc  Pointer of suface object descriptor.
- *
- * @returns #hipSuccess, #hipErrorInvalidValue
- *
- */
-hipError_t hipCreateSurfaceObject(hipSurfaceObject_t* pSurfObject, const hipResourceDesc* pResDesc);
-/**
- * @brief Destroy a surface object.
- *
- * @param [in] surfaceObject  Surface object to be destroyed.
- *
- * @returns #hipSuccess, #hipErrorInvalidValue
- */
-hipError_t hipDestroySurfaceObject(hipSurfaceObject_t surfaceObject);
-// end of surface
-/**
-* @}
-*/
-
 /**
  * @brief Binds a memory area to a texture.
  *
