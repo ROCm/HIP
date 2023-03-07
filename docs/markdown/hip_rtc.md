@@ -159,13 +159,13 @@ hiprtcLinkComplete(rtc_link_state,       // hiprtc link state
 
 If the hiprtcLinkComplete returns successfully, the generated binary can be loaded and run using the hipModule* APIs.
 ```cpp
-hipModuleLoadData( &module, binary );
+hipModuleLoadData(&module, binary);
 ```
 
 #### Note
  - The compiled binary must be loaded before hiprtc link instance is destroyed using the hiprtcLinkDestroy API.
 ```cpp
-hiprtcLinkDestroy( rtc_link_state);
+hiprtcLinkDestroy(rtc_link_state);
 ```
  - The correct sequence of calls is : hiprtcLinkCreate, hiprtcLinkAddData or hiprtcLinkAddFile, hiprtcLinkComplete, hiprtcModuleLoadData, hiprtcLinkDestroy.
 
@@ -184,6 +184,22 @@ HIPRTC_JIT_INPUT_LLVM_BITCODE = 100,
 HIPRTC_JIT_INPUT_LLVM_BUNDLED_BITCODE = 101,
 HIPRTC_JIT_INPUT_LLVM_ARCHIVES_OF_BUNDLED_BITCODE = 102,
 HIPRTC_JIT_NUM_INPUT_TYPES = (HIPRTC_JIT_NUM_LEGACY_INPUT_TYPES + 3)
+```
+
+#### Link Options
+- `HIPRTC_JIT_IR_TO_ISA_OPT_EXT` - AMD Only. Options to be passed on to link step of compiler by `hiprtcLinkCreate`.
+- `HIPRTC_JIT_IR_TO_ISA_OPT_COUNT_EXT` - AMD Only. Count of options passed on to link step of compiler.
+
+Example:
+
+```cpp
+const char* isaopts[] = {"-mllvm", "-inline-threshold=1", "-mllvm", "-inlinehint-threshold=1"};
+std::vector<hiprtcJIT_option> jit_options = {HIPRTC_JIT_IR_TO_ISA_OPT_EXT,
+                                             HIPRTC_JIT_IR_TO_ISA_OPT_COUNT_EXT};
+size_t isaoptssize = 4;
+const void* lopts[] = {(void*)isaopts, (void*)(isaoptssize)};
+hiprtcLinkState linkstate;
+hiprtcLinkCreate(2, jit_options.data(), (void**)lopts, &linkstate);
 ```
 
 ## Error Handling
