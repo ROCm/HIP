@@ -52,15 +52,21 @@ if(scalar @ARGV == 0){
 
 # retrieve --rocm-path hipcc option from command line.
 # We need to respect this over the env var ROCM_PATH for this compilation.
-sub get_rocm_path_option {
+sub get_path_options {
   my $rocm_path="";
+  my $hip_path="";
   my @CLArgs = @ARGV;
   foreach $arg (@CLArgs) {
     if (index($arg,"--rocm-path=") != -1) {
       ($rocm_path) = $arg=~ /=\s*(.*)\s*$/;
+      next;
+    }
+    if (index($arg,"--hip-path=") != -1) {
+      ($hip_path) = $arg=~ /=\s*(.*)\s*$/;
+      next;
     }
   }
-  return $rocm_path;
+  return ($rocm_path, $hip_path);
 }
 
 $verbose = $ENV{'HIPCC_VERBOSE'} // 0;
@@ -99,13 +105,16 @@ sub delete_temp_dirs {
 }
 
 my $base_dir;
-my $rocmPath;
 BEGIN {
     $base_dir = dirname(Cwd::realpath(__FILE__) );
-    $rocmPath = get_rocm_path_option();
-    if ($rocmPath ne '') {
+    my ($rocm_path, $hip_path) = get_path_options();
+    if ($rocm_path ne '') {
       # --rocm-path takes precedence over ENV{ROCM_PATH}
-      $ENV{ROCM_PATH}=$rocmPath;
+      $ENV{ROCM_PATH}=$rocm_path;
+    }
+    if ($hip_path ne '') {
+      # --rocm-path takes precedence over ENV{ROCM_PATH}
+      $ENV{HIP_PATH}=$hip_path;
     }
 }
 use lib "$base_dir/";
@@ -554,6 +563,13 @@ if ($HIP_PLATFORM eq "amd") {
         if ($needLDFLAGS and not $needCXXFLAGS) {
             $HIPLDFLAGS .= " -mllvm -amdgpu-early-inline-all=true -mllvm -amdgpu-function-calls=false";
         }
+    }
+
+    # If the HIP_PATH env var is defined, pass that path to Clang
+    if ($ENV{'HIP_PATH'}) {
+        my $hip_path_flag = " --hip-path=\"$HIP_PATH\"";
+        $HIPCXXFLAGS .= $hip_path_flag;
+        $HIPLDFLAGS .= $hip_path_flag;
     }
 
     if ($hasHIP) {
