@@ -1,5 +1,0 @@
-# Device Management
-   
-:::{doxygenfunction} device
-
-:::
