@@ -14,7 +14,6 @@
 	   "Unit_hipInit_Negative",
 	   "Unit_hipMemset_Negative_OutOfBoundsPtr",
 	   "Unit_hipDeviceReset_Positive_Basic",
-	   "Unit_hipDeviceReset_Positive_Threaded",
-	   "Unit_hipDeviceGetUuid_Positive"
+	   "Unit_hipDeviceReset_Positive_Threaded"
 	]
 }
