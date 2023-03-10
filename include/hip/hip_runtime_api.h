@@ -1495,7 +1495,7 @@ hipError_t hipDeviceGetP2PAttribute(int* value, hipDeviceP2PAttr attr,
                                     int srcDevice, int dstDevice);
 /**
  * @brief Returns a PCI Bus Id string for the device, overloaded to take int device ID.
- * @param [out] pciBusId The string of PCI Bus Id format for the device 
+ * @param [out] pciBusId The string of PCI Bus Id format for the device
  * @param [in] len Maximum length of string
  * @param [in] device The device ordinal
  *
@@ -1505,7 +1505,7 @@ hipError_t hipDeviceGetPCIBusId(char* pciBusId, int len, int device);
 /**
  * @brief Returns a handle to a compute device.
  * @param [out] device The handle of the device
- * @param [in] PCI The string of PCI Bus Id for the device
+ * @param [in] pciBusId The string of PCI Bus Id for the device
  *
  * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
  */
@@ -1585,7 +1585,7 @@ hipError_t hipSetDevice(int deviceId);
 /**
  * @brief Return the default device id for the calling host thread.
  *
- * @param [out] device *device is written with the default device
+ * @param [out] deviceId *device is written with the default device
  *
  * HIP maintains an default device for each thread using thread-local-storage.
  * This device is used implicitly for HIP runtime APIs called by this thread.
@@ -1599,7 +1599,7 @@ hipError_t hipGetDevice(int* deviceId);
 /**
  * @brief Return number of compute-capable devices.
  *
- * @param [output] count Returns number of compute-capable devices.
+ * @param [out] count Returns number of compute-capable devices.
  *
  * @returns #hipSuccess, #hipErrorNoDevice
  *
@@ -1625,7 +1625,7 @@ hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int deviceI
  * @param [out] mem_pool Default memory pool to return
  * @param [in] device    Device index for query the default memory pool
  *
- * @returns #chipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue, #hipErrorNotSupported
+ * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue, #hipErrorNotSupported
  *
  * @see hipDeviceGetDefaultMemPool, hipMallocAsync, hipMemPoolTrimTo, hipMemPoolGetAttribute,
  * hipDeviceSetMemPool, hipMemPoolSetAttribute, hipMemPoolSetAccess, hipMemPoolGetAccess
@@ -1963,7 +1963,8 @@ hipError_t hipFuncSetAttribute(const void* func, hipFuncAttribute attr, int valu
 /**
  * @brief Set Cache configuration for a specific function
  *
- * @param [in] config Configuration to set
+ * @param [in] func Pointer of the function.
+ * @param [in] config Configuration to set.
  *
  * @returns #hipSuccess, #hipErrorNotInitialized
  * Note: AMD devices and some Nvidia GPUS do not support reconfigurable cache.  This hint is ignored
@@ -2040,7 +2041,7 @@ const char* hipGetErrorString(hipError_t hipError);
  * @brief Return hip error as text string form.
  *
  * @param [in] hipError Error code to convert to string.
- * @param [out] const char pointer to the NULL-terminated error string
+ * @param [out] errorString char pointer to the NULL-terminated error string
  * @return #hipSuccess, #hipErrorInvalidValue
  *
  * @see hipGetErrorName, hipGetLastError, hipPeakAtLastError, hipError_t
@@ -2050,7 +2051,7 @@ hipError_t hipDrvGetErrorName(hipError_t hipError, const char** errorString);
  * @brief Return handy text string message to explain the error which occurred
  *
  * @param [in] hipError Error code to convert to string.
- * @param [out] const char pointer to the NULL-terminated error string
+ * @param [out] errorString char pointer to the NULL-terminated error string
  * @return #hipSuccess, #hipErrorInvalidValue
  *
  * @see hipGetErrorName, hipGetLastError, hipPeakAtLastError, hipError_t
@@ -2242,7 +2243,7 @@ hipError_t hipStreamGetPriority(hipStream_t stream, int* priority);
  * @brief Get the device assocaited with the stream
  *
  * @param[in] stream stream to be queried
- * @param[out] hipDevice_t device associated with the stream
+ * @param[out] device device associated with the stream
  * @return #hipSuccess, #hipErrorInvalidValue, #hipErrorContextIsDestroyed, #hipErrorInvalidHandle,
  * #hipErrorNotInitialized, #hipErrorDeinitialized, #hipErrorInvalidContext
  *
@@ -3511,7 +3512,7 @@ hipError_t hipHostFree(void* ptr);
  *  @param[in]  src Data being copy from
  *  @param[in]  sizeBytes Data size in bytes
  *  @param[in]  copyType Memory copy type
- *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree, #hipErrorUnknowni
+ *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree, #hipErrorUnknown
  *
  *  @see hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc, hipMemAllocHost,
  * hipMemAllocPitch, hipMemcpy2D, hipMemcpy2DAsync, hipMemcpy2DUnaligned, hipMemcpyAtoA,
@@ -3521,7 +3522,20 @@ hipError_t hipHostFree(void* ptr);
  * hipMemHostAlloc, hipMemHostGetDevicePointer
  */
 hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind);
-// TODO: Add description
+/**
+ *  @brief Memory copy on the stream.
+ *  It allows single or multiple devices to do memory copy on single or multiple streams.
+ *
+ *  @param[out]  dst Data being copy to
+ *  @param[in]  src Data being copy from
+ *  @param[in]  sizeBytes Data size in bytes
+ *  @param[in]  copyType Memory copy type
+ *  @param[in]  stream Valid stream
+ *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree, #hipErrorUnknown, #hipErrorContextIsDestroyed
+ *
+ *  @see hipMemcpy, hipStreamCreate, hipStreamSynchronize, hipStreamDestroy, hipSetDevice, hipLaunchKernelGGL
+ *
+ */
 hipError_t hipMemcpyWithStream(void* dst, const void* src, size_t sizeBytes,
                                hipMemcpyKind kind, hipStream_t stream);
 /**
@@ -3932,14 +3946,25 @@ hipError_t hipMemset3DAsync(hipPitchedPtr pitchedDevPtr, int  value, hipExtent e
  * @warning On Windows, the free memory only accounts for memory allocated by this process and may
  * be optimistic.
  *
- * @param[out] free returns free memory on the current device in bytes
- * @param[out] total returns total allocatable memory on the current device in bytes
+ * @param[out] free Returns free memory on the current device in bytes
+ * @param[out] total Returns total allocatable memory on the current device in bytes
  *
  * @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
  *
  **/
 hipError_t hipMemGetInfo(size_t* free, size_t* total);
 
+/**
+ * @brief Get allocated memory size via memory pointer.
+ *
+ * This function gets the allocated shared virtual memory size from memory pointer.
+ *
+ * @param[in] ptr Pointer to allocated memory
+ * @param[out] size Returns the allocated memory size in bytes
+ *
+ * @return #hipSuccess, #hipErrorInvalidValue
+ *
+ **/
 hipError_t hipMemPtrGetInfo(void* ptr, size_t* size);
 /**
  *  @brief Allocate an array on the device.
@@ -3955,9 +3980,48 @@ hipError_t hipMemPtrGetInfo(void* ptr, size_t* size);
  */
 hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc, size_t width,
                           size_t height __dparm(0), unsigned int flags __dparm(hipArrayDefault));
+/**
+ *  @brief Create an array memory pointer on the device.
+ *
+ *  @param[out]  pHandle  Pointer to the array memory
+ *  @param[in]   pAllocateArray   Requested array desciptor
+ *
+ *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ *
+ *  @see hipMallocArray, hipArrayDestroy, hipFreeArray
+ */
 hipError_t hipArrayCreate(hipArray** pHandle, const HIP_ARRAY_DESCRIPTOR* pAllocateArray);
+ /**
+ *  @brief Destroy an array memory pointer on the device.
+ *
+ *  @param[in]  array  Pointer to the array memory
+ *
+ *  @return      #hipSuccess, #hipErrorInvalidValue
+ *
+ *  @see hipArrayCreate, hipArrayDestroy, hipFreeArray
+ */
 hipError_t hipArrayDestroy(hipArray* array);
+/**
+ *  @brief Create a 3D array memory pointer on the device.
+ *
+ *  @param[out]  array  Pointer to the 3D array memory
+ *  @param[in]   pAllocateArray   Requested array desciptor
+ *
+ *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ *
+ *  @see hipMallocArray, hipArrayDestroy, hipFreeArray
+ */
 hipError_t hipArray3DCreate(hipArray** array, const HIP_ARRAY3D_DESCRIPTOR* pAllocateArray);
+/**
+ *  @brief Create a 3D memory pointer on the device.
+ *
+ *  @param[out]  pitchedDevPtr  Pointer to the 3D memory
+ *  @param[in]   extent   Requested extent
+ *
+ *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ *
+ *  @see hipMallocPitch, hipMemGetInfo, hipFree
+ */
 hipError_t hipMalloc3D(hipPitchedPtr* pitchedDevPtr, hipExtent extent);
 /**
  *  @brief Frees an array on the device.
@@ -4436,16 +4500,18 @@ hipError_t hipMemcpyPeerAsync(void* dst, int dstDeviceId, const void* src, int s
  *  This section describes the deprecated context management functions of HIP runtime API.
  */
 /**
- * @brief Create a context and set it as current/ default context
+ * @brief Create a context and set it as current/default context
  *
- * @param [out] ctx
- * @param [in] flags
- * @param [in] associated device handle
+ * @param [out] ctx  Context to create 
+ * @param [in] flags  Context creation flags 
+ * @param [in] device  device handle
  *
  * @return #hipSuccess
  *
  * @see hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxPushCurrent,
  * hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
+ *
+ * @warning : This HIP API is deprecated.
  */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxCreate(hipCtx_t* ctx, unsigned int flags, hipDevice_t device);
@@ -4458,6 +4524,8 @@ hipError_t hipCtxCreate(hipCtx_t* ctx, unsigned int flags, hipDevice_t device);
  *
  * @see hipCtxCreate, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,hipCtxSetCurrent,
  * hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize , hipCtxGetDevice
+ *
+ * @warning : This HIP API is deprecated.
  */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxDestroy(hipCtx_t ctx);
@@ -4470,6 +4538,8 @@ hipError_t hipCtxDestroy(hipCtx_t ctx);
  *
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxSetCurrent, hipCtxGetCurrent,
  * hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
+ *
+ * @warning : This HIP API is deprecated.
  */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxPopCurrent(hipCtx_t* ctx);
@@ -4482,6 +4552,8 @@ hipError_t hipCtxPopCurrent(hipCtx_t* ctx);
  *
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize , hipCtxGetDevice
+ *
+ * @warning : This HIP API is deprecated.
  */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxPushCurrent(hipCtx_t ctx);
@@ -4494,6 +4566,8 @@ hipError_t hipCtxPushCurrent(hipCtx_t ctx);
  *
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize , hipCtxGetDevice
+ *
+ * @warning : This HIP API is deprecated.
  */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxSetCurrent(hipCtx_t ctx);
@@ -4506,6 +4580,8 @@ hipError_t hipCtxSetCurrent(hipCtx_t ctx);
  *
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetDevice, hipCtxGetFlags, hipCtxPopCurrent,
  * hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
+ *
+ * @warning : This HIP API is deprecated.
  */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxGetCurrent(hipCtx_t* ctx);
@@ -4518,6 +4594,8 @@ hipError_t hipCtxGetCurrent(hipCtx_t* ctx);
  *
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize
+ *
+ * @warning : This HIP API is deprecated.
  */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxGetDevice(hipDevice_t* device);
@@ -4537,13 +4615,15 @@ hipError_t hipCtxGetDevice(hipDevice_t* device);
  *
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetDevice, hipCtxGetFlags, hipCtxPopCurrent,
  * hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
+ *
+ * @warning : This HIP API is deprecated.
  */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxGetApiVersion(hipCtx_t ctx, int* apiVersion);
 /**
- * @brief Set Cache configuration for a specific function
+ * @brief Get Cache configuration for a specific function
  *
- * @param [out] cacheConfiguration
+ * @param [out] cacheConfig  Cache configuration
  *
  * @return #hipSuccess
  *
@@ -4552,13 +4632,15 @@ hipError_t hipCtxGetApiVersion(hipCtx_t ctx, int* apiVersion);
  *
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
+ *
+ * @warning : This HIP API is deprecated.
  */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxGetCacheConfig(hipFuncCache_t* cacheConfig);
 /**
  * @brief Set L1/Shared cache partition.
  *
- * @param [in] cacheConfiguration
+ * @param [in] cacheConfig  Cache configuration to set
  *
  * @return #hipSuccess
  *
@@ -4567,13 +4649,15 @@ hipError_t hipCtxGetCacheConfig(hipFuncCache_t* cacheConfig);
  *
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
+ *
+ * @warning : This HIP API is deprecated.
  */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxSetCacheConfig(hipFuncCache_t cacheConfig);
 /**
  * @brief Set Shared memory bank configuration.
  *
- * @param [in] sharedMemoryConfiguration
+ * @param [in] config  Shared memory configuration to set
  *
  * @return #hipSuccess
  *
@@ -4582,13 +4666,15 @@ hipError_t hipCtxSetCacheConfig(hipFuncCache_t cacheConfig);
  *
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
+ *
+ * @warning : This HIP API is deprecated.
  */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxSetSharedMemConfig(hipSharedMemConfig config);
 /**
  * @brief Get Shared memory bank configuration.
  *
- * @param [out] sharedMemoryConfiguration
+ * @param [out] pConfig  Pointer of shared memory configuration
  *
  * @return #hipSuccess
  *
@@ -4597,6 +4683,8 @@ hipError_t hipCtxSetSharedMemConfig(hipSharedMemConfig config);
  *
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
+ *
+ * @warning : This HIP API is deprecated.
  */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxGetSharedMemConfig(hipSharedMemConfig* pConfig);
@@ -4610,18 +4698,22 @@ hipError_t hipCtxGetSharedMemConfig(hipSharedMemConfig* pConfig);
  *
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxGetDevice
+ *
+ * @warning : This HIP API is deprecated.
  */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxSynchronize(void);
 /**
  * @brief Return flags used for creating default context.
  *
- * @param [out] flags
+ * @param [out] flags  Pointer of flags
  *
  * @returns #hipSuccess
  *
  * @see hipCtxCreate, hipCtxDestroy, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxGetCurrent,
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
+ *
+ * @warning : This HIP API is deprecated.
  */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxGetFlags(unsigned int* flags);
@@ -4634,8 +4726,8 @@ hipError_t hipCtxGetFlags(unsigned int* flags);
  * accessible from the current device until a call to hipDeviceDisablePeerAccess or hipDeviceReset.
  *
  *
- * @param [in] peerCtx
- * @param [in] flags
+ * @param [in] peerCtx  Peer context 
+ * @param [in] flags  flags, need to set as 0
  *
  * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue,
  * #hipErrorPeerAccessAlreadyEnabled
@@ -4643,6 +4735,8 @@ hipError_t hipCtxGetFlags(unsigned int* flags);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  * @warning PeerToPeer support is experimental.
+ *
+ * @warning : This HIP API is deprecated.
  */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxEnablePeerAccess(hipCtx_t peerCtx, unsigned int flags);
@@ -4651,16 +4745,18 @@ hipError_t hipCtxEnablePeerAccess(hipCtx_t peerCtx, unsigned int flags);
  * physically located on a peer context.Disables direct access to memory allocations in a peer
  * context and unregisters any registered allocations.
  *
- * Returns hipErrorPeerAccessNotEnabled if direct access to memory on peerDevice has not yet been
+ * Returns #hipErrorPeerAccessNotEnabled if direct access to memory on peerDevice has not yet been
  * enabled from the current device.
  *
- * @param [in] peerCtx
+ * @param [in] peerCtx  Peer context to be disabled
  *
  * @returns #hipSuccess, #hipErrorPeerAccessNotEnabled
  *
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  * @warning PeerToPeer support is experimental.
+ *
+ * @warning : This HIP API is deprecated.
  */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxDisablePeerAccess(hipCtx_t peerCtx);
@@ -4671,9 +4767,9 @@ hipError_t hipCtxDisablePeerAccess(hipCtx_t peerCtx);
 /**
  * @brief Get the state of the primary context.
  *
- * @param [in] Device to get primary context flags for
- * @param [out] Pointer to store flags
- * @param [out] Pointer to store context state; 0 = inactive, 1 = active
+ * @param [in] dev  Device to get primary context flags for
+ * @param [out] flags  Pointer to store flags
+ * @param [out] active  Pointer to store context state; 0 = inactive, 1 = active
  *
  * @returns #hipSuccess
  *
@@ -4684,7 +4780,7 @@ hipError_t hipDevicePrimaryCtxGetState(hipDevice_t dev, unsigned int* flags, int
 /**
  * @brief Release the primary context on the GPU.
  *
- * @param [in] Device which primary context is released
+ * @param [in] dev  Device which primary context is released
  *
  * @returns #hipSuccess
  *
@@ -4697,8 +4793,9 @@ hipError_t hipDevicePrimaryCtxRelease(hipDevice_t dev);
 /**
  * @brief Retain the primary context on the GPU.
  *
- * @param [out] Returned context handle of the new context
- * @param [in] Device which primary context is released
+hipError_t hipDevicePrimaryCtxRetain(hipCtx_t* pctx, hipDevice_t dev);
+ * @param [out] pctx  Returned context handle of the new context
+ * @param [in] dev  Device which primary context is released
  *
  * @returns #hipSuccess
  *
@@ -4709,7 +4806,7 @@ hipError_t hipDevicePrimaryCtxRetain(hipCtx_t* pctx, hipDevice_t dev);
 /**
  * @brief Resets the primary context on the GPU.
  *
- * @param [in] Device which primary context is reset
+ * @param [in] dev  Device which primary context is reset
  *
  * @returns #hipSuccess
  *
@@ -4720,8 +4817,8 @@ hipError_t hipDevicePrimaryCtxReset(hipDevice_t dev);
 /**
  * @brief Set flags for the primary context.
  *
- * @param [in] Device for which the primary context flags are set
- * @param [in] New flags for the device
+ * @param [in] dev  Device for which the primary context flags are set
+ * @param [in] flags  New flags for the device
  *
  * @returns #hipSuccess, #hipErrorContextAlreadyInUse
  *
@@ -4741,67 +4838,67 @@ hipError_t hipDevicePrimaryCtxSetFlags(hipDevice_t dev, unsigned int flags);
  *
  */
 /**
- * @brief Loads code object from file into a hipModule_t
+ * @brief Loads code object from file into a module the currrent context. 
  *
- * @param [in] fname
- * @param [out] module
+ * @param [in] fname  Filename of code object to load
+
+ * @param [out] module  Module
  *
  * @warning File/memory resources allocated in this function are released only in hipModuleUnload.
  *
- * @returns hipSuccess, hipErrorInvalidValue, hipErrorInvalidContext, hipErrorFileNotFound,
- * hipErrorOutOfMemory, hipErrorSharedObjectInitFailed, hipErrorNotInitialized
- *
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidContext, #hipErrorFileNotFound,
+ * #hipErrorOutOfMemory, #hipErrorSharedObjectInitFailed, #hipErrorNotInitialized
  *
  */
 hipError_t hipModuleLoad(hipModule_t* module, const char* fname);
 /**
  * @brief Frees the module
  *
- * @param [in] module
+ * @param [in] module  Module to free
  *
- * @returns hipSuccess, hipInvalidValue
- * module is freed and the code objects associated with it are destroyed
+ * @returns #hipSuccess, #hipErrorInvalidResourceHandle
  *
+ * The module is freed, and the code objects associated with it are destroyed.
  */
 hipError_t hipModuleUnload(hipModule_t module);
 /**
  * @brief Function with kname will be extracted if present in module
  *
- * @param [in] module
- * @param [in] kname
- * @param [out] function
+ * @param [in] module  Module to get function from 
+ * @param [in] kname  Pointer to the name of function
+ * @param [out] function  Pointer to function handle 
  *
- * @returns hipSuccess, hipErrorInvalidValue, hipErrorInvalidContext, hipErrorNotInitialized,
- * hipErrorNotFound,
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidContext, #hipErrorNotInitialized,
+ * #hipErrorNotFound,
  */
 hipError_t hipModuleGetFunction(hipFunction_t* function, hipModule_t module, const char* kname);
 /**
  * @brief Find out attributes for a given function.
  *
- * @param [out] attr
- * @param [in] func
+ * @param [out] attr  Attributes of funtion
+ * @param [in] func  Pointer to the function handle
  *
- * @returns hipSuccess, hipErrorInvalidValue, hipErrorInvalidDeviceFunction
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidDeviceFunction
  */
 hipError_t hipFuncGetAttributes(struct hipFuncAttributes* attr, const void* func);
 /**
  * @brief Find out a specific attribute for a given function.
  *
- * @param [out] value
- * @param [in]  attrib
- * @param [in]  hfunc
+ * @param [out] value  Pointer to the value
+ * @param [in]  attrib  Attributes of the given funtion
+ * @param [in]  hfunc  Function to get attributes from
  *
- * @returns hipSuccess, hipErrorInvalidValue, hipErrorInvalidDeviceFunction
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidDeviceFunction
  */
 hipError_t hipFuncGetAttribute(int* value, hipFunction_attribute attrib, hipFunction_t hfunc);
 /**
  * @brief returns the handle of the texture reference with the name from the module.
  *
- * @param [in] hmod
- * @param [in] name
- * @param [out] texRef
+ * @param [in] hmod  Module
+ * @param [in] name  Pointer of name of texture reference 
+ * @param [out] texRef  Pointer of texture reference
  *
- * @returns hipSuccess, hipErrorNotInitialized, hipErrorNotFound, hipErrorInvalidValue
+ * @returns #hipSuccess, #hipErrorNotInitialized, #hipErrorNotFound, #hipErrorInvalidValue
  */
 hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const char* name);
 /**
@@ -5267,7 +5364,7 @@ hipError_t hipExtLaunchKernel(const void* function_address, dim3 numBlocks, dim3
  * @param [in] mipmappedArray  memory mipmapped array on the device
  * @param [in] desc  opointer to the channel format
  *
- * @returns hipSuccess, hipErrorInvalidValue
+ * @returns #hipSuccess, #hipErrorInvalidValue
  *
  */
 hipError_t hipBindTextureToMipmappedArray(
@@ -5283,7 +5380,7 @@ hipError_t hipBindTextureToMipmappedArray(
  * @param [in] pTexDesc  pointer to texture descriptor
  * @param [in] pResViewDesc  pointer to resource view descriptor
  *
- * @returns hipSuccess, hipErrorInvalidValue, hipErrorNotSupported, hipErrorOutOfMemory
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported, #hipErrorOutOfMemory
  *
  * @note 3D liner filter isn't supported on GFX90A boards, on which the API @p hipCreateTextureObject will
  * return hipErrorNotSupported.
@@ -5300,7 +5397,7 @@ hipError_t hipCreateTextureObject(
  *
  * @param [in] textureObject  texture object to destroy
  *
- * @returns hipSuccess, hipErrorInvalidValue
+ * @returns #hipSuccess, #hipErrorInvalidValue
  *
  */
 hipError_t hipDestroyTextureObject(hipTextureObject_t textureObject);
@@ -5311,7 +5408,7 @@ hipError_t hipDestroyTextureObject(hipTextureObject_t textureObject);
  * @param [in] desc  pointer to channel format descriptor
  * @param [out] array  memory array on the device
  *
- * @returns hipSuccess, hipErrorInvalidValue
+ * @returns #hipSuccess, #hipErrorInvalidValue
  *
  */
 hipError_t hipGetChannelDesc(
@@ -5324,7 +5421,7 @@ hipError_t hipGetChannelDesc(
  * @param [out] pResDesc  pointer to resource descriptor
  * @param [in] textureObject  texture object
  *
- * @returns hipSuccess, hipErrorInvalidValue
+ * @returns #hipSuccess, #hipErrorInvalidValue
  *
  */
 hipError_t hipGetTextureObjectResourceDesc(
@@ -5337,7 +5434,7 @@ hipError_t hipGetTextureObjectResourceDesc(
  * @param [out] pResViewDesc  pointer to resource view descriptor
  * @param [in] textureObject  texture object
  *
- * @returns hipSuccess, hipErrorInvalidValue
+ * @returns #hipSuccess, #hipErrorInvalidValue
  *
  */
 hipError_t hipGetTextureObjectResourceViewDesc(
@@ -5350,7 +5447,7 @@ hipError_t hipGetTextureObjectResourceViewDesc(
  * @param [out] pTexDesc  pointer to texture descriptor
  * @param [in] textureObject  texture object
  *
- * @returns hipSuccess, hipErrorInvalidValue
+ * @returns #hipSuccess, #hipErrorInvalidValue
  *
  */
 hipError_t hipGetTextureObjectTextureDesc(
@@ -5365,7 +5462,7 @@ hipError_t hipGetTextureObjectTextureDesc(
  * @param [in] pTexDesc  pointer to texture descriptor
  * @param [in] pResViewDesc  pointer to resource view descriptor
  *
- * @returns hipSuccess, hipErrorInvalidValue
+ * @returns #hipSuccess, #hipErrorInvalidValue
  *
  */
 hipError_t hipTexObjectCreate(
@@ -5379,7 +5476,7 @@ hipError_t hipTexObjectCreate(
  *
  * @param [in] texObject  texture object to destroy
  *
- * @returns hipSuccess, hipErrorInvalidValue
+ * @returns #hipSuccess, #hipErrorInvalidValue
  *
  */
 hipError_t hipTexObjectDestroy(
@@ -5391,7 +5488,7 @@ hipError_t hipTexObjectDestroy(
  * @param [out] pResDesc  pointer to resource descriptor
  * @param [in] texObject  texture object
  *
- * @returns hipSuccess, hipErrorNotSupported, hipErrorInvalidValue
+ * @returns #hipSuccess, #hipErrorNotSupported, #hipErrorInvalidValue
  *
  */
 hipError_t hipTexObjectGetResourceDesc(
@@ -5404,7 +5501,7 @@ hipError_t hipTexObjectGetResourceDesc(
  * @param [out] pResViewDesc  pointer to resource view descriptor
  * @param [in] texObject  texture object
  *
- * @returns hipSuccess, hipErrorNotSupported, hipErrorInvalidValue
+ * @returns #hipSuccess, #hipErrorNotSupported, #hipErrorInvalidValue
  *
  */
 hipError_t hipTexObjectGetResourceViewDesc(
@@ -5417,7 +5514,7 @@ hipError_t hipTexObjectGetResourceViewDesc(
  * @param [out] pTexDesc  pointer to texture descriptor
  * @param [in] texObject  texture object
  *
- * @returns hipSuccess, hipErrorNotSupported, hipErrorInvalidValue
+ * @returns #hipSuccess, #hipErrorNotSupported, #hipErrorInvalidValue
  *
  */
 hipError_t hipTexObjectGetTextureDesc(
@@ -5437,37 +5534,106 @@ hipError_t hipTexObjectGetTextureDesc(
  * @param [out] texref  texture reference
  * @param [in] symbol  pointer to the symbol related with the texture for the reference
  *
- * @returns hipSuccess, hipErrorInvalidValue
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning This API is deprecated.
  *
  */
 DEPRECATED(DEPRECATED_MSG)
  hipError_t hipGetTextureReference(
     const textureReference** texref,
     const void* symbol);
-
+/**
+ * @brief Sets address mode for a texture reference.
+ *
+ * @param [in] texRef  texture reference.
+ * @param [in] dim  Dimension of the texture.
+ * @param [in] am  Value of the texture address mode.
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning This API is deprecated.
+ *
+ */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetAddressMode(
     textureReference* texRef,
     int dim,
     enum hipTextureAddressMode am);
+/**
+ * @brief Binds an array as a texture reference.
+ *
+ * @param [in] tex  Pointer texture reference.
+ * @param [in] array  Array to bind.
+ * @param [in] flags  Flags should be set as HIP_TRSA_OVERRIDE_FORMAT, as a valid value.
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * @warning This API is deprecated.
+ *
+ */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetArray(
     textureReference* tex,
     hipArray_const_t array,
     unsigned int flags);
+/**
+ * @brief Set filter mode for a texture reference.
+ *
+ * @param [in] texRef  Pointer texture reference.
+ * @param [in] fm  Value of texture filter mode.
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * @warning This API is deprecated.
+ *
+ */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetFilterMode(
     textureReference* texRef,
     enum hipTextureFilterMode fm);
+/**
+ * @brief Set flags for a texture reference.
+ *
+ * @param [in] texRef  Pointer texture reference.
+ * @param [in] Flags  Value of flags.
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * @warning This API is deprecated.
+ *
+ */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetFlags(
     textureReference* texRef,
     unsigned int Flags);
+/**
+ * @brief Set format for a texture reference.
+ *
+ * @param [in] texRef  Pointer texture reference.
+ * @param [in] fmt  Value of format.
+ * @param [in] NumPackedComponents  Number of components per array.
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * @warning This API is deprecated.
+ *
+ */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetFormat(
     textureReference* texRef,
     hipArray_Format fmt,
     int NumPackedComponents);
+/**
+ * @brief Binds a memory area to a texture.
+ *
+ * @param [in] offset  Offset in bytes.
+ * @param [in] tex  Texture to bind.
+ * @param [in] devPtr  Pointer of memory on the device.
+ * @param [in] desc  Pointer of channel format descriptor.
+ * @param [in] size  Size of memory in bites.
+ *
+ * @warning This API is deprecated.
+ *
+ */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipBindTexture(
     size_t* offset,
@@ -5475,6 +5641,20 @@ hipError_t hipBindTexture(
     const void* devPtr,
     const hipChannelFormatDesc* desc,
     size_t size __dparm(UINT_MAX));
+/**
+ * @brief Binds a 2D memory area to a texture.
+ *
+ * @param [in] offset  Offset in bytes.
+ * @param [in] tex  Texture to bind.
+ * @param [in] devPtr  Pointer of 2D memory area on the device.
+ * @param [in] desc  Pointer of channel format descriptor.
+ * @param [in] width  Width in texel units.
+ * @param [in] height  Height in texel units.
+ * @param [in] pitch  Pitch in bytes.
+ *
+ * @warning This API is deprecated.
+ *
+ */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipBindTexture2D(
     size_t* offset,
@@ -5484,93 +5664,291 @@ hipError_t hipBindTexture2D(
     size_t width,
     size_t height,
     size_t pitch);
+/**
+ * @brief Binds a memory area to a texture.
+ *
+ * @param [in] tex  Pointer of texture reference.
+ * @param [in] array  Array to bind.
+ * @param [in] desc  Pointer of channel format descriptor.
+ *
+ * @warning This API is deprecated.
+ *
+ */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipBindTextureToArray(
     const textureReference* tex,
     hipArray_const_t array,
     const hipChannelFormatDesc* desc);
+/**
+ * @brief Get the offset of the alignment in a texture.
+ *
+ * @param [in] offset  Offset in bytes.
+ * @param [in] texref  Pointer of texture reference.
+ *
+ * @warning This API is deprecated.
+ *
+ */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipGetTextureAlignmentOffset(
     size_t* offset,
     const textureReference* texref);
+/**
+ * @brief Unbinds a texture.
+ *
+ * @param [in] tex  Texture to unbind.
+ *
+ * @warning This API is deprecated.
+ *
+ */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipUnbindTexture(const textureReference* tex);
+/**
+ * @brief Gets the the address for a texture reference.
+ *
+ * @param [out] dev_ptr  Pointer of device address.
+ * @param [in] texRef  Pointer of texture reference.
+ *
+ * @warning This API is deprecated.
+ *
+ */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefGetAddress(
     hipDeviceptr_t* dev_ptr,
     const textureReference* texRef);
+/**
+ * @brief Gets the address mode for a texture reference.
+ *
+ * @param [out] pam  Pointer of address mode.
+ * @param [in] texRef  Pointer of texture reference.
+ * @param [in] dim  Dimension.
+ *
+ * @warning This API is deprecated.
+ *
+ */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefGetAddressMode(
     enum hipTextureAddressMode* pam,
     const textureReference* texRef,
     int dim);
+/**
+ * @brief Gets filter mode for a texture reference.
+ *
+ * @param [out] pfm  Pointer of filter mode.
+ * @param [in] texRef  Pointer of texture reference.
+ *
+ * @warning This API is deprecated.
+ *
+ */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefGetFilterMode(
     enum hipTextureFilterMode* pfm,
     const textureReference* texRef);
+/**
+ * @brief Gets flags for a texture reference.
+ *
+ * @param [out] pFlags  Pointer of flags.
+ * @param [in] texRef  Pointer of texture reference.
+ *
+ * @warning This API is deprecated.
+ *
+ */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefGetFlags(
     unsigned int* pFlags,
     const textureReference* texRef);
+/**
+ * @brief Gets texture format for a texture reference.
+ *
+ * @param [out] pFormat  Pointer of the format.
+ * @param [out] pNumChannels  Pointer of number of channels.
+ * @param [in] texRef  Pointer of texture reference.
+ *
+ * @warning This API is deprecated.
+ *
+ */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefGetFormat(
     hipArray_Format* pFormat,
     int* pNumChannels,
     const textureReference* texRef);
+/**
+ * @brief Gets the maximum anisotropy for a texture reference.
+ *
+ * @param [out] pmaxAnsio  Pointer of the maximum anisotropy.
+ * @param [in] texRef  Pointer of texture reference.
+ *
+ * @warning This API is deprecated.
+ *
+ */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefGetMaxAnisotropy(
     int* pmaxAnsio,
     const textureReference* texRef);
+/**
+ * @brief Gets the mipmap filter mode for a texture reference.
+ *
+ * @param [out] pfm  Pointer of the mipmap filter mode.
+ * @param [in] texRef  Pointer of texture reference.
+ *
+ * @warning This API is deprecated.
+ *
+ */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefGetMipmapFilterMode(
     enum hipTextureFilterMode* pfm,
     const textureReference* texRef);
 DEPRECATED(DEPRECATED_MSG)
+/**
+ * @brief Gets the mipmap level bias for a texture reference.
+ *
+ * @param [out] pbias  Pointer of the mipmap level bias.
+ * @param [in] texRef  Pointer of texture reference.
+ *
+ * @warning This API is deprecated.
+ *
+ */
 hipError_t hipTexRefGetMipmapLevelBias(
     float* pbias,
     const textureReference* texRef);
+/**
+ * @brief Gets the minimum and maximum mipmap level clamps for a texture reference.
+ *
+ * @param [out] pminMipmapLevelClamp  Pointer of the minimum mipmap level clamp.
+ * @param [out] pmaxMipmapLevelClamp  Pointer of the maximum mipmap level clamp.
+ * @param [in] texRef  Pointer of texture reference.
+ *
+ * @warning This API is deprecated.
+ *
+ */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefGetMipmapLevelClamp(
     float* pminMipmapLevelClamp,
     float* pmaxMipmapLevelClamp,
     const textureReference* texRef);
+/**
+ * @brief Gets the mipmapped array bound to a texture reference.
+ *
+ * @param [out] pArray  Pointer of the mipmapped array.
+ * @param [in] texRef  Pointer of texture reference.
+ *
+ * @warning This API is deprecated.
+ *
+ */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefGetMipMappedArray(
     hipMipmappedArray_t* pArray,
     const textureReference* texRef);
+/**
+ * @brief Sets an bound address for a texture reference.
+ *
+ * @param [out] ByteOffset  Pointer of the offset in bytes.
+ * @param [in] texRef  Pointer of texture reference.
+ * @param [in] dptr  Pointer of device address to bind.
+ * @param [in] bytes  Size in bytes.
+ *
+ * @warning This API is deprecated.
+ *
+ */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetAddress(
     size_t* ByteOffset,
     textureReference* texRef,
     hipDeviceptr_t dptr,
     size_t bytes);
+/**
+ * @brief Set a bind an address as a 2D texture reference.
+ *
+ * @param [in] texRef  Pointer of texture reference.
+ * @param [in] desc  Pointer of array descriptor.
+ * @param [in] dptr  Pointer of device address to bind.
+ * @param [in] Pitch  Pitch in bytes.
+ *
+ * @warning This API is deprecated.
+ *
+ */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetAddress2D(
     textureReference* texRef,
     const HIP_ARRAY_DESCRIPTOR* desc,
     hipDeviceptr_t dptr,
     size_t Pitch);
+/**
+ * @brief Sets the maximum anisotropy for a texture reference.
+ *
+ * @param [in] texRef  Pointer of texture reference.
+ * @param [out] maxAniso  Value of the maximum anisotropy.
+ *
+ * @warning This API is deprecated.
+ *
+ */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetMaxAnisotropy(
     textureReference* texRef,
     unsigned int maxAniso);
-    DEPRECATED(DEPRECATED_MSG)
+/**
+ * @brief Sets border color for a texture reference.
+ *
+ * @param [in] texRef  Pointer of texture reference.
+ * @param [in] pBorderColor  Pointer of border color.
+ *
+ * @warning This API is deprecated.
+ *
+ */
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetBorderColor(
     textureReference* texRef,
     float* pBorderColor);
+/**
+ * @brief Sets mipmap filter mode for a texture reference.
+ *
+ * @param [in] texRef  Pointer of texture reference.
+ * @param [in] fm  Value of filter mode.
+ *
+ * @warning This API is deprecated.
+ *
+ */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetMipmapFilterMode(
     textureReference* texRef,
     enum hipTextureFilterMode fm);
+/**
+ * @brief Sets mipmap level bias for a texture reference.
+ *
+ * @param [in] texRef  Pointer of texture reference.
+ * @param [in] bias  Value of mipmap bias.
+ *
+ * @warning This API is deprecated.
+ *
+ */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetMipmapLevelBias(
     textureReference* texRef,
     float bias);
+/**
+ * @brief Sets mipmap level clamp for a texture reference.
+ *
+ * @param [in] texRef  Pointer of texture reference.
+ * @param [in] minMipMapLevelClamp  Value of minimum mipmap level clamp.
+ * @param [in] maxMipMapLevelClamp  Value of maximum mipmap level clamp.
+ *
+ * @warning This API is deprecated.
+ *
+ */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetMipmapLevelClamp(
     textureReference* texRef,
     float minMipMapLevelClamp,
     float maxMipMapLevelClamp);
+/**
+ * @brief Binds mipmapped array to a texture reference.
+ *
+ * @param [in] texRef  Pointer of texture reference to bind.
+ * @param [in] mipmappedArray  Pointer of mipmapped array to bind.
+ * @param [in] Flags  Flags should be set as HIP_TRSA_OVERRIDE_FORMAT, as a valid value.
+ *
+ * @warning This API is deprecated.
+ *
+ */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetMipmappedArray(
     textureReference* texRef,
@@ -5590,13 +5968,39 @@ hipError_t hipTexRefSetMipmappedArray(
  *  @ingroup Texture
  *  This section describes the texture management functions currently unsupported in HIP runtime.
  */
-
+/**
+ * @brief Create a mipmapped array.
+ *
+ * @param [out] pHandle  pointer to mipmapped array
+ * @param [in] pMipmappedArrayDesc  mipmapped array descriptor
+ * @param [in] numMipmapLevels  mipmap level
+ *
+ * @returns #hipSuccess, #hipErrorNotSupported, #hipErrorInvalidValue
+ *
+ */
 hipError_t hipMipmappedArrayCreate(
     hipMipmappedArray_t* pHandle,
     HIP_ARRAY3D_DESCRIPTOR* pMipmappedArrayDesc,
     unsigned int numMipmapLevels);
-hipError_t hipMipmappedArrayDestroy(
-    hipMipmappedArray_t hMipmappedArray);
+/**
+ * @brief Destroy a mipmapped array.
+ *
+ * @param [out] hMipmappedArray  pointer to mipmapped array to destroy
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ */
+hipError_t hipMipmappedArrayDestroy(hipMipmappedArray_t hMipmappedArray);
+/**
+ * @brief Get a mipmapped array on a mipmapped level.
+ *
+ * @param [in] pLevelArray Pointer of array
+ * @param [out] hMipMappedArray Pointer of mipmapped array on the requested mipmap level
+ * @param [out] level  Mipmap level
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ */
 hipError_t hipMipmappedArrayGetLevel(
     hipArray_t* pLevelArray,
     hipMipmappedArray_t hMipMappedArray,
@@ -5631,9 +6035,42 @@ hipError_t hipMipmappedArrayGetLevel(
  *  @{
  *  This section describes the callback/Activity of HIP runtime API.
  */
+/**
+ * @brief Returns HIP API name by ID.
+ *
+ * @param [in] id ID of HIP API
+ *
+ * @returns hipSuccess, hipErrorInvalidValue
+ *
+ */
 const char* hipApiName(uint32_t id);
+/**
+ * @brief Returns kernel name reference by function name.
+ *
+ * @param [in] f name of function
+ *
+ * @returns hipSuccess, hipErrorInvalidValue
+ *
+ */
 const char* hipKernelNameRef(const hipFunction_t f);
+/**
+ * @brief Retrives kernel for a given host pointer, unless stated otherwise.
+ *
+ * @param [in] hostFunction Pointer of host function.
+ * @param [in] stream stream the kernel is executed on.
+ *
+ * @returns hipSuccess, hipErrorInvalidValue
+ *
+ */
 const char* hipKernelNameRefByPtr(const void* hostFunction, hipStream_t stream);
+/**
+ * @brief Returns device ID on the stream.
+ *
+ * @param [in] stream stream of device executed on.
+ *
+ * @returns hipSuccess, hipErrorInvalidValue
+ *
+ */
 int hipGetStreamDeviceId(hipStream_t stream);
 
 // doxygen end Callback
