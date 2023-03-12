@@ -2,5 +2,5 @@
 Execution Control
 *****************
 
-.. doxygengroup:: execution
+.. doxygengroup:: Execution
    :members:
