@@ -1,5 +1,5 @@
 # Device Management
    
-:::{doxygenfunction} device
-
-:::
+.. doxygengroup:: Device
+   :project: group
+   :members:

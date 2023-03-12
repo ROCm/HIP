@@ -11,6 +11,7 @@ subtrees:
       - file: api/constants
       - file: api/initialization
       - file: api/device_management
+      - file: api/execution_control
   - file: userguide/index
 
 

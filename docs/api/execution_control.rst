@@ -2,6 +2,6 @@
 Execution Control
 *****************
 
-:::{doxygenfunction} execution
-
-:::
+.. doxygengroup:: execution
+   :project: group
+   :members:
