@@ -21,6 +21,7 @@ subtrees:
       - file: api/context_management
       - file: api/module_management
       - file: api/occupancy
+      - file: api/profiler
   - file: userguide/index
 
 
