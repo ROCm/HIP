@@ -18,6 +18,7 @@ subtrees:
       - file: api/event_management
       - file: api/memory_management
       - file: api/peer_to_peer
+      - file: api/context_management
   - file: userguide/index
 
 
