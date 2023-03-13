@@ -12,6 +12,7 @@ subtrees:
       - file: api/initialization
       - file: api/device_management
       - file: api/execution_control
+      - file: api/error_handling
   - file: userguide/index
 
 
