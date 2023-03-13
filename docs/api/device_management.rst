@@ -1,4 +1,6 @@
-# Device Management
+*****************
+Device Management
+*****************
    
 .. doxygengroup:: Device
    :members:
