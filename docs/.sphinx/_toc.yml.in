@@ -15,6 +15,9 @@ subtrees:
       - file: api/error_handling
       - file: api/stream_management
       - file: api/stream_memory_operations
+      - file: api/event_management
+      - file: api/memory_management
+      - file: api/peer_to_peer
   - file: userguide/index
 
 
