@@ -19,6 +19,8 @@ subtrees:
       - file: api/memory_management
       - file: api/peer_to_peer
       - file: api/context_management
+      - file: api/module_management
+      - file: api/occupancy
   - file: userguide/index
 
 
