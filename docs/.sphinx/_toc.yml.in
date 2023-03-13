@@ -13,6 +13,8 @@ subtrees:
       - file: api/device_management
       - file: api/execution_control
       - file: api/error_handling
+      - file: api/stream_management
+      - file: api/stream_memory_operations
   - file: userguide/index
 
 
