@@ -29,11 +29,6 @@ THE SOFTWARE.
 #elif (defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) &&                          \
     !(defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__))
 
-/**
- *  @addtogroup Runtime Runtime Compilation
- *  @{
- *  @ingroup Runtime
- */
 
 #ifdef __cplusplus
 extern "C" {
@@ -46,86 +41,93 @@ extern "C" {
 #endif
 
 /**
- * @brief hiprtcResult
- * @enum
  *
+ * @addtogroup GlobalDefs
+ * @{
+ *  
  */
-
+ /**
+ * hiprtc error code
+ */
 typedef enum hiprtcResult {
-  HIPRTC_SUCCESS = 0,
-  HIPRTC_ERROR_OUT_OF_MEMORY = 1,
-  HIPRTC_ERROR_PROGRAM_CREATION_FAILURE = 2,
-  HIPRTC_ERROR_INVALID_INPUT = 3,
-  HIPRTC_ERROR_INVALID_PROGRAM = 4,
-  HIPRTC_ERROR_INVALID_OPTION = 5,
-  HIPRTC_ERROR_COMPILATION = 6,
-  HIPRTC_ERROR_BUILTIN_OPERATION_FAILURE = 7,
-  HIPRTC_ERROR_NO_NAME_EXPRESSIONS_AFTER_COMPILATION = 8,
-  HIPRTC_ERROR_NO_LOWERED_NAMES_BEFORE_COMPILATION = 9,
-  HIPRTC_ERROR_NAME_EXPRESSION_NOT_VALID = 10,
-  HIPRTC_ERROR_INTERNAL_ERROR = 11,
-  HIPRTC_ERROR_LINKING = 100
+    HIPRTC_SUCCESS = 0,   ///< Success
+    HIPRTC_ERROR_OUT_OF_MEMORY = 1,  ///< Out of memory
+    HIPRTC_ERROR_PROGRAM_CREATION_FAILURE = 2,   ///< Failed to create program
+    HIPRTC_ERROR_INVALID_INPUT = 3,   ///< Invalid input
+    HIPRTC_ERROR_INVALID_PROGRAM = 4,   ///< Invalid program
+    HIPRTC_ERROR_INVALID_OPTION = 5,   ///< Invalid option
+    HIPRTC_ERROR_COMPILATION = 6,   ///< Compilation error
+    HIPRTC_ERROR_BUILTIN_OPERATION_FAILURE = 7,   ///< Failed in builtin operation
+    HIPRTC_ERROR_NO_NAME_EXPRESSIONS_AFTER_COMPILATION = 8,   ///< No name expression after compilation
+    HIPRTC_ERROR_NO_LOWERED_NAMES_BEFORE_COMPILATION = 9,   ///< No lowered names before compilation 
+    HIPRTC_ERROR_NAME_EXPRESSION_NOT_VALID = 10,   ///< Invalid name expression
+    HIPRTC_ERROR_INTERNAL_ERROR = 11,   ///< Internal error
+    HIPRTC_ERROR_LINKING = 100   ///< Error in linking
 } hiprtcResult;
 
 /**
- * @brief hiprtcJIT_option
- * @enum
- *
+ * hiprtc JIT option
  */
 
 typedef enum hiprtcJIT_option {
-  HIPRTC_JIT_MAX_REGISTERS = 0,
-  HIPRTC_JIT_THREADS_PER_BLOCK,
-  HIPRTC_JIT_WALL_TIME,
-  HIPRTC_JIT_INFO_LOG_BUFFER,
-  HIPRTC_JIT_INFO_LOG_BUFFER_SIZE_BYTES,
-  HIPRTC_JIT_ERROR_LOG_BUFFER,
-  HIPRTC_JIT_ERROR_LOG_BUFFER_SIZE_BYTES,
-  HIPRTC_JIT_OPTIMIZATION_LEVEL,
-  HIPRTC_JIT_TARGET_FROM_HIPCONTEXT,
-  HIPRTC_JIT_TARGET,
-  HIPRTC_JIT_FALLBACK_STRATEGY,
-  HIPRTC_JIT_GENERATE_DEBUG_INFO,
-  HIPRTC_JIT_LOG_VERBOSE,
-  HIPRTC_JIT_GENERATE_LINE_INFO,
-  HIPRTC_JIT_CACHE_MODE,
-  HIPRTC_JIT_NEW_SM3X_OPT,
-  HIPRTC_JIT_FAST_COMPILE,
-  HIPRTC_JIT_GLOBAL_SYMBOL_NAMES,
-  HIPRTC_JIT_GLOBAL_SYMBOL_ADDRESS,
-  HIPRTC_JIT_GLOBAL_SYMBOL_COUNT,
-  HIPRTC_JIT_LTO,
-  HIPRTC_JIT_FTZ,
-  HIPRTC_JIT_PREC_DIV,
-  HIPRTC_JIT_PREC_SQRT,
-  HIPRTC_JIT_FMA,
-  HIPRTC_JIT_NUM_OPTIONS,
-  HIPRTC_JIT_IR_TO_ISA_OPT_EXT = 10000,  //! AMD only. Linker options to be passed on to
-  HIPRTC_JIT_IR_TO_ISA_OPT_COUNT_EXT,    //! AMD only. Count of linker options
+  HIPRTC_JIT_MAX_REGISTERS = 0,  ///< Maximum registers
+  HIPRTC_JIT_THREADS_PER_BLOCK,  ///< Thread per block
+  HIPRTC_JIT_WALL_TIME,  ///< Time from aall clock
+  HIPRTC_JIT_INFO_LOG_BUFFER,  ///< Log buffer info
+  HIPRTC_JIT_INFO_LOG_BUFFER_SIZE_BYTES,  ///< Log buffer size in bytes
+  HIPRTC_JIT_ERROR_LOG_BUFFER,  ///< Log buffer error
+  HIPRTC_JIT_ERROR_LOG_BUFFER_SIZE_BYTES,  ///< Log buffer size in bytes
+  HIPRTC_JIT_OPTIMIZATION_LEVEL,  ///< Optimization level
+  HIPRTC_JIT_TARGET_FROM_HIPCONTEXT,  ///< 
+  HIPRTC_JIT_TARGET,  ///< JIT target
+  HIPRTC_JIT_FALLBACK_STRATEGY,  ///< Fallback strategy
+  HIPRTC_JIT_GENERATE_DEBUG_INFO,  ///< Generate debug information
+  HIPRTC_JIT_LOG_VERBOSE,  ///< Log verbose
+  HIPRTC_JIT_GENERATE_LINE_INFO,  ///< Generate line information
+  HIPRTC_JIT_CACHE_MODE,  ///< Cache mode
+  HIPRTC_JIT_NEW_SM3X_OPT,  ///< New SM3X option
+  HIPRTC_JIT_FAST_COMPILE,  ///< Fast compile
+  HIPRTC_JIT_GLOBAL_SYMBOL_NAMES,  ///< Global symbol names
+  HIPRTC_JIT_GLOBAL_SYMBOL_ADDRESS,  ///< Global symbol address
+  HIPRTC_JIT_GLOBAL_SYMBOL_COUNT,  ///< Global symbol count
+  HIPRTC_JIT_LTO,  ///< LTO
+  HIPRTC_JIT_FTZ,  ///< FTZ
+  HIPRTC_JIT_PREC_DIV,  ///< Prec_VIV
+  HIPRTC_JIT_PREC_SQRT,  ///< PREC_SQRT
+  HIPRTC_JIT_FMA,  ///< FMA
+  HIPRTC_JIT_NUM_OPTIONS,  ///< Number of options
+  HIPRTC_JIT_IR_TO_ISA_OPT_EXT = 10000,  //< AMD only. Linker options to be passed on to
+  HIPRTC_JIT_IR_TO_ISA_OPT_COUNT_EXT,    //< AMD only. Count of linker options
 } hiprtcJIT_option;
 
 /**
- * @brief hiprtcJITInputType
- * @enum
- *
+ * hiprtc JIT input type
  */
 typedef enum hiprtcJITInputType {
-  HIPRTC_JIT_INPUT_CUBIN = 0,
-  HIPRTC_JIT_INPUT_PTX,
-  HIPRTC_JIT_INPUT_FATBINARY,
-  HIPRTC_JIT_INPUT_OBJECT,
-  HIPRTC_JIT_INPUT_LIBRARY,
-  HIPRTC_JIT_INPUT_NVVM,
-  HIPRTC_JIT_NUM_LEGACY_INPUT_TYPES,
-  HIPRTC_JIT_INPUT_LLVM_BITCODE = 100,
-  HIPRTC_JIT_INPUT_LLVM_BUNDLED_BITCODE = 101,
-  HIPRTC_JIT_INPUT_LLVM_ARCHIVES_OF_BUNDLED_BITCODE = 102,
+  HIPRTC_JIT_INPUT_CUBIN = 0,  ///< Input cubin
+  HIPRTC_JIT_INPUT_PTX,  ///< Input PTX
+  HIPRTC_JIT_INPUT_FATBINARY,  ///< Input fat binary
+  HIPRTC_JIT_INPUT_OBJECT,  ///< Input object
+  HIPRTC_JIT_INPUT_LIBRARY,  ///< Input library
+  HIPRTC_JIT_INPUT_NVVM,  ///< Input NVVM
+  HIPRTC_JIT_NUM_LEGACY_INPUT_TYPES,  ///< Number of legacy input type
+  HIPRTC_JIT_INPUT_LLVM_BITCODE = 100,  ///< LLVM bitcode
+  HIPRTC_JIT_INPUT_LLVM_BUNDLED_BITCODE = 101,  ///< LLVM bundled bitcode
+  HIPRTC_JIT_INPUT_LLVM_ARCHIVES_OF_BUNDLED_BITCODE = 102,  ///< LLVM archives of boundled bitcode
   HIPRTC_JIT_NUM_INPUT_TYPES = (HIPRTC_JIT_NUM_LEGACY_INPUT_TYPES + 3)
 } hiprtcJITInputType;
-
-typedef struct ihiprtcLinkState* hiprtcLinkState;
+/**
+* @}
+*/
 
 /**
+ *  hiprtc link state
+ *
+ */
+typedef struct ihiprtcLinkState* hiprtcLinkState;
+/**
+ *  @ingroup Runtime
+ *
  * @brief Returns text string message to explain the error which occurred
  *
  * @param [in] result  code to convert to string.
@@ -139,6 +141,7 @@ typedef struct ihiprtcLinkState* hiprtcLinkState;
 const char* hiprtcGetErrorString(hiprtcResult result);
 
 /**
+ * @ingroup Runtime
  * @brief Sets the parameters as major and minor version.
  *
  * @param [out] major  HIP Runtime Compilation major version.
@@ -146,38 +149,47 @@ const char* hiprtcGetErrorString(hiprtcResult result);
  *
  */
 hiprtcResult hiprtcVersion(int* major, int* minor);
-
+/**
+ *  hiprtc program
+ *
+ */
 typedef struct _hiprtcProgram* hiprtcProgram;
 
 /**
+ * @ingroup Runtime
  * @brief Adds the given name exprssion to the runtime compilation program.
  *
  * @param [in] prog  runtime compilation program instance.
  * @param [in] name_expression  const char pointer to the name expression.
- * @return  HIPRTC_SUCCESS
+ * @return  #HIPRTC_SUCCESS
  *
- * If const char pointer is NULL, it will return HIPRTC_ERROR_INVALID_INPUT.
+ * If const char pointer is NULL, it will return #HIPRTC_ERROR_INVALID_INPUT.
  *
  * @see hiprtcResult
  */
-hiprtcResult hiprtcAddNameExpression(hiprtcProgram prog, const char* name_expression);
+hiprtcResult hiprtcAddNameExpression(hiprtcProgram prog,
+                                     const char* name_expression);
 
 /**
+ * @ingroup Runtime 
  * @brief Compiles the given runtime compilation program.
  *
  * @param [in] prog  runtime compilation program instance.
  * @param [in] numOptions  number of compiler options.
  * @param [in] options  compiler options as const array of strins.
- * @return HIPRTC_SUCCESS
+ * @return #HIPRTC_SUCCESS
  *
  * If the compiler failed to build the runtime compilation program,
- * it will return HIPRTC_ERROR_COMPILATION.
+ * it will return #HIPRTC_ERROR_COMPILATION.
  *
  * @see hiprtcResult
  */
-hiprtcResult hiprtcCompileProgram(hiprtcProgram prog, int numOptions, const char** options);
+hiprtcResult hiprtcCompileProgram(hiprtcProgram prog,
+                                  int numOptions,
+                                  const char** options);
 
 /**
+ * @ingroup Runtime
  * @brief Creates an instance of hiprtcProgram with the given input parameters,
  * and sets the output hiprtcProgram prog with it.
  *
@@ -187,53 +199,58 @@ hiprtcResult hiprtcCompileProgram(hiprtcProgram prog, int numOptions, const char
  * @param [in] numHeaders  number of headers.
  * @param [in] headers  array of strings pointing to headers.
  * @param [in] includeNames  array of strings pointing to names included in program source.
- * @return HIPRTC_SUCCESS
+ * @return #HIPRTC_SUCCESS
  *
- * Any invalide input parameter, it will return HIPRTC_ERROR_INVALID_INPUT
- * or HIPRTC_ERROR_INVALID_PROGRAM.
+ * Any invalide input parameter, it will return #HIPRTC_ERROR_INVALID_INPUT
+ * or #HIPRTC_ERROR_INVALID_PROGRAM.
  *
- * If failed to create the program, it will return HIPRTC_ERROR_PROGRAM_CREATION_FAILURE.
+ * If failed to create the program, it will return #HIPRTC_ERROR_PROGRAM_CREATION_FAILURE.
  *
  * @see hiprtcResult
  */
-hiprtcResult hiprtcCreateProgram(hiprtcProgram* prog, const char* src, const char* name,
-                                 int numHeaders, const char** headers, const char** includeNames);
+hiprtcResult hiprtcCreateProgram(hiprtcProgram* prog,
+                                 const char* src,
+                                 const char* name,
+                                 int numHeaders,
+                                 const char** headers,
+                                 const char** includeNames);
 
 /**
  * @brief Destroys an instance of given hiprtcProgram.
- *
+ * @ingroup Runtime
  * @param [in] prog  runtime compilation program instance.
- * @return HIPRTC_SUCCESS
+ * @return #HIPRTC_SUCCESS
  *
- * If prog is NULL, it will return HIPRTC_ERROR_INVALID_INPUT.
+ * If prog is NULL, it will return #HIPRTC_ERROR_INVALID_INPUT.
  *
  * @see hiprtcResult
  */
 hiprtcResult hiprtcDestroyProgram(hiprtcProgram* prog);
 
 /**
- * @brief Gets the lowered (mangled) name from an instance of hiprtcProgram with the given input
- * parameters, and sets the output lowered_name with it.
- *
+ * @brief Gets the lowered (mangled) name from an instance of hiprtcProgram with the given input parameters,
+ * and sets the output lowered_name with it.
+ * @ingroup Runtime
  * @param [in] prog  runtime compilation program instance.
  * @param [in] name_expression  const char pointer to the name expression.
  * @param [in, out] lowered_name  const char array to the lowered (mangled) name.
- * @return HIPRTC_SUCCESS
+ * @return #HIPRTC_SUCCESS
  *
- * If any invalide nullptr input parameters, it will return HIPRTC_ERROR_INVALID_INPUT
+ * If any invalide nullptr input parameters, it will return #HIPRTC_ERROR_INVALID_INPUT
  *
- * If name_expression is not found, it will return HIPRTC_ERROR_NAME_EXPRESSION_NOT_VALID
+ * If name_expression is not found, it will return #HIPRTC_ERROR_NAME_EXPRESSION_NOT_VALID
  *
- * If failed to get lowered_name from the program, it will return HIPRTC_ERROR_COMPILATION.
+ * If failed to get lowered_name from the program, it will return #HIPRTC_ERROR_COMPILATION.
  *
  * @see hiprtcResult
  */
-hiprtcResult hiprtcGetLoweredName(hiprtcProgram prog, const char* name_expression,
+hiprtcResult hiprtcGetLoweredName(hiprtcProgram prog,
+                                  const char* name_expression,
                                   const char** lowered_name);
 
 /**
  * @brief Gets the log generated by the runtime compilation program instance.
- *
+ * @ingroup Runtime
  * @param [in] prog  runtime compilation program instance.
  * @param [out] log  memory pointer to the generated log.
  * @return HIPRTC_SUCCESS
@@ -251,11 +268,12 @@ hiprtcResult hiprtcGetProgramLog(hiprtcProgram prog, char* log);
  *
  * @see hiprtcResult
  */
-hiprtcResult hiprtcGetProgramLogSize(hiprtcProgram prog, size_t* logSizeRet);
+hiprtcResult hiprtcGetProgramLogSize(hiprtcProgram prog,
+                                     size_t* logSizeRet);
 
 /**
  * @brief Gets the pointer of compilation binary by the runtime compilation program instance.
- *
+ * @ingroup Runtime
  * @param [in] prog  runtime compilation program instance.
  * @param [out] code  char pointer to binary.
  * @return HIPRTC_SUCCESS
@@ -266,9 +284,9 @@ hiprtcResult hiprtcGetCode(hiprtcProgram prog, char* code);
 
 /**
  * @brief Gets the size of compilation binary by the runtime compilation program instance.
- *
+ * @ingroup Runtime
  * @param [in] prog  runtime compilation program instance.
- * @param [out] code  the size of binary.
+ * @param [out] codeSizeRet  the size of binary.
  * @return HIPRTC_SUCCESS
  *
  * @see hiprtcResult
@@ -279,7 +297,7 @@ hiprtcResult hiprtcGetCodeSize(hiprtcProgram prog, size_t* codeSizeRet);
  * @brief Gets the pointer of compiled bitcode by the runtime compilation program instance.
  *
  * @param [in] prog  runtime compilation program instance.
- * @param [out] code  char pointer to bitcode.
+ * @param [out] bitcode  char pointer to bitcode.
  * @return HIPRTC_SUCCESS
  *
  * @see hiprtcResult
@@ -288,11 +306,11 @@ hiprtcResult hiprtcGetBitcode(hiprtcProgram prog, char* bitcode);
 
 /**
  * @brief Gets the size of compiled bitcode by the runtime compilation program instance.
- *
+ * @ingroup Runtime
  *
  * @param [in] prog  runtime compilation program instance.
- * @param [out] code  the size of bitcode.
- * @return HIPRTC_SUCCESS
+ * @param [out] bitcode_size  the size of bitcode.
+ * @return #HIPRTC_SUCCESS
  *
  * @see hiprtcResult
  */
@@ -300,10 +318,13 @@ hiprtcResult hiprtcGetBitcodeSize(hiprtcProgram prog, size_t* bitcode_size);
 
 /**
  * @brief Creates the link instance via hiprtc APIs.
- *
- * @param [in] hip_jit_options
- * @param [out] hiprtc link state instance
- * @return HIPRTC_SUCCESS
+ * @ingroup Runtime
+ * @param [in] num_options  Number of options
+ * @param [in] option_ptr  Array of options
+ * @param [in] option_vals_pptr  Array of option values cast to void*
+ * @param [out] hip_link_state_ptr  hiprtc link state created upon success
+ * 
+ * @return #HIPRTC_SUCCESS, #HIPRTC_ERROR_INVALID_INPUT, #HIPRTC_ERROR_INVALID_OPTION
  *
  * @see hiprtcResult
  */
@@ -312,14 +333,18 @@ hiprtcResult hiprtcLinkCreate(unsigned int num_options, hiprtcJIT_option* option
 
 /**
  * @brief Adds a file with bit code to be linked with options
+ * @ingroup Runtime
+ * @param [in] hip_link_state  hiprtc link state
+ * @param [in] input_type  Type of the input data or bitcode
+ * @param [in] file_path  Path to the input file where bitcode is present
+ * @param [in] num_options  Size of the options
+ * @param [in] options_ptr  Array of options applied to this input
+ * @param [in] option_values  Array of option values cast to void*
  *
- * @param [in] hiprtc link state, jit input type, file path,
- *        option reated parameters.
- * @param [out] None.
- * @return HIPRTC_SUCCESS
+ * @return #HIPRTC_SUCCESS
  *
  * If input values are invalid, it will
- * @return HIPRTC_ERROR_INVALID_INPUT
+ * @return #HIPRTC_ERROR_INVALID_INPUT
  *
  * @see hiprtcResult
  */
@@ -330,14 +355,20 @@ hiprtcResult hiprtcLinkAddFile(hiprtcLinkState hip_link_state, hiprtcJITInputTyp
 
 /**
  * @brief Completes the linking of the given program.
+ * @ingroup Runtime
+ * @param [in] hip_link_state  hiprtc link state
+ * @param [in] input_type  Type of the input data or bitcode
+ * @param [in] image  Input data which is null terminated
+ * @param [in] image_size  Size of the input data
+ * @param [in] name  Optional name for this input
+ * @param [in] num_options  Size of the options
+ * @param [in] options_ptr  Array of options applied to this input
+ * @param [in] option_values  Array of option values cast to void*
  *
- * @param [in] hiprtc link state, jit input type, image_ptr ,
- *        option reated parameters.
- * @param [out] None.
- * @return HIPRTC_SUCCESS
+ * @return #HIPRTC_SUCCESS, #HIPRTC_ERROR_INVALID_INPUT
  *
  * If adding the file fails, it will
- * @return HIPRTC_ERROR_PROGRAM_CREATION_FAILURE
+ * @return #HIPRTC_ERROR_PROGRAM_CREATION_FAILURE
  *
  * @see hiprtcResult
  */
@@ -349,13 +380,15 @@ hiprtcResult hiprtcLinkAddData(hiprtcLinkState hip_link_state, hiprtcJITInputTyp
 
 /**
  * @brief Completes the linking of the given program.
+ * @ingroup Runtime
+ * @param [in]  hip_link_state  hiprtc link state
+ * @param [out]  bin_out  Upon success, points to the output binary
+ * @param [out]  size_out  Size of the binary is stored (optional)
  *
- * @param [in] hiprtc link state instance
- * @param [out] linked_binary, linked_binary_size.
- * @return HIPRTC_SUCCESS
+ * @return #HIPRTC_SUCCESS
  *
  * If adding the data fails, it will
- * @return HIPRTC_ERROR_PROGRAM_CREATION_FAILURE
+ * @return #HIPRTC_ERROR_LINKING
  *
  * @see hiprtcResult
  */
@@ -363,13 +396,10 @@ hiprtcResult hiprtcLinkComplete(hiprtcLinkState hip_link_state, void** bin_out, 
 
 /**
  * @brief Deletes the link instance via hiprtc APIs.
+ * @ingroup Runtime
+ * @param [in] hip_link_state link state instance
  *
- * @param [in] hiprtc link state instance
- * @param [out] code  the size of binary.
- * @return HIPRTC_SUCCESS
- *
- * If linking fails, it will
- * @return HIPRTC_ERROR_LINKING
+ * @return #HIPRTC_SUCCESS
  *
  * @see hiprtcResult
  */
@@ -382,10 +412,7 @@ hiprtcResult hiprtcLinkDestroy(hiprtcLinkState hip_link_state);
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-// doxygen end HIPrtc feature
-/**
- * @}
- */
+
 #else
 #error("Must define exactly one of __HIP_PLATFORM_AMD__ or __HIP_PLATFORM_NVIDIA__");
 #endif
