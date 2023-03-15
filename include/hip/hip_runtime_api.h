@@ -585,6 +585,16 @@ enum hipLimit_t {
 /** Event can support IPC. hipEventDisableTiming also must be set.*/
 #define hipEventInterprocess 0x4
 
+/** Disable performing a system scope sequentially consistent memory fence when the event
+ * transitions from recording to recorded.  This can be used for events that are only being
+ * used to measure timing, and do not require the event inspection operations
+ * (see ::hipEventSynchronize, ::hipEventQuery, and ::hipEventElapsedTime) to synchronize-with
+ * the work on which the recorded event (see ::hipEventRecord) is waiting.
+ * On some AMD GPU devices this can improve the accuracy of timing measurements by avoiding the
+ * cost of cache writeback and invalidation, and the performance impact of those actions on the
+ * execution of following work. */
+#define hipEventDisableSystemFence 0x20000000
+
 /** Use a device-scope release when recording this event. This flag is useful to obtain more
  * precise timings of commands between events.  The flag is a no-op on CUDA platforms.*/
 #define hipEventReleaseToDevice  0x40000000
@@ -1396,7 +1406,7 @@ hipError_t hipInit(unsigned int flags);
 /**
  * @brief Returns the approximate HIP driver version.
  *
- * @param [out] driverVersion
+ * @param [out] driverVersion driver version
  *
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
@@ -1412,7 +1422,7 @@ hipError_t hipDriverGetVersion(int* driverVersion);
 /**
  * @brief Returns the approximate HIP Runtime version.
  *
- * @param [out] runtimeVersion
+ * @param [out] runtimeVersion HIP runtime version
  *
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
@@ -1426,8 +1436,8 @@ hipError_t hipDriverGetVersion(int* driverVersion);
 hipError_t hipRuntimeGetVersion(int* runtimeVersion);
 /**
  * @brief Returns a handle to a compute device
- * @param [out] device
- * @param [in] ordinal
+ * @param [out] device Handle of device
+ * @param [in] ordinal Device ordinal
  *
  * @returns #hipSuccess, #hipErrorInvalidDevice
  */
@@ -1435,26 +1445,26 @@ hipError_t hipDeviceGet(hipDevice_t* device, int ordinal);
 
 /**
  * @brief Returns the compute capability of the device
- * @param [out] major
- * @param [out] minor
- * @param [in] device
+ * @param [out] major Major compute capability version number
+ * @param [out] minor Minor compute capability version number
+ * @param [in] device Device ordinal
  *
  * @returns #hipSuccess, #hipErrorInvalidDevice
  */
 hipError_t hipDeviceComputeCapability(int* major, int* minor, hipDevice_t device);
 /**
  * @brief Returns an identifer string for the device.
- * @param [out] name
- * @param [in] len
- * @param [in] device
+ * @param [out] name String of the device name
+ * @param [in] len Maximum length of string to store in device name
+ * @param [in] device Device ordinal
  *
  * @returns #hipSuccess, #hipErrorInvalidDevice
  */
 hipError_t hipDeviceGetName(char* name, int len, hipDevice_t device);
 /**
  * @brief Returns an UUID for the device.[BETA]
- * @param [out] uuid
- * @param [in] device
+ * @param [out] uuid UUID for the device
+ * @param [in] device device ordinal
  *
  * @beta This API is marked as beta, meaning, while this is feature complete,
  * it is still open to changes and may have outstanding issues.
@@ -1464,11 +1474,11 @@ hipError_t hipDeviceGetName(char* name, int len, hipDevice_t device);
  */
 hipError_t hipDeviceGetUuid(hipUUID* uuid, hipDevice_t device);
 /**
- * @brief Returns a value for attr of link between two devices
- * @param [out] value
- * @param [in] attr
- * @param [in] srcDevice
- * @param [in] dstDevice
+ * @brief Returns a value for attribute of link between two devices
+ * @param [out] value Pointer of the value for the attrubute
+ * @param [in] attr enum of hipDeviceP2PAttr to query
+ * @param [in] srcDevice The source device of the link
+ * @param [in] dstDevice The destination device of the link
  *
  * @returns #hipSuccess, #hipErrorInvalidDevice
  */
@@ -1476,25 +1486,25 @@ hipError_t hipDeviceGetP2PAttribute(int* value, hipDeviceP2PAttr attr,
                                     int srcDevice, int dstDevice);
 /**
  * @brief Returns a PCI Bus Id string for the device, overloaded to take int device ID.
- * @param [out] pciBusId
- * @param [in] len
- * @param [in] device
+ * @param [out] pciBusId The string of PCI Bus Id format for the device 
+ * @param [in] len Maximum length of string
+ * @param [in] device The device ordinal
  *
  * @returns #hipSuccess, #hipErrorInvalidDevice
  */
 hipError_t hipDeviceGetPCIBusId(char* pciBusId, int len, int device);
 /**
  * @brief Returns a handle to a compute device.
- * @param [out] device handle
- * @param [in] PCI Bus ID
+ * @param [out] device The handle of the device
+ * @param [in] PCI The string of PCI Bus Id for the device
  *
  * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
  */
 hipError_t hipDeviceGetByPCIBusId(int* device, const char* pciBusId);
 /**
  * @brief Returns the total amount of memory on the device.
- * @param [out] bytes
- * @param [in] device
+ * @param [out] bytes The size of memory in bytes, on the device
+ * @param [in] device The ordinal of the device
  *
  * @returns #hipSuccess, #hipErrorInvalidDevice
  */
@@ -1674,7 +1684,7 @@ hipError_t hipGetDeviceProperties(hipDeviceProp_t* prop, int deviceId);
 /**
  * @brief Set L1/Shared cache partition.
  *
- * @param [in] cacheConfig
+ * @param [in] cacheConfig Cache configuration
  *
  * @returns #hipSuccess, #hipErrorNotInitialized, #hipErrorNotSupported
  *
@@ -1686,7 +1696,7 @@ hipError_t hipDeviceSetCacheConfig(hipFuncCache_t cacheConfig);
 /**
  * @brief Get Cache configuration for a specific Device
  *
- * @param [out] cacheConfig
+ * @param [out] cacheConfig Pointer of cache configuration
  *
  * @returns #hipSuccess, #hipErrorNotInitialized
  * Note: AMD devices do not support reconfigurable cache. This hint is ignored
@@ -1695,21 +1705,25 @@ hipError_t hipDeviceSetCacheConfig(hipFuncCache_t cacheConfig);
  */
 hipError_t hipDeviceGetCacheConfig(hipFuncCache_t* cacheConfig);
 /**
- * @brief Get Resource limits of current device
+ * @brief Gets resource limits of current device
+ * The funtion querys the size of limit value, as required input enum hipLimit_t, can be either
+ * hipLimitStackSize, or hipLimitMallocHeapSize.
  *
- * @param [out] pValue
- * @param [in]  limit
+ * @param [out] pValue returns the size of the limit in bytes
+ * @param [in]  limit the limit to query
  *
  * @returns #hipSuccess, #hipErrorUnsupportedLimit, #hipErrorInvalidValue
- * Note: Currently, only hipLimitMallocHeapSize is available
  *
  */
 hipError_t hipDeviceGetLimit(size_t* pValue, enum hipLimit_t limit);
 /**
- * @brief Set Resource limits of current device
- *
- * @param [in] limit
- * @param [in] value
+ * @brief Sets resource limits of current device
+ * As the input enum limit, hipLimitStackSize sets the limit value of the stack size on current
+ * GPU devie, hipLimitMallocHeapSize sets the limit value of the heap used by the malloc()/free()
+ * calls. 
+ * 
+ * @param [in] limit enum of hipLimit_t to set
+ * @param [in] value the size of limit value in bytes
  *
  * @returns #hipSuccess, #hipErrorUnsupportedLimit, #hipErrorInvalidValue
  *
@@ -1718,7 +1732,7 @@ hipError_t hipDeviceSetLimit ( enum hipLimit_t limit, size_t value );
 /**
  * @brief Returns bank width of shared memory for current device
  *
- * @param [out] pConfig
+ * @param [out] pConfig The pointer of the bank width for shared memory 
  *
  * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized
  *
@@ -1730,7 +1744,7 @@ hipError_t hipDeviceGetSharedMemConfig(hipSharedMemConfig* pConfig);
 /**
  * @brief Gets the flags set for current device
  *
- * @param [out] flags
+ * @param [out] flags Pointer of the flags 
  *
  * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
  */
@@ -1738,7 +1752,7 @@ hipError_t hipGetDeviceFlags(unsigned int* flags);
 /**
  * @brief The bank width of shared memory on current device is set
  *
- * @param [in] config
+ * @param [in] config Configuration for the bank width of shared memory
  *
  * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized
  *
@@ -1750,7 +1764,7 @@ hipError_t hipDeviceSetSharedMemConfig(hipSharedMemConfig config);
 /**
  * @brief The current device behavior is changed according the flags passed.
  *
- * @param [in] flags
+ * @param [in] flags Flag to set on the current device 
  *
  * The schedule flags impact how HIP waits for the completion of a command running on a device.
  * hipDeviceScheduleSpin         : HIP runtime will actively spin in the thread which submitted the
@@ -1775,8 +1789,8 @@ hipError_t hipSetDeviceFlags(unsigned flags);
 /**
  * @brief Device which matches hipDeviceProp_t is returned
  *
- * @param [out] device ID
- * @param [in]  device properties pointer
+ * @param [out] device Pointer of the device
+ * @param [in]  prop Pointer of the properties
  *
  * @returns #hipSuccess, #hipErrorInvalidValue
  */
@@ -1926,9 +1940,9 @@ hipError_t hipIpcOpenEventHandle(hipEvent_t* event, hipIpcEventHandle_t handle);
 /**
  * @brief Set attribute for a specific function
  *
- * @param [in] func;
- * @param [in] attr;
- * @param [in] value;
+ * @param [in] func Pointer of the function
+ * @param [in] attr Attribute to set
+ * @param [in] value Value to set
  *
  * @returns #hipSuccess, #hipErrorInvalidDeviceFunction, #hipErrorInvalidValue
  *
@@ -1940,7 +1954,7 @@ hipError_t hipFuncSetAttribute(const void* func, hipFuncAttribute attr, int valu
 /**
  * @brief Set Cache configuration for a specific function
  *
- * @param [in] config;
+ * @param [in] config Configuration to set
  *
  * @returns #hipSuccess, #hipErrorNotInitialized
  * Note: AMD devices and some Nvidia GPUS do not support reconfigurable cache.  This hint is ignored
@@ -1951,8 +1965,8 @@ hipError_t hipFuncSetCacheConfig(const void* func, hipFuncCache_t config);
 /**
  * @brief Set shared memory configuation for a specific function
  *
- * @param [in] func
- * @param [in] config
+ * @param [in] func Pointer of the function
+ * @param [in] config Configuration
  *
  * @returns #hipSuccess, #hipErrorInvalidDeviceFunction, #hipErrorInvalidValue
  *
@@ -2116,8 +2130,7 @@ hipError_t hipDeviceGetStreamPriorityRange(int* leastPriority, int* greatestPrio
 /**
  * @brief Destroys the specified stream.
  *
- * @param[in, out] stream Valid pointer to hipStream_t.  This function writes the memory with the
- * newly created stream.
+ * @param[in] stream stream identifier.
  * @return #hipSuccess #hipErrorInvalidHandle
  *
  * Destroys the specified stream.
@@ -2216,6 +2229,17 @@ hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int* flags);
  * @see hipStreamCreateWithFlags
  */
 hipError_t hipStreamGetPriority(hipStream_t stream, int* priority);
+/**
+ * @brief Get the device assocaited with the stream
+ *
+ * @param[in] stream stream to be queried
+ * @param[out] hipDevice_t device associated with the stream
+ * @return #hipSuccess, #hipErrorInvalidValue, #hipErrorContextIsDestroyed, #hipErrorInvalidHandle,
+ * #hipErrorNotInitialized, #hipErrorDeinitialized, #hipErrorInvalidContext
+ *
+ * @see hipStreamCreate, hipStreamDestroy, hipDeviceGetStreamPriorityRange
+ */
+hipError_t hipStreamGetDevice(hipStream_t stream, hipDevice_t* device);
 /**
  * @brief Create an asynchronous stream with the specified CU mask.
  *
@@ -2416,6 +2440,9 @@ hipError_t hipStreamWriteValue64(hipStream_t stream, void* ptr, uint64_t value, 
  would not record profiling data and provide best performance if used for synchronization.
  * #hipEventInterprocess : The event can be used as an interprocess event. hipEventDisableTiming
  flag also must be set when hipEventInterprocess flag is set.
+ * #hipEventDisableSystemFence : Disable acquire and release system scope fence. This may
+ improve performance but device memory may not be visible to the host and other devices
+ if this flag is set.
  *
  * @returns #hipSuccess, #hipErrorNotInitialized, #hipErrorInvalidValue,
  #hipErrorLaunchFailure, #hipErrorOutOfMemory
@@ -2581,11 +2608,15 @@ hipError_t hipEventQuery(hipEvent_t event);
 hipError_t hipPointerSetAttribute(const void* value, hipPointer_attribute attribute,
                                   hipDeviceptr_t ptr);
 
+
 /**
  *  @brief Return attributes for the specified pointer
  *
  *  @param [out]  attributes  attributes for the specified pointer
  *  @param [in]   ptr         pointer to get attributes for
+ *
+ *  Note: To get pointer's memory type, the parameter attributes has 'type' as member variable.
+ *  The 'type' indicates input pointer is allocated on device or host.
  *
  *  @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
  *
@@ -2773,10 +2804,11 @@ hipError_t hipMemAllocHost(void** ptr, size_t size);
  *  @brief Allocate device accessible page locked host memory
  *
  *  @param[out] ptr Pointer to the allocated host pinned memory
- *  @param[in]  size Requested memory size
+ *  @param[in]  size Requested memory size in bytes
  *  @param[in]  flags Type of host memory allocation
  *
  *  If size is 0, no memory is allocated, *ptr returns nullptr, and hipSuccess is returned.
+ *  If no input for flags, it will be the default pinned memory allocation on the host.
  *
  *  @return #hipSuccess, #hipErrorOutOfMemory
  *
@@ -3291,7 +3323,7 @@ hipError_t hipMemPoolImportPointer(
  *  @brief Allocate device accessible page locked host memory [Deprecated]
  *
  *  @param[out] ptr Pointer to the allocated host pinned memory
- *  @param[in]  size Requested memory size
+ *  @param[in]  size Requested memory size in bytes
  *  @param[in]  flags Type of host memory allocation
  *
  *  If size is 0, no memory is allocated, *ptr returns nullptr, and hipSuccess is returned.
@@ -3810,7 +3842,7 @@ hipError_t hipMemsetD32(hipDeviceptr_t dest, int value, size_t count);
  *  @brief Fills the first sizeBytes bytes of the memory area pointed to by dev with the constant
  * byte value value.
  *
- *  hipMemsetAsync() is asynchronous with respect to the host, so the call may return before the
+ * hipMemsetAsync() is asynchronous with respect to the host, so the call may return before the
  * memset is complete. The operation can optionally be associated to a stream by passing a non-zero
  * stream argument. If stream is non-zero, the operation may overlap with operations in other
  * streams.
@@ -3883,14 +3915,22 @@ hipError_t hipMemset3D(hipPitchedPtr pitchedDevPtr, int  value, hipExtent extent
 hipError_t hipMemset3DAsync(hipPitchedPtr pitchedDevPtr, int  value, hipExtent extent ,hipStream_t stream __dparm(0));
 /**
  * @brief Query memory info.
- * Return snapshot of free memory, and total allocatable memory on the device.
  *
- * Returns in *free a snapshot of the current free memory.
- * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
- * @warning On HCC, the free memory only accounts for memory allocated by this process and may be
- *optimistic.
+ * On ROCM, this function gets the actual free memory left on the current device, so supports
+ * the cases while running multi-workload (such as multiple processes, multiple threads, and
+ * multiple GPUs).
+ *
+ * @warning On Windows, the free memory only accounts for memory allocated by this process and may
+ * be optimistic.
+ *
+ * @param[out] free returns free memory on the current device in bytes
+ * @param[out] total returns total allocatable memory on the current device in bytes
+ *
+ * @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
+ *
  **/
 hipError_t hipMemGetInfo(size_t* free, size_t* total);
+
 hipError_t hipMemPtrGetInfo(void* ptr, size_t* size);
 /**
  *  @brief Allocate an array on the device.
@@ -3970,6 +4010,56 @@ hipError_t hipGetMipmappedArrayLevel(
     hipArray_t *levelArray,
     hipMipmappedArray_const_t mipmappedArray,
     unsigned int level);
+/**
+ * @brief Gets info about the specified array
+ *
+ * @param[out] desc   - Returned array type
+ * @param[out] extent - Returned array shape. 2D arrays will have depth of zero
+ * @param[out] flags  - Returned array flags
+ * @param[in]  array  - The HIP array to get info for
+ *
+ * @return #hipSuccess, #hipErrorInvalidValue #hipErrorInvalidHandle
+ *
+ * @see hipArrayGetDescriptor, hipArray3DGetDescriptor
+ */
+hipError_t hipArrayGetInfo(hipChannelFormatDesc* desc, hipExtent* extent, unsigned int* flags,
+                           hipArray* array);
+/**
+ * @brief Gets a 1D or 2D array descriptor
+ *
+ * @param[out] pArrayDescriptor - Returned array descriptor
+ * @param[in]  array            - Array to get descriptor of
+ *
+ * @return #hipSuccess, #hipErrorDeInitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ * #hipErrorInvalidValue #hipErrorInvalidHandle
+ *
+ * @see hipArray3DCreate, hipArray3DGetDescriptor, hipArrayCreate, hipArrayDestroy, hipMemAlloc,
+ * hipMemAllocHost, hipMemAllocPitch, hipMemcpy2D, hipMemcpy2DAsync, hipMemcpy2DUnaligned,
+ * hipMemcpy3D, hipMemcpy3DAsync, hipMemcpyAtoA, hipMemcpyAtoD, hipMemcpyAtoH, hipMemcpyAtoHAsync,
+ * hipMemcpyDtoA, hipMemcpyDtoD, hipMemcpyDtoDAsync, hipMemcpyDtoH, hipMemcpyDtoHAsync,
+ * hipMemcpyHtoA, hipMemcpyHtoAAsync, hipMemcpyHtoD, hipMemcpyHtoDAsync, hipMemFree,
+ * hipMemFreeHost, hipMemGetAddressRange, hipMemGetInfo, hipMemHostAlloc,
+ * hipMemHostGetDevicePointer, hipMemsetD8, hipMemsetD16, hipMemsetD32, hipArrayGetInfo
+ */
+hipError_t hipArrayGetDescriptor(HIP_ARRAY_DESCRIPTOR* pArrayDescriptor, hipArray* array);
+/**
+ * @brief Gets a 3D array descriptor
+ *
+ * @param[out] pArrayDescriptor - Returned 3D array descriptor
+ * @param[in]  array            - 3D array to get descriptor of
+ *
+ * @return #hipSuccess, #hipErrorDeInitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ * #hipErrorInvalidValue #hipErrorInvalidHandle, #hipErrorContextIsDestroyed
+ *
+ * @see hipArray3DCreate, hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc,
+ * hipMemAllocHost, hipMemAllocPitch, hipMemcpy2D, hipMemcpy2DAsync, hipMemcpy2DUnaligned,
+ * hipMemcpy3D, hipMemcpy3DAsync, hipMemcpyAtoA, hipMemcpyAtoD, hipMemcpyAtoH, hipMemcpyAtoHAsync,
+ * hipMemcpyDtoA, hipMemcpyDtoD, hipMemcpyDtoDAsync, hipMemcpyDtoH, hipMemcpyDtoHAsync,
+ * hipMemcpyHtoA, hipMemcpyHtoAAsync, hipMemcpyHtoD, hipMemcpyHtoDAsync, hipMemFree,
+ * hipMemFreeHost, hipMemGetAddressRange, hipMemGetInfo, hipMemHostAlloc,
+ * hipMemHostGetDevicePointer, hipMemsetD8, hipMemsetD16, hipMemsetD32, hipArrayGetInfo
+ */
+hipError_t hipArray3DGetDescriptor(HIP_ARRAY3D_DESCRIPTOR* pArrayDescriptor, hipArray* array);
 /**
  *  @brief Copies data between host and device.
  *

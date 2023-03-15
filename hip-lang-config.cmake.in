@@ -72,23 +72,6 @@ get_filename_component(_DIR "${CMAKE_CURRENT_LIST_FILE}" REALPATH)
 get_filename_component(_IMPORT_PREFIX "${_DIR}/../../../../" ABSOLUTE)
 
 
-#If HIP isnot installed under ROCm, need this to find HSA assuming HSA is under ROCm
-if( DEFINED ENV{ROCM_PATH} )
-  set(ROCM_PATH "$ENV{ROCM_PATH}")
-endif()
-
-#if HSA is not under ROCm then provide CMAKE_PREFIX_PATH=<HSA_PATH>
-find_path(HSA_HEADER hsa/hsa.h
-  PATHS
-    "${_IMPORT_PREFIX}/include"
-    "${ROCM_PATH}/include"
-)
-
-if (NOT HSA_HEADER)
-  message (FATAL_ERROR "HSA header not found! ROCM_PATH environment not set")
-endif()
-
-
 set_target_properties(hip-lang::device PROPERTIES
   INTERFACE_INCLUDE_DIRECTORIES "$<$<COMPILE_LANGUAGE:HIP>:${_IMPORT_PREFIX}/include>"
   INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "$<$<COMPILE_LANGUAGE:HIP>:${_IMPORT_PREFIX}/include>"
@@ -96,8 +79,8 @@ set_target_properties(hip-lang::device PROPERTIES
 
 set_target_properties(hip-lang::amdhip64 PROPERTIES
   INTERFACE_COMPILE_DEFINITIONS "$<$<COMPILE_LANGUAGE:HIP>:__HIP_ROCclr__=1>"
-  INTERFACE_INCLUDE_DIRECTORIES "$<$<COMPILE_LANGUAGE:HIP>:${_IMPORT_PREFIX}/include;${HSA_HEADER}>"
-  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "$<$<COMPILE_LANGUAGE:HIP>:${_IMPORT_PREFIX}/include;${HSA_HEADER}>"
+  INTERFACE_INCLUDE_DIRECTORIES "$<$<COMPILE_LANGUAGE:HIP>:${_IMPORT_PREFIX}/include>"
+  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "$<$<COMPILE_LANGUAGE:HIP>:${_IMPORT_PREFIX}/include>"
 )
 set_target_properties(hip-lang::device PROPERTIES
   INTERFACE_COMPILE_DEFINITIONS "$<$<COMPILE_LANGUAGE:HIP>:__HIP_ROCclr__=1>"
@@ -106,12 +89,6 @@ set_target_properties(hip-lang::device PROPERTIES
 set_property(TARGET hip-lang::device APPEND PROPERTY
   INTERFACE_COMPILE_OPTIONS "$<$<COMPILE_LANGUAGE:HIP>:SHELL:-mllvm;-amdgpu-early-inline-all=true;-mllvm;-amdgpu-function-calls=false>"
 )
-
-if (NOT EXISTS "${AMD_DEVICE_LIBS_PREFIX}/amdgcn/bitcode")
-  set_property(TARGET hip-lang::device APPEND PROPERTY
-    INTERFACE_COMPILE_OPTIONS "$<$<COMPILE_LANGUAGE:HIP>:--hip-device-lib-path=${AMD_DEVICE_LIBS_PREFIX}/lib>"
-  )
-endif()
 
 set_property(TARGET hip-lang::device APPEND PROPERTY
   INTERFACE_LINK_OPTIONS "$<$<LINK_LANGUAGE:HIP>:--hip-link>"

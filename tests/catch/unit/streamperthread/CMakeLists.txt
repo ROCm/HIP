@@ -7,6 +7,11 @@ set(TEST_SRC
   hipStreamPerThrdTsts.cc
 )
 
+if (UNIX)
+  set(__LINKER_LIBS__ pthread)
+endif()
+
 hip_add_exe_to_target(NAME StreamPerThreadTest
                       TEST_SRC ${TEST_SRC}
-                      TEST_TARGET_NAME build_tests)
+                      TEST_TARGET_NAME build_tests
+                      LINKER_LIBS ${__LINKER_LIBS__})

@@ -204,6 +204,7 @@ int main(int argc, char *argv[]) {
   int extraArgs = 0;
   bool testResult = true;
 
+  checkImageSupport();
   HIPCHECK(hipSetDevice(p_gpuDevice));
   extraArgs = HipTest::parseStandardArguments(argc, argv, false);
   parseExtraArguments(extraArgs, argv);
