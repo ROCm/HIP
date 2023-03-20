@@ -61,6 +61,25 @@ __global__ void vector_square(float* C_d, float* A_d, size_t N_elmts) {
   }
 }
 
+__global__ void vector_square_gfx11(float* C_d, float* A_d, size_t N_elmts) {
+#ifdef __HIP_PLATFORM_AMD__
+  size_t offset = (blockIdx.x * blockDim.x + threadIdx.x);
+  size_t stride = blockDim.x * gridDim.x;
+
+  for (size_t i = offset; i < N_elmts; i += stride) {
+    C_d[i] = A_d[i] * A_d[i];
+  }
+
+  // Delay the thread 1
+  if (offset == 1) {
+    unsigned long long int wait_t = 3200000000, start = wall_clock64(), cur;
+    do {
+      cur = wall_clock64() - start;
+    } while (cur < wait_t);
+  }
+#endif
+}
+
 float *A_h, *C_h;
 
 static void HIPRT_CB Callback1(hipStream_t stream, hipError_t status,
@@ -102,7 +121,8 @@ int main(int argc, char* argv[]) {
   const unsigned threadsPerBlock = 256;
   const unsigned blocks = (N_elmts + 255)/threadsPerBlock;
 
-  hipLaunchKernelGGL((vector_square), dim3(blocks), dim3(threadsPerBlock), 0,
+  auto vector_square_used = IsGfx11() ? vector_square_gfx11 : vector_square;
+  hipLaunchKernelGGL((vector_square_used), dim3(blocks), dim3(threadsPerBlock), 0,
                       mystream, C_d, A_d, N_elmts);
   HIPCHECK(hipMemcpyAsync(C_h, C_d, Nbytes, hipMemcpyDeviceToHost, mystream));
   HIPCHECK(hipStreamAddCallback(mystream, Callback1, NULL, 0));

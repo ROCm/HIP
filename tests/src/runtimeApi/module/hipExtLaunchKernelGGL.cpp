@@ -62,6 +62,34 @@ __global__ void FourSecKernel(int clockrate) {
   }
 }
 
+__global__ void TwoSecKernel_gfx11(int clockrate) {
+#ifdef __HIP_PLATFORM_AMD__
+  if (globalvar == 0x2222) {
+    globalvar = 0x3333;
+  }
+  uint64_t wait_t = 2000,
+  start = wall_clock64()/clockrate, cur;
+  do { cur = (wall_clock64()/clockrate)-start;}while (cur < wait_t);
+  if (globalvar != 0x3333) {
+    globalvar = 0x5555;
+  }
+#endif
+}
+
+__global__ void FourSecKernel_gfx11(int clockrate) {
+#ifdef __HIP_PLATFORM_AMD__
+  if (globalvar == 1) {
+    globalvar = 0x2222;
+  }
+  uint64_t wait_t = 4000,
+  start = wall_clock64()/clockrate, cur;
+  do { cur = (wall_clock64()/clockrate)-start;}while (cur < wait_t);
+  if (globalvar == 0x2222) {
+    globalvar = 0x4444;
+  }
+#endif
+}
+
 /*
  * In this Scenario, we create events by disabling the timing flag
  * We then Launch the kernel using hipExtModuleLaunchKernel by passing
@@ -76,13 +104,20 @@ bool DisableTimeFlag() {
   float time_4sec, time_2sec;
   hipEvent_t  start_event1, end_event1;
   int clkRate = 0;
-  HIPCHECK(hipDeviceGetAttribute(&clkRate, hipDeviceAttributeClockRate, 0));
+
+  if (IsGfx11()) {
+    HIPCHECK(hipDeviceGetAttribute(&clkRate, hipDeviceAttributeWallClockRate, 0));
+  } else {
+    HIPCHECK(hipDeviceGetAttribute(&clkRate, hipDeviceAttributeClockRate, 0));
+  }
+
   HIPCHECK(hipEventCreateWithFlags(&start_event1,
                                    hipEventDisableTiming));
   HIPCHECK(hipEventCreateWithFlags(&end_event1,
                                    hipEventDisableTiming));
   HIPCHECK(hipStreamCreate(&stream1));
-  hipExtLaunchKernelGGL((TwoSecKernel), dim3(1), dim3(1), 0,
+  auto TwoSecKernel_used = IsGfx11() ? TwoSecKernel_gfx11 : TwoSecKernel;
+  hipExtLaunchKernelGGL((TwoSecKernel_used), dim3(1), dim3(1), 0,
       stream1, start_event1, end_event1, 0, clkRate);
   HIPCHECK(hipStreamSynchronize(stream1));
   e = hipEventElapsedTime(&time_2sec, start_event1, end_event1);
@@ -113,11 +148,20 @@ bool ConcurencyCheck_GlobalVar(int conc_flag) {
   int deviceGlobal_h = 0;
   HIPCHECK(hipSetDevice(0));
   int clkRate = 0;
-  HIPCHECK(hipDeviceGetAttribute(&clkRate, hipDeviceAttributeClockRate, 0));
+
+  if (IsGfx11()) {
+    HIPCHECK(hipDeviceGetAttribute(&clkRate, hipDeviceAttributeWallClockRate, 0));
+  } else {
+    HIPCHECK(hipDeviceGetAttribute(&clkRate, hipDeviceAttributeClockRate, 0));
+  }
+
   HIPCHECK(hipStreamCreate(&stream1));
-  hipExtLaunchKernelGGL((FourSecKernel), dim3(1), dim3(1), 0,
+  auto TwoSecKernel_used = IsGfx11() ? TwoSecKernel_gfx11 : TwoSecKernel;
+  auto FourSecKernel_used = IsGfx11() ? FourSecKernel_gfx11 : FourSecKernel;
+
+  hipExtLaunchKernelGGL((FourSecKernel_used), dim3(1), dim3(1), 0,
                          stream1, nullptr, nullptr, conc_flag, clkRate);
-  hipExtLaunchKernelGGL((TwoSecKernel), dim3(1), dim3(1), 0,
+  hipExtLaunchKernelGGL((TwoSecKernel_used), dim3(1), dim3(1), 0,
                          stream1, nullptr, nullptr, conc_flag, clkRate);
   HIPCHECK(hipStreamSynchronize(stream1));
   HIPCHECK(hipMemcpyFromSymbol(&deviceGlobal_h, globalvar,
@@ -148,16 +192,24 @@ bool KernelTimeExecution() {
   hipEvent_t  start_event1, end_event1, start_event2, end_event2;
   float time_4sec, time_2sec;
   int clkRate = 0;
-  HIPCHECK(hipDeviceGetAttribute(&clkRate, hipDeviceAttributeClockRate, 0));
+
+  if (IsGfx11()) {
+    HIPCHECK(hipDeviceGetAttribute(&clkRate, hipDeviceAttributeWallClockRate, 0));
+  } else {
+    HIPCHECK(hipDeviceGetAttribute(&clkRate, hipDeviceAttributeClockRate, 0));
+  }
+
+  auto TwoSecKernel_used = IsGfx11() ? TwoSecKernel_gfx11 : TwoSecKernel;
+  auto FourSecKernel_used = IsGfx11() ? FourSecKernel_gfx11 : FourSecKernel;
 
   HIPCHECK(hipEventCreate(&start_event1));
   HIPCHECK(hipEventCreate(&end_event1));
   HIPCHECK(hipEventCreate(&start_event2));
   HIPCHECK(hipEventCreate(&end_event2));
   HIPCHECK(hipStreamCreate(&stream1));
-  hipExtLaunchKernelGGL((FourSecKernel), dim3(1), dim3(1), 0,
+  hipExtLaunchKernelGGL((FourSecKernel_used), dim3(1), dim3(1), 0,
                          stream1, start_event1, end_event1, 0, clkRate);
-  hipExtLaunchKernelGGL((TwoSecKernel), dim3(1), dim3(1), 0,
+  hipExtLaunchKernelGGL((TwoSecKernel_used), dim3(1), dim3(1), 0,
                           stream1, start_event2, end_event2, 0, clkRate);
   HIPCHECK(hipStreamSynchronize(stream1));
   e = hipEventElapsedTime(&time_4sec, start_event1, end_event1);
