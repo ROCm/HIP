@@ -43,6 +43,20 @@ THE SOFTWARE.
       Ad[tid] = clock() + clock64() + __clock() + __clock64() - Ad[tid];
   }
 
+  static __global__ void kernel1_gfx11(long long* Ad) {
+#ifdef __HIP_PLATFORM_AMD__
+      int tid = threadIdx.x + blockIdx.x * blockDim.x;
+      Ad[tid] = clock() + wall_clock64() + __clock() + __clock64();
+#endif
+  }
+
+  static __global__ void kernel2_gfx11(long long* Ad) {
+#ifdef __HIP_PLATFORM_AMD__
+      int tid = threadIdx.x + blockIdx.x * blockDim.x;
+      Ad[tid] = clock() + wall_clock64() + __clock() + __clock64() - Ad[tid];
+#endif
+  }
+
   void run() {
     long long *A, *Ad;
     A = new long long[LEN];
@@ -50,9 +64,15 @@ THE SOFTWARE.
         A[i] = 0;
     }
 
+    auto kernel1_used = IsGfx11() ? kernel1_gfx11 : kernel1;
+    auto kernel2_used = IsGfx11() ? kernel2_gfx11 : kernel2;
+
     HIP_ASSERT(hipMalloc((void**)&Ad, SIZE));
-    hipLaunchKernelGGL(kernel1, dim3(1, 1, 1), dim3(LEN, 1, 1), 0, 0, Ad);
-    hipLaunchKernelGGL(kernel2, dim3(1, 1, 1), dim3(LEN, 1, 1), 0, 0, Ad);
+
+    hipLaunchKernelGGL(kernel1_used, dim3(1, 1, 1),
+                       dim3(LEN, 1, 1), 0, 0, Ad);
+    hipLaunchKernelGGL(kernel2_used, dim3(1, 1, 1),
+                       dim3(LEN, 1, 1), 0, 0, Ad);
     HIP_ASSERT(hipMemcpy(A, Ad, SIZE, hipMemcpyDeviceToHost));
 
     for (unsigned i = 0; i < LEN; i++) {
