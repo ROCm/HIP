@@ -581,3 +581,6 @@ inline bool isImageSupported() {
     if (!HipTest::isImageSupported())                                                      \
         { printf("Texture is not support on the device. Skipped.\n"); passed(); }
 #endif //__cplusplus
+
+// Function to determine if the device is of gfx11 architecture
+bool IsGfx11();
