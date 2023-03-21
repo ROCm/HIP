@@ -108,9 +108,9 @@ A stronger system-level fence can be specified when the event is created with hi
 - HIP/ROCm also supports the ability to cache host memory in the GPU using the "Non-Coherent" host memory allocations. This can provide performance benefit, but care must be taken to use the correct synchronization.
 
 ## Direct Dispatch
-HIP runtime has Direct Dispatch enabled by default in ROCM 4.4. With this feature we move away from our conventional producer-consumer model where the runtime creates a worker thread(consumer) for each HIP Stream, where as the host thread(producer) enqueues commands to a command queue(per stream).
+HIP runtime has Direct Dispatch enabled by default in ROCM 4.4. With this feature we move away from our conventional producer-consumer model where the runtime creates a worker thread(consumer) for each HIP Stream, and the host thread(producer) enqueues commands to a command queue(per stream).
 
-For Direct Dispatch, the runtime would directly queue a packet to the AQL queue (user mode queue to GPU) in case of Dispatch and some of the synchronization. This has shown to the total latency of the HIP Dispatch API and latency to launch first wave on the GPU.
+For Direct Dispatch, HIP runtime would directly enqueue a packet to the AQL queue (user mode queue on GPU) on the Dispatch API call from the application. That has shown to reduce the latency to launch the first wave on the idle GPU and total time of tiny dispatches synchronized with the host.
 
 In addition, eliminating the threads in runtime has reduced the variance in the dispatch numbers as the thread scheduling delays and atomics/locks synchronization latencies are reduced.
 

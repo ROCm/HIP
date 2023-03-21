@@ -49,10 +49,7 @@
 
 #define fileName "matmul.code"
 #define matmulK "matmulK"
-#define SixteenSec "SixteenSecKernel"
 #define KernelandExtra "KernelandExtraParams"
-#define FourSec "FourSecKernel"
-#define TwoSec "TwoSecKernel"
 #define globalDevVar "deviceGlobal"
 #define dummyKernel "dummyKernel"
 #define FOURSEC_KERNEL 4999
@@ -124,7 +121,12 @@ void ModuleLaunchKernel::AllocateMemory() {
   HIPCHECK(hipMemcpy(Ad, A, SIZE*sizeof(int), hipMemcpyHostToDevice));
   HIPCHECK(hipMemcpy(Bd, B, SIZE*sizeof(int), hipMemcpyHostToDevice));
   int clkRate = 0;
-  HIPCHECK(hipDeviceGetAttribute(&clkRate, hipDeviceAttributeClockRate, 0));
+  if (IsGfx11()) {
+    HIPCHECK(hipDeviceGetAttribute(&clkRate, hipDeviceAttributeWallClockRate, 0));
+  } else {
+    HIPCHECK(hipDeviceGetAttribute(&clkRate, hipDeviceAttributeClockRate, 0));
+  }
+
   args1._Ad = Ad;
   args1._Bd = Bd;
   args1._Cd = C;
@@ -149,13 +151,21 @@ void ModuleLaunchKernel::AllocateMemory() {
 }
 
 void ModuleLaunchKernel::ModuleLoad() {
+
+  std::string TwoSecStr = IsGfx11() ? std::string("TwoSecKernel_gfx11")
+                                      : std::string("TwoSecKernel");
+  std::string FourSecStr = IsGfx11() ? std::string("FourSecKernel_gfx11")
+                                       : std::string("FourSecKernel");
+  std::string SixteenSecStr = IsGfx11() ? std::string("SixteenSecKernel_gfx11")
+                                          : std::string("SixteenSecKernel");
+
   HIPCHECK(hipModuleLoad(&Module, fileName));
   HIPCHECK(hipModuleGetFunction(&MultKernel, Module, matmulK));
-  HIPCHECK(hipModuleGetFunction(&SixteenSecKernel, Module, SixteenSec));
+  HIPCHECK(hipModuleGetFunction(&SixteenSecKernel, Module, SixteenSecStr.c_str()));
   HIPCHECK(hipModuleGetFunction(&KernelandExtraParamKernel,
                                 Module, KernelandExtra));
-  HIPCHECK(hipModuleGetFunction(&FourSecKernel, Module, FourSec));
-  HIPCHECK(hipModuleGetFunction(&TwoSecKernel, Module, TwoSec));
+  HIPCHECK(hipModuleGetFunction(&FourSecKernel, Module, FourSecStr.c_str()));
+  HIPCHECK(hipModuleGetFunction(&TwoSecKernel, Module, TwoSecStr.c_str()));
   HIPCHECK(hipModuleGetFunction(&DummyKernel, Module, dummyKernel));
   HIPCHECK(hipModuleGetGlobal(&deviceGlobal, &deviceGlobalSize,
                               Module, globalDevVar));

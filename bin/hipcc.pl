@@ -52,15 +52,21 @@ if(scalar @ARGV == 0){
 
 # retrieve --rocm-path hipcc option from command line.
 # We need to respect this over the env var ROCM_PATH for this compilation.
-sub get_rocm_path_option {
+sub get_path_options {
   my $rocm_path="";
+  my $hip_path="";
   my @CLArgs = @ARGV;
   foreach $arg (@CLArgs) {
     if (index($arg,"--rocm-path=") != -1) {
       ($rocm_path) = $arg=~ /=\s*(.*)\s*$/;
+      next;
+    }
+    if (index($arg,"--hip-path=") != -1) {
+      ($hip_path) = $arg=~ /=\s*(.*)\s*$/;
+      next;
     }
   }
-  return $rocm_path;
+  return ($rocm_path, $hip_path);
 }
 
 $verbose = $ENV{'HIPCC_VERBOSE'} // 0;
@@ -99,13 +105,16 @@ sub delete_temp_dirs {
 }
 
 my $base_dir;
-my $rocmPath;
 BEGIN {
     $base_dir = dirname(Cwd::realpath(__FILE__) );
-    $rocmPath = get_rocm_path_option();
-    if ($rocmPath ne '') {
+    my ($rocm_path, $hip_path) = get_path_options();
+    if ($rocm_path ne '') {
       # --rocm-path takes precedence over ENV{ROCM_PATH}
-      $ENV{ROCM_PATH}=$rocmPath;
+      $ENV{ROCM_PATH}=$rocm_path;
+    }
+    if ($hip_path ne '') {
+      # --rocm-path takes precedence over ENV{ROCM_PATH}
+      $ENV{HIP_PATH}=$hip_path;
     }
 }
 use lib "$base_dir/";
@@ -123,24 +132,9 @@ $HIP_VERSION    =   $hipvars::HIP_VERSION;
 $HIP_ROCCLR_HOME =   $hipvars::HIP_ROCCLR_HOME;
 
 if ($HIP_PLATFORM eq "amd") {
-  # If using ROCclr runtime, need to find HIP_ROCCLR_HOME
-  if (!defined $DEVICE_LIB_PATH and -e "$HIP_ROCCLR_HOME/lib/bitcode") {
-    $DEVICE_LIB_PATH = "$HIP_ROCCLR_HOME/lib/bitcode";
-  }
   $HIP_INCLUDE_PATH = "$HIP_ROCCLR_HOME/include";
   if (!defined $HIP_LIB_PATH) {
     $HIP_LIB_PATH = "$HIP_ROCCLR_HOME/lib";
-  }
-
-  if (!defined $DEVICE_LIB_PATH) {
-    if (-e "$ROCM_PATH/amdgcn/bitcode") {
-      $DEVICE_LIB_PATH = "$ROCM_PATH/amdgcn/bitcode";
-    }
-    else {
-      # This path is to support an older build of the device library
-      # TODO: To be removed in the future.
-      $DEVICE_LIB_PATH = "$ROCM_PATH/lib";
-    }
   }
 }
 
@@ -199,10 +193,6 @@ if ($HIP_PLATFORM eq "amd") {
         print ("HIP_CLANG_RT_LIB=$HIP_CLANG_RT_LIB\n");
     }
 
-    $HIPLDFLAGS .= " -L\"$HIP_LIB_PATH\"";
-    if ($isWindows) {
-      $HIPLDFLAGS .= " -lamdhip64";
-    }
     if ($HIP_CLANG_HCC_COMPAT_MODE) {
         ## Allow __fp16 as function parameter and return type.
         $HIPCXXFLAGS .= " -Xclang -fallow-half-arguments-and-returns -D__HIP_HCC_COMPAT_MODE__=1";
@@ -245,8 +235,6 @@ my $printCXXFlags = 0;      # print HIPCXXFLAGS
 my $printLDFlags = 0;       # print HIPLDFLAGS
 my $runCmd = 1;
 my $buildDeps = 0;
-my $linkType = 1;
-my $setLinkType = 0;
 my $hsacoVersion = 0;
 my $funcSupp = 0;      # enable function support
 my $rdc = 0;           # whether -fgpu-rdc is on
@@ -265,7 +253,12 @@ if($HIP_PLATFORM eq "nvidia"){
     if($ARGV[0] eq "--genco"){
         foreach $isaarg (@ARGV[1..$#ARGV]){
             $ISACMD .= " ";
-            $ISACMD .= $isaarg;
+            # ignore --rocm-path=xxxx on nvcc nvidia platform
+            if ($isaarg !~ /--rocm-path/) {
+              $ISACMD .= $isaarg;
+            } else {
+              print "Ignoring --rocm-path= on nvidia nvcc platform.\n";
+            }
         }
         if ($verbose & 0x1) {
             print "hipcc-cmd: ", $ISACMD, "\n";
@@ -361,16 +354,11 @@ foreach $arg (@ARGV)
         $compileOnly = 1;
         $buildDeps = 1;
     }
-    if(($trimarg eq '-use-staticlib') and ($setLinkType eq 0))
-    {
-        $linkType = 0;
-        $setLinkType = 1;
-        $swallowArg = 1;
+    if($trimarg eq '-use-staticlib') {
+        print "Warning: The -use-staticlib option has been deprecated and is no longer needed.\n"
     }
-    if(($trimarg eq '-use-sharedlib') and ($setLinkType eq 0))
-    {
-        $linkType = 1;
-        $setLinkType = 1;
+    if($trimarg eq '-use-sharedlib') {
+        print "Warning: The -use-sharedlib option has been deprecated and is no longer needed.\n"
     }
     if($arg =~ m/^-O/)
     {
@@ -558,12 +546,6 @@ if ($buildDeps and $HIP_PLATFORM eq 'amd') {
     $HIPCXXFLAGS .= " --cuda-host-only";
 }
 
-# Add --hip-link only if it is compile only and -fgpu-rdc is on.
-if ($rdc and !$compileOnly and $HIP_PLATFORM eq 'amd') {
-    $HIPLDFLAGS .= " --hip-link";
-    $HIPLDFLAGS .= $HIPLDARCHFLAGS;
-}
-
 # hipcc currrently requires separate compilation of source files, ie it is not possible to pass
 # CPP files combined with .O files
 # Reason is that NVCC uses the file extension to determine whether to compile in CUDA mode or
@@ -583,23 +565,28 @@ if ($HIP_PLATFORM eq "amd") {
         }
     }
 
+    # If the HIP_PATH env var is defined, pass that path to Clang
+    if ($ENV{'HIP_PATH'}) {
+        my $hip_path_flag = " --hip-path=\"$HIP_PATH\"";
+        $HIPCXXFLAGS .= $hip_path_flag;
+        $HIPLDFLAGS .= $hip_path_flag;
+    }
+
     if ($hasHIP) {
-        if ($DEVICE_LIB_PATH ne "$ROCM_PATH/amdgcn/bitcode") {
+        if (defined $DEVICE_LIB_PATH) {
             $HIPCXXFLAGS .= " --hip-device-lib-path=\"$DEVICE_LIB_PATH\"";
         }
     }
-    if (not $isWindows) {
-        $HIPLDFLAGS .= " -lgcc_s -lgcc -lpthread -lm -lrt";
-    }
 
-    if (not $isWindows  and not $compileOnly) {
-      if ($linkType eq 0) {
-        $toolArgs = " -L$HIP_LIB_PATH -lamdhip64 -L$ROCM_PATH/lib -lhsa-runtime64 -ldl -lnuma " . ${toolArgs};
-      } else {
-        $toolArgs = ${toolArgs} . " -Wl,-rpath=$HIP_LIB_PATH:$ROCM_PATH/lib -lamdhip64 ";
-      }
+    if (!$compileOnly) {
+        $HIPLDFLAGS .= " --hip-link";
+        if ($rdc) {
+            $HIPLDFLAGS .= $HIPLDARCHFLAGS;
+        }
+        if (not $isWindows) {
+            $HIPLDFLAGS .= " --rtlib=compiler-rt -unwindlib=libgcc";
 
-      $toolArgs .= " -L$HIP_CLANG_RT_LIB -lclang_rt.builtins-x86_64 "
+        }
     }
 }
 

@@ -204,6 +204,81 @@ test_kernel(unsigned int *atomic_val, unsigned int *global_array,
   }
 }
 
+__global__ void
+test_kernel_gfx11(unsigned int *atomic_val, unsigned int *global_array,
+                  unsigned int *array, uint32_t loops) {
+#ifdef __HIP_PLATFORM_AMD__
+  cooperative_groups::grid_group grid = cooperative_groups::this_grid();
+  cooperative_groups::multi_grid_group mgrid =
+                      cooperative_groups::this_multi_grid();
+  unsigned rank = grid.thread_rank();
+  unsigned global_rank = mgrid.thread_rank();
+
+  int offset = blockIdx.x;
+  for (int i = 0; i < loops; i++) {
+    // Make the last thread run way behind everyone else.
+    // If the grid barrier below fails, then the other threads may hit the
+    // atomicInc instruction many times before the last thread ever gets
+    // to it.
+    // As such, without the barrier, the last array entry will eventually
+    // contain a very large value, defined by however many times the other
+    // wavefronts make it through this loop.
+    // If the barrier works, then it will likely contain some number
+    // near "total number of blocks". It will be the last wavefront to
+    // reach the atomicInc, but everyone will have only hit the atomic once.
+    if (rank == (grid.size() - 1)) {
+      long long time_diff = 0;
+      long long last_clock = wall_clock64();
+      do {
+        long long cur_clock = wall_clock64();
+        if (cur_clock > last_clock) {
+          time_diff += (cur_clock - last_clock);
+        }
+        // If it rolls over, we don't know how much to add to catch up.
+        // So just ignore those slipped cycles.
+        last_clock = cur_clock;
+      } while(time_diff < 1000000);
+    }
+    if (threadIdx.x == 0) {
+      array[offset] = atomicInc(atomic_val, UINT_MAX);
+    }
+    grid.sync();
+
+    // Make the last thread in the entire multi-grid run way behind
+    // everyone else.
+    // If the mgrid barrier below fails, then the two global_array entries
+    // will end up being out of sync, because the intermingling of adds
+    // and multiplies will not be aligned between to the two GPUs.
+    if (global_rank == (mgrid.size() - 1)) {
+      long long time_diff = 0;
+      long long last_clock = wall_clock64();
+      do {
+        long long cur_clock = wall_clock64();
+        if (cur_clock > last_clock) {
+          time_diff += (cur_clock - last_clock);
+        }
+        // If it rolls over, we don't know how much to add to catch up.
+        // So just ignore those slipped cycles.
+        last_clock = cur_clock;
+      } while(time_diff < 1000000);
+    }
+    // During even iterations, add into your own array entry
+    // During odd iterations, add into your partner's array entry
+    unsigned grid_rank = mgrid.grid_rank();
+    unsigned inter_gpu_offset = (grid_rank + i) % mgrid.num_grids();
+    if (rank == (grid.size() - 1)) {
+      if (i % mgrid.num_grids() == 0) {
+        global_array[grid_rank] += 2;
+      } else {
+        global_array[inter_gpu_offset] *= 2;
+      }
+    }
+    mgrid.sync();
+    offset += gridDim.x;
+  }
+#endif
+}
+
 int main(int argc, char** argv) {
     hipError_t err;
     int device_num = 0, flag = 0;
@@ -263,8 +338,9 @@ int main(int argc, char** argv) {
     int max_blocks_per_sm = INT_MAX;
     for (int i = 0; i < 2; i++) {
       HIPCHECK(hipSetDevice((d + i)));
+      auto test_kernel_used = IsGfx11() ? test_kernel_gfx11 : test_kernel;
       HIPCHECK(hipOccupancyMaxActiveBlocksPerMultiprocessor(
-              &max_blocks_per_sm_arr[i], test_kernel, num_threads_in_block,
+              &max_blocks_per_sm_arr[i], test_kernel_used, num_threads_in_block,
               0));
       if (max_blocks_per_sm_arr[i] < max_blocks_per_sm) {
         max_blocks_per_sm = max_blocks_per_sm_arr[i];
@@ -319,11 +395,12 @@ int main(int argc, char** argv) {
     void *dev_params[2][4];
     hipLaunchParams md_params[2];
     for (int i = 0; i < 2; i++) {
+      auto test_kernel_used = IsGfx11() ? test_kernel_gfx11 : test_kernel;
       dev_params[i][0] = reinterpret_cast<void*>(&kernel_atomic[i]);
       dev_params[i][1] = reinterpret_cast<void*>(&global_array);
       dev_params[i][2] = reinterpret_cast<void*>(&kernel_buffer[i]);
       dev_params[i][3] = reinterpret_cast<void*>(&loops);
-      md_params[i].func = reinterpret_cast<void*>(test_kernel);
+      md_params[i].func = reinterpret_cast<void*>(test_kernel_used);
       md_params[i].gridDim = requested_blocks;
       md_params[i].blockDim = num_threads_in_block;
       md_params[i].sharedMem = 0;

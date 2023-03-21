@@ -202,6 +202,7 @@ bool MemcpyAtoH<T>::hipMemcpyAtoH_NegativeTests() {
 
 int main(int argc, char **argv) {
   bool TestPassed = true;
+  checkImageSupport();
   HipTest::parseStandardArguments(argc, argv, false);
   MemcpyAtoH<float> AtoH_obj;
   if (p_tests == 1) {
