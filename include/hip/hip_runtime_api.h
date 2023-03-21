@@ -7565,7 +7565,7 @@ hipError_t hipMemUnmap(void* ptr, size_t size);
  *-------------------------------------------------------------------------------------------------
  *  @defgroup GL OpenGL Interop
  *  @{
- *  This section describes OpenGL interoperability functions of HIP runtime API.
+ *  This section describes the OpenGL and graphics interoperability functions of HIP runtime API.
  */
 /** GLuint as uint.*/
 typedef unsigned int GLuint;
