@@ -79,7 +79,7 @@ ClPrint(amd::LOG_INFO, amd::LOG_INIT, "Initializing HSA stack.");
 
 ## HIP Logging Example:
 
-Below is an example to enable HIP logging and get logging information during execution of hipinfo,
+Below is an example to enable HIP logging and get logging information during execution of hipinfo on Linux,
 
 ```
 user@user-test:~/hip/bin$ export AMD_LOG_LEVEL=4
@@ -107,15 +107,7 @@ clockRate:                        1900 Mhz
 memoryClockRate:                  875 Mhz
 memoryBusWidth:                   0
 clockInstructionRate:             1000 Mhz
-totalGlobalMem:                   7.98 GB
-maxSharedMemoryPerMultiProcessor: 64.00 KB
-totalConstMem:                    8573157376
-sharedMemPerBlock:                64.00 KB
-canMapHostMemory:                 1
-regsPerBlock:                     0
-warpSize:                         32
-l2CacheSize:                      0
-computeMode:                      0
+...
 maxThreadsPerBlock:               1024
 maxThreadsDim.x:                  1024
 maxThreadsDim.y:                  1024
@@ -128,23 +120,7 @@ minor:                            12
 concurrentKernels:                1
 cooperativeLaunch:                0
 cooperativeMultiDeviceLaunch:     0
-arch.hasGlobalInt32Atomics:       1
-arch.hasGlobalFloatAtomicExch:    1
-arch.hasSharedInt32Atomics:       1
-arch.hasSharedFloatAtomicExch:    1
-arch.hasFloatAtomicAdd:           1
-arch.hasGlobalInt64Atomics:       1
-arch.hasSharedInt64Atomics:       1
-arch.hasDoubles:                  1
-arch.hasWarpVote:                 1
-arch.hasWarpBallot:               1
-arch.hasWarpShuffle:              1
-arch.hasFunnelShift:              0
-arch.hasThreadFenceSystem:        1
-arch.hasSyncThreadsExt:           0
-arch.hasSurfaceFuncs:             0
-arch.has3dGrid:                   1
-arch.hasDynamicParallelism:       0
+...
 gcnArch:                          1012
 isIntegrated:                     0
 maxTexture1D:                     65536
@@ -169,6 +145,56 @@ non-peers:                        device#0
 :3:hip_memory.cpp           :360 : 23647702243: 5617 : [7fad295dd840] hipMemGetInfo: Returned hipSuccess
 memInfo.total:                    7.98 GB
 memInfo.free:                     7.98 GB (100%)
+```
+
+On Windows, AMD_LOG_LEVEL can be set via environment variable from advanced system setting, or from Command prompt run as administrator, as shown below as an example, which shows some debug log information calling backend runtime on Windows.
+```
+C:\hip\bin>set AMD_LOG_LEVEL=4
+C:\hip\bin>hipinfo
+
+:3:C:\constructicon\builds\gfx\two\22.40\drivers\compute\vdi\device\comgrctx.cpp:33  : 605413686305 us: 29864: [tid:0x9298] Loading COMGR library.
+:4:C:\constructicon\builds\gfx\two\22.40\drivers\compute\vdi\platform\runtime.cpp:83  : 605413869411 us: 29864: [tid:0x9298] init
+:3:C:\constructicon\builds\gfx\two\22.40\drivers\compute\hipamd\src\hip_context.cpp:47  : 605413869502 us: 29864: [tid:0x9298] Direct Dispatch: 0
+:3:C:\constructicon\builds\gfx\two\22.40\drivers\compute\hipamd\src\hip_device_runtime.cpp:543 : 605413870553 us: 29864: [tid:0x9298] hipGetDeviceCount: Returned hipSuccess :
+:3:C:\constructicon\builds\gfx\two\22.40\drivers\compute\hipamd\src\hip_device_runtime.cpp:556 : 605413870631 us: 29864: [tid:0x9298] ←[32m hipSetDevice ( 0 ) ←[0m
+:3:C:\constructicon\builds\gfx\two\22.40\drivers\compute\hipamd\src\hip_device_runtime.cpp:561 : 605413870848 us: 29864: [tid:0x9298] hipSetDevice: Returned hipSuccess :
+--------------------------------------------------------------------------------
+device#                           0
+:3:C:\constructicon\builds\gfx\two\22.40\drivers\compute\hipamd\src\hip_device.cpp:346 : 605413871623 us: 29864: [tid:0x9298] ←[32m hipGetDeviceProperties ( 0000008AEBEFF8C8, 0 ) ←[0m
+:3:C:\constructicon\builds\gfx\two\22.40\drivers\compute\hipamd\src\hip_device.cpp:348 : 605413871695 us: 29864: [tid:0x9298] hipGetDeviceProperties: Returned hipSuccess :
+Name:                             AMD Radeon(TM) Graphics
+pciBusID:                         3
+pciDeviceID:                      0
+pciDomainID:                      0
+multiProcessorCount:              7
+maxThreadsPerMultiProcessor:      2560
+isMultiGpuBoard:                  0
+clockRate:                        1600 Mhz
+memoryClockRate:                  1333 Mhz
+memoryBusWidth:                   0
+totalGlobalMem:                   12.06 GB
+totalConstMem:                    2147483647
+sharedMemPerBlock:                64.00 KB
+...
+gcnArchName:                      gfx90c:xnack-
+:3:C:\constructicon\builds\gfx\two\22.40\drivers\compute\hipamd\src\hip_device_runtime.cpp:541 : 605413924779 us: 29864: [tid:0x9298] ←[32m hipGetDeviceCount ( 0000008AEBEFF8A4 ) ←[0m
+:3:C:\constructicon\builds\gfx\two\22.40\drivers\compute\hipamd\src\hip_device_runtime.cpp:543 : 605413925075 us: 29864: [tid:0x9298] hipGetDeviceCount: Returned hipSuccess :
+peers:                            :3:C:\constructicon\builds\gfx\two\22.40\drivers\compute\hipamd\src\hip_peer.cpp:176 : 605413928643 us: 29864: [tid:0x9298] ←[32m hipDeviceCanAccessPeer ( 0000008AEBEFF890, 0, 0 ) ←[0m
+:3:C:\constructicon\builds\gfx\two\22.40\drivers\compute\hipamd\src\hip_peer.cpp:177 : 605413928743 us: 29864: [tid:0x9298] hipDeviceCanAccessPeer: Returned hipSuccess :
+
+non-peers:                        :3:C:\constructicon\builds\gfx\two\22.40\drivers\compute\hipamd\src\hip_peer.cpp:176 : 605413930830 us: 29864: [tid:0x9298] ←[32m hipDeviceCanAccessPeer ( 0000008AEBEFF890, 0, 0 ) ←[0m
+:3:C:\constructicon\builds\gfx\two\22.40\drivers\compute\hipamd\src\hip_peer.cpp:177 : 605413930882 us: 29864: [tid:0x9298] hipDeviceCanAccessPeer: Returned hipSuccess :
+device#0
+...
+:4:C:\constructicon\builds\gfx\two\22.40\drivers\compute\vdi\device\pal\palmemory.cpp:430 : 605414517802 us: 29864: [tid:0x9298] Free-:     8000 bytes, VM[ 3007c8000,  3007d0000]
+:3:C:\constructicon\builds\gfx\two\22.40\drivers\compute\vdi\device\devprogram.cpp:2979: 605414517893 us: 29864: [tid:0x9298] For Init/Fini: Kernel Name: __amd_rocclr_copyBufferToImage
+:3:C:\constructicon\builds\gfx\two\22.40\drivers\compute\vdi\device\devprogram.cpp:2979: 605414518259 us: 29864: [tid:0x9298] For Init/Fini: Kernel Name: __amd_rocclr_copyBuffer
+...
+:4:C:\constructicon\builds\gfx\two\22.40\drivers\compute\vdi\device\pal\palmemory.cpp:206 : 605414523422 us: 29864: [tid:0x9298] Alloc: 100000 bytes, ptr[00000003008D0000-00000003009D0000], obj[00000003007D0000-00000003047D0000]
+:4:C:\constructicon\builds\gfx\two\22.40\drivers\compute\vdi\device\pal\palmemory.cpp:206 : 605414523767 us: 29864: [tid:0x9298] Alloc: 100000 bytes, ptr[00000003009D0000-0000000300AD0000], obj[00000003007D0000-00000003047D0000]
+:3:C:\constructicon\builds\gfx\two\22.40\drivers\compute\hipamd\src\hip_memory.cpp:681 : 605414524092 us: 29864: [tid:0x9298] hipMemGetInfo: Returned hipSuccess :
+memInfo.total:                    12.06 GB
+memInfo.free:                     11.93 GB (99%)
 ```
 
 ## HIP Logging Tips:

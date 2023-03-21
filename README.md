@@ -14,24 +14,27 @@ New projects can be developed directly in the portable HIP C++ language and can 
 
 ## DISCLAIMER
 
-The information presented in this document is for informational purposes only and may contain technical inaccuracies, omissions, and typographical errors. The information contained herein is subject to change and may be rendered inaccurate for many reasons, including but not limited to product and roadmap changes, component and motherboard versionchanges, new model and/or product releases, product differences between differing manufacturers, software changes, BIOS flashes, firmware upgrades, or the like. Any computer system has risks of security vulnerabilities that cannot be completely prevented or mitigated.AMD assumes no obligation to update or otherwise correct or revise this information. However, AMD reserves the right to revise this information and to make changes from time to time to the content hereof without obligation of AMD to notify any person of such revisions or changes.THIS INFORMATION IS PROVIDED ‘AS IS.” AMD MAKES NO REPRESENTATIONS OR WARRANTIES WITH RESPECT TO THE CONTENTS HEREOF AND ASSUMES NO RESPONSIBILITY FOR ANY INACCURACIES, ERRORS, OR OMISSIONS THAT MAY APPEAR IN THIS INFORMATION. AMD SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR ANY PARTICULAR PURPOSE. IN NO EVENT WILL AMD BE LIABLE TO ANY PERSON FOR ANY RELIANCE, DIRECT, INDIRECT, SPECIAL, OR OTHER CONSEQUENTIAL DAMAGES ARISING FROM THE USE OF ANY INFORMATION CONTAINED HEREIN, EVEN IF AMD IS EXPRESSLY ADVISED OF THE POSSIBILITY OF SUCH DAMAGES. AMD, the AMD Arrow logo, and combinations thereof are trademarks of Advanced Micro Devices, Inc. Other product names used in this publication are for identification purposes only and may be trademarks of their respective companies.
+The information presented in this document is for informational purposes only and may contain technical inaccuracies, omissions, and typographical errors. The information contained herein is subject to change and may be rendered inaccurate for many reasons, including but not limited to product and roadmap changes, component and motherboard version changes, new model and/or product releases, product differences between differing manufacturers, software changes, BIOS flashes, firmware upgrades, or the like. Any computer system has risks of security vulnerabilities that cannot be completely prevented or mitigated.AMD assumes no obligation to update or otherwise correct or revise this information. However, AMD reserves the right to revise this information and to make changes from time to time to the content hereof without obligation of AMD to notify any person of such revisions or changes.THIS INFORMATION IS PROVIDED ‘AS IS.” AMD MAKES NO REPRESENTATIONS OR WARRANTIES WITH RESPECT TO THE CONTENTS HEREOF AND ASSUMES NO RESPONSIBILITY FOR ANY INACCURACIES, ERRORS, OR OMISSIONS THAT MAY APPEAR IN THIS INFORMATION. AMD SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR ANY PARTICULAR PURPOSE. IN NO EVENT WILL AMD BE LIABLE TO ANY PERSON FOR ANY RELIANCE, DIRECT, INDIRECT, SPECIAL, OR OTHER CONSEQUENTIAL DAMAGES ARISING FROM THE USE OF ANY INFORMATION CONTAINED HEREIN, EVEN IF AMD IS EXPRESSLY ADVISED OF THE POSSIBILITY OF SUCH DAMAGES. AMD, the AMD Arrow logo, and combinations thereof are trademarks of Advanced Micro Devices, Inc. Other product names used in this publication are for identification purposes only and may be trademarks of their respective companies.
 
 © 2021 Advanced Micro Devices, Inc. All Rights Reserved.
 
 ## Repository branches:
 
-The HIP repository maintains several branches. The branches that are of importance are:
+On Linux, the HIP open source repository maintains several branches. The branches that are of importance are:
 
 * develop branch: This is the default branch, on which the new features are still under development and visible. While this maybe of interest to many, it should be noted that this branch and the features under development might not be stable.
 * Main branch: This is the stable branch. It is up to date with the latest release branch, for example, if the latest HIP release is rocm-4.3, main branch will be the repository based on this release.
 * Release branches. These are branches corresponding to each ROCM release, listed with release tags, such as rocm-4.2, rocm-4.3, etc.
 
+On Windows, however, HIP doesn't have open source.
+
 ## Release tagging:
 
-HIP releases are typically naming convention for each ROCM release to help differentiate them.
-
+On Linux, HIP releases are typically naming convention for each ROCM release to help differentiate them.
 * rocm x.yy: These are the stable releases based on the ROCM release.
-  This type of release is typically made once a month.*
+  This type of release is typically made once a month.
+
+On Windows, HIP is one part of HIP SDK package, aligns with each SDK software release.
 
 ## More Info:
 - [Installation](INSTALL.md)
@@ -109,21 +112,23 @@ vector_square(T *C_d, const T *A_d, size_t N)
 The HIP Runtime API code and compute kernel definition can exist in the same source file - HIP takes care of generating host and device code appropriately.
 
 ## HIP Portability and Compiler Technology
-HIP C++ code can be compiled with either,
-- On the NVIDIA CUDA platform, HIP provides header file which translate from the HIP runtime APIs to CUDA runtime APIs.  The header file contains mostly inlined
+HIP open source C++ code can be compiled with either,
+- On the NVIDIA CUDA platform
+  HIP provides header file which translate from the HIP runtime APIs to CUDA runtime APIs.  The header file contains mostly inlined
   functions and thus has very low overhead - developers coding in HIP should expect the same performance as coding in native CUDA.  The code is then
-  compiled with nvcc, the standard C++ compiler provided with the CUDA SDK.  Developers can use any tools supported by the CUDA SDK including the CUDA
-  profiler and debugger.
-- On the AMD ROCm platform, HIP provides a header and runtime library built on top of HIP-Clang compiler.  The HIP runtime implements HIP streams, events, and memory APIs,
-  and is a object library that is linked with the application.  The source code for all headers and the library implementation is available on GitHub.
-  HIP developers on ROCm can use AMD's ROCgdb (https://github.com/ROCm-Developer-Tools/ROCgdb) for debugging and profiling.
+  compiled with nvcc, the standard C++ compiler provided with the CUDA SDK.  Developers can use any tools supported by the CUDA SDK including the CUDA profiler and debugger.
+- On the AMD platform
+  On Linux, HIP provides a header and runtime library built on top of HIP-Clang compiler.  The HIP runtime implements HIP streams, events, and memory APIs, and is a object library that is linked with the application.
+  On Linux, The source code for all headers and the library implementation is available on GitHub. HIP developers on ROCm Linux can use AMD's ROCgdb (https://github.com/ROCm-Developer-Tools/ROCgdb) for debugging and profiling.
+
+  On Windows, developers can install HIP SDK and implement their own applications via calling HIP APIs on any C++ development tools, like Microsoft Visual Studio. 
 
 Thus HIP source code can be compiled to run on either platform.  Platform-specific features can be isolated to a specific platform using conditional compilation.  Thus HIP
 provides source portability to either platform.   HIP provides the _hipcc_ compiler driver which will call the appropriate toolchain depending on the desired platform.
 
 
 ## Examples and Getting Started:
-
+On Linux open source,
 * A sample and [blog](https://github.com/ROCm-Developer-Tools/HIP/tree/main/samples/0_Intro/square) that uses any of [HIPIFY](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/master/README.md) tools to convert a simple app from CUDA to HIP:
 
 
@@ -136,7 +141,7 @@ cd samples/01_Intro/square
 
 
 ## More Examples
-The GitHub repository [HIP-Examples](https://github.com/ROCm-Developer-Tools/HIP-Examples.git) contains a hipified version of the popular Rodinia benchmark suite.
+On Linux open source, the GitHub repository [HIP-Examples](https://github.com/ROCm-Developer-Tools/HIP-Examples.git) contains a hipified version of the popular Rodinia benchmark suite.
 The README with the procedures and tips the team used during this porting effort is here: [Rodinia Porting Guide](https://github.com/ROCm-Developer-Tools/HIP-Examples/blob/master/rodinia_3.0/hip/README.hip_porting)
 
 ## Tour of the HIP Directories

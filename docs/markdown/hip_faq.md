@@ -20,6 +20,7 @@
 - [Can I develop HIP code on an AMD HIP-Clang platform?](#can-i-develop-hip-code-on-an-amd-hip-clang-platform)
 - [What is ROCclr?](#what-is-rocclr)
 - [What is hipamd?](#what-is-hipamd)
+- [Can I get HIP open source repository for Windows?](#can-i-get-hip-open-source-repository-for-windows)
 - [Can a HIP binary run on both AMD and Nvidia platforms?](#can-a-hip-binary-run-on-both-amd-and-nvidia-platforms)
 - [On HIP-Clang, can I link HIP code with host code compiled with another compiler such as gcc, icc, or clang?](#on-HIP-Clang-can-i-link-hip-code-with-host-code-compiled-with-another-compiler-such-as-gcc-icc-or-clang-)
 - [HIP detected my platform (hip-clang vs nvcc) incorrectly - what should I do?](#hip-detected-my-platform-hip-clang-vs-nvcc-incorrectly---what-should-i-do)
@@ -34,6 +35,7 @@
 - [Does the HIP-Clang compiler support extern shared declarations?](#does-the-hip-clang-compiler-support-extern-shared-declarations)
 - [I have multiple HIP enabled devices and I am getting an error message hipErrorNoBinaryForGpu: Unable to find code object for all current devices?](#i-have-multiple-hip-enabled-devices-and-i-am-getting-an-error-message-hipErrorNoBinaryForGpu-unable-to-find-code-object-for-all-current-devices)
 - [How to use per-thread default stream in HIP?](#how-to-use-per-thread-default-stream-in-hip)
+- [Can I develop applications with HIP APIs on Windows the same on Linux?](#can-I-develop-applications-with-hip-apis-on-windows-the-same-on-linux)
 - [How can I know the version of HIP?](#how-can-I-know-the-version-of-hip)
 <!-- tocstop -->
 
@@ -185,6 +187,9 @@ ROCclr (Radeon Open Compute Common Language Runtime) is a virtual device interfa
 ### What is HIPAMD?
 HIPAMD is a repository branched out from HIP, mainly the implementation for AMD GPU.
 
+### Can I get HIP open source repository for Windows?
+No, there is no HIP repository open publicly on Windows.
+
 ### Can a HIP binary run on both AMD and Nvidia platforms?
 HIP is a source-portable language that can be compiled to run on either AMD or NVIDIA platform. HIP tools don't create a "fat binary" that can run on either platform, however.
 
@@ -273,6 +278,11 @@ In ROCm, a compilation option should be added in order to compile the translatio
 Once source is compiled with per-thread default stream enabled, all APIs will be executed on per thread default stream, hence there will not be any implicit synchronization with other streams.
 
 Besides, per-thread default stream be enabled per translation unit, users can compile some files with feature enabled and some with feature disabled. Feature enabled translation unit will have default stream as per thread and there will not be any implicit synchronization done but other modules will have legacy default stream which will do implicit synchronization.
+
+### Can I develop applications with HIP APIs on Windows the same on Linux?
+
+Yes, HIP APIs are available to use on both Linux and Windows.
+Due to different working mechanisms on operating systems like Windows vs Linux, HIP APIs call corresponding lower level backend runtime libraries and kernel drivers for the OS, in order to control the executions on GPU hardware accordingly. There might be a few differences on the related backend software and driver support, which might affect usage of HIP APIs. See OS support details in HIP API document.
 
 ### How can I know the version of HIP?
 
