@@ -67,7 +67,7 @@ if(HIP_CXX_COMPILER MATCHES ".*hipcc")
 elseif (HIP_CXX_COMPILER MATCHES ".*clang\\+\\+")
   get_filename_component(_HIP_CLANG_REAL_PATH "${HIP_CXX_COMPILER}" REALPATH)
   get_filename_component(_HIP_CLANG_BIN_PATH "${_HIP_CLANG_REAL_PATH}" DIRECTORY)
-  get_filename_component(HIP_CLANG_INSTALL_DIR "${_HIP_CLANG_BIN_PATH}" DIRECTORY)
+  set(HIP_CLANG_PATH "${_HIP_CLANG_BIN_PATH}")
 endif()
 
 

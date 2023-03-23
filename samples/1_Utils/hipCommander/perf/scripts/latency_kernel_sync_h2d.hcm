@@ -1,9 +1,0 @@
-setstream(1);
-loop(10); NullKernel; streamsync; H2D; streamsync; endloop(1);
-loop(10); NullKernel; streamsync; H2D; streamsync; endloop(1);
-loop(100); NullKernel; streamsync; H2D; streamsync; endloop(1);
-loop(100); NullKernel; streamsync; H2D; streamsync; endloop(1);
-loop(1000); NullKernel; streamsync; H2D; streamsync; endloop(1);
-loop(1000); NullKernel; streamsync; H2D; streamsync; endloop(1);
-loop(10000); NullKernel; streamsync; H2D; streamsync; endloop(1);
-loop(10000); NullKernel; streamsync; H2D; streamsync; endloop(1);

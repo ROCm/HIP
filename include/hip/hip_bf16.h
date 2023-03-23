@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,38 +20,19 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include <hip_test_common.hh>
+#ifndef HIP_INCLUDE_HIP_HIP_BF16_H
+#define HIP_INCLUDE_HIP_HIP_BF16_H
 
-/**
- * hipChooseDevice tests
- * Scenario: Validates dev id value.
- */
-TEST_CASE("Unit_hipChooseDevice_ValidateDevId") {
-  hipDeviceProp_t prop;
-  HIP_CHECK(hipGetDeviceProperties(&prop, 0));
-  int numDevices = 0;
-  HIP_CHECK(hipGetDeviceCount(&numDevices));
-  int dev = -1;
-  HIP_CHECK(hipChooseDevice(&dev, &prop));
-  REQUIRE_FALSE(dev < 0);
-  REQUIRE_FALSE(dev >= numDevices);
-}
-/**
- * hipChooseDevice tests
- * Scenario1: Validates if dev = nullptr returns error code
- * Scenario2: Validates if prop = nullptr returns error code
- */
-TEST_CASE("Unit_hipChooseDevice_NegTst") {
-  hipDeviceProp_t prop;
-  int dev = -1;
+#include <hip/hip_common.h>
 
-  // Scenario1
-  SECTION("dev is nullptr") {
-    REQUIRE_FALSE(hipSuccess == hipChooseDevice(nullptr, &prop));
-  }
+#if (defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) &&                            \
+    !(defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__))
+#include <hip/amd_detail/amd_hip_bf16.h>
+#elif !(defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) &&                         \
+    (defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__))
+#include <hip/nvidia_detail/nvidia_hip_bf16.h>
+#else
+#error("Must define exactly one of __HIP_PLATFORM_AMD__ or __HIP_PLATFORM_NVIDIA__");
+#endif
 
-  // Scenario2
-  SECTION("prop is nullptr") {
-    REQUIRE_FALSE(hipSuccess == hipChooseDevice(&dev, nullptr));
-  }
-}
+#endif  // HIP_INCLUDE_HIP_HIP_BF16_H

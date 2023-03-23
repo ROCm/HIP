@@ -1,9 +1,0 @@
-setstream(1);
-loop(10); D2H; D2H; D2H; streamsync; endloop(1);
-loop(10); D2H; D2H; D2H; streamsync; endloop(1);
-loop(100); D2H; D2H; D2H; streamsync; endloop(1);
-loop(100); D2H;  D2H; D2H; streamsync; endloop(1);
-loop(1000); D2H; D2H; D2H; streamsync; endloop(1);
-loop(1000); D2H; D2H; D2H; streamsync; endloop(1);
-loop(10000); D2H;  D2H; D2H; streamsync; endloop(1);
-loop(10000); D2H; D2H; D2H;streamsync; endloop(1);

@@ -36,15 +36,15 @@ THE SOFTWARE.
  * to kernel params or extra arguments.
  *
  * @param [in] f Kernel to launch.
- * @param [in] gridDimX  X grid dimension specified in work-items.
- * @param [in] gridDimY  Y grid dimension specified in work-items.
- * @param [in] gridDimZ  Z grid dimension specified in work-items.
- * @param [in] blockDimX  X block dimension specified in work-items.
- * @param [in] blockDimY  Y grid dimension specified in work-items.
- * @param [in] blockDimZ  Z grid dimension specified in work-items.
+ * @param [in] globalWorkSizeX  X grid dimension specified in work-items.
+ * @param [in] globalWorkSizeY  Y grid dimension specified in work-items.
+ * @param [in] globalWorkSizeZ  Z grid dimension specified in work-items.
+ * @param [in] localWorkSizeX  X block dimension specified in work-items.
+ * @param [in] localWorkSizeY  Y block dimension specified in work-items.
+ * @param [in] localWorkSizeZ  Z block dimension specified in work-items.
  * @param [in] sharedMemBytes  Amount of dynamic shared memory to allocate for this kernel.
  * HIP-Clang compiler provides support for extern shared declarations.
- * @param [in] stream  Stream where the kernel should be dispatched.
+ * @param [in] hStream  Stream where the kernel should be dispatched.
  * May be 0, in which case the default stream is used with associated synchronization rules.
  * @param [in] kernelParams  pointer to kernel parameters.
  * @param [in] extra  Pointer to kernel arguments. These are passed directly to the kernel and
@@ -53,11 +53,11 @@ THE SOFTWARE.
  * the kernel launch. The event must be created before calling this API.
  * @param [in] stopEvent  If non-null, specified event will be updated to track the stop time of
  * the kernel launch. The event must be created before calling this API.
- * @param [in] flags. The value of hipExtAnyOrderLaunch, signifies if kernel can be
+ * @param [in] flags  The value of hipExtAnyOrderLaunch, signifies if kernel can be
  * launched in any order.
- * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue.
+ * @returns #hipSuccess, #hipInvalidDeviceId, #hipErrorNotInitialized, #hipErrorInvalidValue.
  *
- * @warning kernellParams argument is not yet implemented in HIP, use extra instead.
+ * @warning  kernellParams argument is not yet implemented in HIP, use extra instead.
  * Please refer to hip_porting_driver_api.md for sample usage.
  * HIP/ROCm actually updates the start event when the associated kernel completes.
  * Currently, timing between startEvent and stopEvent does not include the time it takes to perform
@@ -104,9 +104,9 @@ hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
  * the kernel launch. The event must be created before calling this API.
  * @param [in] stopEvent  If non-null, specified event will be updated to track the stop time of
  * the kernel launch. The event must be created before calling this API.
- * @param [in] flags. The value of hipExtAnyOrderLaunch, signifies if kernel can be
+ * @param [in] flags  The value of hipExtAnyOrderLaunch, signifies if kernel can be
  * launched in any order.
- * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue.
+ * @returns #hipSuccess, #hipInvalidDeviceId, #hipErrorNotInitialized, #hipErrorInvalidValue.
  *
  */
 extern "C" hipError_t hipExtLaunchKernel(const void* function_address, dim3 numBlocks,
@@ -117,9 +117,9 @@ extern "C" hipError_t hipExtLaunchKernel(const void* function_address, dim3 numB
 /**
  * @brief Launches kernel with dimention parameters and shared memory on stream with templated kernel and arguments.
  *
- * @param [in] f Kernel to launch.
- * @param [in] numBlocks const number of blocks.
- * @param [in] dimBlocks const dimension of a block.
+ * @param [in] kernel  Kernel to launch.
+ * @param [in] numBlocks  const number of blocks.
+ * @param [in] dimBlocks  const dimension of a block.
  * @param [in] sharedMemBytes  Amount of dynamic shared memory to allocate for this kernel.
  * HIP-Clang compiler provides support for extern shared declarations.
  * @param [in] stream  Stream where the kernel should be dispatched.
@@ -128,10 +128,11 @@ extern "C" hipError_t hipExtLaunchKernel(const void* function_address, dim3 numB
  * the kernel launch. The event must be created before calling this API.
  * @param [in] stopEvent  If non-null, specified event will be updated to track the stop time of
  * the kernel launch. The event must be created before calling this API.
- * @param [in] flags. The value of hipExtAnyOrderLaunch, signifies if kernel can be
+ * @param [in] flags  The value of hipExtAnyOrderLaunch, signifies if kernel can be
  * launched in any order.
- * @param [in] args templated kernel arguments.
- * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue.
+ * @param [in] args  templated kernel arguments.
+ *
+ *
  * Please refer to the application for sample usage at,
  * (https://github.com/ROCm-Developer-Tools/HIP/blob/rocm-4.5.x/tests/src/kernel/hipExtLaunchKernelGGL.cpp).
  */
