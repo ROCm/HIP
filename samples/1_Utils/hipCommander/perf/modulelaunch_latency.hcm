@@ -1,5 +1,0 @@
-setstream(1);
-NullKernel; streamsync;
-loop(100);  ModuleKernel; streamsync; endloop(1);
-loop(100); streamsync; endloop(1);
-loop(3000); NullKernel; streamsync; endloop(1);
