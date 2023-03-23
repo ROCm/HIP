@@ -1,2 +1,0 @@
-setstream(1);
-loop(1000); NullKernel; streamsync; endloop(1);

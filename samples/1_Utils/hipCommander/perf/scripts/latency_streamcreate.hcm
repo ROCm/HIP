@@ -1,2 +1,0 @@
-setstream(1);
-loop(10);setstream(1);setstream(2);setstream(3);setstream(4);setstream(5);streamsync; endloop(1);

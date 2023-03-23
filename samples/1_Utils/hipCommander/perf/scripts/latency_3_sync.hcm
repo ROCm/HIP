@@ -1,9 +1,0 @@
-setstream(1);
-loop(10);streamsync; streamsync; streamsync; endloop(1);
-loop(10);streamsync; streamsync; streamsync; endloop(1);
-loop(100);streamsync; streamsync; streamsync; endloop(1);
-loop(100);streamsync; streamsync; streamsync; endloop(1);
-loop(1000);streamsync; streamsync; streamsync; endloop(1);
-loop(1000);streamsync; streamsync; streamsync; endloop(1);
-loop(10000);streamsync; streamsync; streamsync; endloop(1);
-loop(10000);streamsync; streamsync; streamsync; endloop(1);
