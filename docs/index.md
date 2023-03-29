@@ -15,6 +15,7 @@ portable applications for AMD and NVIDIA GPUs from single source code.
 :::
 
 :::{grid-item-card} How to Guides
+- {doc}`/how_to_guides/install`
 - {doc}`/how_to_guides/debugging`
 :::
 
@@ -27,7 +28,9 @@ portable applications for AMD and NVIDIA GPUs from single source code.
 :::
 
 :::{grid-item-card} Developer Guide
+- {doc}`/developer_guide/build`
 - {doc}`/developer_guide/logging`
+- {doc}`/developer_guide/contributing`
 :::
 
 ::::
