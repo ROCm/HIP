@@ -9,10 +9,13 @@ sphinx:
 formats: [htmlzip]
 
 python:
-   version: "3.8"
    install:
    - requirements: docs/.sphinx/requirements.txt
 
 build:
+   os: ubuntu-20.04
+   tools:
+      python: "3.8"
    apt_packages:
+     - "doxygen"
      - "graphviz" # For dot graphs in doxygen
