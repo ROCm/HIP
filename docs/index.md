@@ -21,6 +21,7 @@ portable applications for AMD and NVIDIA GPUs from single source code.
 
 :::{grid-item-card} Reference
 - {doc}`/.doxygen/docBin/html/index`
+  - {doc}`/.doxygen/docBin/html/modules`
 - {doc}`/reference/kernel_language`
 - {doc}`/reference/math_api`
 - {doc}`/reference/terms`
