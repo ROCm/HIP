@@ -186,10 +186,10 @@ Built-ins determine the coordinate of the active work item in the execution grid
 In HIP, built-ins coordinate variable definitions are the same as in Cuda, for instance:
 threadIdx.x, blockIdx.y, gridDim.y, etc.
 The products gridDim.x * blockDim.x, gridDim.y * blockDim.y and gridDim.z * blockDim.z are always less than 2^32.
+Coordinates builtins are implemented as structures for better performance. When used with printf, they needs to be casted to integer types explicitly.
 
 ### warpSize
-The warpSize variable is of type int and contains the warp size (in threads) for the target device. Note that all current Nvidia devices return 32 for this variable, and all current AMD devices return 64. Device code should use the warpSize built-in to develop portable wave-aware code.
-
+The warpSize variable is of type int and contains the warp size (in threads) for the target device. Note that all current Nvidia devices return 32 for this variable, and current AMD devices return 64 for gfx9 and 32 for gfx10 and above. The warpSize variable should only be used in device functions. Device code should use the warpSize built-in to develop portable wave-aware code.
 
 ## Vector Types
 
