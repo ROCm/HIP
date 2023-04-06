@@ -204,7 +204,7 @@ requests==2.28.1
     # via
     #   pygithub
     #   sphinx
-rocm-docs-core @ git+https://github.com/RadeonOpenCompute/rocm-docs-core.git
+rocm-docs-core[api_reference]==0.2.0
     # via -r requirements.in
 six==1.16.0
     # via
