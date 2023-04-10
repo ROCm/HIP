@@ -662,6 +662,9 @@ enum hipLimit_t {
 /** Not supported.*/
 #define hipHostRegisterIoMemory 0x4
 
+/** This flag is ignored On AMD devices.*/
+#define hipHostRegisterReadOnly 0x08
+
 /** Coarse Grained host memory lock.*/
 #define hipExtHostRegisterCoarseGrained 0x8
 
@@ -1254,6 +1257,12 @@ typedef enum hipUserObjectRetainFlags {
 typedef enum hipGraphInstantiateFlags {
   hipGraphInstantiateFlagAutoFreeOnLaunch =
       1,  ///< Automatically free memory allocated in a graph before relaunching.
+  hipGraphInstantiateFlagUpload =
+      2, ///< Automatically upload the graph after instantiaton.
+  hipGraphInstantiateFlagDeviceLaunch  =
+      4, ///< Instantiate the graph to be launchable from the device.
+  hipGraphInstantiateFlagUseNodePriority =
+      8, ///< Run the graph using the per-node priority attributes rather than the priority of the stream it is launched into.
 } hipGraphInstantiateFlags;
 
 enum hipGraphDebugDotFlags {
@@ -5984,8 +5993,8 @@ hipError_t hipGraphInstantiate(hipGraphExec_t* pGraphExec, hipGraph_t graph,
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
  * @warning : This API is marked as beta, meaning, while this is feature complete,
- * it is still open to changes and may have outstanding issues.
- *
+ * it is still open to changes and may have outstanding issues.It does not support
+ * any of flag and is behaving as hipGraphInstantiate.
  */
 hipError_t hipGraphInstantiateWithFlags(hipGraphExec_t* pGraphExec, hipGraph_t graph,
                                         unsigned long long flags);

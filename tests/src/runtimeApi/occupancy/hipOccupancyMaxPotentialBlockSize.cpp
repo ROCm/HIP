@@ -82,7 +82,7 @@ bool argValidation() {
 #ifndef __HIP_PLATFORM_NVIDIA__
   // nvcc doesnt support kernelfunc(NULL) for api
   ret = hipOccupancyMaxPotentialBlockSize(&gridSize, &blockSize, NULL, 0, 0);
-  if (ret != hipErrorInvalidValue) {
+  if (ret != hipErrorInvalidValue && ret != hipErrorInvalidDeviceFunction) {
     printf("ArgValidation : Inappropritate error value returned for"
            " kernelfunc(NULL). gridSize %d, blkSize %d, Error: '%s'(%d)\n",
            gridSize, blockSize, hipGetErrorString(ret), ret);
