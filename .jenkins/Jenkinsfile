@@ -8,7 +8,7 @@ def hipBuildTest(String backendLabel) {
                env.HIP_DIR = "${WORKSPACE}" + "/hip"
             }
 
-            // Clone HIP-TESTS repository
+            // Clone hip-tests repository
             dir("${WORKSPACE}/hip-tests") {
               git branch: 'develop',
               url: 'https://github.com/ROCm-Developer-Tools/hip-tests'
@@ -47,6 +47,7 @@ def hipBuildTest(String backendLabel) {
                     """
             }
         }
+
         timeout(time: 1, unit: 'HOURS') {
             stage("TEST - HIT ${backendLabel}") {
                 dir("${WORKSPACE}/clr/build/hipamd") {
@@ -64,11 +65,12 @@ def hipBuildTest(String backendLabel) {
             }
         }
 
-        stage("BUILD HIP ${backendLabel}") {
+        stage("BUILD HIP - ${backendLabel}") {
             // Running the build on clr workspace
             dir("${WORKSPACE}/clr") {
                 sh  """#!/usr/bin/env bash
                     set -x
+                    rm -rf build
                     mkdir -p build
                     cd build
                     # Check if backend label contains string "amd" or backend host is a server with amd gpu
@@ -103,8 +105,9 @@ def hipBuildTest(String backendLabel) {
                     """
             }
         }
+
         timeout(time: 1, unit: 'HOURS') {
-            stage("TEST - ${backendLabel}") {
+            stage("TEST - CATCH2 ${backendLabel}") {
                 dir("${WORKSPACE}/hip-tests") {
                     sh  """#!/usr/bin/env bash
                         set -x
