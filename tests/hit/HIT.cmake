@@ -46,7 +46,7 @@ if(NOT DEFINED OFFLOAD_ARCH_STR AND EXISTS "${ROCM_PATH}/bin/rocm_agent_enumerat
         RESULT_VARIABLE ROCM_AGENT_ENUM_RESULT)
     message(STATUS "ROCm Agent Enumurator Result: ${ROCM_AGENT_ENUM_RESULT}")
     # Trim out gfx000
-    string(REPLACE "gfx000\n" "" HIP_GPU_ARCH ${HIP_GPU_ARCH})
+    string(REPLACE "gfx000\n" "" HIP_GPU_ARCH "${HIP_GPU_ARCH}")
     if (NOT HIP_GPU_ARCH STREQUAL "")
         string(LENGTH ${HIP_GPU_ARCH} HIP_GPU_ARCH_LEN)
         # If string has more gfx target except gfx000
