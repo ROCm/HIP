@@ -44,7 +44,7 @@ if(NOT DEFINED OFFLOAD_ARCH_STR AND EXISTS "${ROCM_PATH}/bin/rocm_agent_enumerat
    AND HIP_PLATFORM STREQUAL "amd" AND UNIX)
     execute_process(COMMAND ${ROCM_PATH}/bin/rocm_agent_enumerator OUTPUT_VARIABLE HIP_GPU_ARCH
         RESULT_VARIABLE ROCM_AGENT_ENUM_RESULT)
-    message(STATUS "ROCm Agent Enumurator Result: ${ROCM_AGENT_ENUM_RESULT}")
+    message(STATUS "ROCm Agent Enumerator Result: ${ROCM_AGENT_ENUM_RESULT}")
     # Trim out gfx000
     string(REPLACE "gfx000\n" "" HIP_GPU_ARCH "${HIP_GPU_ARCH}")
     if (NOT HIP_GPU_ARCH STREQUAL "")
@@ -59,10 +59,10 @@ if(NOT DEFINED OFFLOAD_ARCH_STR AND EXISTS "${ROCM_PATH}/bin/rocm_agent_enumerat
             message(STATUS "Using offload arch string: ${OFFLOAD_ARCH_STR}")
         endif()
     else()
-        message(STATUS "ROCm Agent Enumurator found no valid architectures")
+        message(STATUS "ROCm Agent Enumerator found no valid architectures")
     endif()
 else()
-    message(STATUS "ROCm Agent Enumurator Not Found")
+    message(STATUS "ROCm Agent Enumerator Not Found")
 endif()
 
 #-------------------------------------------------------------------------------
