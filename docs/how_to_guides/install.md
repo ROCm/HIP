@@ -1,16 +1,4 @@
-## Table of Contents
-
-<!-- toc -->
-
-- [Install HIP](#installing-hip)
-  * [Prerequisites](#prerequisites)
-  * [AMD Platform](#amd-platform)
-  * [NVIDIA Platform](#nvidia-platform)
-- [Verify your installation](#verify-your-installation)
-- [How to build HIP from source](#how-to-build-hip-from-source)
-<!-- tocstop -->
-
-# Install HIP
+# Installing HIP
 
 HIP can be installed either on AMD ROCm platform with HIP-Clang compiler, or a CUDA platform with nvcc installed.
 
@@ -59,6 +47,7 @@ Run hipconfig (instructions below assume default installation path) :
 
 # How to build HIP from source
 
-Developers can build HIP from source on either AMD or NVIDIA platforms, see detail instructions at [building HIP] (docs/markdown/hip_build.md).
+Developers can build HIP from source on either AMD or NVIDIA platforms, see
+detailed instructions at {doc}`/developer_guide/build` 
 
 
