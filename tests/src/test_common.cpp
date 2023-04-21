@@ -92,6 +92,32 @@ size_t getHostThreadCount(const size_t memPerThread, const size_t maxThreads) {
   return thread_count;
 }
 
+// Function to determine if the device is of gfx11 architecture
+bool IsGfx11() {
+#if defined(__HIP_PLATFORM_NVIDIA__)
+  return false;
+#elif defined(__HIP_PLATFORM_AMD__)
+  int device = -1;
+  hipDeviceProp_t props{};
+  HIPCHECK(hipGetDevice(&device));
+  HIPCHECK(hipGetDeviceProperties(&props, device));
+
+  // Get GCN Arch Name and compare to check if it is gfx11
+  std::string arch = std::string(props.gcnArchName);
+  auto pos = arch.find(":");
+  if (pos != std::string::npos)
+    arch = arch.substr(0, pos);
+
+  if(arch.size() >= 5)
+    arch = arch.substr(0,5);
+
+  return (arch == std::string("gfx11")) ? true : false;
+#else
+  std::cout<<"Have to be either Nvidia or AMD platform, asserting"<<std::endl;
+  assert(false);
+#endif
+}
+
 namespace HipTest {
 
 
@@ -231,6 +257,5 @@ unsigned setNumBlocks(unsigned blocksPerCU, unsigned threadsPerBlock, size_t N) 
 
     return blocks;
 }
-
 
 }  // namespace HipTest

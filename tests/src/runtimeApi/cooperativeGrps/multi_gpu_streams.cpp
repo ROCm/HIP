@@ -195,6 +195,55 @@ __global__ void test_kernel(uint32_t loops, unsigned long long *array) {
   }
 }
 
+__global__ void test_coop_kernel_gfx11(unsigned int loops, long long *array,
+                                       int fast_gpu) {
+#ifdef __HIP_PLATFORM_AMD__
+  cooperative_groups::multi_grid_group mgrid =
+  cooperative_groups::this_multi_grid();
+  unsigned int rank = blockIdx.x * blockDim.x + threadIdx.x;
+
+  if (mgrid.grid_rank() == fast_gpu) {
+    return;
+  }
+
+  for (int i = 0; i < loops; i++) {
+    long long time_diff = 0;
+    long long last_clock = wall_clock64();
+    do {
+      long long cur_clock = wall_clock64();
+      if (cur_clock > last_clock) {
+        time_diff += (cur_clock - last_clock);
+      }
+      // If it rolls over, we don't know how much to add to catch up.
+      // So just ignore those slipped cycles.
+      last_clock = cur_clock;
+    } while(time_diff < 1000000);
+    array[rank] += wall_clock64();
+  }
+#endif
+}
+
+__global__ void test_kernel_gfx11(uint32_t loops, unsigned long long *array) {
+#ifdef __HIP_PLATFORM_AMD__
+  unsigned int rank = blockIdx.x * blockDim.x + threadIdx.x;
+
+  for (int i = 0; i < loops; i++) {
+    long long time_diff = 0;
+    long long last_clock = wall_clock64();
+    do {
+      long long cur_clock = wall_clock64();
+      if (cur_clock > last_clock) {
+        time_diff += (cur_clock - last_clock);
+      }
+      // If it rolls over, we don't know how much to add to catch up.
+      // So just ignore those slipped cycles.
+      last_clock = cur_clock;
+    } while(time_diff < 1000000);
+    array[rank] += wall_clock64();
+  }
+#endif
+}
+
 int main(int argc, char** argv) {
   hipError_t err;
   int device_num, FailFlag = 0;
@@ -249,8 +298,9 @@ int main(int argc, char** argv) {
     int max_blocks_per_sm = INT_MAX;
     for (int i = 0; i < 2; i++) {
       HIPCHECK(hipSetDevice(dev + i));
+      auto test_kernel_used = IsGfx11() ? test_kernel_gfx11 : test_kernel;
       HIPCHECK(hipOccupancyMaxActiveBlocksPerMultiprocessor(
-               &max_blocks_per_sm_arr[i], test_kernel, warp_size, 0));
+               &max_blocks_per_sm_arr[i], test_kernel_used, warp_size, 0));
       if (max_blocks_per_sm_arr[i] < max_blocks_per_sm) {
         max_blocks_per_sm = max_blocks_per_sm_arr[i];
       }
@@ -302,11 +352,12 @@ int main(int argc, char** argv) {
     std::cout << "GPU " << dev << ": Long Coop Kernel" << std::endl;
     std::cout << "GPU " << (dev + 1) << ": Long Coop Kernel" << std::endl;
 
+    auto test_coop_kernel_used = IsGfx11() ? test_coop_kernel_gfx11 : test_coop_kernel;
     for (int i = 0; i < 2; i++) {
       dev_params[i][0] = reinterpret_cast<void*>(&loops);
       dev_params[i][1] = reinterpret_cast<void*>(&dev_array[i]);
       dev_params[i][2] = reinterpret_cast<void*>(&fast_gpu);
-      md_params[i].func = reinterpret_cast<void*>(test_coop_kernel);
+      md_params[i].func = reinterpret_cast<void*>(test_coop_kernel_used);
       md_params[i].gridDim = desired_blocks;
       md_params[i].blockDim = warp_size;
       md_params[i].sharedMem = 0;
@@ -331,12 +382,14 @@ int main(int argc, char** argv) {
     fast_gpu = 1;
     start_time[1] = std::chrono::system_clock::now();
     HIPCHECK(hipSetDevice(dev));
-    hipLaunchKernelGGL(test_kernel, dim3(desired_blocks), dim3(warp_size), 0,
+    auto test_kernel_used = IsGfx11() ? test_kernel_gfx11 : test_kernel;
+    hipLaunchKernelGGL(test_kernel_used, dim3(desired_blocks), dim3(warp_size), 0,
                        streams[0], loops, dev_array[0]);
     HIPCHECK(hipGetLastError());
     HIPCHECK(hipLaunchCooperativeKernelMultiDevice(md_params, 2, 0));
     HIPCHECK(hipSetDevice(dev + 1));
-    hipLaunchKernelGGL(test_kernel, dim3(desired_blocks), dim3(warp_size), 0,
+    test_kernel_used = IsGfx11() ? test_kernel_gfx11 : test_kernel;
+    hipLaunchKernelGGL(test_kernel_used, dim3(desired_blocks), dim3(warp_size), 0,
                        streams[1], loops, dev_array[1]);
     HIPCHECK(hipGetLastError());
     for (int i = 0; i < 2; i++) {
@@ -356,12 +409,14 @@ int main(int argc, char** argv) {
     fast_gpu = 0;
     start_time[2] = std::chrono::system_clock::now();
     HIPCHECK(hipSetDevice(dev));
-    hipLaunchKernelGGL(test_kernel, dim3(desired_blocks), dim3(warp_size), 0,
+    test_kernel_used = IsGfx11() ? test_kernel_gfx11 : test_kernel;
+    hipLaunchKernelGGL(test_kernel_used, dim3(desired_blocks), dim3(warp_size), 0,
                        streams[0], loops, dev_array[0]);
     HIPCHECK(hipGetLastError());
     HIPCHECK(hipLaunchCooperativeKernelMultiDevice(md_params, 2, 0));
     HIPCHECK(hipSetDevice(dev + 1));
-    hipLaunchKernelGGL(test_kernel, dim3(desired_blocks), dim3(warp_size), 0,
+    test_kernel_used = IsGfx11() ? test_kernel_gfx11 : test_kernel;
+    hipLaunchKernelGGL(test_kernel_used, dim3(desired_blocks), dim3(warp_size), 0,
                        streams[1], loops, dev_array[1]);
     HIPCHECK(hipGetLastError());
     for (int i = 0; i < 2; i++) {
@@ -382,13 +437,15 @@ int main(int argc, char** argv) {
     fast_gpu = 0;
     start_time[3] = std::chrono::system_clock::now();
     HIPCHECK(hipSetDevice(dev));
-    hipLaunchKernelGGL(test_kernel, dim3(desired_blocks), dim3(warp_size), 0,
+    test_kernel_used = IsGfx11() ? test_kernel_gfx11 : test_kernel;
+    hipLaunchKernelGGL(test_kernel_used, dim3(desired_blocks), dim3(warp_size), 0,
                        streams[0], loops, dev_array[0]);
     HIPCHECK(hipGetLastError());
     HIPCHECK(hipLaunchCooperativeKernelMultiDevice(md_params, 2,
              hipCooperativeLaunchMultiDeviceNoPreSync));
     HIPCHECK(hipSetDevice(dev + 1));
-    hipLaunchKernelGGL(test_kernel, dim3(desired_blocks), dim3(warp_size), 0,
+    test_kernel_used = IsGfx11() ? test_kernel_gfx11 : test_kernel;
+    hipLaunchKernelGGL(test_kernel_used, dim3(desired_blocks), dim3(warp_size), 0,
                        streams[1], loops, dev_array[1]);
     HIPCHECK(hipGetLastError());
     for (int i = 0; i < 2; i++) {
@@ -409,13 +466,15 @@ int main(int argc, char** argv) {
     fast_gpu = 1;
     start_time[4] = std::chrono::system_clock::now();
     HIPCHECK(hipSetDevice(dev));
-    hipLaunchKernelGGL(test_kernel, dim3(desired_blocks), dim3(warp_size), 0,
+    test_kernel_used = IsGfx11() ? test_kernel_gfx11 : test_kernel;
+    hipLaunchKernelGGL(test_kernel_used, dim3(desired_blocks), dim3(warp_size), 0,
                        streams[0], loops, dev_array[0]);
     HIPCHECK(hipGetLastError());
     HIPCHECK(hipLaunchCooperativeKernelMultiDevice(md_params, 2,
              hipCooperativeLaunchMultiDeviceNoPostSync));
     HIPCHECK(hipSetDevice(dev + 1));
-    hipLaunchKernelGGL(test_kernel, dim3(desired_blocks), dim3(warp_size), 0,
+    test_kernel_used = IsGfx11() ? test_kernel_gfx11 : test_kernel;
+    hipLaunchKernelGGL(test_kernel_used, dim3(desired_blocks), dim3(warp_size), 0,
                        streams[1], loops, dev_array[1]);
     for (int i = 0; i < 2; i++) {
       HIPCHECK(hipSetDevice(dev + i));
@@ -434,14 +493,16 @@ int main(int argc, char** argv) {
     std::cout << "  Kernel\n";
     start_time[5] = std::chrono::system_clock::now();
     HIPCHECK(hipSetDevice(dev));
-    hipLaunchKernelGGL(test_kernel, dim3(desired_blocks), dim3(warp_size), 0,
+    test_kernel_used = IsGfx11() ? test_kernel_gfx11 : test_kernel;
+    hipLaunchKernelGGL(test_kernel_used, dim3(desired_blocks), dim3(warp_size), 0,
                        streams[0], loops, dev_array[0]);
     HIPCHECK(hipGetLastError());
     HIPCHECK(hipLaunchCooperativeKernelMultiDevice(md_params, 2,
              hipCooperativeLaunchMultiDeviceNoPreSync |
              hipCooperativeLaunchMultiDeviceNoPostSync));
     HIPCHECK(hipSetDevice(dev + 1));
-    hipLaunchKernelGGL(test_kernel, dim3(desired_blocks), dim3(warp_size), 0,
+    test_kernel_used = IsGfx11() ? test_kernel_gfx11 : test_kernel;
+    hipLaunchKernelGGL(test_kernel_used, dim3(desired_blocks), dim3(warp_size), 0,
                        streams[1], loops, dev_array[1]);
     HIPCHECK(hipGetLastError());
     for (int i = 0; i < 2; i++) {
