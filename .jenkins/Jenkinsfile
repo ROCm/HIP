@@ -18,6 +18,7 @@ def hipBuildTest(String backendLabel) {
             // Clone clr repository
             dir("${WORKSPACE}/clr") {
               git branch: 'develop',
+              credentialsId: 'branch-credentials',
               url: 'https://github.com/ROCm-Developer-Tools/clr'
               env.CLR_DIR = "${WORKSPACE}" + "/clr"
             }
