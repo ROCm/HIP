@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015 - 2021 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,6 +23,10 @@ THE SOFTWARE.
 #ifndef HIP_INCLUDE_HIP_HIP_COMMON_H
 #define HIP_INCLUDE_HIP_HIP_COMMON_H
 
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreserved-macro-identifier"
+#endif
 // Common code included at start of every hip file.
 // Auto enable __HIP_PLATFORM_AMD__ if compiling on AMD platform
 // Other compiler (GCC,ICC,etc) need to set one of these macros explicitly
@@ -97,6 +101,10 @@ THE SOFTWARE.
 #define __HIP_ARCH_HAS_SURFACE_FUNCS__ (0)
 #define __HIP_ARCH_HAS_3DGRID__ (0)
 #define __HIP_ARCH_HAS_DYNAMIC_PARALLEL__ (0)
+#endif
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
 #endif
 
 #endif
