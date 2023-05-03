@@ -1,4 +1,4 @@
-# HIP Programming Guide
+# HIP Programming Manual
 
 ## Host Memory
 
@@ -189,5 +189,3 @@ Here is an example to create and use static libraries:
     ```
 
 For more information, please see samples/2_Cookbook/15_static_library/host_functions and samples/2_Cookbook/15_static_library/device_functions.
-
-## [Supported Clang Options](clang_options.md)

@@ -1,32 +1,37 @@
-## What is HIP logging for? ###
+# Logging Mechanisms
 
-HIP provides a logging mechanism, which is a convinient way of printing important information so as to trace HIP API and runtime codes during the execution of HIP application.
-It assists HIP development team in the development of HIP runtime, and is useful for HIP application developers as well.
-Depending on the setting of logging level and logging mask, HIP logging will print different kinds of information, for different types of functionalities such as HIP APIs, executed kernels, queue commands and queue contents, etc.
+HIP provides a logging mechanism, which is a convenient way of printing
+important information so as to trace HIP API and runtime codes during the
+execution of HIP application.
+It assists HIP development team in the development of HIP runtime, and is useful
+for HIP application developers as well.
+Depending on the setting of logging level and logging mask, HIP logging will
+print different kinds of information, for different types of functionalities
+such as HIP APIs, executed kernels, queue commands and queue contents, etc.
 
 ## HIP Logging Level:
 
-By Default, HIP logging is disabled, it can be enabled via environment setting,
-  - AMD_LOG_LEVEL
+By default, HIP logging is disabled, it can be enabled via the `AMD_LOG_LEVEL`
+environment variable.
+The value controls the logging level. The levels are defined as:
 
-The value of the setting controls different logging level,
-
-```
+```cpp
 enum LogLevel {
-LOG_NONE = 0,
-LOG_ERROR = 1,
-LOG_WARNING = 2,
-LOG_INFO = 3,
-LOG_DEBUG = 4
+  LOG_NONE    = 0,
+  LOG_ERROR   = 1,
+  LOG_WARNING = 2,
+  LOG_INFO    = 3,
+  LOG_DEBUG   = 4
 };
 ```
 
 ## HIP Logging Mask:
 
-Logging mask is designed to print types of functionalities during the execution of HIP application.
+Logging mask is designed to print types of functionalities during the execution
+of HIP application.
 It can be set as one of the following values,
 
-```
+```cpp
 enum LogMask {
   LOG_API       = 0x00000001, //!< API call
   LOG_CMD       = 0x00000002, //!< Kernel and Copy Commands and Barriers
@@ -49,39 +54,41 @@ enum LogMask {
 };
 ```
 
-Once AMD_LOG_LEVEL is set, logging mask is set as default with the value 0x7FFFFFFF.
-However, for different pupose of logging functionalities, logging mask can be defined as well via environment variable,
-
-  - AMD_LOG_MASK
+Once `AMD_LOG_LEVEL` is set, logging mask is set as default with the value
+`0x7FFFFFFF`.
+However, for different purpose of logging functionalities, logging mask can be
+defined as well via environment variable `AMD_LOG_MASK`
 
 ## HIP Logging command:
 
 To pring HIP logging information, the function is defined as
-```
-#define ClPrint(level, mask, format, ...)
-  do {
-    if (AMD_LOG_LEVEL >= level) {
-      if (AMD_LOG_MASK & mask || mask == amd::LOG_ALWAYS) {
-        if (AMD_LOG_MASK & amd::LOG_LOCATION) {
-          amd::log_printf(level, __FILENAME__, __LINE__, format, ##__VA_ARGS__);
-        } else {
-          amd::log_printf(level, "", 0, format, ##__VA_ARGS__);
-        }
-      }
-    }
+```cpp
+#define ClPrint(level, mask, format, ...)                                       \
+  do {                                                                          \
+    if (AMD_LOG_LEVEL >= level) {                                               \
+      if (AMD_LOG_MASK & mask || mask == amd::LOG_ALWAYS) {                     \
+        if (AMD_LOG_MASK & amd::LOG_LOCATION) {                                 \
+          amd::log_printf(level, __FILENAME__, __LINE__, format, ##__VA_ARGS__);\
+        } else {                                                                \
+          amd::log_printf(level, "", 0, format, ##__VA_ARGS__);                 \
+        }                                                                       \
+      }                                                                         \
+    }                                                                           \
   } while (false)
 ```
 
-So in HIP code, call ClPrint() function with proper input varibles as needed, for example,
-```
+So in HIP code, call `ClPrint()` function with proper input varibles as needed,
+for example,
+```cpp
 ClPrint(amd::LOG_INFO, amd::LOG_INIT, "Initializing HSA stack.");
 ```
 
 ## HIP Logging Example:
 
-Below is an example to enable HIP logging and get logging information during execution of hipinfo,
+Below is an example to enable HIP logging and get logging information during
+execution of hipinfo,
 
-```
+```console
 user@user-test:~/hip/bin$ export AMD_LOG_LEVEL=4
 user@user-test:~/hip/bin$ ./hipinfo
 
@@ -174,14 +181,13 @@ memInfo.free:                     7.98 GB (100%)
 ## HIP Logging Tips:
 
 - HIP logging works for both release and debug version of HIP application.
-
-- Logging function with different logging level can be called in the code as needed.
-
+- Logging function with different logging level can be called in the code as
+  needed.
 - Information with logging level less than AMD_LOG_LEVEL will be printed.
+- If need to save the HIP logging output information in a file, just define the
+  file at the command when run the application at the terminal, for example,
 
-- If need to save the HIP logging output information in a file, just define the file at the command when run the application at the terminal, for example,
-
-```
+```console
 user@user-test:~/hip/bin$ ./hipinfo > ~/hip_log.txt
 ```
 
