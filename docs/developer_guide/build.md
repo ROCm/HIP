@@ -6,13 +6,14 @@ HIP code can be developed either on AMD ROCm platform using HIP-Clang compiler, 
 Before build and run HIP, make sure drivers and pre-build packages are installed properly on the platform.
 
 ### AMD platform
-Install ROCm packages (see ROCm Installation Guide on AMD public documentation site (https://docs.amd.com/)) or install pre-built binary packages using the package manager,
+Install ROCm packages (see ROCm Installation Guide on AMD public documentation site (https://docs.amd.com/) or install pre-built binary packages using the package manager,
 
 ```shell
 sudo apt install mesa-common-dev
 sudo apt install clang
 sudo apt install comgr
 sudo apt-get -y install rocm-dkms
+sudo apt-get install -y libelf-dev
 ```
 
 ### NVIDIA platform
@@ -22,14 +23,14 @@ Install Nvidia driver and pre-build packages (see HIP Installation Guide at http
 ### Branch of repository
 
 Before get HIP source code, set the expected branch of repository at the variable `ROCM_BRANCH`.
-For example, for ROCm5.0 release branch, set
+For example, for ROCm5.6 release branch, set
 ```shell
-export ROCM_BRANCH=rocm-5.0.x
+export ROCM_BRANCH=rocm-5.6.x
 ```
 
-ROCm5.4 release branch, set
+ROCm5.6 release branch, set
 ```shell
-export ROCM_BRANCH=rocm-5.4.x
+export ROCM_BRANCH=rocm-5.6.x
 ```
 Similiar format for future branches.
 
@@ -42,38 +43,46 @@ Similiar format for future branches.
 ### Get HIP source code
 
 ```shell
-git clone -b "$ROCM_BRANCH" https://github.com/ROCm-Developer-Tools/hipamd.git
+git clone -b "$ROCM_BRANCH" https://github.com/ROCm-Developer-Tools/clr.git
 git clone -b "$ROCM_BRANCH" https://github.com/ROCm-Developer-Tools/hip.git
-git clone -b "$ROCM_BRANCH" https://github.com/ROCm-Developer-Tools/ROCclr.git
-git clone -b "$ROCM_BRANCH" https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime.git
+git clone -b "$ROCM_BRANCH" https://github.com/ROCm-Developer-Tools/HIPCC.git
 ```
 
 ### Set the environment variables
 
 ```shell
-export HIPAMD_DIR="$(readlink -f hipamd)"
+export CLR_DIR="$(readlink -f clr)"
 export HIP_DIR="$(readlink -f hip)"
+export HIPCC_DIR="$(readlink -f hipcc)"
 ```
 
-ROCclr is defined on AMD platform that HIP use Radeon Open Compute Common Language Runtime (ROCclr), which is a virtual device interface that HIP runtimes interact with different backends.
-See https://github.com/ROCm-Developer-Tools/ROCclr
+Note, starting from ROCM 5.6 release, clr is a new repository including the previous ROCclr, HIPAMD and OpenCl repositories.
+ROCclr is defined on AMD platform that HIP uses Radeon Open Compute Common Language Runtime (ROCclr), which is a virtual device interface that HIP runtimes interact with different backends.
+HIPAMD provides implementation specifically for AMD platform.
+OpenCL provides headers that ROCclr runtime currently depends on.
 
-HIPAMD repository provides implementation specifically for AMD platform.
-See https://github.com/ROCm-Developer-Tools/hipamd
+### Build the HIPCC runtime
+
+```shell
+cd "$HIPCC_DIR"
+mkdir -p build; cd build
+cmake ..
+make -j4
+```
 
 ### Build HIP
 
 ```shell
-cd "$HIPAMD_DIR"
+cd "$CLR_DIR"
 mkdir -p build; cd build
-cmake -DHIP_COMMON_DIR=$HIP_DIR -DCMAKE_PREFIX_PATH="<ROCM_PATH>/" -DCMAKE_INSTALL_PREFIX=$PWD/install ..
+cmake -DHIP_COMMON_DIR=$HIP_DIR -DHIP_PLATFORM=amd -DCMAKE_PREFIX_PATH="/opt/rocm/" -DCMAKE_INSTALL_PREFIX=$PWD/install -DHIPCC_BIN_DIR=$HIPCC_DIR/build -DHIP_CATCH_TEST=0 -DCLR_BUILD_HIP=ON -DCLR_BUILD_OCL=OFF ..
+
 make -j$(nproc)
 sudo make install
 ```
-::::{note}
-If you don't specify `CMAKE_INSTALL_PREFIX`, hip runtime will be installed to `<ROCM_PATH>/hip`.
-By default, release version of AMDHIP is built.
-::::
+
+Note, if `CMAKE_INSTALL_PREFIX` is not specified, hip runtime will be installed to `<ROCM_PATH>/hip`.
+By default, release version of HIP is built.
 
 ### Default paths and environment variables
 
@@ -120,9 +129,9 @@ Developers can build HIP directed tests right after build HIP commands,
 sudo make install
 make -j$(nproc) build_tests
 ```
-By default, all HIP directed tests will be built and generated under the folder `$HIPAMD_DIR/build/`directed_tests.
+By default, all HIP directed tests will be built and generated under the folder `$CLR_DIR/build/hipamd`directed_tests.
 Take HIP directed device APIs tests, as an example, all available test applications will have executable files generated under,
-`$HIPAMD_DIR/build/directed_tests/runtimeApi/device`.
+`$CLR_DIR/build/hipamd/directed_tests/runtimeApi/device`.
 
 Run all HIP directed_tests, use the command,
 
@@ -138,7 +147,7 @@ Build and run a single directed test, use the follow command as an example,
 
 ```shell
 make directed_tests.texture.hipTexObjPitch
-cd $HIPAMD_DIR/build/directed_tests/texcture
+cd $CLR_DIR/build/hipamd/directed_tests/texcture
 ./hipTexObjPitch
 ```
 Please note, the integrated HIP directed tests, will be deprecated in future release.
@@ -156,20 +165,20 @@ git clone -b "$ROCM_BRANCH" https://github.com/ROCm-Developer-Tools/hip-tests.gi
 ##### Build HIP tests from source
 
 ```shell
-export HIP_TESTS_DIR="$(readlink -f hip-tests)"
-cd "$HIP_TESTS_DIR"
+export HIPTESTS_DIR="$(readlink -f hip-tests)"
+cd "$HIPTESTS_DIR"
 mkdir -p build; cd build
-export HIP_PATH=$HIPAMD_DIR/build/install (or any path where HIP is installed, for example, /opt/rocm)
+export HIP_PATH=$CLR_DIR/build/install (or any path where HIP is installed, for example, /opt/rocm)
 cmake ../catch/ -DHIP_PLATFORM=amd
 make -j$(nproc) build_tests
 ctest # run tests
 ```
-HIP catch tests are built under the folder $HIP_TESTS_DIR/build.
+HIP catch tests are built under the folder $HIPTESTS_DIR/build.
 
 To run any single catch test, the following is an example,
 
 ```shell
-cd $HIP_TESTS_DIR/build/catch_tests/unit/texture
+cd $HIPTESTS_DIR/build/catch_tests/unit/texture
 ./TextureTest
 ```
 
@@ -178,8 +187,8 @@ cd $HIP_TESTS_DIR/build/catch_tests/unit/texture
 HIP Catch2 supports build a standalone test, for example,
 
 ```shell
-cd "$HIP_TESTS_DIR"
-hipcc $HIP_TESTS_DIR/catch/unit/memory/hipPointerGetAttributes.cc -I ./catch/include ./catch/hipTestMain/standalone_main.cc -I ./catch/external/Catch2 -o hipPointerGetAttributes
+cd "$HIPTESTS_DIR"
+hipcc $HIPTESTS_DIR/catch/unit/memory/hipPointerGetAttributes.cc -I ./catch/include ./catch/hipTestMain/standalone_main.cc -I ./catch/external/Catch2 -o hipPointerGetAttributes
 ./hipPointerGetAttributes
 ...
 
@@ -193,22 +202,33 @@ All tests passed
 
 ```shell
 git clone -b "$ROCM_BRANCH" https://github.com/ROCm-Developer-Tools/hip.git
-git clone -b "$ROCM_BRANCH" https://github.com/ROCm-Developer-Tools/hipamd.git
+git clone -b "$ROCM_BRANCH" https://github.com/ROCm-Developer-Tools/clr.git
+git clone -b "$ROCM_BRANCH" https://github.com/ROCm-Developer-Tools/HIPCC.git
 ```
 
 ### Set the environment variables
 
 ```shell
 export HIP_DIR="$(readlink -f hip)"
-export HIPAMD_DIR="$(readlink -f hipamd)"
+export CLR_DIR="$(readlink -f hipamd)"
+export HIPCC_DIR="$(readlink -f hipcc)"
 ```
 
-### Build HIP
+### Build the HIPCC runtime
 
 ```shell
-cd "$HIPAMD_DIR"
+cd "$HIPCC_DIR"
 mkdir -p build; cd build
-cmake -DHIP_COMMON_DIR=$HIP_DIR -DHIP_PLATFORM=nvidia -DCMAKE_INSTALL_PREFIX=$PWD/install ..
+cmake ..
+make -j4
+```
+
+## Build HIP
+
+```shell
+cd "$CLR_DIR"
+mkdir -p build; cd build
+cmake -DHIP_COMMON_DIR=$HIP_DIR -DHIP_PLATFORM=nvidia -DCMAKE_INSTALL_PREFIX=$PWD/install -DHIPCC_BIN_DIR=$HIPCC_DIR/build -DHIP_CATCH_TEST=0 -DCLR_BUILD_HIP=ON -DCLR_BUILD_OCL=OFF ..
 make -j$(nproc)
 sudo make install
 ```
@@ -218,5 +238,5 @@ Build HIP tests commands on NVIDIA platform are basically the same as AMD, excep
 
 ## Run HIP
 
-Compile and run the [square sample](https://github.com/ROCm-Developer-Tools/HIP/tree/rocm-5.0.x/samples/0_Intro/square).
+Compile and run the [square sample](https://github.com/ROCm-Developer-Tools/hip-tests/tree/rocm-5.5.x/samples/0_Intro/square).
 
