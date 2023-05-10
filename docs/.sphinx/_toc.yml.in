@@ -5,6 +5,8 @@ subtrees:
     - file: user_guide/programming_manual
     - file: user_guide/hip_rtc
     - file: user_guide/faq
+    - file: user_guide/hip_porting_guide    
+    - file: user_guide/hip_porting_driver_api
 - caption: How to Guides
   entries:
   - file: how_to_guides/install.md
