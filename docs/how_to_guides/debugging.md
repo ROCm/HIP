@@ -201,7 +201,7 @@ So HIP runtime can wait for GPU idle before/after any GPU command depending on t
 
 ### Making Device visible
 For system with multiple devices, it's possible to make only certain device(s) visible to HIP via setting environment variable,
-HIP_VISIBLE_DEVICES, only devices whose index is present in the sequence are visible to HIP.
+HIP_VISIBLE_DEVICES(or CUDA_VISIBLE_DEVICES on Nvidia platform), only devices whose index is present in the sequence are visible to HIP.
 
 For example,
 ```console
@@ -241,7 +241,7 @@ The following is the summary of the most useful environment variables in HIP.
 | ---------------------------------------------------------------------------------------------------------------| ----------------- | --------- |
 | AMD_LOG_LEVEL <br><sub> Enable HIP log on different Level. </sub> |  0  | 0: Disable log. <br> 1: Enable log on error level. <br> 2: Enable log on warning and below levels. <br> 0x3: Enable log on information and below levels. <br> 0x4: Decode and display AQL packets. |
 | AMD_LOG_MASK <br><sub> Enable HIP log on different Level. </sub> |  0x7FFFFFFF  | 0x1: Log API calls. <br> 0x02: Kernel and Copy Commands and Barriers. <br> 0x4: Synchronization and waiting for commands to finish. <br> 0x8: Enable log on information and below levels. <br> 0x20: Queue commands and queue contents. <br> 0x40:Signal creation, allocation, pool. <br> 0x80: Locks and thread-safety code. <br> 0x100: Copy debug. <br> 0x200: Detailed copy debug. <br> 0x400: Resource allocation, performance-impacting events. <br> 0x800: Initialization and shutdown. <br> 0x1000: Misc debug, not yet classified. <br> 0x2000: Show raw bytes of AQL packet. <br> 0x4000: Show code creation debug. <br> 0x8000: More detailed command info, including barrier commands. <br> 0x10000: Log message location. <br> 0xFFFFFFFF: Log always even mask flag is zero. |
-| HIP_VISIBLE_DEVICES <br><sub> Only devices whose index is present in the sequence are visible to HIP. </sub> |   | 0,1,2: Depending on the number of devices on the system.  |
+| HIP_VISIBLE_DEVICES(or CUDA_VISIBLE_DEVICES) <br><sub> Only devices whose index is present in the sequence are visible to HIP. </sub> |   | 0,1,2: Depending on the number of devices on the system.  |
 | GPU_DUMP_CODE_OBJECT <br><sub> Dump code object. </sub> |  0  | 0: Disable. <br> 1: Enable. |
 | AMD_SERIALIZE_KERNEL <br><sub> Serialize kernel enqueue. </sub> |  0  | 1: Wait for completion before enqueue. <br> 2: Wait for completion after enqueue. <br> 3: Both. |
 | AMD_SERIALIZE_COPY <br><sub> Serialize copies. </sub> |  0  | 1: Wait for completion before enqueue. <br> 2: Wait for completion after enqueue. <br> 3: Both. |

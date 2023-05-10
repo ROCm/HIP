@@ -223,7 +223,7 @@ If you have compiled the application yourself, make sure you have given the corr
 If you have a precompiled application/library (like rocblas, tensorflow etc) which gives you such error, there are one of two possibilities.
 
  - The application/library does not ship code object bundles for *all* of your device(s): in this case you need to recompile the application/library yourself with correct `--offload-arch`.
- - The application/library does not ship code object bundles for *some* of your device(s), for example you have a system with an APU + GPU and the library does not ship code objects for your APU. For this you can set the environment variable `HIP_VISIBLE_DEVICES` to only enable GPUs for which code object is available. This will limit the GPUs visible to your application and allow it to run.
+ - The application/library does not ship code object bundles for *some* of your device(s), for example you have a system with an APU + GPU and the library does not ship code objects for your APU. For this you can set the environment variable `HIP_VISIBLE_DEVICES` or `CUDA_VISIBLE_DEVICES` on NVdia platform, to only enable GPUs for which code object is available. This will limit the GPUs visible to your application and allow it to run.
 
 ## How to use per-thread default stream in HIP?
 
