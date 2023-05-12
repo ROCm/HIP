@@ -174,6 +174,7 @@ bool Memcpy2DAsync::Memcpy2DAsync_PinnedMemory_MultiGPU() {
       HIPCHECK(hipHostMalloc(reinterpret_cast<void**>(&D_h), sizeElements));
       AllocateMemory();
       HIPCHECK(hipMemset2D(A_d, pitch_A, memsetval, NUM_W, NUM_H));
+      HIPCHECK(hipDeviceSynchronize());
       HIPCHECK(hipSetDevice(1));
       hipStream_t p_stream;
       HIPCHECK(hipStreamCreate(&p_stream));
