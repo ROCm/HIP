@@ -3,3 +3,5 @@
 /_images
 /_static
 /_templates
+doxygen/html/
+doxygen/xml/
