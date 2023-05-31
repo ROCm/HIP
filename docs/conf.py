@@ -7,8 +7,23 @@
 from rocm_docs import ROCmDocs
 from typing import Any, Dict, List
 
-docs_core = ROCmDocs("HIP Documentation")
-docs_core.run_doxygen()
+
+name = "HIP"
+version_numbers = []
+version_file = open("../VERSION", "r")
+lines = version_file.readlines()
+for line in lines:
+    if line[0] == '#':
+        continue
+    version_numbers.append(line.strip())
+version = ".".join(version_numbers)
+if len(version) > 0:
+    name = f"{name} {version}"
+
+external_toc_path = "./sphinx/_toc.yml"
+
+docs_core = ROCmDocs(f"{name} Documentation")
+docs_core.run_doxygen(doxygen_root="doxygen", doxygen_path="doxygen/xml")
 docs_core.enable_api_reference()
 docs_core.setup()
 
@@ -23,4 +38,4 @@ if not "exclude_patterns" in globals():
     exclude_patterns: List[str] = []
 
 html_theme_options["show_navbar_depth"] = 2
-exclude_patterns.append(".doxygen/mainpage.md")
+exclude_patterns.append("doxygen/mainpage.md")

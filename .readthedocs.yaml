@@ -6,11 +6,11 @@ version: 2
 sphinx:
    configuration: docs/conf.py
 
-formats: [htmlzip]
+formats: [htmlzip, pdf, epub]
 
 python:
    install:
-   - requirements: docs/.sphinx/requirements.txt
+   - requirements: docs/sphinx/requirements.txt
 
 build:
    os: ubuntu-20.04

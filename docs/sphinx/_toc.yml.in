@@ -1,0 +1,29 @@
+root: index
+subtrees:
+- caption: User Guide
+  entries:
+    - file: user_guide/programming_manual
+    - file: user_guide/hip_rtc
+    - file: user_guide/faq
+    - file: user_guide/hip_porting_guide
+    - file: user_guide/hip_porting_driver_api
+- caption: How to Guides
+  entries:
+  - file: how_to_guides/install.md
+  - file: how_to_guides/debugging.md
+- caption: Reference
+  entries:
+  - file: doxygen/html/index
+  - file: reference/kernel_language
+  - file: reference/math_api
+  - file: reference/terms
+  - file: reference/glossary
+  - file: reference/deprecated_api_list
+- caption: Developer Guide
+  entries:
+  - file: developer_guide/build
+  - file: developer_guide/logging
+  - file: developer_guide/contributing.md
+- caption: About
+  entries:
+  - file: license
