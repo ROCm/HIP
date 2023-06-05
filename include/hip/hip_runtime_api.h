@@ -1302,6 +1302,30 @@ typedef struct hipMemAllocationProp {
 } hipMemAllocationProp;
 
 /**
+ * External semaphore signal node parameters
+ */
+typedef struct hipExternalSemaphoreSignalNodeParams {
+    ///< Array containing external semaphore handles.
+    hipExternalSemaphore_t* extSemArray;
+    ///< Array containing parameters of external signal semaphore.
+    const hipExternalSemaphoreSignalParams* paramsArray;
+    ///< Total number of handles and parameters contained in extSemArray and paramsArray.
+    unsigned int numExtSems;
+} hipExternalSemaphoreSignalNodeParams;
+
+/**
+ * External semaphore wait node parameters
+ */
+typedef struct hipExternalSemaphoreWaitNodeParams {
+    ///< Array containing external semaphore handles.
+    hipExternalSemaphore_t* extSemArray;
+    ///< Array containing parameters of external wait semaphore.
+    const hipExternalSemaphoreWaitParams* paramsArray;
+    ///< Total number of handles and parameters contained in extSemArray and paramsArray.
+    unsigned int numExtSems;
+} hipExternalSemaphoreWaitNodeParams;
+
+/**
  * Generic handle for memory allocation
  */
 typedef struct ihipMemGenericAllocationHandle* hipMemGenericAllocationHandle_t;
@@ -7340,6 +7364,105 @@ hipError_t hipGraphNodeSetEnabled(hipGraphExec_t hGraphExec, hipGraphNode_t hNod
 hipError_t hipGraphNodeGetEnabled(hipGraphExec_t hGraphExec, hipGraphNode_t hNode,
                                   unsigned int* isEnabled);
 
+/**
+ * @brief Creates a external semaphor wait node and adds it to a graph.
+ *
+ * @param [out] pGraphNode - pointer to the graph node to create.
+ * @param [in] graph - instance of the graph to add the created node.
+ * @param [in] pDependencies - const pointer to the dependencies on the memset execution node.
+ * @param [in] numDependencies - the number of the dependencies.
+ * @param [in] nodeParams -pointer to the parameters.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphAddExternalSemaphoresWaitNode(hipGraphNode_t* pGraphNode, hipGraph_t graph,
+                               const hipGraphNode_t* pDependencies, size_t numDependencies,
+                               const hipExternalSemaphoreWaitNodeParams* nodeParams);
+
+/**
+ * @brief Creates a external semaphor signal node and adds it to a graph.
+ *
+ * @param [out] pGraphNode - pointer to the graph node to create.
+ * @param [in] graph - instance of the graph to add the created node.
+ * @param [in] pDependencies - const pointer to the dependencies on the memset execution node.
+ * @param [in] numDependencies - the number of the dependencies.
+ * @param [in] nodeParams -pointer to the parameters.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphAddExternalSemaphoresSignalNode(hipGraphNode_t* pGraphNode, hipGraph_t graph,
+                               const hipGraphNode_t* pDependencies, size_t numDependencies,
+                               const hipExternalSemaphoreSignalNodeParams* nodeParams);
+/**
+ * @brief Updates node parameters in the external semaphore signal node.
+ *
+ * @param [in]  hNode      - Node from the graph from which graphExec was instantiated.
+ * @param [in]  nodeParams  - Pointer to the params to be set.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphExternalSemaphoresSignalNodeSetParams(hipGraphNode_t hNode,
+                                                         const hipExternalSemaphoreSignalNodeParams* nodeParams);
+/**
+ * @brief Updates node parameters in the external semaphore wait node.
+ *
+ * @param [in]  hNode      - Node from the graph from which graphExec was instantiated.
+ * @param [in]  nodeParams  - Pointer to the params to be set.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphExternalSemaphoresWaitNodeSetParams(hipGraphNode_t hNode,
+                                                       const hipExternalSemaphoreWaitNodeParams* nodeParams);
+/**
+ * @brief Returns external semaphore signal node params.
+ *
+ * @param [in]   hNode       - Node from the graph from which graphExec was instantiated.
+ * @param [out]  params_out  - Pointer to params.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphExternalSemaphoresSignalNodeGetParams(hipGraphNode_t hNode,
+                                                         const hipExternalSemaphoreSignalNodeParams* params_out);
+/**
+ * @brief Returns external semaphore wait node params.
+ *
+ * @param [in]   hNode       - Node from the graph from which graphExec was instantiated.
+ * @param [out]  params_out  - Pointer to params.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphExternalSemaphoresWaitNodeGetParams(hipGraphNode_t hNode,
+                                                       const hipExternalSemaphoreWaitNodeParams* params_out);
+/**
+ * @brief Updates node parameters in the external semaphore signal node in the given graphExec.
+ *
+ * @param [in]  hGraphExec - The executable graph in which to set the specified node.
+ * @param [in]  hNode      - Node from the graph from which graphExec was instantiated.
+ * @param [in]  nodeParams  - Pointer to the params to be set.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphExecExternalSemaphoresSignalNodeSetParams(hipGraphExec_t hGraphExec, hipGraphNode_t hNode,
+                                                             const hipExternalSemaphoreSignalNodeParams* nodeParams);
+/**
+ * @brief Updates node parameters in the external semaphore wait node in the given graphExec.
+ *
+ * @param [in]  hGraphExec - The executable graph in which to set the specified node.
+ * @param [in]  hNode      - Node from the graph from which graphExec was instantiated.
+ * @param [in]  nodeParams  - Pointer to the params to be set.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphExecExternalSemaphoresWaitNodeSetParams(hipGraphExec_t hGraphExec, hipGraphNode_t hNode,
+                                                           const hipExternalSemaphoreWaitNodeParams* nodeParams);
 // doxygen end graph API
 /**
  * @}
