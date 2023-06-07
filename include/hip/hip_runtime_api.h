@@ -7631,8 +7631,10 @@ hipError_t hipGraphicsMapResources(int count, hipGraphicsResource_t* resources,
  * @param [in] resource - Mapped resource to access.
  * @param [in] arrayIndex - Array index for the subresource to access.
  * @param [in] mipLevel - Mipmap level for the subresource to access.
- * 
+ *
  * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * @note  In this API, the value of arrayIndex higher than zero is currently not supported.
  *
  */
 hipError_t hipGraphicsSubResourceGetMappedArray(hipArray_t* array, hipGraphicsResource_t resource,
@@ -7643,7 +7645,7 @@ hipError_t hipGraphicsSubResourceGetMappedArray(hipArray_t* array, hipGraphicsRe
  * @param [out] devPtr - Pointer of device through which graphic resource may be accessed.
  * @param [out] size - Size of the buffer accessible from devPtr.
  * @param [in] resource - Mapped resource to access.
- * 
+ *
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
  */
