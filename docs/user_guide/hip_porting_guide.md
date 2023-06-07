@@ -3,53 +3,6 @@ In addition to providing a portable C++ programming environment for GPUs, HIP is
 the porting of existing CUDA code into the HIP environment.  This section describes the available tools
 and provides practical suggestions on how to port CUDA code and work through common issues.
 
-## Table of Contents
-
-<!-- toc -->
-
-- [Porting a New CUDA Project](#porting-a-new-cuda-project)
-  * [General Tips](#general-tips)
-  * [Scanning existing CUDA code to scope the porting effort](#scanning-existing-cuda-code-to-scope-the-porting-effort)
-  * [Converting a project "in-place"](#converting-a-project-in-place)
-  * [CUDA to HIP Math Library Equivalents](#library-equivalents)
-- [Distinguishing Compiler Modes](#distinguishing-compiler-modes)
-  * [Identifying HIP Target Platform](#identifying-hip-target-platform)
-  * [Identifying the Compiler: hip-clang, or nvcc](#identifying-the-compiler-hip-clang-or-nvcc)
-  * [Identifying Current Compilation Pass: Host or Device](#identifying-current-compilation-pass-host-or-device)
-  * [Compiler Defines: Summary](#compiler-defines-summary)
-- [Identifying Architecture Features](#identifying-architecture-features)
-  * [HIP_ARCH Defines](#hip_arch-defines)
-  * [Device-Architecture Properties](#device-architecture-properties)
-  * [Table of Architecture Properties](#table-of-architecture-properties)
-- [Finding HIP](#finding-hip)
-- [Identifying HIP Runtime](#identifying-hip-runtime)
-- [hipLaunchKernelGGL](#hiplaunchkernelGGL)
-- [Compiler Options](#compiler-options)
-- [Linking Issues](#linking-issues)
-  * [Linking With hipcc](#linking-with-hipcc)
-  * [-lm Option](#-lm-option)
-- [Linking Code With Other Compilers](#linking-code-with-other-compilers)
-  * [libc++ and libstdc++](#libc-and-libstdc)
-  * [HIP Headers (hip_runtime.h, hip_runtime_api.h)](#hip-headers-hip_runtimeh-hip_runtime_apih)
-  * [Using a Standard C++ Compiler](#using-a-standard-c-compiler)
-    + [cuda.h](#cudah)
-  * [Choosing HIP File Extensions](#choosing-hip-file-extensions)
-- [Workarounds](#workarounds)
-  * [warpSize](#warpsize)
-  * [Kernel launch with group size > 256](#kernel-launch-with-group-size--256)
-- [memcpyToSymbol](#memcpytosymbol)
-- [threadfence_system](#threadfence_system)
-  * [Textures and Cache Control](#textures-and-cache-control)
-- [More Tips](#more-tips)
-  * [HIP Logging](#hip-logging)
-  * [Debugging hipcc](#debugging-hipcc)
-  * [What Does This Error Mean?](#what-does-this-error-mean)
-    + [/usr/include/c++/v1/memory:5172:15: error: call to implicitly deleted default constructor of 'std::__1::bad_weak_ptr' throw bad_weak_ptr();](#usrincludecv1memory517215-error-call-to-implicitly-deleted-default-constructor-of-std__1bad_weak_ptr-throw-bad_weak_ptr)
-  * [Editor Highlighting](#editor-highlighting)
-
-
-<!-- tocstop -->
-
 ## Porting a New CUDA Project
 
 ### General Tips
