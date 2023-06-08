@@ -87,7 +87,7 @@ typedef struct hipUUID_t {
 } hipUUID;
 
 //---
-// Common headers for both NVCC and HCC paths:
+// Common headers for both NVCC and HIP:
 
 /**
  * hipDeviceProp
@@ -106,10 +106,10 @@ typedef struct hipDeviceProp_t {
     int memoryClockRate;       ///< Max global memory clock frequency in khz.
     int memoryBusWidth;        ///< Global memory bus width in bits.
     size_t totalConstMem;      ///< Size of shared memory region (in bytes).
-    int major;  ///< Major compute capability.  On HCC, this is an approximation and features may
+    int major;  ///< Major compute capability.  On HIP, this is an approximation and features may
                 ///< differ from CUDA CC.  See the arch feature flags for portable ways to query
                 ///< feature caps.
-    int minor;  ///< Minor compute capability.  On HCC, this is an approximation and features may
+    int minor;  ///< Minor compute capability.  On HIP, this is an approximation and features may
                 ///< differ from CUDA CC.  See the arch feature flags for portable ways to query
                 ///< feature caps.
     int multiProcessorCount;          ///< Number of multi-processors (compute units).
@@ -210,7 +210,7 @@ typedef struct hipPointerAttribute_t {
 #endif
 
 // Developer note - when updating these, update the hipErrorName and hipErrorString functions in
-// NVCC and HCC paths Also update the hipCUDAErrorTohipError function in NVCC path.
+// NVCC and HIP. Also update the hipCUDAErrorTohipError function in NVCC.
 /*
  * @brief HIP error type
  * @ingroup Enumerations
@@ -1691,9 +1691,9 @@ hipError_t hipDeviceGetMemPool(hipMemPool_t* mem_pool, int device);
  * @param [in]  deviceId which device to query for information
  *
  * @return #hipSuccess, #hipErrorInvalidDevice
- * @bug HCC always returns 0 for maxThreadsPerMultiProcessor
- * @bug HCC always returns 0 for regsPerBlock
- * @bug HCC always returns 0 for l2CacheSize
+ * @bug HIP always returns 0 for maxThreadsPerMultiProcessor
+ * @bug HIP always returns 0 for regsPerBlock
+ * @bug HIP always returns 0 for l2CacheSize
  *
  * Populates hipGetDeviceProperties with information for the specified device.
  */
@@ -3555,7 +3555,7 @@ hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height
  */
 hipError_t hipMemAllocPitch(hipDeviceptr_t* dptr, size_t* pitch, size_t widthInBytes, size_t height, unsigned int elementSizeBytes);
 /**
- *  @brief Free memory allocated by the hcc hip memory allocation API.
+ *  @brief Free memory allocated by the hip memory allocation API.
  *  This API performs an implicit hipDeviceSynchronize() call.
  *  If pointer is NULL, the hip runtime is initialized and hipSuccess is returned.
  *
@@ -3569,7 +3569,7 @@ hipError_t hipMemAllocPitch(hipDeviceptr_t* dptr, size_t* pitch, size_t widthInB
  */
 hipError_t hipFree(void* ptr);
 /**
- *  @brief Free memory allocated by the hcc hip host memory allocation API.  [Deprecated]
+ *  @brief Free memory allocated by the hip host memory allocation API.  [Deprecated]
  *
  *  @param[in] ptr Pointer to memory to be freed
  *  @return #hipSuccess,
@@ -3580,7 +3580,7 @@ hipError_t hipFree(void* ptr);
 DEPRECATED("use hipHostFree instead")
 hipError_t hipFreeHost(void* ptr);
 /**
- *  @brief Free memory allocated by the hcc hip host memory allocation API
+ *  @brief Free memory allocated by the hip host memory allocation API
  *  This API performs an implicit hipDeviceSynchronize() call.
  *  If pointer is NULL, the hip runtime is initialized and hipSuccess is returned.
  *
@@ -3866,7 +3866,7 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbol,
  *  @warning If host or dest are not pinned, the memory copy will be performed synchronously.  For
  * best performance, use hipHostMalloc to allocate host memory that is transferred asynchronously.
  *
- *  @warning on HCC hipMemcpyAsync does not support overlapped H2D and D2H copies.
+ *  @warning on hipMemcpyAsync does not support overlapped H2D and D2H copies.
  *  For hipMemcpy, the copy is always performed by the device associated with the specified stream.
  *
  *  For multi-gpu or peer-to-peer configurations, it is recommended to use a stream which is a
@@ -4850,7 +4850,7 @@ hipError_t hipDevicePrimaryCtxGetState(hipDevice_t dev, unsigned int* flags, int
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  * @warning This function return #hipSuccess though doesn't release the primaryCtx by design on
- * HIP/HCC path.
+ * HIP.
  */
 hipError_t hipDevicePrimaryCtxRelease(hipDevice_t dev);
 /**
