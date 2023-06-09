@@ -5442,6 +5442,7 @@ hipError_t hipExtLaunchKernel(const void* function_address, dim3 numBlocks, dim3
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
  */
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipBindTextureToMipmappedArray(
     const textureReference* tex,
     hipMipmappedArray_const_t mipmappedArray,
@@ -6030,12 +6031,6 @@ hipError_t hipTexRefSetMipmappedArray(
     struct hipMipmappedArray* mipmappedArray,
     unsigned int Flags);
 
-// doxygen end deprecated texture management
-/**
- * @}
- */
-
-// The following are not supported.
 /**
  *
  *  @addtogroup TextureU Texture Management [Not supported]
@@ -6053,6 +6048,7 @@ hipError_t hipTexRefSetMipmappedArray(
  * @returns #hipSuccess, #hipErrorNotSupported, #hipErrorInvalidValue
  *
  */
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipMipmappedArrayCreate(
     hipMipmappedArray_t* pHandle,
     HIP_ARRAY3D_DESCRIPTOR* pMipmappedArrayDesc,
@@ -6065,6 +6061,7 @@ hipError_t hipMipmappedArrayCreate(
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
  */
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipMipmappedArrayDestroy(hipMipmappedArray_t hMipmappedArray);
 /**
  * @brief Get a mipmapped array on a mipmapped level.
@@ -6076,11 +6073,12 @@ hipError_t hipMipmappedArrayDestroy(hipMipmappedArray_t hMipmappedArray);
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
  */
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipMipmappedArrayGetLevel(
     hipArray_t* pLevelArray,
     hipMipmappedArray_t hMipMappedArray,
     unsigned int level);
-// doxygen end unsuppported texture management
+// doxygen end deprecated texture management
 /**
  * @}
  */
@@ -8204,6 +8202,7 @@ static inline hipError_t hipBindTextureToArray(
  *
  */
 template<class T, int dim, enum hipTextureReadMode readMode>
+DEPRECATED(DEPRECATED_MSG)
 static inline hipError_t hipBindTextureToMipmappedArray(
     const struct texture<T, dim, readMode> &tex,
     hipMipmappedArray_const_t mipmappedArray)
@@ -8228,6 +8227,7 @@ static inline hipError_t hipBindTextureToMipmappedArray(
  *
  */
 template<class T, int dim, enum hipTextureReadMode readMode>
+DEPRECATED(DEPRECATED_MSG)
 static inline hipError_t hipBindTextureToMipmappedArray(
     const struct texture<T, dim, readMode> &tex,
     hipMipmappedArray_const_t mipmappedArray,

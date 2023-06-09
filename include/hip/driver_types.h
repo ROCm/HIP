@@ -126,8 +126,10 @@ typedef struct hipMipmappedArray {
   unsigned int max_mipmap_level;
   unsigned int flags;
   enum hipArray_Format format;
+  unsigned int num_channels;
 } hipMipmappedArray;
 typedef struct hipMipmappedArray* hipMipmappedArray_t;
+typedef hipMipmappedArray_t hipmipmappedArray;
 typedef const struct hipMipmappedArray* hipMipmappedArray_const_t;
 /**
  * hip resource types
