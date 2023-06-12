@@ -1,0 +1,4 @@
+diff a/docs/reference/kernel_language.md b/docs/reference/kernel_language.md	(rejected hunks)
+@@ -458 +399 @@ Following is the list of supported integer intrinsics. Note that intrinsics are
+-<sub><b id="f3"><sup>[1]</sup></b>
++<sub>[^f3]
