@@ -39,3 +39,4 @@ if not "exclude_patterns" in globals():
 
 html_theme_options["show_navbar_depth"] = 2
 exclude_patterns.append("doxygen/mainpage.md")
+external_projects_current_project = "hip"
