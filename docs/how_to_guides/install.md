@@ -40,14 +40,15 @@ apt-get install hip-runtime-nvidia hip-dev
 
 # Verify your installation
 
-Run hipconfig (instructions below assume default installation path) :
-```shell
+Run hipconfig (instructions below assume default installation path):
+```
 /opt/rocm/bin/hipconfig --full
 ```
 
 # How to build HIP from source
 
 Developers can build HIP from source on either AMD or NVIDIA platforms, see
-detailed instructions at {doc}`/developer_guide/build` 
+detailed instructions at [building HIP from source](../developer_guide/build.md).
+
 
 

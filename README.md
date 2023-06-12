@@ -39,7 +39,7 @@ HIP releases are typically naming convention for each ROCM release to help diffe
 - [HIP Kernel Language](docs/reference/kernel_language.md)
 - [HIP Porting Guide](docs/user_guide/hip_porting_guide.md)
 - [HIP Porting Driver Guide](docs/user_guide/hip_porting_driver_api.md)
-- [HIP Programming Guide](ddocs/user_guide/programming_manual.md)
+- [HIP Programming Guide](docs/user_guide/programming_manual.md)
 - [HIP Logging ](docs/developer_guide/logging.md)
 - [Building HIP From Source](docs/developer_guide/build.md)
 - [HIP Debugging ](docs/how_to_guides/debugging.md)
