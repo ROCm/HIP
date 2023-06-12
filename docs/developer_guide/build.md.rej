@@ -1,0 +1,51 @@
+diff a/docs/developer_guide/build.md b/docs/developer_guide/build.md	(rejected hunks)
+@@ -1,20 +1,3 @@
+-## Table of Contents
+-
+-<!-- toc -->
+-
+-- [Prerequisites](#Prerequisites)
+-- [Build HIP on AMD platform](#build-hip-on-amd-platform)
+-  * [Get HIP source code](#get-hip-source-code)
+-  * [Set the environment variables](#set-the-environment-variables)
+-  * [Build HIP](#build-hip)
+-  * [Default paths and environment variables](#default-paths-and-environment-variables)
+-  * [Build HIP Tests](#build-hip-tests)
+-- [Build HIP on NVIDIA platform](#build-hip-on-NVIDIA-platform)
+-  * [Get HIP source code](#get-hip-source-code)
+-  * [Set the environment variables](#set-the-environment-variables)
+-  * [Build HIP](#build-hip)
+-  * [Build HIP tests](#build-hip-tests)
+-- [Run HIP](#run-hip)
+-<!-- tocstop -->
+-
+-# Prerequisites
++# Building HIP from Source
++
++## Prerequisites
+@@ -104 +88 @@ After make install command, make sure HIP_PATH is pointed to $PWD/install/hip.
+-## Build HIP tests
++#### Generating profiling header after adding/changing a HIP API
+@@ -106,2 +90,6 @@ After make install command, make sure HIP_PATH is pointed to $PWD/install/hip.
+-### Build HIP directed tests
+-Developers can build HIP directed tests right after build HIP commands,
++When you add or change a HIP API, you might need to generate a new `hip_prof_str.h` header. This header is used by rocm tools to track HIP APIs like rocprofiler/roctracer etc.
++To generate the header after your change, use the tool `hip_prof_gen.py` present in `hipamd/src`.
++
++Usage:
++
++`hip_prof_gen.py [-v] <input HIP API .h file> <patched srcs path> <previous output> [<output>]`
+@@ -113 +122 @@ make -j$(nproc) build_tests
+-By default, all HIP directed tests will be built and generated under the folder $HIPAMD_DIR/build/directed_tests.
++By default, all HIP directed tests will be built and generated under the folder `$HIPAMD_DIR/build/`directed_tests.
+@@ -115 +124 @@ Take HIP directed device APIs tests, as an example, all available test applicati
+-$HIPAMD_DIR/build/directed_tests/runtimeApi/device.
++`$HIPAMD_DIR/build/directed_tests/runtimeApi/device`.
+@@ -135 +144 @@ cd $HIPAMD_DIR/build/directed_tests/texcture
+-### Build HIP catch tests
++#### Build HIP catch tests
+@@ -201,2 +210,2 @@ sudo make install
+-## Build HIP tests
+-Build HIP tests commands on NVIDIA platform are basically the same as AMD, except set -DHIP_PLATFORM=nvidia.
++### Build HIP tests
++Build HIP tests commands on NVIDIA platform are basically the same as AMD, except set `-DHIP_PLATFORM=nvidia`.
