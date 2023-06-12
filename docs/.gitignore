@@ -1,7 +1,5 @@
 /_build
 /_doxygen
-/_images
-/_static
-/_templates
-doxygen/html/
-doxygen/xml/
+/doxygen/html/
+/doxygen/xml/
+/sphinx/_toc.yml
