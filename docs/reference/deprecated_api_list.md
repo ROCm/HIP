@@ -1,4 +1,4 @@
-# HIP Deprecated APIs
+# HIP Deprecated Runtime Functions
 
 ## HIP Context Management APIs
 
