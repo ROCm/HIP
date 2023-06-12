@@ -1,60 +1,4 @@
-## Table of Contents
-
-<!-- toc -->
-
-- [Introduction](#introduction)
-- [Function-Type Qualifiers](#function-type-qualifiers)
-  * [`__device__`](#__device__)
-  * [`__global__`](#__global__)
-  * [`__host__`](#__host__)
-- [Calling `__global__` Functions](#calling-__global__-functions)
-- [Kernel-Launch Example](#kernel-launch-example)
-- [Variable-Type Qualifiers](#variable-type-qualifiers)
-  * [`__constant__`](#__constant__)
-  * [`__shared__`](#__shared__)
-  * [`__managed__`](#__managed__)
-  * [`__restrict__`](#__restrict__)
-- [Built-In Variables](#built-in-variables)
-  * [Coordinate Built-Ins](#coordinate-built-ins)
-  * [warpSize](#warpsize)
-- [Vector Types](#vector-types)
-  * [Short Vector Types](#short-vector-types)
-  * [dim3](#dim3)
-- [Memory-Fence Instructions](#memory-fence-instructions)
-- [Synchronization Functions](#synchronization-functions)
-- [Math Functions](#math-functions)
-  * [Single Precision Mathematical Functions](#single-precision-mathematical-functions)
-  * [Double Precision Mathematical Functions](#double-precision-mathematical-functions)
-  * [Integer Intrinsics](#integer-intrinsics)
-  * [Floating-point Intrinsics](#floating-point-intrinsics)
-- [Texture Functions](#texture-functions)
-- [Surface Functions](#surface-functions)
-- [Timer Functions](#timer-functions)
-- [Atomic Functions](#atomic-functions)
-- [Warp Cross-Lane Functions](#warp-cross-lane-functions)
-  * [Warp Vote and Ballot Functions](#warp-vote-and-ballot-functions)
-  * [Warp Shuffle Functions](#warp-shuffle-functions)
-- [Cooperative Groups Functions](#cooperative-groups-functions)
-- [Warp Matrix Functions](#warp-matrix-functions)
-- [Independent Thread Scheduling](#independent-thread-scheduling)
-- [Profiler Counter Function](#profiler-counter-function)
-- [Assert](#assert)
-- [Printf](#printf)
-- [Device-Side Dynamic Global Memory Allocation](#device-side-dynamic-global-memory-allocation)
-- [`__launch_bounds__`](#__launch_bounds__)
-  * [Compiler Impact](#compiler-impact)
-  * [CU and EU Definitions](#cu-and-eu-definitions)
-  * [Porting from CUDA __launch_bounds](#porting-from-cuda-__launch_bounds)
-  * [maxregcount](#maxregcount)
-- [Register Keyword](#register-keyword)
-- [Pragma Unroll](#pragma-unroll)
-- [In-Line Assembly](#in-line-assembly)
-- [C++ Support](#c-support)
-- [Kernel Compilation](#kernel-compilation)
-- [GFX Arch specific kernel](#gfx-arch-specific-kernel)
-<!-- tocstop -->
-
-## Introduction
+# Kernel Language Syntax
 
 HIP provides a C++ syntax that is suitable for compiling most code that commonly appears in compute kernels, including classes, namespaces, operator overloading, templates and more. Additionally, it defines other language features designed specifically to target accelerators, such as the following:
 - A kernel-launch syntax that uses standard C++, resembles a function call and is portable to all HIP targets
@@ -75,7 +19,7 @@ Supported  `__device__` functions are
   - Executed on the device
   - Called from the device only
 
-The `__device__` keyword can combine with the host keyword (see [__host__](#host)).
+The `__device__` keyword can combine with the host keyword (see {ref}`host_attr`).
 
 ### `__global__`
 Supported `__global__` functions are
@@ -86,6 +30,7 @@ HIP `__global__` functions must have a `void` return type, and the first paramet
 
 HIP lacks dynamic-parallelism support, so `__global__ ` functions cannot be called from the device.
 
+(host_attr)=
 ### `__host__`
 Supported `__host__` functions are
   - Executed on the host
@@ -123,7 +68,7 @@ MyKernel<<<dim3(gridDim), dim3(groupDim), 0, 0>>> (a,b,c,n);
 
 ```
 
-The hipLaunchKernelGGL macro always starts with the five parameters specified above, followed by the kernel arguments. HIPIFY tools optionally convert Cuda launch syntax to hipLaunchKernelGGL, including conversion of optional arguments in <<< >>> to the five required hipLaunchKernelGGL parameters. The dim3 constructor accepts zero to three arguments and will by default initialize unspecified dimensions to 1. See [dim3](#dim3). The kernel uses the coordinate built-ins (thread*, block*, grid*) to determine coordinate index and coordinate bounds of the work item that’s currently executing. See [Coordinate Built-Ins](#coordinate-builtins).
+The hipLaunchKernelGGL macro always starts with the five parameters specified above, followed by the kernel arguments. HIPIFY tools optionally convert Cuda launch syntax to hipLaunchKernelGGL, including conversion of optional arguments in <<< >>> to the five required hipLaunchKernelGGL parameters. The dim3 constructor accepts zero to three arguments and will by default initialize unspecified dimensions to 1. See [dim3](#dim3). The kernel uses the coordinate built-ins (thread*, block*, grid*) to determine coordinate index and coordinate bounds of the work item that’s currently executing. See {ref}`coordinate_builtins`.
 
 Please note, HIP does not support kernel launch with total work items defined in dimension with size gridDim x blockDim >= 2^32.
 
@@ -181,6 +126,7 @@ The `__restrict__` keyword tells the compiler that the associated memory pointer
 
 ## Built-In Variables
 
+(coordinate_builtins)=
 ### Coordinate Built-Ins
 Built-ins determine the coordinate of the active work item in the execution grid. They are defined in amd_hip_runtime.h (rather than being implicitly defined by the compiler).
 In HIP, built-ins coordinate variable definitions are the same as in Cuda, for instance:
@@ -277,9 +223,9 @@ Following is the list of supported single precision mathematical functions.
 | float frexpf ( float  x, int* nptr ) <br><sub>Extract mantissa and exponent of a floating-point value.</sub> | ✓ | ✗ |
 | float hypotf ( float  x, float  y ) <br><sub>Calculate the square root of the sum of squares of two arguments.</sub> | ✓ | ✓ |
 | int ilogbf ( float  x ) <br><sub>Compute the unbiased integer exponent of the argument.</sub> | ✓ | ✓ |
-| __RETURN_TYPE<sup id="a1">[1](#f1)</sup> isfinite ( float  a ) <br><sub>Determine whether argument is finite.</sub> | ✓ | ✓ |
-| __RETURN_TYPE<sup>[1](#f1)</sup> isinf ( float  a ) <br><sub>Determine whether argument is infinite.</sub> | ✓ | ✓ |
-| __RETURN_TYPE<sup>[1](#f1)</sup> isnan ( float  a ) <br><sub>Determine whether argument is a NaN.</sub> | ✓ | ✓ |
+| __RETURN_TYPE[^f1] isfinite ( float  a ) <br><sub>Determine whether argument is finite.</sub> | ✓ | ✓ |
+| __RETURN_TYPE[^f1]</sup> isinf ( float  a ) <br><sub>Determine whether argument is infinite.</sub> | ✓ | ✓ |
+| __RETURN_TYPE[^f1]</sup> isnan ( float  a ) <br><sub>Determine whether argument is a NaN.</sub> | ✓ | ✓ |
 | float ldexpf ( float  x, int  exp ) <br><sub>Calculate the value of x ⋅ 2<sup>exp</sup>.</sub> | ✓ | ✓ |
 | float log10f ( float  x ) <br><sub>Calculate the base 10 logarithm of the input argument.</sub> | ✓ | ✓ |
 | float log1pf ( float  x ) <br><sub>Calculate the value of log<sub>e</sub>( 1 + x ).</sub> | ✓ | ✓ |
@@ -294,7 +240,7 @@ Following is the list of supported single precision mathematical functions.
 | float remquof ( float  x, float  y, int* quo ) <br><sub>Compute single-precision floating-point remainder and part of quotient.</sub> | ✓ | ✗ |
 | float roundf ( float  x ) <br><sub>Round to nearest integer value in floating-point.</sub> | ✓ | ✓ |
 | float scalbnf ( float  x, int  n ) <br><sub>Scale floating-point input by integer power of two.</sub> | ✓ | ✓ |
-| __RETURN_TYPE<sup>[1](#f1)</sup> signbit ( float  a ) <br><sub>Return the sign bit of the input.</sub> | ✓ | ✓ |
+| __RETURN_TYPE[^f1]</sup> signbit ( float  a ) <br><sub>Return the sign bit of the input.</sub> | ✓ | ✓ |
 | void sincosf ( float  x, float* sptr, float* cptr ) <br><sub>Calculate the sine and cosine of the first input argument.</sub> | ✓ | ✗ |
 | float sinf ( float  x ) <br><sub>Calculate the sine of the input argument.</sub> | ✓ | ✓ |
 | float sinhf ( float  x ) <br><sub>Calculate the hyperbolic sine of the input argument.</sub> | ✓ | ✓ |
@@ -338,8 +284,7 @@ Following is the list of supported single precision mathematical functions.
 | float ynf ( int n, float  x ) <br><sub>Calculate the value of the Bessel function of the second kind of order n for the input argument.</sub> | ✓ | ✓ |
 
 
-
-<sub><b id="f1"><sup>[1]</sup></b> __RETURN_TYPE is dependent on compiler. It is usually 'int' for C compilers and 'bool' for C++ compilers.</sub> [↩](#a1)
+[^f1]: __RETURN_TYPE is dependent on compiler. It is usually 'int' for C compilers and 'bool' for C++ compilers.
 
 ### Double Precision Mathematical Functions
 Following is the list of supported double precision mathematical functions.
@@ -374,9 +319,9 @@ Following is the list of supported double precision mathematical functions.
 | double frexp ( double  x, int* nptr ) <br><sub>Extract mantissa and exponent of a floating-point value.</sub> | ✓ | ✗ |
 | double hypot ( double  x, double  y ) <br><sub>Calculate the square root of the sum of squares of two arguments.</sub> | ✓ | ✓ |
 | int ilogb ( double  x ) <br><sub>Compute the unbiased integer exponent of the argument.</sub> | ✓ | ✓ |
-| __RETURN_TYPE<sup id="a2">[1](#f2)</sup> isfinite ( double  a ) <br><sub>Determine whether argument is finite.</sub> | ✓ | ✓ |
-| __RETURN_TYPE<sup>[1](#f2)</sup> isinf ( double  a ) <br><sub>Determine whether argument is infinite.</sub> | ✓ | ✓ |
-| __RETURN_TYPE<sup>[1](#f2)</sup> isnan ( double  a ) <br><sub>Determine whether argument is a NaN.</sub> | ✓ | ✓ |
+| __RETURN_TYPE[^f1] isfinite ( double  a ) <br><sub>Determine whether argument is finite.</sub> | ✓ | ✓ |
+| __RETURN_TYPE[^f1]</sup> isinf ( double  a ) <br><sub>Determine whether argument is infinite.</sub> | ✓ | ✓ |
+| __RETURN_TYPE[^f1]</sup> isnan ( double  a ) <br><sub>Determine whether argument is a NaN.</sub> | ✓ | ✓ |
 | double ldexp ( double  x, int  exp ) <br><sub>Calculate the value of x ⋅ 2<sup>exp</sup>.</sub> | ✓ | ✓ |
 | double log ( double  x ) <br><sub>Calculate the base e logarithm of the input argument.</sub> | ✓ | ✓ |
 | double log10 ( double  x ) <br><sub>Calculate the base 10 logarithm of the input argument.</sub> | ✓ | ✓ |
@@ -391,7 +336,7 @@ Following is the list of supported double precision mathematical functions.
 | double remquo ( double  x, double  y, int* quo ) <br><sub>Compute double-precision floating-point remainder and part of quotient.</sub> | ✓ | ✗ |
 | double round ( double  x ) <br><sub>Round to nearest integer value in floating-point.</sub> | ✓ | ✓ |
 | double scalbn ( double  x, int  n ) <br><sub>Scale floating-point input by integer power of two.</sub> | ✓ | ✓ |
-| __RETURN_TYPE<sup>[1](#f2)</sup> signbit ( double  a ) <br><sub>Return the sign bit of the input.</sub> | ✓ | ✓ |
+| __RETURN_TYPE[^f1] signbit ( double  a ) <br><sub>Return the sign bit of the input.</sub> | ✓ | ✓ |
 | double sin ( double  x ) <br><sub>Calculate the sine of the input argument.</sub> | ✓ | ✓ |
 | void sincos ( double  x, double* sptr, double* cptr ) <br><sub>Calculate the sine and cosine of the first input argument.</sub> | ✓ | ✗ |
 | double sinh ( double  x ) <br><sub>Calculate the hyperbolic sine of the input argument.</sub> | ✓ | ✓ |
@@ -432,10 +377,6 @@ Following is the list of supported double precision mathematical functions.
 | double y1 ( double  x ) <br><sub>Calculate the value of the Bessel function of the second kind of order 1 for the input argument.</sub> | ✓ | ✓ |
 | double yn ( int n, double  x ) <br><sub>Calculate the value of the Bessel function of the second kind of order n for the input argument.</sub> | ✓ | ✓ |
 
-
-
-<sub><b id="f2"><sup>[1]</sup></b> __RETURN_TYPE is dependent on compiler. It is usually 'int' for C compilers and 'bool' for C++ compilers.</sub> [↩](#a2)
-
 ### Integer Intrinsics
 Following is the list of supported integer intrinsics. Note that intrinsics are supported on device only.
 
@@ -447,19 +388,19 @@ Following is the list of supported integer intrinsics. Note that intrinsics are 
 | unsigned int __clz(unsigned int x) <br><sub>Return the number of consecutive high-order zero bits in 32 bit unsigned integer.</sub> |
 | int __clzll ( long long int x ) <br><sub>Count the number of consecutive high-order zero bits in a 64 bit integer.</sub> |
 | unsigned int __clzll(long long int x) <br><sub>Return the number of consecutive high-order zero bits in 64 bit signed integer.</sub> |
-| unsigned int __ffs(unsigned int x) <br><sub>Find the position of least signigicant bit set to 1 in a 32 bit unsigned integer.<sup id="a3">[1](#f3)</sup></sub> |
+| unsigned int __ffs(unsigned int x) <br><sub>Find the position of least signigicant bit set to 1 in a 32 bit unsigned integer.[^f3]</sub> |
 | unsigned int __ffs(int x) <br><sub>Find the position of least signigicant bit set to 1 in a 32 bit signed integer.</sub> |
-| unsigned int __ffsll(unsigned long long int x) <br><sub>Find the position of least signigicant bit set to 1 in a 64 bit unsigned integer.<sup>[1](#f3)</sup></sub> |
+| unsigned int __ffsll(unsigned long long int x) <br><sub>Find the position of least signigicant bit set to 1 in a 64 bit unsigned integer.[^f3]</sup></sub> |
 | unsigned int __ffsll(long long int x) <br><sub>Find the position of least signigicant bit set to 1 in a 64 bit signed integer.</sub> |
 | unsigned int __popc ( unsigned int x ) <br><sub>Count the number of bits that are set to 1 in a 32 bit integer.</sub> |
 | unsigned int __popcll ( unsigned long long int x )<br><sub>Count the number of bits that are set to 1 in a 64 bit integer.</sub> |
 | int __mul24 ( int x, int y )<br><sub>Multiply two 24bit integers.</sub> |
 | unsigned int __umul24 ( unsigned int x, unsigned int y )<br><sub>Multiply two 24bit unsigned integers.</sub> |
-<sub><b id="f3"><sup>[1]</sup></b> 
-The HIP-Clang implementation of __ffs() and __ffsll() contains code to add a constant +1 to produce the ffs result format.
-For the cases where this overhead is not acceptable and programmer is willing to specialize for the platform, 
-HIP-Clang provides __lastbit_u32_u32(unsigned int input) and __lastbit_u32_u64(unsigned long long int input).
-The index returned by __lastbit_ instructions starts at -1, while for ffs the index starts at 0.
+
+[^f3]: The HIP-Clang implementation of __ffs() and __ffsll() contains code to add a constant +1 to produce the ffs result format.
+  For the cases where this overhead is not acceptable and programmer is willing to specialize for the platform, 
+  HIP-Clang provides __lastbit_u32_u32(unsigned int input) and __lastbit_u32_u64(unsigned long long int input).
+  The index returned by __lastbit_ instructions starts at -1, while for ffs the index starts at 0.
 
 ### Floating-point Intrinsics
 Following is the list of supported floating-point intrinsics. Note that intrinsics are supported on device only.
@@ -612,6 +553,7 @@ Note that Nvidia and AMD devices have different warp sizes, so portable code sho
     int w = props.warpSize;
     // implement portable algorithm based on w (rather than assume 32 or 64)
 ```
+(warp_cross_lane_functions)=
 
 Note that assembly kernels may be built for a warp size which is different than the default warp size.
 
