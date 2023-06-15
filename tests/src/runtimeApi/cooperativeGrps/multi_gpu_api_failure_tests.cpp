@@ -54,7 +54,7 @@ static inline void hipCheckAndFail(hipError_t errval,
     std::cerr << "hip error: " << hipGetErrorString(errval);
     std::cerr << std::endl;
     std::cerr << "    Location: " << file << ":" << line << std::endl;
-    failed("");
+    failed("\n");
   }
   if (last_err != errval) {
     std::cerr << "Error: the return value of a function was not the same ";
@@ -64,7 +64,7 @@ static inline void hipCheckAndFail(hipError_t errval,
     std::cerr << " (" << errval << ")" << std::endl;
     std::cerr << "hipGetLastError() returned: " << hipGetErrorString(last_err);
     std::cerr << " (" << last_err << ")" << std::endl;
-    failed("");
+    failed("\n");
   }
 }
 #define hipCheckErr(errval) \
@@ -580,7 +580,7 @@ int main(int argc, char** argv) {
     }
   }
   if (FailFlag == 1) {
-    failed("");
+    failed("\n");
   } else {
   passed();
   }
