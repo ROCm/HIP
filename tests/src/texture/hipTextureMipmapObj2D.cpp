@@ -89,11 +89,11 @@ bool runMipMapTest(unsigned int width, unsigned int height, unsigned int mipmap_
   mipmapped_array_desc.Flags = 0;
 
 
-  hipMipmappedArray* mip_array_ptr;
-  hipMipmappedArrayCreate(&mip_array_ptr, &mipmapped_array_desc, 2 * mipmap_level);
+  hipMipMappedArray* mip_array_ptr;
+  hipMipMappedArrayCreate(&mip_array_ptr, &mipmapped_array_desc, 2 * mipmap_level);
 
   hipArray *hipArray = nullptr;
-  HIPCHECK(hipMipmappedArrayGetLevel(&hipArray, mip_array_ptr, mipmap_level));
+  HIPCHECK(hipMipMappedArrayGetLevel(&hipArray, mip_array_ptr, mipmap_level));
   HIPCHECK(hipMemcpyToArray(hipArray, 0, 0, hData, size, hipMemcpyHostToDevice));
 
   hipResourceDesc resDesc;
@@ -177,7 +177,7 @@ int main(int argc, char** argv) {
 #ifdef _WIN32
   testResult = runTest(argc, argv);
 #else
-  std::cout<<"Mipmaps are Supported only on windows, skipping the test"<<std::endl;
+  std::cout<<"MipMaps are Supported only on windows, skipping the test"<<std::endl;
 #endif
 
   if (testResult) {

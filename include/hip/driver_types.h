@@ -115,7 +115,7 @@ typedef struct hip_Memcpy2D {
 typedef struct hipArray* hipArray_t;
 typedef hipArray_t hiparray;
 typedef const struct hipArray* hipArray_const_t;
-typedef struct hipMipmappedArray {
+typedef struct hipMipMappedArray {
   void* data;
   struct hipChannelFormatDesc desc;
   unsigned int type;
@@ -126,21 +126,21 @@ typedef struct hipMipmappedArray {
   unsigned int max_mipmap_level;
   unsigned int flags;
   enum hipArray_Format format;
-} hipMipmappedArray;
-typedef struct hipMipmappedArray* hipMipmappedArray_t;
-typedef const struct hipMipmappedArray* hipMipmappedArray_const_t;
+} hipMipMappedArray;
+typedef struct hipMipMappedArray* hipMipMappedArray_t;
+typedef const struct hipMipMappedArray* hipMipMappedArray_const_t;
 /**
  * hip resource types
  */
 typedef enum hipResourceType {
     hipResourceTypeArray = 0x00,
-    hipResourceTypeMipmappedArray = 0x01,
+    hipResourceTypeMipMappedArray = 0x01,
     hipResourceTypeLinear = 0x02,
     hipResourceTypePitch2D = 0x03
 }hipResourceType;
 typedef enum HIPresourcetype_enum {
     HIP_RESOURCE_TYPE_ARRAY           = 0x00, /**< Array resoure */
-    HIP_RESOURCE_TYPE_MIPMAPPED_ARRAY = 0x01, /**< Mipmapped array resource */
+    HIP_RESOURCE_TYPE_MIPMAPPED_ARRAY = 0x01, /**< MipMapped array resource */
     HIP_RESOURCE_TYPE_LINEAR          = 0x02, /**< Linear resource */
     HIP_RESOURCE_TYPE_PITCH2D         = 0x03  /**< Pitch 2D resource */
 } HIPresourcetype, hipResourcetype;
@@ -168,10 +168,10 @@ typedef struct HIP_TEXTURE_DESC_st {
     HIPfilter_mode filterMode;       /**< Filter mode */
     unsigned int flags;              /**< Flags */
     unsigned int maxAnisotropy;      /**< Maximum anisotropy ratio */
-    HIPfilter_mode mipmapFilterMode; /**< Mipmap filter mode */
-    float mipmapLevelBias;           /**< Mipmap level bias */
-    float minMipmapLevelClamp;       /**< Mipmap minimum level clamp */
-    float maxMipmapLevelClamp;       /**< Mipmap maximum level clamp */
+    HIPfilter_mode mipmapFilterMode; /**< MipMap filter mode */
+    float mipmapLevelBias;           /**< MipMap level bias */
+    float minMipMapLevelClamp;       /**< MipMap minimum level clamp */
+    float maxMipMapLevelClamp;       /**< MipMap maximum level clamp */
     float borderColor[4];            /**< Border Color */
     int reserved[12];
 } HIP_TEXTURE_DESC;
@@ -263,7 +263,7 @@ typedef struct hipResourceDesc {
             hipArray_t array;
         } array;
         struct {
-            hipMipmappedArray_t mipmap;
+            hipMipMappedArray_t mipmap;
         } mipmap;
         struct {
             void* devPtr;
@@ -287,7 +287,7 @@ typedef struct HIP_RESOURCE_DESC_st
             hipArray_t hArray;                   /**< HIP array */
         } array;
         struct {
-            hipMipmappedArray_t hMipmappedArray; /**< HIP mipmapped array */
+            hipMipMappedArray_t hMipMappedArray; /**< HIP mipmapped array */
         } mipmap;
         struct {
             hipDeviceptr_t devPtr;               /**< Device pointer */
@@ -317,8 +317,8 @@ struct hipResourceViewDesc {
     size_t width;
     size_t height;
     size_t depth;
-    unsigned int firstMipmapLevel;
-    unsigned int lastMipmapLevel;
+    unsigned int firstMipMapLevel;
+    unsigned int lastMipMapLevel;
     unsigned int firstLayer;
     unsigned int lastLayer;
 };
@@ -331,8 +331,8 @@ typedef struct HIP_RESOURCE_VIEW_DESC_st
     size_t width;                   /**< Width of the resource view */
     size_t height;                  /**< Height of the resource view */
     size_t depth;                   /**< Depth of the resource view */
-    unsigned int firstMipmapLevel;  /**< First defined mipmap level */
-    unsigned int lastMipmapLevel;   /**< Last defined mipmap level */
+    unsigned int firstMipMapLevel;  /**< First defined mipmap level */
+    unsigned int lastMipMapLevel;   /**< Last defined mipmap level */
     unsigned int firstLayer;        /**< First layer index */
     unsigned int lastLayer;         /**< Last layer index */
     unsigned int reserved[16];
