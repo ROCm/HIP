@@ -426,7 +426,7 @@ int main(int argc, char* argv[]) {
       OverAllStatus = false;
     }
     if (!OverAllStatus) {
-      failed("");
+      failed("\n");
     }
   }
   if (p_tests == 2) {

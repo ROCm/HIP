@@ -78,7 +78,7 @@ int main(int argc, char *argv[]) {
       OverAllStatus = false;
    }
    if (!OverAllStatus) {
-      failed("");
+      failed("\n");
    }
    passed();
 }

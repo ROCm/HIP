@@ -111,6 +111,6 @@ int main() {
   if (IfTestPassed) {
     passed();
   } else {
-    failed("");
+    failed("\n");
   }
 }
