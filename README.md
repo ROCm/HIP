@@ -16,7 +16,7 @@ New projects can be developed directly in the portable HIP C++ language and can 
 
 The information presented in this document is for informational purposes only and may contain technical inaccuracies, omissions, and typographical errors. The information contained herein is subject to change and may be rendered inaccurate for many reasons, including but not limited to product and roadmap changes, component and motherboard versionchanges, new model and/or product releases, product differences between differing manufacturers, software changes, BIOS flashes, firmware upgrades, or the like. Any computer system has risks of security vulnerabilities that cannot be completely prevented or mitigated.AMD assumes no obligation to update or otherwise correct or revise this information. However, AMD reserves the right to revise this information and to make changes from time to time to the content hereof without obligation of AMD to notify any person of such revisions or changes.THIS INFORMATION IS PROVIDED ‘AS IS.” AMD MAKES NO REPRESENTATIONS OR WARRANTIES WITH RESPECT TO THE CONTENTS HEREOF AND ASSUMES NO RESPONSIBILITY FOR ANY INACCURACIES, ERRORS, OR OMISSIONS THAT MAY APPEAR IN THIS INFORMATION. AMD SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR ANY PARTICULAR PURPOSE. IN NO EVENT WILL AMD BE LIABLE TO ANY PERSON FOR ANY RELIANCE, DIRECT, INDIRECT, SPECIAL, OR OTHER CONSEQUENTIAL DAMAGES ARISING FROM THE USE OF ANY INFORMATION CONTAINED HEREIN, EVEN IF AMD IS EXPRESSLY ADVISED OF THE POSSIBILITY OF SUCH DAMAGES. AMD, the AMD Arrow logo, and combinations thereof are trademarks of Advanced Micro Devices, Inc. Other product names used in this publication are for identification purposes only and may be trademarks of their respective companies.
 
-© 2021 Advanced Micro Devices, Inc. All Rights Reserved.
+© 2023 Advanced Micro Devices, Inc. All Rights Reserved.
 
 ## Repository branches:
 
@@ -34,19 +34,18 @@ HIP releases are typically naming convention for each ROCM release to help diffe
   This type of release is typically made once a month.*
 
 ## More Info:
-- [Installation](INSTALL.md)
-- [HIP FAQ](docs/markdown/hip_faq.md)
-- [HIP Kernel Language](docs/markdown/hip_kernel_language.md)
-- [HIP Runtime API (Doxygen)](https://github.com/RadeonOpenCompute/ROCm)
-- [HIP Porting Guide](docs/markdown/hip_porting_guide.md)
-- [HIP Porting Driver Guide](docs/markdown/hip_porting_driver_api.md)
-- [HIP Programming Guide](docs/markdown/hip_programming_guide.md)
-- [HIP Logging ](docs/markdown/hip_logging.md)
-- [HIP Debugging ](docs/markdown/hip_debugging.md)
-- [Code Object tooling ](docs/markdown/obj_tooling.md)
-- [HIP RTC](docs/markdown/hip_rtc.md)
-- [HIP Terminology](docs/markdown/hip_terms2.md) (including Rosetta Stone of GPU computing terms across CUDA/HIP/OpenCL)
-- [HIPIFY](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/master/README.md)
+- [Installation](docs/how_to_guides/install.md)
+- [HIP FAQ](docs/user_guide/faq.md)
+- [HIP Kernel Language](docs/reference/kernel_language.md)
+- [HIP Porting Guide](docs/user_guide/hip_porting_guide.md)
+- [HIP Porting Driver Guide](docs/user_guide/hip_porting_driver_api.md)
+- [HIP Programming Guide](docs/user_guide/programming_manual.md)
+- [HIP Logging ](docs/developer_guide/logging.md)
+- [Building HIP From Source](docs/developer_guide/build.md)
+- [HIP Debugging ](docs/how_to_guides/debugging.md)
+- [HIP RTC](docs/user_guide/hip_rtc.md)
+- [HIP Terminology](docs/reference/terms.md) (including Rosetta Stone of GPU computing terms across CUDA/HIP/OpenCL)
+- [HIPIFY](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/amd-staging/README.md)
 - Supported CUDA APIs:
   * [Runtime API](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/master/doc/markdown/CUDA_Runtime_API_functions_supported_by_HIP.md)
   * [Driver API](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/master/doc/markdown/CUDA_Driver_API_functions_supported_by_HIP.md)
@@ -57,18 +56,18 @@ HIP releases are typically naming convention for each ROCM release to help diffe
   * [cuDNN](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/master/doc/markdown/CUDNN_API_supported_by_HIP.md)
   * [cuFFT](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/master/doc/markdown/CUFFT_API_supported_by_HIP.md)
   * [cuSPARSE](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/master/doc/markdown/CUSPARSE_API_supported_by_HIP.md)
-- [Developer/CONTRIBUTING Info](CONTRIBUTING.md)
+- [Developer/CONTRIBUTING Info](docs/developer_guide/contributing.md)
 - [Release Notes](RELEASE.md)
 
 ## How do I get set up?
 
-See the [Installation](INSTALL.md) notes.
+See the [Installation](docs/how_to_guides/install.md) notes.
 
 ## Simple Example
 The HIP API includes functions such as hipMalloc, hipMemcpy, and hipFree.
 Programmers familiar with CUDA will also be able to quickly learn and start coding with the HIP API.
-Compute kernels are launched with the "hipLaunchKernelGGL" macro call.    Here is simple example showing a
-snippet of HIP API code:
+Compute kernels are launched with the "hipLaunchKernelGGL" macro call.
+Here is simple example showing a snippet of HIP API code:
 
 ```
 hipMalloc(&A_d, Nbytes);
@@ -88,7 +87,7 @@ hipMemcpy(C_h, C_d, Nbytes, hipMemcpyDeviceToHost);
 
 The HIP kernel language defines builtins for determining grid and block coordinates, math functions, short vectors,
 atomics, and timer functions.
-It also specifies additional defines and keywords for function types, address spaces, and optimization controls (See the [HIP Kernel Language](docs/markdown/hip_kernel_language.md) for a full description).
+It also specifies additional defines and keywords for function types, address spaces, and optimization controls (See the [HIP Kernel Language](docs/reference/kernel_language.md) for a full description).
 Here's an example of defining a simple 'vector_square' kernel.
 
 
@@ -124,7 +123,7 @@ provides source portability to either platform.   HIP provides the _hipcc_ compi
 
 ## Examples and Getting Started:
 
-* A sample and [blog](https://github.com/ROCm-Developer-Tools/HIP/tree/main/samples/0_Intro/square) that uses any of [HIPIFY](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/master/README.md) tools to convert a simple app from CUDA to HIP:
+* A sample and [blog](https://github.com/ROCm-Developer-Tools/hip-tests/tree/develop/samples/0_Intro/square) that uses any of [HIPIFY](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/amd-staging/README.md) tools to convert a simple app from CUDA to HIP:
 
 
 ```shell
@@ -132,12 +131,12 @@ cd samples/01_Intro/square
 # follow README / blog steps to hipify the application.
 ```
 
-* Guide to [Porting a New Cuda Project](docs/markdown/hip_porting_guide.md#porting-a-new-cuda-project")
+* Guide to [Porting a New Cuda Project](docs/user_guide/hip_porting_guide.md/"Porting a New CUDA Project")
 
 
 ## More Examples
-The GitHub repository [HIP-Examples](https://github.com/ROCm-Developer-Tools/HIP-Examples.git) contains a hipified version of the popular Rodinia benchmark suite.
-The README with the procedures and tips the team used during this porting effort is here: [Rodinia Porting Guide](https://github.com/ROCm-Developer-Tools/HIP-Examples/blob/master/rodinia_3.0/hip/README.hip_porting)
+The GitHub repository [HIP-Examples](https://github.com/ROCm-Developer-Tools/HIP-Examples) contains a hipified version of benchmark suite.
+Besides, there are more samples in Github [HIP samples](https://github.com/ROCm-Developer-Tools/hip-tests/tree/develop/samples), showing how to program with different features, build and run.
 
 ## Tour of the HIP Directories
 * **include**:
@@ -149,7 +148,7 @@ The README with the procedures and tips the team used during this porting effort
     * **hipcc** : Compiler driver that can be used to replace nvcc in existing CUDA code. hipcc will call nvcc or HIP-Clang depending on platform and include appropriate platform-specific headers and libraries.
     * **hipconfig** : Print HIP configuration (HIP_PATH, HIP_PLATFORM, HIP_COMPILER, HIP_RUNTIME, CXX config flags, etc.)
 
-* **doc**: Documentation - markdown and doxygen info.
+* **docs**: Documentation - markdown and doxygen info.
 
 ## Reporting an issue
 Use the [GitHub issue tracker](https://github.com/ROCm-Developer-Tools/HIP/issues).
