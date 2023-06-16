@@ -236,7 +236,7 @@ int main() {
   IfTestPassed = true;
 #endif
   if (IfTestPassed == false) {
-    failed("");
+    failed("\n");
   }
   passed();
 }
