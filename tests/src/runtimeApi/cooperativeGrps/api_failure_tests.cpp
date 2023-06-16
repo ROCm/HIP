@@ -60,7 +60,7 @@ static inline void hipCheckAndFail(hipError_t errval,
     std::cerr << "hip error: " << hipGetErrorString(errval);
     std::cerr << std::endl;
     std::cerr << "    Location: " << file << ":" << line << std::endl;
-    failed("");
+    failed("\n");
   }
   if (last_err != errval) {
     std::cerr << "Error: the return value of a function was not the same ";
@@ -70,7 +70,7 @@ static inline void hipCheckAndFail(hipError_t errval,
     std::cerr << " (" << errval << ")" << std::endl;
     std::cerr << "hipGetLastError() returned: " << hipGetErrorString(last_err);
     std::cerr << " (" << last_err << ")" << std::endl;
-    failed("");
+    failed("\n");
   }
 }
 #define hipCheckErr(errval) \
@@ -180,7 +180,7 @@ int main(int argc, char** argv) {
         std::cerr << "to work on the device." << std::endl;
         std::cerr << "This is incorrect, and could possibly lead users ";
         std::cerr << "to try to launch kernels that will fail." << std::endl;
-        //failed("");
+        //failed("\n");
         FailFlag = 1;
         break;
       }
@@ -279,7 +279,7 @@ int main(int argc, char** argv) {
       for (int m = 0; m < 2; ++m) {
         HIPCHECK(hipFree(dev_array[m]));
       }
-      failed("");
+      failed("\n");
     }
   }
   passed();

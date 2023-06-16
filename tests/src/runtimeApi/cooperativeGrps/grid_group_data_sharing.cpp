@@ -67,7 +67,7 @@ static inline void hipCheckAndFail(hipError_t errval,
     std::cerr << " (" << errval << ")" << std::endl;
     std::cerr << "hipGetLastError() returned: " << hipGetErrorString(last_err);
     std::cerr << " (" << last_err << ")" << std::endl;
-    failed("");
+    failed("\n");
   }
 }
 #define hipCheckErr(errval)\
@@ -298,6 +298,6 @@ int main(int argc, char** argv) {
   if (!flag) {
     passed();
   } else {
-    failed("");
+    failed("\n");
   }
 }

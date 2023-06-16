@@ -353,7 +353,7 @@ int main(int argc, char** argv) {
     std::cerr << "Requesting to run " << requested_blocks << " blocks, ";
     std::cerr << "but we can only guarantee to simultaneously run ";
     std::cerr << (max_blocks_per_sm * num_sm) << std::endl;
-    failed("");
+    failed("\n");
   }
 
   /*************************************************************************/
@@ -439,7 +439,7 @@ int main(int argc, char** argv) {
     int local_ret_val = verify_barrier_buffer(loops, requested_blocks,
                                               host_buffer[dev], num_devices);
     if (local_ret_val) {
-      failed("");
+      failed("\n");
     }
   }
 
@@ -463,7 +463,7 @@ int main(int argc, char** argv) {
     free(host_buffer[k]);
   }
   if (flag == 1) {
-    failed("");
+    failed("\n");
   } else {
     passed();
   }
