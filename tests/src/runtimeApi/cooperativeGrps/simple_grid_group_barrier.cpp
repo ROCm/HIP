@@ -219,7 +219,7 @@ int main(int argc, char** argv) {
       std::cerr << "Requesting to run " << requested_blocks << " blocks, ";
       std::cerr << "but we can only guarantee to simultaneously run ";
       std::cerr << (max_blocks_per_sm * num_sms) << std::endl;
-      failed("");
+      failed("\n");
     }
 
     /*************************************************************************/
@@ -278,7 +278,7 @@ int main(int argc, char** argv) {
     HIPCHECK(hipFree(kernel_buffer));
     HIPCHECK(hipFree(kernel_atomic));
     if (ret_val == -1) {
-      failed("");
+      failed("\n");
     } else {
       passed();
     }
