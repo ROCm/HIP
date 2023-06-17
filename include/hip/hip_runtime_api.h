@@ -382,13 +382,13 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeMaxTexture1DLayered,              ///< Cuda only. Maximum dimensions of 1D layered texture.
     hipDeviceAttributeMaxTexture1DLinear,               ///< Maximum number of elements allocatable in a 1D linear texture.
                                                         ///< Use cudaDeviceGetTexture1DLinearMaxWidth() instead on Cuda.
-    hipDeviceAttributeMaxTexture1DMipmap,               ///< Cuda only. Maximum size of 1D mipmapped texture.
+    hipDeviceAttributeMaxTexture1DMipMap,               ///< Cuda only. Maximum size of 1D mipmapped texture.
     hipDeviceAttributeMaxTexture2DWidth,                ///< Maximum dimension width of 2D texture.
     hipDeviceAttributeMaxTexture2DHeight,               ///< Maximum dimension hight of 2D texture.
     hipDeviceAttributeMaxTexture2DGather,               ///< Cuda only. Maximum dimensions of 2D texture if gather operations  performed.
     hipDeviceAttributeMaxTexture2DLayered,              ///< Cuda only. Maximum dimensions of 2D layered texture.
     hipDeviceAttributeMaxTexture2DLinear,               ///< Cuda only. Maximum dimensions (width, height, pitch) of 2D textures bound to pitched memory.
-    hipDeviceAttributeMaxTexture2DMipmap,               ///< Cuda only. Maximum dimensions of 2D mipmapped texture.
+    hipDeviceAttributeMaxTexture2DMipMap,               ///< Cuda only. Maximum dimensions of 2D mipmapped texture.
     hipDeviceAttributeMaxTexture3DWidth,                ///< Maximum dimension width of 3D texture.
     hipDeviceAttributeMaxTexture3DHeight,               ///< Maximum dimension height of 3D texture.
     hipDeviceAttributeMaxTexture3DDepth,                ///< Maximum dimension depth of 3D texture.
@@ -1351,7 +1351,7 @@ typedef enum hipArraySparseSubresourceType {
 typedef struct hipArrayMapInfo {
      hipResourceType resourceType;                   ///< Resource type
      union {
-         hipMipmappedArray mipmap;
+         hipMipMappedArray mipmap;
          hipArray_t array;
      } resource;
      hipArraySparseSubresourceType subresourceType;  ///< Sparse subresource type
@@ -4109,7 +4109,7 @@ hipError_t hipFreeArray(hipArray* array);
  *
  * @return #hipSuccess, #hipErrorInvalidValue
  */
-hipError_t hipFreeMipmappedArray(hipMipmappedArray_t mipmappedArray);
+hipError_t hipFreeMipMappedArray(hipMipMappedArray_t mipmappedArray);
 /**
  *  @brief Allocate an array on the device.
  *
@@ -4134,8 +4134,8 @@ hipError_t hipMalloc3DArray(hipArray** array, const struct hipChannelFormatDesc*
  *
  * @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryAllocation
  */
-hipError_t hipMallocMipmappedArray(
-    hipMipmappedArray_t *mipmappedArray,
+hipError_t hipMallocMipMappedArray(
+    hipMipMappedArray_t *mipmappedArray,
     const struct hipChannelFormatDesc* desc,
     struct hipExtent extent,
     unsigned int numLevels,
@@ -4145,13 +4145,13 @@ hipError_t hipMallocMipmappedArray(
  *
  * @param[out] levelArray     - Returned mipmap level HIP array
  * @param[in]  mipmappedArray - HIP mipmapped array
- * @param[in]  level          - Mipmap level
+ * @param[in]  level          - MipMap level
  *
  * @return #hipSuccess, #hipErrorInvalidValue
  */
-hipError_t hipGetMipmappedArrayLevel(
+hipError_t hipGetMipMappedArrayLevel(
     hipArray_t *levelArray,
-    hipMipmappedArray_const_t mipmappedArray,
+    hipMipMappedArray_const_t mipmappedArray,
     unsigned int level);
 /**
  * @brief Gets info about the specified array
@@ -5442,9 +5442,9 @@ hipError_t hipExtLaunchKernel(const void* function_address, dim3 numBlocks, dim3
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
  */
-hipError_t hipBindTextureToMipmappedArray(
+hipError_t hipBindTextureToMipMappedArray(
     const textureReference* tex,
-    hipMipmappedArray_const_t mipmappedArray,
+    hipMipMappedArray_const_t mipmappedArray,
     const hipChannelFormatDesc* desc);
 
 /**
@@ -5869,7 +5869,7 @@ hipError_t hipTexRefGetMaxAnisotropy(
  *
  */
 DEPRECATED(DEPRECATED_MSG)
-hipError_t hipTexRefGetMipmapFilterMode(
+hipError_t hipTexRefGetMipMapFilterMode(
     enum hipTextureFilterMode* pfm,
     const textureReference* texRef);
 DEPRECATED(DEPRECATED_MSG)
@@ -5882,23 +5882,23 @@ DEPRECATED(DEPRECATED_MSG)
  * @warning This API is deprecated.
  *
  */
-hipError_t hipTexRefGetMipmapLevelBias(
+hipError_t hipTexRefGetMipMapLevelBias(
     float* pbias,
     const textureReference* texRef);
 /**
  * @brief Gets the minimum and maximum mipmap level clamps for a texture reference.
  *
- * @param [out] pminMipmapLevelClamp  Pointer of the minimum mipmap level clamp.
- * @param [out] pmaxMipmapLevelClamp  Pointer of the maximum mipmap level clamp.
+ * @param [out] pminMipMapLevelClamp  Pointer of the minimum mipmap level clamp.
+ * @param [out] pmaxMipMapLevelClamp  Pointer of the maximum mipmap level clamp.
  * @param [in] texRef  Pointer of texture reference.
  *
  * @warning This API is deprecated.
  *
  */
 DEPRECATED(DEPRECATED_MSG)
-hipError_t hipTexRefGetMipmapLevelClamp(
-    float* pminMipmapLevelClamp,
-    float* pmaxMipmapLevelClamp,
+hipError_t hipTexRefGetMipMapLevelClamp(
+    float* pminMipMapLevelClamp,
+    float* pmaxMipMapLevelClamp,
     const textureReference* texRef);
 /**
  * @brief Gets the mipmapped array bound to a texture reference.
@@ -5911,7 +5911,7 @@ hipError_t hipTexRefGetMipmapLevelClamp(
  */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefGetMipMappedArray(
-    hipMipmappedArray_t* pArray,
+    hipMipMappedArray_t* pArray,
     const textureReference* texRef);
 /**
  * @brief Sets an bound address for a texture reference.
@@ -5983,7 +5983,7 @@ hipError_t hipTexRefSetBorderColor(
  *
  */
 DEPRECATED(DEPRECATED_MSG)
-hipError_t hipTexRefSetMipmapFilterMode(
+hipError_t hipTexRefSetMipMapFilterMode(
     textureReference* texRef,
     enum hipTextureFilterMode fm);
 /**
@@ -5996,7 +5996,7 @@ hipError_t hipTexRefSetMipmapFilterMode(
  *
  */
 DEPRECATED(DEPRECATED_MSG)
-hipError_t hipTexRefSetMipmapLevelBias(
+hipError_t hipTexRefSetMipMapLevelBias(
     textureReference* texRef,
     float bias);
 /**
@@ -6010,7 +6010,7 @@ hipError_t hipTexRefSetMipmapLevelBias(
  *
  */
 DEPRECATED(DEPRECATED_MSG)
-hipError_t hipTexRefSetMipmapLevelClamp(
+hipError_t hipTexRefSetMipMapLevelClamp(
     textureReference* texRef,
     float minMipMapLevelClamp,
     float maxMipMapLevelClamp);
@@ -6025,9 +6025,9 @@ hipError_t hipTexRefSetMipmapLevelClamp(
  *
  */
 DEPRECATED(DEPRECATED_MSG)
-hipError_t hipTexRefSetMipmappedArray(
+hipError_t hipTexRefSetMipMappedArray(
     textureReference* texRef,
-    struct hipMipmappedArray* mipmappedArray,
+    struct hipMipMappedArray* mipmappedArray,
     unsigned int Flags);
 
 // doxygen end deprecated texture management
@@ -6047,38 +6047,38 @@ hipError_t hipTexRefSetMipmappedArray(
  * @brief Create a mipmapped array.
  *
  * @param [out] pHandle  pointer to mipmapped array
- * @param [in] pMipmappedArrayDesc  mipmapped array descriptor
- * @param [in] numMipmapLevels  mipmap level
+ * @param [in] pMipMappedArrayDesc  mipmapped array descriptor
+ * @param [in] numMipMapLevels  mipmap level
  *
  * @returns #hipSuccess, #hipErrorNotSupported, #hipErrorInvalidValue
  *
  */
-hipError_t hipMipmappedArrayCreate(
-    hipMipmappedArray_t* pHandle,
-    HIP_ARRAY3D_DESCRIPTOR* pMipmappedArrayDesc,
-    unsigned int numMipmapLevels);
+hipError_t hipMipMappedArrayCreate(
+    hipMipMappedArray_t* pHandle,
+    HIP_ARRAY3D_DESCRIPTOR* pMipMappedArrayDesc,
+    unsigned int numMipMapLevels);
 /**
  * @brief Destroy a mipmapped array.
  *
- * @param [out] hMipmappedArray  pointer to mipmapped array to destroy
+ * @param [out] hMipMappedArray  pointer to mipmapped array to destroy
  *
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
  */
-hipError_t hipMipmappedArrayDestroy(hipMipmappedArray_t hMipmappedArray);
+hipError_t hipMipMappedArrayDestroy(hipMipMappedArray_t hMipMappedArray);
 /**
  * @brief Get a mipmapped array on a mipmapped level.
  *
  * @param [in] pLevelArray Pointer of array
  * @param [out] hMipMappedArray Pointer of mipmapped array on the requested mipmap level
- * @param [out] level  Mipmap level
+ * @param [out] level  MipMap level
  *
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
  */
-hipError_t hipMipmappedArrayGetLevel(
+hipError_t hipMipMappedArrayGetLevel(
     hipArray_t* pLevelArray,
-    hipMipmappedArray_t hMipMappedArray,
+    hipMipMappedArray_t hMipMappedArray,
     unsigned int level);
 // doxygen end unsuppported texture management
 /**
@@ -7630,7 +7630,7 @@ hipError_t hipGraphicsMapResources(int count, hipGraphicsResource_t* resources,
  * @param [out] array - Pointer of array through which a subresource of resource may be accessed.
  * @param [in] resource - Mapped resource to access.
  * @param [in] arrayIndex - Array index for the subresource to access.
- * @param [in] mipLevel - Mipmap level for the subresource to access.
+ * @param [in] mipLevel - MipMap level for the subresource to access.
  * 
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
@@ -8198,42 +8198,42 @@ static inline hipError_t hipBindTextureToArray(
  * @brief Binds a mipmapped array to a texture.
  *
  * @param [in] tex  Texture to bind.
- * @param [in] mipmappedArray  Mipmapped Array of memory on the device.
+ * @param [in] mipmappedArray  MipMapped Array of memory on the device.
  *
  * @warning This API is deprecated.
  *
  */
 template<class T, int dim, enum hipTextureReadMode readMode>
-static inline hipError_t hipBindTextureToMipmappedArray(
+static inline hipError_t hipBindTextureToMipMappedArray(
     const struct texture<T, dim, readMode> &tex,
-    hipMipmappedArray_const_t mipmappedArray)
+    hipMipMappedArray_const_t mipmappedArray)
 {
     struct hipChannelFormatDesc desc;
     hipArray_t levelArray;
-    hipError_t err = hipGetMipmappedArrayLevel(&levelArray, mipmappedArray, 0);
+    hipError_t err = hipGetMipMappedArrayLevel(&levelArray, mipmappedArray, 0);
     if (err != hipSuccess) {
         return err;
     }
     err = hipGetChannelDesc(&desc, levelArray);
-    return (err == hipSuccess) ? hipBindTextureToMipmappedArray(&tex, mipmappedArray, &desc) : err;
+    return (err == hipSuccess) ? hipBindTextureToMipMappedArray(&tex, mipmappedArray, &desc) : err;
 }
 /**
  * @brief Binds a mipmapped array to a texture.
  *
  * @param [in] tex  Texture to bind.
- * @param [in] mipmappedArray  Mipmapped Array of memory on the device.
+ * @param [in] mipmappedArray  MipMapped Array of memory on the device.
  * @param [in] desc  Texture channel format.
  *
  * @warning This API is deprecated.
  *
  */
 template<class T, int dim, enum hipTextureReadMode readMode>
-static inline hipError_t hipBindTextureToMipmappedArray(
+static inline hipError_t hipBindTextureToMipMappedArray(
     const struct texture<T, dim, readMode> &tex,
-    hipMipmappedArray_const_t mipmappedArray,
+    hipMipMappedArray_const_t mipmappedArray,
     const struct hipChannelFormatDesc &desc)
 {
-    return hipBindTextureToMipmappedArray(&tex, mipmappedArray, &desc);
+    return hipBindTextureToMipMappedArray(&tex, mipmappedArray, &desc);
 }
 /**
  * @brief Unbinds a texture.

@@ -95,8 +95,8 @@ typedef struct textureReference {
     unsigned int maxAnisotropy;  // Limit to the anisotropy ratio
     enum hipTextureFilterMode mipmapFilterMode;
     float mipmapLevelBias;
-    float minMipmapLevelClamp;
-    float maxMipmapLevelClamp;
+    float minMipMapLevelClamp;
+    float maxMipMapLevelClamp;
 
     hipTextureObject_t textureObject;
     int numChannels;
@@ -116,8 +116,8 @@ typedef struct hipTextureDesc {
     unsigned int maxAnisotropy;
     enum hipTextureFilterMode mipmapFilterMode;
     float mipmapLevelBias;
-    float minMipmapLevelClamp;
-    float maxMipmapLevelClamp;
+    float minMipMapLevelClamp;
+    float maxMipMapLevelClamp;
 }hipTextureDesc;
 
 #if __cplusplus
@@ -151,8 +151,8 @@ struct __HIP_TEXTURE_ATTRIB texture : public textureReference {
         textureObject = nullptr;
         maxAnisotropy = 0;
         mipmapLevelBias = 0;
-        minMipmapLevelClamp = 0;
-        maxMipmapLevelClamp = 0;
+        minMipMapLevelClamp = 0;
+        maxMipMapLevelClamp = 0;
     }
 
     texture(int norm, enum hipTextureFilterMode fMode, enum hipTextureAddressMode aMode,
@@ -168,8 +168,8 @@ struct __HIP_TEXTURE_ATTRIB texture : public textureReference {
         textureObject = nullptr;
         maxAnisotropy = 0;
         mipmapLevelBias = 0;
-        minMipmapLevelClamp = 0;
-        maxMipmapLevelClamp = 0;
+        minMipMapLevelClamp = 0;
+        maxMipMapLevelClamp = 0;
     }
 };
 
