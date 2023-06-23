@@ -1015,6 +1015,13 @@ typedef struct hipExternalMemoryBufferDesc_st {
   unsigned long long size;
   unsigned int flags;
 } hipExternalMemoryBufferDesc;
+typedef struct hipExternalMemoryMipmappedArrayDesc_st {
+  unsigned long long offset;
+  hipChannelFormatDesc formatDesc;
+  hipExtent extent;
+  unsigned int flags;
+  unsigned int numLevels;
+} hipExternalMemoryMipmappedArrayDesc;
 typedef void* hipExternalMemory_t;
 typedef enum hipExternalSemaphoreHandleType_enum {
   hipExternalSemaphoreHandleTypeOpaqueFd = 1,
@@ -2776,18 +2783,20 @@ hipError_t hipExternalMemoryGetMappedBuffer(void **devPtr, hipExternalMemory_t e
 */
 hipError_t hipDestroyExternalMemory(hipExternalMemory_t extMem);
 /**
- *  @brief Allocate memory on the default accelerator
+ *  @brief Maps a mipmapped array onto an external memory object.
  *
- *  @param[out] ptr Pointer to the allocated memory
- *  @param[in]  size Requested memory size
+ *  @param[out] mipmap mipmapped array to return
+ *  @param[in]  extMem external memory object handle
+ *  @param[in]  mipmapDesc external mipmapped array descriptor
  *
- *  If size is 0, no memory is allocated, *ptr returns nullptr, and hipSuccess is returned.
+ *  Returned mipmapped array must be freed using hipFreeMipmappedArray.
  *
- *  @return #hipSuccess, #hipErrorOutOfMemory, #hipErrorInvalidValue (bad context, null *ptr)
+ *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidResourceHandle
  *
- *  @see hipMallocPitch, hipFree, hipMallocArray, hipFreeArray, hipMalloc3D, hipMalloc3DArray,
- * hipHostFree, hipHostMalloc
+ *  @see hipImportExternalMemory, hipDestroyExternalMemory, hipExternalMemoryGetMappedBuffer, hipFreeMipmappedArray
  */
+hipError_t hipExternalMemoryGetMappedMipmappedArray(hipMipmappedArray_t* mipmap, hipExternalMemory_t extMem,
+    const hipExternalMemoryMipmappedArrayDesc* mipmapDesc);
  // end of external resource
  /**
  * @}
