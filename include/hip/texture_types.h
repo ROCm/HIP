@@ -45,9 +45,8 @@ THE SOFTWARE.
 #if !defined(__HIPCC_RTC__)
 #include <limits.h>
 #include <hip/channel_descriptor.h>
-#endif // !defined(__HIPCC_RTC__)
-
 #include <hip/driver_types.h>
+#endif // !defined(__HIPCC_RTC__)
 
 #define hipTextureType1D 0x01
 #define hipTextureType2D 0x02
