@@ -24,7 +24,6 @@ This is the full HIP Runtime API reference. The API is organized into
 - @ref Clang
 - @ref Texture
   - @ref TextureD
-  - @ref TextureU
 - @ref Runtime
 - @ref Callback
 - @ref Graph
