@@ -96,8 +96,8 @@ typedef enum hiprtcJIT_option {
   HIPRTC_JIT_PREC_SQRT,  ///< PREC_SQRT
   HIPRTC_JIT_FMA,  ///< FMA
   HIPRTC_JIT_NUM_OPTIONS,  ///< Number of options
-  HIPRTC_JIT_IR_TO_ISA_OPT_EXT = 10000,  //< AMD only. Linker options to be passed on to
-  HIPRTC_JIT_IR_TO_ISA_OPT_COUNT_EXT,    //< AMD only. Count of linker options
+  HIPRTC_JIT_IR_TO_ISA_OPT_EXT = 10000,  ///< AMD only. Linker options to be passed on to
+  HIPRTC_JIT_IR_TO_ISA_OPT_COUNT_EXT,    ///< AMD only. Count of linker options
 } hiprtcJIT_option;
 
 /**
@@ -131,7 +131,7 @@ typedef struct ihiprtcLinkState* hiprtcLinkState;
  * @brief Returns text string message to explain the error which occurred
  *
  * @param [in] result  code to convert to string.
- * @return  const char pointer to the NULL-terminated error string
+ * @returns  const char pointer to the NULL-terminated error string
  *
  * @warning In HIP, this function returns the name of the error,
  * if the hiprtc result is defined, it will return "Invalid HIPRTC error code"
@@ -147,8 +147,11 @@ const char* hiprtcGetErrorString(hiprtcResult result);
  * @param [out] major  HIP Runtime Compilation major version.
  * @param [out] minor  HIP Runtime Compilation minor version.
  *
+ * @returns #HIPRTC_ERROR_INVALID_INPUT, #HIPRTC_SUCCESS
+ *
  */
 hiprtcResult hiprtcVersion(int* major, int* minor);
+
 /**
  *  hiprtc program
  *
@@ -161,7 +164,7 @@ typedef struct _hiprtcProgram* hiprtcProgram;
  *
  * @param [in] prog  runtime compilation program instance.
  * @param [in] name_expression  const char pointer to the name expression.
- * @return  #HIPRTC_SUCCESS
+ * @returns  #HIPRTC_SUCCESS
  *
  * If const char pointer is NULL, it will return #HIPRTC_ERROR_INVALID_INPUT.
  *
@@ -171,13 +174,13 @@ hiprtcResult hiprtcAddNameExpression(hiprtcProgram prog,
                                      const char* name_expression);
 
 /**
- * @ingroup Runtime 
+ * @ingroup Runtime
  * @brief Compiles the given runtime compilation program.
  *
  * @param [in] prog  runtime compilation program instance.
  * @param [in] numOptions  number of compiler options.
  * @param [in] options  compiler options as const array of strins.
- * @return #HIPRTC_SUCCESS
+ * @returns #HIPRTC_SUCCESS
  *
  * If the compiler failed to build the runtime compilation program,
  * it will return #HIPRTC_ERROR_COMPILATION.
@@ -199,7 +202,7 @@ hiprtcResult hiprtcCompileProgram(hiprtcProgram prog,
  * @param [in] numHeaders  number of headers.
  * @param [in] headers  array of strings pointing to headers.
  * @param [in] includeNames  array of strings pointing to names included in program source.
- * @return #HIPRTC_SUCCESS
+ * @returns #HIPRTC_SUCCESS
  *
  * Any invalide input parameter, it will return #HIPRTC_ERROR_INVALID_INPUT
  * or #HIPRTC_ERROR_INVALID_PROGRAM.
@@ -219,7 +222,7 @@ hiprtcResult hiprtcCreateProgram(hiprtcProgram* prog,
  * @brief Destroys an instance of given hiprtcProgram.
  * @ingroup Runtime
  * @param [in] prog  runtime compilation program instance.
- * @return #HIPRTC_SUCCESS
+ * @returns #HIPRTC_SUCCESS
  *
  * If prog is NULL, it will return #HIPRTC_ERROR_INVALID_INPUT.
  *
@@ -234,7 +237,7 @@ hiprtcResult hiprtcDestroyProgram(hiprtcProgram* prog);
  * @param [in] prog  runtime compilation program instance.
  * @param [in] name_expression  const char pointer to the name expression.
  * @param [in, out] lowered_name  const char array to the lowered (mangled) name.
- * @return #HIPRTC_SUCCESS
+ * @returns #HIPRTC_SUCCESS
  *
  * If any invalide nullptr input parameters, it will return #HIPRTC_ERROR_INVALID_INPUT
  *
@@ -253,7 +256,7 @@ hiprtcResult hiprtcGetLoweredName(hiprtcProgram prog,
  * @ingroup Runtime
  * @param [in] prog  runtime compilation program instance.
  * @param [out] log  memory pointer to the generated log.
- * @return HIPRTC_SUCCESS
+ * @returns #HIPRTC_SUCCESS
  *
  * @see hiprtcResult
  */
@@ -264,7 +267,7 @@ hiprtcResult hiprtcGetProgramLog(hiprtcProgram prog, char* log);
  *
  * @param [in] prog  runtime compilation program instance.
  * @param [out] logSizeRet  size of generated log.
- * @return HIPRTC_SUCCESS
+ * @returns #HIPRTC_SUCCESS
  *
  * @see hiprtcResult
  */
@@ -276,7 +279,7 @@ hiprtcResult hiprtcGetProgramLogSize(hiprtcProgram prog,
  * @ingroup Runtime
  * @param [in] prog  runtime compilation program instance.
  * @param [out] code  char pointer to binary.
- * @return HIPRTC_SUCCESS
+ * @returns #HIPRTC_SUCCESS
  *
  * @see hiprtcResult
  */
@@ -287,7 +290,7 @@ hiprtcResult hiprtcGetCode(hiprtcProgram prog, char* code);
  * @ingroup Runtime
  * @param [in] prog  runtime compilation program instance.
  * @param [out] codeSizeRet  the size of binary.
- * @return HIPRTC_SUCCESS
+ * @returns #HIPRTC_SUCCESS
  *
  * @see hiprtcResult
  */
@@ -310,7 +313,7 @@ hiprtcResult hiprtcGetBitcode(hiprtcProgram prog, char* bitcode);
  *
  * @param [in] prog  runtime compilation program instance.
  * @param [out] bitcode_size  the size of bitcode.
- * @return #HIPRTC_SUCCESS
+ * @returns #HIPRTC_SUCCESS
  *
  * @see hiprtcResult
  */
@@ -323,8 +326,8 @@ hiprtcResult hiprtcGetBitcodeSize(hiprtcProgram prog, size_t* bitcode_size);
  * @param [in] option_ptr  Array of options
  * @param [in] option_vals_pptr  Array of option values cast to void*
  * @param [out] hip_link_state_ptr  hiprtc link state created upon success
- * 
- * @return #HIPRTC_SUCCESS, #HIPRTC_ERROR_INVALID_INPUT, #HIPRTC_ERROR_INVALID_OPTION
+ *
+ * @returns #HIPRTC_SUCCESS, #HIPRTC_ERROR_INVALID_INPUT, #HIPRTC_ERROR_INVALID_OPTION
  *
  * @see hiprtcResult
  */
@@ -341,7 +344,7 @@ hiprtcResult hiprtcLinkCreate(unsigned int num_options, hiprtcJIT_option* option
  * @param [in] options_ptr  Array of options applied to this input
  * @param [in] option_values  Array of option values cast to void*
  *
- * @return #HIPRTC_SUCCESS
+ * @returns #HIPRTC_SUCCESS
  *
  * If input values are invalid, it will
  * @return #HIPRTC_ERROR_INVALID_INPUT
@@ -365,7 +368,7 @@ hiprtcResult hiprtcLinkAddFile(hiprtcLinkState hip_link_state, hiprtcJITInputTyp
  * @param [in] options_ptr  Array of options applied to this input
  * @param [in] option_values  Array of option values cast to void*
  *
- * @return #HIPRTC_SUCCESS, #HIPRTC_ERROR_INVALID_INPUT
+ * @returns #HIPRTC_SUCCESS, #HIPRTC_ERROR_INVALID_INPUT
  *
  * If adding the file fails, it will
  * @return #HIPRTC_ERROR_PROGRAM_CREATION_FAILURE
@@ -385,7 +388,7 @@ hiprtcResult hiprtcLinkAddData(hiprtcLinkState hip_link_state, hiprtcJITInputTyp
  * @param [out]  bin_out  Upon success, points to the output binary
  * @param [out]  size_out  Size of the binary is stored (optional)
  *
- * @return #HIPRTC_SUCCESS
+ * @returns #HIPRTC_SUCCESS
  *
  * If adding the data fails, it will
  * @return #HIPRTC_ERROR_LINKING
@@ -399,7 +402,7 @@ hiprtcResult hiprtcLinkComplete(hiprtcLinkState hip_link_state, void** bin_out, 
  * @ingroup Runtime
  * @param [in] hip_link_state link state instance
  *
- * @return #HIPRTC_SUCCESS
+ * @returns #HIPRTC_SUCCESS
  *
  * @see hiprtcResult
  */
