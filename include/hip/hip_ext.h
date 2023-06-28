@@ -49,6 +49,9 @@ THE SOFTWARE.
  * @param [in] kernelParams  pointer to kernel parameters.
  * @param [in] extra  Pointer to kernel arguments. These are passed directly to the kernel and
  * must be in the memory layout and alignment expected by the kernel.
+ * All passed arguments must be naturally aligned according to their type. The memory address of each
+ * argument should be a multiple of its size in bytes. Please refer to hip_porting_driver_api.md
+ * for sample usage.
  * @param [in] startEvent  If non-null, specified event will be updated to track the start time of
  * the kernel launch. The event must be created before calling this API.
  * @param [in] stopEvent  If non-null, specified event will be updated to track the stop time of
@@ -57,8 +60,6 @@ THE SOFTWARE.
  * launched in any order.
  * @returns #hipSuccess, #hipInvalidDeviceId, #hipErrorNotInitialized, #hipErrorInvalidValue.
  *
- * @warning  kernellParams argument is not yet implemented in HIP, use extra instead.
- * Please refer to hip_porting_driver_api.md for sample usage.
  * HIP/ROCm actually updates the start event when the associated kernel completes.
  * Currently, timing between startEvent and stopEvent does not include the time it takes to perform
  * a system scope release/cache flush - only the time it takes to issues writes to cache.
