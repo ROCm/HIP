@@ -5042,15 +5042,15 @@ hipError_t hipModuleLoadDataEx(hipModule_t* module, const void* image, unsigned 
  * @param [in] kernelParams
  * @param [in] extra     Pointer to kernel arguments.   These are passed directly to the kernel and
  * must be in the memory layout and alignment expected by the kernel.
+ * All passed arguments must be naturally aligned according to their type. The memory address of each
+ * argument should be a multiple of its size in bytes. Please refer to hip_porting_driver_api.md
+ * for sample usage.
  *
  * Please note, HIP does not support kernel launch with total work items defined in dimension with
  * size gridDim x blockDim >= 2^32. So gridDim.x * blockDim.x, gridDim.y * blockDim.y
  * and gridDim.z * blockDim.z are always less than 2^32.
  *
  * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
- *
- * @warning kernellParams argument is not yet implemented in HIP. Please use extra instead. Please
- * refer to hip_porting_driver_api.md for sample usage.
  */
 hipError_t hipModuleLaunchKernel(hipFunction_t f, unsigned int gridDimX, unsigned int gridDimY,
                                  unsigned int gridDimZ, unsigned int blockDimX,
