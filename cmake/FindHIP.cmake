@@ -52,17 +52,28 @@ if(NOT HIP_CXX_COMPILER)
   set(HIP_CXX_COMPILER ${CMAKE_CXX_COMPILER})
 endif()
 
-# Approach: To find HIP_CLANG_PATH using HIP_CXX_COMPILER options
-# Using --version option of HIP_CXX_COMPILER get the Install Directory
-# This install directory is set as the HIP_CLANG_PATH.
-# IF not successful in getting the Install Directory using HIP_CXX_COMPILER
+# Approach: To find HIP_CLANG_PATH for HIP_CXX_COMPILER types
+# For HIP_CXX_COMPILER as *hipcc use hipconfig -l option to get the clang path.
+# For HIP_CXX_COMPILER as *clang use real path of HIP_CXX_COMPILER
+# IF not successful in getting the CLANG_PATH using HIP_CXX_COMPILER
 # fallback to Old Method to find HIP_CLANG_PATH from ENV Vars, ROCMPATH, HIPPATH etc.
-execute_process(COMMAND ${HIP_CXX_COMPILER} --version
-             OUTPUT_STRIP_TRAILING_WHITESPACE
-             OUTPUT_VARIABLE HIP_CXX_COMPILER_VERSION_OUTPUT)
 if(HIP_CXX_COMPILER MATCHES ".*hipcc")
-  if(HIP_CXX_COMPILER_VERSION_OUTPUT MATCHES "InstalledDir:[ \t]*([^\n]*)")
-    get_filename_component(HIP_CLANG_INSTALL_DIR "${CMAKE_MATCH_1}" DIRECTORY)
+  get_filename_component(HIPCC_PATH "${HIP_CXX_COMPILER}" DIRECTORY)
+  set(_HIPCONFIG_EXECUTABLE "${HIPCC_PATH}/hipconfig")
+  execute_process(COMMAND ${_HIPCONFIG_EXECUTABLE} -l
+             OUTPUT_VARIABLE _HIP_CLANG_INSTALL_PATH
+             OUTPUT_STRIP_TRAILING_WHITESPACE
+             ERROR_VARIABLE _HIPCONFIG_EXE_ERROR
+             ERROR_STRIP_TRAILING_WHITESPACE
+             RESULT_VARIABLE _HIPCONFIG_EXE_EXIT_CODE)
+  if( _HIPCONFIG_EXE_ERROR )
+      message( STATUS "hipconfig -l option failed with error: ${_HIPCONFIG_EXE_ERROR}" )
+  else() #IF hipconfig -l executed with no error
+    if( "${_HIPCONFIG_EXE_EXIT_CODE}" STREQUAL "0" )
+      set(HIP_CLANG_PATH "${_HIP_CLANG_INSTALL_PATH}")
+    else()
+      message( STATUS "${_HIPCONFIG_EXECUTABLE} Failed with Exit code: ${_HIPCONFIG_EXE_EXIT_CODE}" )
+    endif()
   endif()
 elseif (HIP_CXX_COMPILER MATCHES ".*clang\\+\\+")
   get_filename_component(_HIP_CLANG_REAL_PATH "${HIP_CXX_COMPILER}" REALPATH)
