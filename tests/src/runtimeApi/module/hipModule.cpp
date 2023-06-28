@@ -126,7 +126,7 @@ bool isRocmPathSet() {
 
 bool testMultiTargArchCodeObj() {
   bool btestPassed = true;
-#ifdef __linux__
+#if defined(__linux__) && defined(__HIP_PLATFORM_AMD__)
   char command[COMMAND_LEN];
   hipDeviceProp_t props;
   hipGetDeviceProperties(&props, 0);
@@ -161,7 +161,7 @@ bool testMultiTargArchCodeObj() {
   const char* genco_option = "--offload-arch";
   const char* input_codeobj = "/tmp/vcpy_kernel.cpp";
   snprintf(command, COMMAND_LEN,
-  "%s --genco %s=gfx801,gfx802,gfx803,gfx900,gfx908,%s %s -o %s",
+  "unset HIP_PATH;%s --genco %s=gfx801,gfx802,gfx803,gfx900,gfx908,%s %s -o %s",
   hipcc_path, genco_option, props.gcnArchName, input_codeobj,
   CODE_OBJ_MULTIARCH);
 
@@ -173,11 +173,11 @@ bool testMultiTargArchCodeObj() {
 
   if (access(command, F_OK) == -1) {
     printf("Code Object File not found \n");
-    return true;
+    return false;
   }
   btestPassed = testCodeObjFile(CODE_OBJ_MULTIARCH);
 #else
-  printf("This test is skipped due to non linux environment.\n");
+  printf("This test is skipped due to non linux or non AMD environment.\n");
 #endif
   return btestPassed;
 }
