@@ -8,6 +8,8 @@ from rocm_docs import ROCmDocs
 from typing import Any, Dict, List
 
 
+external_projects_current_project = "hip"
+
 name = "HIP"
 version_numbers = []
 version_file = open("../VERSION", "r")
