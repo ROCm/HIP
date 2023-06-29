@@ -7,6 +7,8 @@
 from rocm_docs import ROCmDocs
 from typing import Any, Dict, List
 
+external_projects_current_project = "hip"
+
 docs_core = ROCmDocs("HIP Documentation")
 docs_core.run_doxygen()
 docs_core.enable_api_reference()
