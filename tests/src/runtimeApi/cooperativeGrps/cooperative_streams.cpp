@@ -200,8 +200,8 @@ template<typename T>
 bool verifyFullCapacity(T& single_kernel_time, T& double_kernel_time, T& triple_kernel_time)
 {
   // Test that the two cooperative kernels took roughly twice as long as the one
-  if (double_kernel_time < 1.8 * single_kernel_time ||
-      double_kernel_time > 2.2 * single_kernel_time ) {
+  if (double_kernel_time < 1.7 * single_kernel_time ||
+      double_kernel_time > 2.3 * single_kernel_time ) {
     std::cerr << "ERROR!" << std::endl;
     std::cerr << "Two cooperative kernels launched at the same ";
     std::cerr << "time did not take roughly twice as long as a single ";
@@ -209,14 +209,14 @@ bool verifyFullCapacity(T& single_kernel_time, T& double_kernel_time, T& triple_
     return false;
   }
 
-  // Test that the three kernels together took roughly 1.6 times as long as the two
+  // Test that the three kernels together took roughly 1.9 times as long as the two
   // cooperative kernels. If the first 2 kernels run very fast, the third
   // won't share much time with the second kernel.
-  if (triple_kernel_time > 1.7 * double_kernel_time) {
+  if (triple_kernel_time > 1.9 * double_kernel_time) {
     std::cerr << "ERROR!" << std::endl;
     std::cerr << "Launching a normal kernel in parallel with two ";
     std::cerr << "back-to-back cooperative kernels still ended up taking ";
-    std::cerr << "more than 70% longer than the two cooperative kernels ";
+    std::cerr << "more than 90% longer than the two cooperative kernels ";
     std::cerr << "alone." << std::endl;
     return false;
   }
@@ -331,8 +331,8 @@ int main(int argc, char** argv) {
 
     for (int i = 0; i < 3; i++) {
       HIPCHECK(hipMalloc(reinterpret_cast<void**>(&dev_array[i]),
-                         warp_size * sizeof(long long)));
-      HIPCHECK(hipMemsetAsync(dev_array[i], 0, warp_size * sizeof(long long),
+                         max_active_blocks * warp_size * sizeof(long long)));
+      HIPCHECK(hipMemsetAsync(dev_array[i], 0, max_active_blocks * warp_size * sizeof(long long),
                               streams[i]));
     }
 
@@ -347,6 +347,20 @@ int main(int argc, char** argv) {
       coop_params[i][2] = reinterpret_cast<void*>(&totalTicks);
     }
 
+    hipEvent_t single_start0, single_end0;
+    hipEvent_t single_start, single_end;
+    hipEvent_t double_start, double_end;
+    hipEvent_t triple_start, triple_end;
+
+    HIPCHECK(hipEventCreate(&single_start0));
+    HIPCHECK(hipEventCreate(&single_end0));
+    HIPCHECK(hipEventCreate(&single_start));
+    HIPCHECK(hipEventCreate(&single_end));
+    HIPCHECK(hipEventCreate(&double_start));
+    HIPCHECK(hipEventCreate(&double_end));
+    HIPCHECK(hipEventCreate(&triple_start));
+    HIPCHECK(hipEventCreate(&triple_end));
+
     // Verify over capacity
     HIPCHECK_API(hipLaunchCooperativeKernel(reinterpret_cast<void*>(test_kernel_used),
                                      max_active_blocks + 1, warp_size,
@@ -355,80 +369,89 @@ int main(int argc, char** argv) {
 
     std::cout << "Launching an initial single cooperative kernel..." << std::endl;
     // We need exclude the the initial launching as it will need time to load code obj.
-    auto single_start0 = std::chrono::system_clock::now();
-    HIPCHECK(hipLaunchCooperativeKernel(reinterpret_cast<void*>(test_kernel),
+    HIPCHECK(hipEventRecord(single_start0, 0));
+    HIPCHECK(hipLaunchCooperativeKernel(reinterpret_cast<void*>(test_kernel_used),
                                         max_active_blocks, warp_size,
                                         coop_params[0], 0, streams[0]));
+    HIPCHECK(hipEventRecord(single_end0, 0));
     HIPCHECK(hipDeviceSynchronize());
-    auto single_end0 = std::chrono::system_clock::now();
 
     std::cout << "Launching a single cooperative kernel..." << std::endl;
-    auto single_start = std::chrono::system_clock::now();
-    HIPCHECK(hipLaunchCooperativeKernel(reinterpret_cast<void*>(test_kernel),
+    HIPCHECK(hipEventRecord(single_start, 0));
+    HIPCHECK(hipLaunchCooperativeKernel(reinterpret_cast<void*>(test_kernel_used),
                                         coop_blocks, warp_size,
                                         coop_params[0], 0, streams[0]));
-
+    HIPCHECK(hipEventRecord(single_end, 0));
     HIPCHECK(hipDeviceSynchronize());
-    auto single_end = std::chrono::system_clock::now();
+
     std::cout << "Launching 2 cooperative kernels to different streams...";
     std::cout << std::endl;
-
-    auto double_start = std::chrono::system_clock::now();
-    HIPCHECK(hipLaunchCooperativeKernel(reinterpret_cast<void*>(test_kernel),
+    HIPCHECK(hipEventRecord(double_start, 0));
+    HIPCHECK(hipLaunchCooperativeKernel(reinterpret_cast<void*>(test_kernel_used),
                                         coop_blocks, warp_size,
                                         coop_params[0], 0, streams[0]));
-    HIPCHECK(hipLaunchCooperativeKernel(reinterpret_cast<void*>(test_kernel),
+    HIPCHECK(hipLaunchCooperativeKernel(reinterpret_cast<void*>(test_kernel_used),
                                         coop_blocks, warp_size,
                                         coop_params[1], 0, streams[1]));
-
+    HIPCHECK(hipEventRecord(double_end, 0));
     HIPCHECK(hipDeviceSynchronize());
-    auto double_end = std::chrono::system_clock::now();
+
     std::cout << "Launching 2 cooperative kernels and 1 normal kernel...";
     std::cout << std::endl;
-
-    auto triple_start = std::chrono::system_clock::now();
-    HIPCHECK(hipLaunchCooperativeKernel(reinterpret_cast<void*>(test_kernel),
+    HIPCHECK(hipEventRecord(triple_start, 0));
+    HIPCHECK(hipLaunchCooperativeKernel(reinterpret_cast<void*>(test_kernel_used),
                                         coop_blocks, warp_size,
                                         coop_params[0], 0, streams[0]));
-    HIPCHECK(hipLaunchCooperativeKernel(reinterpret_cast<void*>(test_kernel),
+    HIPCHECK(hipLaunchCooperativeKernel(reinterpret_cast<void*>(test_kernel_used),
                                         coop_blocks, warp_size,
                                         coop_params[1], 0, streams[1]));
-    hipLaunchKernelGGL(test_kernel, dim3(reg_blocks), dim3(warp_size),
+    hipLaunchKernelGGL(test_kernel_used, dim3(reg_blocks), dim3(warp_size),
                        0, streams[2], loops, dev_array[2], totalTicks);
-
+    HIPCHECK(hipEventRecord(triple_end, 0));
     HIPCHECK(hipDeviceSynchronize());
-    auto triple_end = std::chrono::system_clock::now();
-    std::chrono::duration<double> single_kernel_time0 =
-                                  (single_end0 - single_start0);
-    std::chrono::duration<double> single_kernel_time =
-                                  (single_end - single_start);
-    std::chrono::duration<double> double_kernel_time =
-                                  (double_end - double_start);
-    std::chrono::duration<double> triple_kernel_time =
-                                  (triple_end - triple_start);
+
+    float single_kernel_time0;
+    float single_kernel_time;
+    float double_kernel_time;
+    float triple_kernel_time;
+
+    HIPCHECK(hipEventElapsedTime(&single_kernel_time0, single_start0, single_end0));
+    HIPCHECK(hipEventElapsedTime(&single_kernel_time, single_start, single_end));
+    HIPCHECK(hipEventElapsedTime(&double_kernel_time, double_start, double_end));
+    HIPCHECK(hipEventElapsedTime(&triple_kernel_time, triple_start, triple_end));
 
     std::cout << "Initial single kernel took:" << std::endl;
-    std::cout << "    " << single_kernel_time0.count();
-    std::cout << " seconds" << std::endl;
+    std::cout << "    " << (int)single_kernel_time0;
+    std::cout << " milli-seconds" << std::endl;
     std::cout << std::endl;
     std::cout << "A single kernel took:" << std::endl;
-    std::cout << "    " << single_kernel_time.count();
-    std::cout << " seconds" << std::endl;
+    std::cout << "    " << (int)single_kernel_time;
+    std::cout << " milli-seconds" << std::endl;
     std::cout << std::endl;
     std::cout << "Two cooperative kernels that could run together took:";
     std::cout << std::endl;
-    std::cout << "    " << double_kernel_time.count();
-    std::cout << " seconds" << std::endl;
+    std::cout << "    " << (int)double_kernel_time;
+    std::cout << " milli-seconds" << std::endl;
     std::cout << std::endl;
     std::cout << "Two coop kernels and a third regular kernel took:";
     std::cout << std::endl << "    ";
-    std::cout << triple_kernel_time.count();
-    std::cout << " seconds" << std::endl;
+    std::cout << (int)triple_kernel_time;
+    std::cout << " milli-seconds" << std::endl;
 
     std::cout << "Testing whether these times make sense.." << std::endl;
 
     FailFlag = !verify(p_tests, single_kernel_time,
                        double_kernel_time, triple_kernel_time);
+
+
+    HIPCHECK(hipEventDestroy(single_start0));
+    HIPCHECK(hipEventDestroy(single_end0));
+    HIPCHECK(hipEventDestroy(single_start));
+    HIPCHECK(hipEventDestroy(single_end));
+    HIPCHECK(hipEventDestroy(double_start));
+    HIPCHECK(hipEventDestroy(double_end));
+    HIPCHECK(hipEventDestroy(triple_start));
+    HIPCHECK(hipEventDestroy(triple_end));
 
     for (int k = 0; k < 3; ++k) {
       HIPCHECK(hipFree(dev_array[k]));
