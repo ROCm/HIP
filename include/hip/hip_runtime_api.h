@@ -1274,6 +1274,30 @@ typedef struct hipMemAllocationProp {
 } hipMemAllocationProp;
 
 /**
+ * External semaphore signal node parameters
+ */
+typedef struct hipExternalSemaphoreSignalNodeParams {
+    ///< Array containing external semaphore handles.
+    hipExternalSemaphore_t* extSemArray;
+    ///< Array containing parameters of external signal semaphore.
+    const hipExternalSemaphoreSignalParams* paramsArray;
+    ///< Total number of handles and parameters contained in extSemArray and paramsArray.
+    unsigned int numExtSems;
+} hipExternalSemaphoreSignalNodeParams;
+
+/**
+ * External semaphore wait node parameters
+ */
+typedef struct hipExternalSemaphoreWaitNodeParams {
+    ///< Array containing external semaphore handles.
+    hipExternalSemaphore_t* extSemArray;
+    ///< Array containing parameters of external wait semaphore.
+    const hipExternalSemaphoreWaitParams* paramsArray;
+    ///< Total number of handles and parameters contained in extSemArray and paramsArray.
+    unsigned int numExtSems;
+} hipExternalSemaphoreWaitNodeParams;
+
+/**
  * Generic handle for memory allocation
  */
 typedef struct ihipMemGenericAllocationHandle* hipMemGenericAllocationHandle_t;
@@ -4084,14 +4108,6 @@ hipError_t hipMalloc3D(hipPitchedPtr* pitchedDevPtr, hipExtent extent);
  */
 hipError_t hipFreeArray(hipArray* array);
 /**
- * @brief Frees a mipmapped array on the device
- *
- * @param[in] mipmappedArray - Pointer to mipmapped array to free
- *
- * @return #hipSuccess, #hipErrorInvalidValue
- */
-hipError_t hipFreeMipmappedArray(hipMipmappedArray_t mipmappedArray);
-/**
  *  @brief Allocate an array on the device.
  *
  *  @param[out]  array  Pointer to allocated array in device memory
@@ -4104,36 +4120,6 @@ hipError_t hipFreeMipmappedArray(hipMipmappedArray_t mipmappedArray);
  */
 hipError_t hipMalloc3DArray(hipArray** array, const struct hipChannelFormatDesc* desc,
                             struct hipExtent extent, unsigned int flags);
-/**
- * @brief Allocate a mipmapped array on the device
- *
- * @param[out] mipmappedArray  - Pointer to allocated mipmapped array in device memory
- * @param[in]  desc            - Requested channel format
- * @param[in]  extent          - Requested allocation size (width field in elements)
- * @param[in]  numLevels       - Number of mipmap levels to allocate
- * @param[in]  flags           - Flags for extensions
- *
- * @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryAllocation
- */
-hipError_t hipMallocMipmappedArray(
-    hipMipmappedArray_t *mipmappedArray,
-    const struct hipChannelFormatDesc* desc,
-    struct hipExtent extent,
-    unsigned int numLevels,
-    unsigned int flags __dparm(0));
-/**
- * @brief Gets a mipmap level of a HIP mipmapped array
- *
- * @param[out] levelArray     - Returned mipmap level HIP array
- * @param[in]  mipmappedArray - HIP mipmapped array
- * @param[in]  level          - Mipmap level
- *
- * @return #hipSuccess, #hipErrorInvalidValue
- */
-hipError_t hipGetMipmappedArrayLevel(
-    hipArray_t *levelArray,
-    hipMipmappedArray_const_t mipmappedArray,
-    unsigned int level);
 /**
  * @brief Gets info about the specified array
  *
@@ -5414,22 +5400,6 @@ hipError_t hipExtLaunchKernel(const void* function_address, dim3 numBlocks, dim3
  */
 
 /**
- * @brief  Binds a mipmapped array to a texture.
- *
- * @param [in] tex  pointer to the texture reference to bind
- * @param [in] mipmappedArray  memory mipmapped array on the device
- * @param [in] desc  opointer to the channel format
- *
- * @returns #hipSuccess, #hipErrorInvalidValue
- *
- */
-DEPRECATED(DEPRECATED_MSG)
-hipError_t hipBindTextureToMipmappedArray(
-    const textureReference* tex,
-    hipMipmappedArray_const_t mipmappedArray,
-    const hipChannelFormatDesc* desc);
-
-/**
  * @brief Creates a texture object.
  *
  * @param [out] pTexObject  pointer to the texture object to create
@@ -5579,12 +5549,124 @@ hipError_t hipTexObjectGetTextureDesc(
     hipTextureObject_t texObject);
 
 /**
+ * @brief Allocate a mipmapped array on the device.
+ *
+ * @param[out] mipmappedArray  - Pointer to allocated mipmapped array in device memory
+ * @param[in]  desc            - Requested channel format
+ * @param[in]  extent          - Requested allocation size (width field in elements)
+ * @param[in]  numLevels       - Number of mipmap levels to allocate
+ * @param[in]  flags           - Flags for extensions
+ *
+ * @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryAllocation
+ *
+ * @note  This API is implemented on Windows, under development on Linux.
+ *
+ */
+hipError_t hipMallocMipmappedArray(
+    hipMipmappedArray_t *mipmappedArray,
+    const struct hipChannelFormatDesc* desc,
+    struct hipExtent extent,
+    unsigned int numLevels,
+    unsigned int flags __dparm(0));
+
+/**
+ * @brief Frees a mipmapped array on the device.
+ *
+ * @param[in] mipmappedArray - Pointer to mipmapped array to free
+ *
+ * @return #hipSuccess, #hipErrorInvalidValue
+ *
+ * @note  This API is implemented on Windows, under development on Linux.
+ *
+ */
+hipError_t hipFreeMipmappedArray(hipMipmappedArray_t mipmappedArray);
+
+/**
+ * @brief Gets a mipmap level of a HIP mipmapped array.
+ *
+ * @param[out] levelArray     - Returned mipmap level HIP array
+ * @param[in]  mipmappedArray - HIP mipmapped array
+ * @param[in]  level          - Mipmap level
+ *
+ * @return #hipSuccess, #hipErrorInvalidValue
+ *
+ * @note  This API is implemented on Windows, under development on Linux.
+ *
+ */
+hipError_t hipGetMipmappedArrayLevel(
+    hipArray_t *levelArray,
+    hipMipmappedArray_const_t mipmappedArray,
+    unsigned int level);
+
+/**
+ * @brief Create a mipmapped array.
+ *
+ * @param [out] pHandle  pointer to mipmapped array
+ * @param [in] pMipmappedArrayDesc  mipmapped array descriptor
+ * @param [in] numMipmapLevels  mipmap level
+ *
+ * @returns #hipSuccess, #hipErrorNotSupported, #hipErrorInvalidValue
+ *
+ * @note  This API is implemented on Windows, under development on Linux.
+ */
+hipError_t hipMipmappedArrayCreate(
+    hipMipmappedArray_t* pHandle,
+    HIP_ARRAY3D_DESCRIPTOR* pMipmappedArrayDesc,
+    unsigned int numMipmapLevels);
+
+/**
+ * @brief Destroy a mipmapped array.
+ *
+ * @param [out] hMipmappedArray  pointer to mipmapped array to destroy
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * @note  This API is implemented on Windows, under development on Linux.
+ *
+ */
+hipError_t hipMipmappedArrayDestroy(hipMipmappedArray_t hMipmappedArray);
+
+/**
+ * @brief Get a mipmapped array on a mipmapped level.
+ *
+ * @param [in] pLevelArray Pointer of array
+ * @param [out] hMipMappedArray Pointer of mipmapped array on the requested mipmap level
+ * @param [out] level  Mipmap level
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * @note  This API is implemented on Windows, under development on Linux.
+ *
+ */
+hipError_t hipMipmappedArrayGetLevel(
+    hipArray_t* pLevelArray,
+    hipMipmappedArray_t hMipMappedArray,
+    unsigned int level);
+
+/**
  *
  *  @addtogroup TextureD Texture Management [Deprecated]
  *  @{
  *  @ingroup Texture
  *  This section describes the deprecated texture management functions of HIP runtime API.
  */
+
+/**
+ * @brief  Binds a mipmapped array to a texture.
+ *
+ * @param [in] tex  pointer to the texture reference to bind
+ * @param [in] mipmappedArray memory mipmapped array on the device
+ * @param [in] desc  opointer to the channel format
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ */
+DEPRECATED(DEPRECATED_MSG)
+hipError_t hipBindTextureToMipmappedArray(
+    const textureReference* tex,
+    hipMipmappedArray_const_t mipmappedArray,
+    const hipChannelFormatDesc* desc);
+
 /**
  * @brief Gets the texture reference related with the symbol.
  *
@@ -5854,7 +5936,6 @@ DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefGetMipmapFilterMode(
     enum hipTextureFilterMode* pfm,
     const textureReference* texRef);
-DEPRECATED(DEPRECATED_MSG)
 /**
  * @brief Gets the mipmap level bias for a texture reference.
  *
@@ -5864,6 +5945,7 @@ DEPRECATED(DEPRECATED_MSG)
  * @warning This API is deprecated.
  *
  */
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefGetMipmapLevelBias(
     float* pbias,
     const textureReference* texRef);
@@ -6012,53 +6094,6 @@ hipError_t hipTexRefSetMipmappedArray(
     struct hipMipmappedArray* mipmappedArray,
     unsigned int Flags);
 
-/**
- *
- *  @addtogroup TextureU Texture Management [Not supported]
- *  @{
- *  @ingroup Texture
- *  This section describes the texture management functions currently unsupported in HIP runtime.
- */
-/**
- * @brief Create a mipmapped array.
- *
- * @param [out] pHandle  pointer to mipmapped array
- * @param [in] pMipmappedArrayDesc  mipmapped array descriptor
- * @param [in] numMipmapLevels  mipmap level
- *
- * @returns #hipSuccess, #hipErrorNotSupported, #hipErrorInvalidValue
- *
- */
-DEPRECATED(DEPRECATED_MSG)
-hipError_t hipMipmappedArrayCreate(
-    hipMipmappedArray_t* pHandle,
-    HIP_ARRAY3D_DESCRIPTOR* pMipmappedArrayDesc,
-    unsigned int numMipmapLevels);
-/**
- * @brief Destroy a mipmapped array.
- *
- * @param [out] hMipmappedArray  pointer to mipmapped array to destroy
- *
- * @returns #hipSuccess, #hipErrorInvalidValue
- *
- */
-DEPRECATED(DEPRECATED_MSG)
-hipError_t hipMipmappedArrayDestroy(hipMipmappedArray_t hMipmappedArray);
-/**
- * @brief Get a mipmapped array on a mipmapped level.
- *
- * @param [in] pLevelArray Pointer of array
- * @param [out] hMipMappedArray Pointer of mipmapped array on the requested mipmap level
- * @param [out] level  Mipmap level
- *
- * @returns #hipSuccess, #hipErrorInvalidValue
- *
- */
-DEPRECATED(DEPRECATED_MSG)
-hipError_t hipMipmappedArrayGetLevel(
-    hipArray_t* pLevelArray,
-    hipMipmappedArray_t hMipMappedArray,
-    unsigned int level);
 // doxygen end deprecated texture management
 /**
  * @}
@@ -7319,6 +7354,105 @@ hipError_t hipGraphNodeSetEnabled(hipGraphExec_t hGraphExec, hipGraphNode_t hNod
 hipError_t hipGraphNodeGetEnabled(hipGraphExec_t hGraphExec, hipGraphNode_t hNode,
                                   unsigned int* isEnabled);
 
+/**
+ * @brief Creates a external semaphor wait node and adds it to a graph.
+ *
+ * @param [out] pGraphNode - pointer to the graph node to create.
+ * @param [in] graph - instance of the graph to add the created node.
+ * @param [in] pDependencies - const pointer to the dependencies on the memset execution node.
+ * @param [in] numDependencies - the number of the dependencies.
+ * @param [in] nodeParams -pointer to the parameters.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphAddExternalSemaphoresWaitNode(hipGraphNode_t* pGraphNode, hipGraph_t graph,
+                               const hipGraphNode_t* pDependencies, size_t numDependencies,
+                               const hipExternalSemaphoreWaitNodeParams* nodeParams);
+
+/**
+ * @brief Creates a external semaphor signal node and adds it to a graph.
+ *
+ * @param [out] pGraphNode - pointer to the graph node to create.
+ * @param [in] graph - instance of the graph to add the created node.
+ * @param [in] pDependencies - const pointer to the dependencies on the memset execution node.
+ * @param [in] numDependencies - the number of the dependencies.
+ * @param [in] nodeParams -pointer to the parameters.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphAddExternalSemaphoresSignalNode(hipGraphNode_t* pGraphNode, hipGraph_t graph,
+                               const hipGraphNode_t* pDependencies, size_t numDependencies,
+                               const hipExternalSemaphoreSignalNodeParams* nodeParams);
+/**
+ * @brief Updates node parameters in the external semaphore signal node.
+ *
+ * @param [in]  hNode      - Node from the graph from which graphExec was instantiated.
+ * @param [in]  nodeParams  - Pointer to the params to be set.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphExternalSemaphoresSignalNodeSetParams(hipGraphNode_t hNode,
+                                                         const hipExternalSemaphoreSignalNodeParams* nodeParams);
+/**
+ * @brief Updates node parameters in the external semaphore wait node.
+ *
+ * @param [in]  hNode      - Node from the graph from which graphExec was instantiated.
+ * @param [in]  nodeParams  - Pointer to the params to be set.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphExternalSemaphoresWaitNodeSetParams(hipGraphNode_t hNode,
+                                                       const hipExternalSemaphoreWaitNodeParams* nodeParams);
+/**
+ * @brief Returns external semaphore signal node params.
+ *
+ * @param [in]   hNode       - Node from the graph from which graphExec was instantiated.
+ * @param [out]  params_out  - Pointer to params.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphExternalSemaphoresSignalNodeGetParams(hipGraphNode_t hNode,
+                                                         const hipExternalSemaphoreSignalNodeParams* params_out);
+/**
+ * @brief Returns external semaphore wait node params.
+ *
+ * @param [in]   hNode       - Node from the graph from which graphExec was instantiated.
+ * @param [out]  params_out  - Pointer to params.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphExternalSemaphoresWaitNodeGetParams(hipGraphNode_t hNode,
+                                                       const hipExternalSemaphoreWaitNodeParams* params_out);
+/**
+ * @brief Updates node parameters in the external semaphore signal node in the given graphExec.
+ *
+ * @param [in]  hGraphExec - The executable graph in which to set the specified node.
+ * @param [in]  hNode      - Node from the graph from which graphExec was instantiated.
+ * @param [in]  nodeParams  - Pointer to the params to be set.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphExecExternalSemaphoresSignalNodeSetParams(hipGraphExec_t hGraphExec, hipGraphNode_t hNode,
+                                                             const hipExternalSemaphoreSignalNodeParams* nodeParams);
+/**
+ * @brief Updates node parameters in the external semaphore wait node in the given graphExec.
+ *
+ * @param [in]  hGraphExec - The executable graph in which to set the specified node.
+ * @param [in]  hNode      - Node from the graph from which graphExec was instantiated.
+ * @param [in]  nodeParams  - Pointer to the params to be set.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphExecExternalSemaphoresWaitNodeSetParams(hipGraphExec_t hGraphExec, hipGraphNode_t hNode,
+                                                           const hipExternalSemaphoreWaitNodeParams* nodeParams);
 // doxygen end graph API
 /**
  * @}
