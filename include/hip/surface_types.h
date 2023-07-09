@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2022 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -25,7 +25,14 @@ THE SOFTWARE.
 #ifndef HIP_INCLUDE_HIP_SURFACE_TYPES_H
 #define HIP_INCLUDE_HIP_SURFACE_TYPES_H
 
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreserved-identifier"
+#endif
+
+#if !defined(__HIPCC_RTC__)
 #include <hip/driver_types.h>
+#endif
 
 /**
  * An opaque value that represents a hip surface object
@@ -48,5 +55,9 @@ enum hipSurfaceBoundaryMode {
     hipBoundaryModeTrap = 1,
     hipBoundaryModeClamp = 2
 };
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
 
 #endif /* !HIP_INCLUDE_HIP_SURFACE_TYPES_H */
