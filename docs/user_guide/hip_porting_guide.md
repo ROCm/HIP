@@ -461,10 +461,11 @@ In this case, memory type translation for hipPointerGetAttributes needs to be ha
 
 So in any HIP applications which use HIP APIs involving memory types, developers should use #ifdef in order to assign the correct enum values depending on Nvidia or AMD platform.
 
-As an example, please see the code from the link,
-github.com/ROCm-Developer-Tools/HIP/blob/develop/tests/catch/unit/memory/hipMemcpyParam2D.cc#L77-L96.
+As an example, please see the code from the [link](github.com/ROCm-Developer-Tools/HIP/blob/develop/tests/catch/unit/memory/hipMemcpyParam2D.cc).
 
 With the #ifdef condition, HIP APIs work as expected on both AMD and NVIDIA platforms.
+
+Note, cudaMemoryType enum value cudaMemoryTypeUnregstered is not supported currently in hipMemoryType, due to HIP functionality backward compatibility.
 
 ## threadfence_system
 Threadfence_system makes all device memory writes, all writes to mapped host memory, and all writes to peer memory visible to CPU and other GPU devices.

@@ -30,7 +30,6 @@ THE SOFTWARE.
 #ifndef HIP_INCLUDE_HIP_HIP_RUNTIME_API_H
 #define HIP_INCLUDE_HIP_HIP_RUNTIME_API_H
 
-
 #include <string.h>  // for getDeviceProp
 #include <hip/hip_version.h>
 #include <hip/hip_common.h>
@@ -164,6 +163,13 @@ typedef struct hipDeviceProp_t {
  /**
  * hipMemoryType (for pointer attributes)
  *
+ * @note hipMemoryType enum values are different from cudaMemoryType enum values.
+ * In this case, memory type translation for hipPointerGetAttributes needs to be handled properly
+ * on nvidia platform to get the correct memory type in CUDA. Developers should use #ifdef in order
+ * to assign the correct enum values depending on Nvidia or AMD platform.
+ *
+ * @note cudaMemoryTypeUnregistered is currently not supported due to HIP functionality backward
+ * compatibility.
  */
 typedef enum hipMemoryType {
     hipMemoryTypeHost = 0,    ///< Memory is physically located on host
@@ -2616,8 +2622,12 @@ hipError_t hipPointerSetAttribute(const void* value, hipPointer_attribute attrib
  *  @param [out]  attributes  attributes for the specified pointer
  *  @param [in]   ptr         pointer to get attributes for
  *
- *  Note: To get pointer's memory type, the parameter attributes has 'type' as member variable.
- *  The 'type' indicates input pointer is allocated on device or host.
+ *  @note: To get pointer's memory type, the parameter attributes has 'type' as member variable.
+ *  The 'type' indicates input pointer is allocated on device or host. That means the input pointer
+ *  must be returned or passed through an HIP API such as hipHostMalloc, hipMallocManaged,
+ *  hipHostRegister, etc. Otherwise, the pointer can't be handled by this API and attributes
+ *  returned hipErrorInvalidValue, due to the hipMemoryType enums values, unrecognized memory type
+ *  is currently not supported due to HIP functionality backward compatibility. 
  *
  *  @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
  *
