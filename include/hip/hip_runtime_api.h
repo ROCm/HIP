@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -621,7 +621,7 @@ enum hipLimit_t {
 
 /**
 * Host memory allocation will follow numa policy set by user.
-* @note  This numa allocation falg is applicable on Linux, under development on Windows.
+* @note  This numa allocation flag is applicable on Linux, under development on Windows.
 */
 #define hipHostMallocNumaUser  0x20000000
 
@@ -2837,13 +2837,30 @@ hipError_t hipMallocHost(void** ptr, size_t size);
 DEPRECATED("use hipHostMalloc instead")
 hipError_t hipMemAllocHost(void** ptr, size_t size);
 /**
- *  @brief Allocate device accessible page locked host memory
+ *  @brief Allocates device accessible page locked (pinned) host memory
  *
+ *  This API allocates pinned host memory which is mapped into the address space of all GPUs
+ *  in the system, the memory can be accessed directly by the GPU device, and can be read or
+ *  written with much higher bandwidth than pageable memory obtained with functions such as
+ *  malloc().
+ *
+ *  Using the pinned host memory, applications can implement faster data transfers for HostToDevice
+ *  and DeviceToHost. The runtime tracks the hipHostMalloc allocations and can avoid some of the
+ *  setup required for regular unpinned memory.
+ *
+ *  When the memory accesses are infrequent, zero-copy memory can be a good choice, for coherent
+ *  allocation. GPU can directly access the host memory over the CPU/GPU interconnect, without need
+ *  to copy the data.
+ *  
+ *  Currently the allocation granularity is 4KB for the API.
+ *  
+ *  Developers need to choose proper allocation flag with consideration of synchronization.
+ * 
  *  @param[out] ptr Pointer to the allocated host pinned memory
  *  @param[in]  size Requested memory size in bytes
+ *  If size is 0, no memory is allocated, *ptr returns nullptr, and hipSuccess is returned.
  *  @param[in]  flags Type of host memory allocation
  *
- *  If size is 0, no memory is allocated, *ptr returns nullptr, and hipSuccess is returned.
  *  If no input for flags, it will be the default pinned memory allocation on the host.
  *
  *  @return #hipSuccess, #hipErrorOutOfMemory
@@ -2858,16 +2875,25 @@ hipError_t hipHostMalloc(void** ptr, size_t size, unsigned int flags);
  *
  *  @ingroup Memory
  * @{
- *  This section describes the managed memory management functions of HIP runtime API. 
+ *  This section describes the managed memory management functions of HIP runtime API.
  *
- *  @note  The managed memory management APIs are implemented on Linux, under developement on Windows.
+ *  @note  The managed memory management APIs are implemented on Linux, under developement
+ *  on Windows.
  *
  */
 /**
  * @brief Allocates memory that will be automatically managed by HIP.
  *
+ * This API is used for managed memory, allows data be shared and accessible to both the CPU and
+ * GPU using a single pointer.
+ *
+ * The API returns the allocation pointer, managed by HMM, can be used further to execute kernels
+ * on device and fetch data between the host and device as needed.
+ *
+ * @note   It is recommend to do the capability check before call this API.
+ *
  * @param [out] dev_ptr - pointer to allocated device memory
- * @param [in]  size    - requested allocation size in bytes
+ * @param [in]  size    - requested allocation size in bytes, it should be granularity of 4KB
  * @param [in]  flags   - must be either hipMemAttachGlobal or hipMemAttachHost
  *                        (defaults to hipMemAttachGlobal)
  *
@@ -2897,7 +2923,7 @@ hipError_t hipMemPrefetchAsync(const void* dev_ptr,
  * @brief Advise about the usage of a given memory range to HIP.
  *
  * @param [in] dev_ptr  pointer to memory to set the advice for
- * @param [in] count    size in bytes of the memory range
+ * @param [in] count    size in bytes of the memory range, it should be 4KB alligned.
  * @param [in] advice   advice to be applied for the specified memory range
  * @param [in] device   device to apply the advice for
  *
@@ -3006,12 +3032,12 @@ hipError_t hipStreamAttachMemAsync(hipStream_t stream,
  * The allocation comes from the memory pool associated with the stream's device.
  *
  * @note The default memory pool of a device contains device memory from that device.
- * @note Basic stream ordering allows future work submitted into the same stream to use the allocation.
- * Stream query, stream synchronize, and HIP events can be used to guarantee that the allocation
- * operation completes before work submitted in a separate stream runs.
- * @note During stream capture, this function results in the creation of an allocation node. In this case,
- * the allocation is owned by the graph instead of the memory pool. The memory pool's properties
- * are used to set the node's creation parameters.
+ * @note Basic stream ordering allows future work submitted into the same stream to use the
+ *  allocation. Stream query, stream synchronize, and HIP events can be used to guarantee that
+ *  the allocation operation completes before work submitted in a separate stream runs.
+ * @note During stream capture, this function results in the creation of an allocation node.
+ *  In this case, the allocation is owned by the graph instead of the memory pool. The memory
+ *  pool's properties are used to set the node's creation parameters.
  *
  * @param [out] dev_ptr  Returned device pointer of memory allocation
  * @param [in] size      Number of bytes to allocate
@@ -3410,7 +3436,7 @@ hipError_t hipMemPoolImportPointer(
  *
  *  @return #hipSuccess, #hipErrorOutOfMemory
  *
- *  @deprecated use hipHostMalloc() instead
+ *  @warning This API is deprecated, use hipHostMalloc() instead
  */
 DEPRECATED("use hipHostMalloc instead")
 hipError_t hipHostAlloc(void** ptr, size_t size, unsigned int flags);
@@ -4572,8 +4598,8 @@ hipError_t hipMemcpyPeerAsync(void* dst, int dstDeviceId, const void* src, int s
 /**
  * @brief Create a context and set it as current/default context
  *
- * @param [out] ctx  Context to create 
- * @param [in] flags  Context creation flags 
+ * @param [out] ctx  Context to create
+ * @param [in] flags  Context creation flags
  * @param [in] device  device handle
  *
  * @return #hipSuccess
@@ -5442,6 +5468,7 @@ hipError_t hipExtLaunchKernel(const void* function_address, dim3 numBlocks, dim3
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
  */
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipBindTextureToMipmappedArray(
     const textureReference* tex,
     hipMipmappedArray_const_t mipmappedArray,
@@ -6030,12 +6057,6 @@ hipError_t hipTexRefSetMipmappedArray(
     struct hipMipmappedArray* mipmappedArray,
     unsigned int Flags);
 
-// doxygen end deprecated texture management
-/**
- * @}
- */
-
-// The following are not supported.
 /**
  *
  *  @addtogroup TextureU Texture Management [Not supported]
@@ -6053,6 +6074,7 @@ hipError_t hipTexRefSetMipmappedArray(
  * @returns #hipSuccess, #hipErrorNotSupported, #hipErrorInvalidValue
  *
  */
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipMipmappedArrayCreate(
     hipMipmappedArray_t* pHandle,
     HIP_ARRAY3D_DESCRIPTOR* pMipmappedArrayDesc,
@@ -6065,6 +6087,7 @@ hipError_t hipMipmappedArrayCreate(
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
  */
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipMipmappedArrayDestroy(hipMipmappedArray_t hMipmappedArray);
 /**
  * @brief Get a mipmapped array on a mipmapped level.
@@ -6076,11 +6099,12 @@ hipError_t hipMipmappedArrayDestroy(hipMipmappedArray_t hMipmappedArray);
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
  */
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipMipmappedArrayGetLevel(
     hipArray_t* pLevelArray,
     hipMipmappedArray_t hMipMappedArray,
     unsigned int level);
-// doxygen end unsuppported texture management
+// doxygen end deprecated texture management
 /**
  * @}
  */
@@ -7631,8 +7655,10 @@ hipError_t hipGraphicsMapResources(int count, hipGraphicsResource_t* resources,
  * @param [in] resource - Mapped resource to access.
  * @param [in] arrayIndex - Array index for the subresource to access.
  * @param [in] mipLevel - Mipmap level for the subresource to access.
- * 
+ *
  * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * @note  In this API, the value of arrayIndex higher than zero is currently not supported.
  *
  */
 hipError_t hipGraphicsSubResourceGetMappedArray(hipArray_t* array, hipGraphicsResource_t resource,
@@ -7643,7 +7669,7 @@ hipError_t hipGraphicsSubResourceGetMappedArray(hipArray_t* array, hipGraphicsRe
  * @param [out] devPtr - Pointer of device through which graphic resource may be accessed.
  * @param [out] size - Size of the buffer accessible from devPtr.
  * @param [in] resource - Mapped resource to access.
- * 
+ *
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
  */
@@ -8204,6 +8230,7 @@ static inline hipError_t hipBindTextureToArray(
  *
  */
 template<class T, int dim, enum hipTextureReadMode readMode>
+DEPRECATED(DEPRECATED_MSG)
 static inline hipError_t hipBindTextureToMipmappedArray(
     const struct texture<T, dim, readMode> &tex,
     hipMipmappedArray_const_t mipmappedArray)
@@ -8228,6 +8255,7 @@ static inline hipError_t hipBindTextureToMipmappedArray(
  *
  */
 template<class T, int dim, enum hipTextureReadMode readMode>
+DEPRECATED(DEPRECATED_MSG)
 static inline hipError_t hipBindTextureToMipmappedArray(
     const struct texture<T, dim, readMode> &tex,
     hipMipmappedArray_const_t mipmappedArray,

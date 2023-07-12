@@ -352,7 +352,7 @@ int main(int argc, char** argv) {
       std::cerr << "Requesting to run " << requested_blocks << " blocks, ";
       std::cerr << "but we can only guarantee to simultaneously run ";
       std::cerr << (max_blocks_per_sm * num_sm) << std::endl;
-      failed("");
+      failed("\n");
     }
 
     /*************************************************************************/
@@ -463,7 +463,7 @@ int main(int argc, char** argv) {
     }
   }
   if (flag == 1) {
-    failed("");
+    failed("\n");
   } else {
     passed();
   }
