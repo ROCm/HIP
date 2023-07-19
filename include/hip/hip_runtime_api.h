@@ -41,7 +41,16 @@ enum {
     HIP_ERROR_NOT_INITIALIZED,
     HIP_ERROR_LAUNCH_OUT_OF_RESOURCES
 };
-
+// hack to get these to show up in Doxygen:
+/**
+ * @defgroup GlobalDefs Global enum and defines
+ * @{
+ *
+ */
+/**
+ * hipDeviceArch_t
+ *
+ */
 typedef struct {
     // 32-bit Atomics
     unsigned hasGlobalInt32Atomics : 1;     ///< 32-bit integer atomics for global memory.
@@ -152,11 +161,9 @@ typedef struct hipDeviceProp_t {
     int pageableMemoryAccessUsesHostPageTables; ///< Device accesses pageable memory via the host's page tables
 } hipDeviceProp_t;
 
-
- /*
- * @brief HIP Memory type (for pointer attributes)
- * @enum
- * @ingroup Enumerations
+ /**
+ * hipMemoryType (for pointer attributes)
+ *
  */
 typedef enum hipMemoryType {
     hipMemoryTypeHost = 0,    ///< Memory is physically located on host
@@ -186,14 +193,6 @@ typedef struct hipPointerAttribute_t {
     /* peers? */
 } hipPointerAttribute_t;
 
-
-// hack to get these to show up in Doxygen:
-/**
- *     @defgroup GlobalDefs Global enum and defines
- *     @{
- *
- */
-
 // Ignoring error-code return values from hip APIs is discouraged. On C++17,
 // we can make that yield a warning
 #if __cplusplus >= 201703L
@@ -202,10 +201,9 @@ typedef struct hipPointerAttribute_t {
 #define __HIP_NODISCARD
 #endif
 
-/*
- * @brief hipError_t
- * @enum
- * @ingroup Enumerations
+/**
+ * HIP error type
+ *
  */
 // Developer note - when updating these, update the hipErrorName and hipErrorString functions in
 // NVCC and HCC paths Also update the hipCUDAErrorTohipError function in NVCC path.
@@ -214,29 +212,29 @@ typedef enum __HIP_NODISCARD hipError_t {
     hipSuccess = 0,  ///< Successful completion.
     hipErrorInvalidValue = 1,  ///< One or more of the parameters passed to the API call is NULL
                                ///< or not in an acceptable range.
-    hipErrorOutOfMemory = 2,
+    hipErrorOutOfMemory = 2,   ///< out of memory range.
     // Deprecated
     hipErrorMemoryAllocation = 2,  ///< Memory allocation error.
-    hipErrorNotInitialized = 3,
+    hipErrorNotInitialized = 3,    ///< Invalid not initialized
     // Deprecated
     hipErrorInitializationError = 3,
-    hipErrorDeinitialized = 4,
+    hipErrorDeinitialized = 4,      ///< Deinitialized
     hipErrorProfilerDisabled = 5,
     hipErrorProfilerNotInitialized = 6,
     hipErrorProfilerAlreadyStarted = 7,
     hipErrorProfilerAlreadyStopped = 8,
-    hipErrorInvalidConfiguration = 9,
-    hipErrorInvalidPitchValue = 12,
-    hipErrorInvalidSymbol = 13,
+    hipErrorInvalidConfiguration = 9,  ///< Invalide configuration
+    hipErrorInvalidPitchValue = 12,   ///< Invalid pitch value
+    hipErrorInvalidSymbol = 13,   ///< Invalid symbol
     hipErrorInvalidDevicePointer = 17,  ///< Invalid Device Pointer
     hipErrorInvalidMemcpyDirection = 21,  ///< Invalid memory copy direction
     hipErrorInsufficientDriver = 35,
     hipErrorMissingConfiguration = 52,
     hipErrorPriorLaunchFailure = 53,
-    hipErrorInvalidDeviceFunction = 98,
+    hipErrorInvalidDeviceFunction = 98,  ///< Invalid device function
     hipErrorNoDevice = 100,  ///< Call to hipGetDeviceCount returned 0 devices
-    hipErrorInvalidDevice = 101,  ///< DeviceID must be in range 0...#compute-devices.
-    hipErrorInvalidImage = 200,
+    hipErrorInvalidDevice = 101,  ///< DeviceID must be in range from 0 to compute-devices.
+    hipErrorInvalidImage = 200,   ///< Invalid image
     hipErrorInvalidContext = 201,  ///< Produced when input context is invalid.
     hipErrorContextAlreadyCurrent = 202,
     hipErrorMapFailed = 205,
@@ -251,34 +249,34 @@ typedef enum __HIP_NODISCARD hipError_t {
     hipErrorNotMappedAsArray = 212,
     hipErrorNotMappedAsPointer = 213,
     hipErrorECCNotCorrectable = 214,
-    hipErrorUnsupportedLimit = 215,
-    hipErrorContextAlreadyInUse = 216,
+    hipErrorUnsupportedLimit = 215,   ///< Unsupported limit
+    hipErrorContextAlreadyInUse = 216,   ///< The context is already in use
     hipErrorPeerAccessUnsupported = 217,
     hipErrorInvalidKernelFile = 218,  ///< In CUDA DRV, it is CUDA_ERROR_INVALID_PTX
     hipErrorInvalidGraphicsContext = 219,
-    hipErrorInvalidSource = 300,
-    hipErrorFileNotFound = 301,
+    hipErrorInvalidSource = 300,   ///< Invalid source.
+    hipErrorFileNotFound = 301,   ///< the file is not found.
     hipErrorSharedObjectSymbolNotFound = 302,
-    hipErrorSharedObjectInitFailed = 303,
-    hipErrorOperatingSystem = 304,
-    hipErrorInvalidHandle = 400,
+    hipErrorSharedObjectInitFailed = 303,   ///< Failed to initialize shared object.
+    hipErrorOperatingSystem = 304,   ///< Not the correct operating system
+    hipErrorInvalidHandle = 400,  ///< Invalide handle
     // Deprecated
     hipErrorInvalidResourceHandle = 400,  ///< Resource handle (hipEvent_t or hipStream_t) invalid.
     hipErrorIllegalState = 401, ///< Resource required is not in a valid state to perform operation.
-    hipErrorNotFound = 500,
+    hipErrorNotFound = 500,   ///< Not found
     hipErrorNotReady = 600,  ///< Indicates that asynchronous operations enqueued earlier are not
                              ///< ready.  This is not actually an error, but is used to distinguish
                              ///< from hipSuccess (which indicates completion).  APIs that return
                              ///< this error include hipEventQuery and hipStreamQuery.
     hipErrorIllegalAddress = 700,
     hipErrorLaunchOutOfResources = 701,  ///< Out of resources error.
-    hipErrorLaunchTimeOut = 702,
+    hipErrorLaunchTimeOut = 702,   ///< Timeout for the launch.
     hipErrorPeerAccessAlreadyEnabled =
         704,  ///< Peer access was already enabled from the current device.
     hipErrorPeerAccessNotEnabled =
         705,  ///< Peer access was never enabled from the current device.
-    hipErrorSetOnActiveProcess = 708,
-    hipErrorContextIsDestroyed = 709,
+    hipErrorSetOnActiveProcess = 708,   ///< The process is active.
+    hipErrorContextIsDestroyed = 709,   ///< The context is already destroyed 
     hipErrorAssert = 710,  ///< Produced when the kernel calls assert.
     hipErrorHostMemoryAlreadyRegistered =
         712,  ///< Produced when trying to lock a page-locked memory.
@@ -317,7 +315,7 @@ typedef enum __HIP_NODISCARD hipError_t {
                                            ///< not performed because it included changes which
                                            ///< violated constraintsspecific to instantiated graph
                                            ///< update.
-    hipErrorUnknown = 999,  //< Unknown error.
+    hipErrorUnknown = 999,  ///< Unknown error.
     // HSA Runtime Error Codes start here.
     hipErrorRuntimeMemory = 1052,  ///< HSA runtime memory call returned error.  Typically not seen
                                    ///< in production systems.
@@ -328,10 +326,9 @@ typedef enum __HIP_NODISCARD hipError_t {
 
 #undef __HIP_NODISCARD
 
-/*
- * @brief hipDeviceAttribute_t
- * @enum
- * @ingroup Enumerations
+/**
+ * hipDeviceAttribute_t
+ *
  */
 typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeCudaCompatibleBegin = 0,
@@ -473,10 +470,6 @@ enum hipComputeMode {
     hipComputeModeExclusiveProcess = 3
 };
 
-/**
- * @}
- */
-
 #if (defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) && !(defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__))
 
 #include <stdint.h>
@@ -556,14 +549,13 @@ typedef struct hipFuncAttributes {
 } hipFuncAttributes;
 typedef struct ihipEvent_t* hipEvent_t;
 enum hipLimit_t {
-    hipLimitStackSize = 0x0,        // limit device stack size
-    hipLimitPrintfFifoSize = 0x01,  // limit printf fifo size
-    hipLimitMallocHeapSize = 0x02,  // limit heap size
-    hipLimitRange                   // supported limit range
+    hipLimitStackSize = 0x0,        ///< limit of stack size in bytes on the current device 
+    hipLimitPrintfFifoSize = 0x01,  ///< size limit in bytes of fifo used by printf call on the device
+    hipLimitMallocHeapSize = 0x02,  ///< limit of heap size in bytes on the current device
+    hipLimitRange                   ///< supported limit range
 };
 /**
- * @addtogroup GlobalDefs More
- * @{
+ * Flags that can be used with hipStreamCreateWithFlags.
  */
 //Flags that can be used with hipStreamCreateWithFlags.
 /** Default stream creation flags. These are used with hipStreamCreate().*/
@@ -711,10 +703,10 @@ enum hipLimit_t {
 
 // Indicates that the external memory object is a dedicated resource
 #define hipExternalMemoryDedicated 0x1
-/*
- * @brief HIP Memory Advise values
- * @enum
- * @ingroup Enumerations
+/**
+ * HIP Memory Advise values
+ *
+ * @note This memory advise enumeration is used on Linux, not Windows.
  */
 typedef enum hipMemoryAdvise {
     hipMemAdviseSetReadMostly = 1,          ///< Data will mostly be read and only occassionally
@@ -723,7 +715,7 @@ typedef enum hipMemoryAdvise {
     hipMemAdviseSetPreferredLocation = 3,   ///< Set the preferred location for the data as
                                             ///< the specified device
     hipMemAdviseUnsetPreferredLocation = 4, ///< Clear the preferred location for the data
-    hipMemAdviseSetAccessedBy = 5,          ///< Data will be accessed by the specified device,
+    hipMemAdviseSetAccessedBy = 5,          ///< Data will be accessed by the specified device 
                                             ///< so prevent page faults as much as possible
     hipMemAdviseUnsetAccessedBy = 6,        ///< Let HIP to decide on the page faulting policy
                                             ///< for the specified device
@@ -734,10 +726,8 @@ typedef enum hipMemoryAdvise {
                                             ///< boundaries for better performance
     hipMemAdviseUnsetCoarseGrain = 101      ///< Restores cache coherency policy back to fine-grain
 } hipMemoryAdvise;
-/*
- * @brief HIP Coherency Mode
- * @enum
- * @ingroup Enumerations
+/**
+ * HIP Coherency Mode
  */
 typedef enum hipMemRangeCoherencyMode {
     hipMemRangeCoherencyModeFineGrain = 0,      ///< Updates to memory with this attribute can be
@@ -748,10 +738,8 @@ typedef enum hipMemRangeCoherencyMode {
                                                 ///< both hipMemRangeCoherencyModeFineGrain and
                                                 ///< hipMemRangeCoherencyModeCoarseGrain attributes
 } hipMemRangeCoherencyMode;
-/*
- * @brief HIP range attributes
- * @enum
- * @ingroup Enumerations
+/**
+ * HIP range attributes
  */
 typedef enum hipMemRangeAttribute {
     hipMemRangeAttributeReadMostly = 1,         ///< Whether the range will mostly be read and
@@ -766,9 +754,7 @@ typedef enum hipMemRangeAttribute {
 } hipMemRangeAttribute;
 
 /**
- * @brief HIP memory pool attributes
- * @enum
- * @ingroup Enumerations
+ * HIP memory pool attributes
  */
 typedef enum hipMemPoolAttr
 {
@@ -827,9 +813,7 @@ typedef enum hipMemPoolAttr
     hipMemPoolAttrUsedMemHigh                = 0x8
 } hipMemPoolAttr;
 /**
- * @brief Specifies the type of location
- * @enum
- * @ingroup Enumerations
+ * Specifies the type of location
  */
  typedef enum hipMemLocationType {
     hipMemLocationTypeInvalid = 0,
@@ -845,9 +829,8 @@ typedef struct hipMemLocation {
     int id;                   ///< Identifier for the provided location type @p hipMemLocationType
 } hipMemLocation;
 /**
- * @brief Specifies the memory protection flags for mapping
- * @enum
- * @ingroup Enumerations
+ * Specifies the memory protection flags for mapping
+ *
  */
 typedef enum hipMemAccessFlags {
     hipMemAccessFlagsProtNone      = 0,  ///< Default, make the address range not accessible
@@ -862,9 +845,7 @@ typedef struct hipMemAccessDesc {
     hipMemAccessFlags   flags;    ///< Accessibility flags to set
 } hipMemAccessDesc;
 /**
- * @brief Defines the allocation types
- * @enum
- * @ingroup Enumerations
+ * Defines the allocation types
  */
 typedef enum hipMemAllocationType {
     hipMemAllocationTypeInvalid = 0x0,
@@ -875,9 +856,8 @@ typedef enum hipMemAllocationType {
     hipMemAllocationTypeMax     = 0x7FFFFFFF
 } hipMemAllocationType;
 /**
- * @brief Flags for specifying handle types for memory pool allocations
- * @enum
- * @ingroup Enumerations
+ * Flags for specifying handle types for memory pool allocations
+ *
  */
 typedef enum hipMemAllocationHandleType {
     hipMemHandleTypeNone                    = 0x0,  ///< Does not allow any export mechanism
@@ -905,10 +885,8 @@ typedef struct hipMemPoolPtrExportData {
     unsigned char reserved[64];
 } hipMemPoolPtrExportData;
 
-/*
- * @brief hipJitOption
- * @enum
- * @ingroup Enumerations
+/**
+ * hipJitOption
  */
 typedef enum hipJitOption {
     hipJitOptionMaxRegisters = 0,
@@ -959,7 +937,6 @@ typedef enum hipSharedMemConfig {
 } hipSharedMemConfig;
 /**
  * Struct for data in 3D
- *
  */
 typedef struct dim3 {
     uint32_t x;  ///< x
@@ -969,6 +946,9 @@ typedef struct dim3 {
     constexpr __host__ __device__ dim3(uint32_t _x = 1, uint32_t _y = 1, uint32_t _z = 1) : x(_x), y(_y), z(_z){};
 #endif
 } dim3;
+/**
+ * struct hipLaunchParams_t
+ */
 typedef struct hipLaunchParams_t {
     void* func;             ///< Device function symbol
     dim3 gridDim;           ///< Grid dimentions
@@ -977,6 +957,9 @@ typedef struct hipLaunchParams_t {
     size_t sharedMem;       ///< Shared memory
     hipStream_t stream;     ///< Stream identifier
 } hipLaunchParams;
+/**
+ * struct hipFunctionLaunchParams_t
+ */
 typedef struct hipFunctionLaunchParams_t {
     hipFunction_t function;      ///< Kernel to launch
     unsigned int gridDimX;       ///< Width(X) of grid in blocks
@@ -1069,16 +1052,13 @@ typedef struct hipExternalSemaphoreWaitParams_st {
 /**
  * Internal use only. This API may change in the future
  * Pre-Compiled header for online compilation
- *
  */
     void __hipGetPCH(const char** pch, unsigned int*size);
 #endif
 
-/*
-    * @brief HIP Devices used by current OpenGL Context.
-    * @enum
-    * @ingroup Enumerations
-    */
+/**
+ * HIP Devices used by current OpenGL Context.
+ */
 typedef enum hipGLDeviceList {
     hipGLDeviceListAll = 1,           ///< All hip devices used by current OpenGL context.
     hipGLDeviceListCurrentFrame = 2,  ///< Hip devices used by current OpenGL context in current
@@ -1087,11 +1067,9 @@ typedef enum hipGLDeviceList {
                                     ///< frame.
 } hipGLDeviceList;
 
-/*
-    * @brief HIP Access falgs for Interop resources.
-    * @enum
-    * @ingroup Enumerations
-    */
+/**
+ * HIP Access falgs for Interop resources.
+ */
 typedef enum hipGraphicsRegisterFlags {
     hipGraphicsRegisterFlagsNone = 0,
     hipGraphicsRegisterFlagsReadOnly = 1,  ///< HIP will not write to this registered resource
@@ -1126,9 +1104,7 @@ typedef struct hipUserObject* hipUserObject_t;
 
 
 /**
- * @brief hipGraphNodeType
- * @enum
- *
+ * hipGraphNodeType
  */
 typedef enum hipGraphNodeType {
   hipGraphNodeTypeKernel = 0,             ///< GPU kernel node
@@ -1181,9 +1157,7 @@ typedef struct hipMemAllocNodeParams {
 } hipMemAllocNodeParams;
 
 /**
- * @brief hipKernelNodeAttrID
- * @enum
- *
+ * Kernel node attributeID
  */
 typedef enum hipKernelNodeAttrID {
     hipKernelNodeAttributeAccessPolicyWindow = 1,
@@ -1207,9 +1181,7 @@ typedef union hipKernelNodeAttrValue {
 } hipKernelNodeAttrValue;
 
 /**
- * @brief hipGraphExecUpdateResult
- * @enum
- *
+ * Graph execution update result
  */
 typedef enum hipGraphExecUpdateResult {
   hipGraphExecUpdateSuccess = 0x0,  ///< The update succeeded
@@ -1302,14 +1274,36 @@ typedef struct hipMemAllocationProp {
 } hipMemAllocationProp;
 
 /**
+ * External semaphore signal node parameters
+ */
+typedef struct hipExternalSemaphoreSignalNodeParams {
+    ///< Array containing external semaphore handles.
+    hipExternalSemaphore_t* extSemArray;
+    ///< Array containing parameters of external signal semaphore.
+    const hipExternalSemaphoreSignalParams* paramsArray;
+    ///< Total number of handles and parameters contained in extSemArray and paramsArray.
+    unsigned int numExtSems;
+} hipExternalSemaphoreSignalNodeParams;
+
+/**
+ * External semaphore wait node parameters
+ */
+typedef struct hipExternalSemaphoreWaitNodeParams {
+    ///< Array containing external semaphore handles.
+    hipExternalSemaphore_t* extSemArray;
+    ///< Array containing parameters of external wait semaphore.
+    const hipExternalSemaphoreWaitParams* paramsArray;
+    ///< Total number of handles and parameters contained in extSemArray and paramsArray.
+    unsigned int numExtSems;
+} hipExternalSemaphoreWaitNodeParams;
+
+/**
  * Generic handle for memory allocation
  */
 typedef struct ihipMemGenericAllocationHandle* hipMemGenericAllocationHandle_t;
 
 /**
- * @brief Flags for granularity
- * @enum
- * @ingroup Enumerations
+ * Flags for granularity
  */
 typedef enum hipMemAllocationGranularity_flags {
     hipMemAllocationGranularityMinimum     = 0x0,  ///< Minimum granularity
@@ -1317,18 +1311,14 @@ typedef enum hipMemAllocationGranularity_flags {
 } hipMemAllocationGranularity_flags;
 
 /**
- * @brief Memory handle type
- * @enum
- * @ingroup Enumerations
+ * Memory handle type
  */
 typedef enum hipMemHandleType {
     hipMemHandleTypeGeneric = 0x0  ///< Generic handle type
 } hipMemHandleType;
 
 /**
- * @brief Memory operation types
- * @enum
- * @ingroup Enumerations
+ * Memory operation types
  */
 typedef enum hipMemOperationType {
     hipMemOperationTypeMap   = 0x1,   ///< Map operation
@@ -1336,9 +1326,7 @@ typedef enum hipMemOperationType {
 } hipMemOperationType;
 
 /**
- * @brief Subresource types for sparse arrays
- * @enum
- * @ingroup Enumerations
+ * Subresource types for sparse arrays
  */
 typedef enum hipArraySparseSubresourceType {
     hipArraySparseSubresourceTypeSparseLevel = 0x0, ///< Sparse level
@@ -1383,18 +1371,9 @@ typedef struct hipArrayMapInfo {
      unsigned int reserved[2];                       ///< Reserved for future use, must be zero now.
 } hipArrayMapInfo;
 // Doxygen end group GlobalDefs
-/**  @} */
-//-------------------------------------------------------------------------------------------------
-// The handle allows the async commands to use the stream even if the parent hipStream_t goes
-// out-of-scope.
-// typedef class ihipStream_t * hipStream_t;
-/*
- * Opaque structure allows the true event (pointed at by the handle) to remain "live" even if the
- * surrounding hipEvent_t goes out-of-scope. This is handy for cases where the hipEvent_t goes
- * out-of-scope but the true event is being written by some async queue or device */
-// typedef struct hipEvent_t {
-//    struct ihipEvent_t *_handle;
-//} hipEvent_t;
+/**
+* @} 
+*/
 /**
  *  @defgroup API HIP API
  *  @{
@@ -4129,14 +4108,6 @@ hipError_t hipMalloc3D(hipPitchedPtr* pitchedDevPtr, hipExtent extent);
  */
 hipError_t hipFreeArray(hipArray* array);
 /**
- * @brief Frees a mipmapped array on the device
- *
- * @param[in] mipmappedArray - Pointer to mipmapped array to free
- *
- * @return #hipSuccess, #hipErrorInvalidValue
- */
-hipError_t hipFreeMipmappedArray(hipMipmappedArray_t mipmappedArray);
-/**
  *  @brief Allocate an array on the device.
  *
  *  @param[out]  array  Pointer to allocated array in device memory
@@ -4149,36 +4120,6 @@ hipError_t hipFreeMipmappedArray(hipMipmappedArray_t mipmappedArray);
  */
 hipError_t hipMalloc3DArray(hipArray** array, const struct hipChannelFormatDesc* desc,
                             struct hipExtent extent, unsigned int flags);
-/**
- * @brief Allocate a mipmapped array on the device
- *
- * @param[out] mipmappedArray  - Pointer to allocated mipmapped array in device memory
- * @param[in]  desc            - Requested channel format
- * @param[in]  extent          - Requested allocation size (width field in elements)
- * @param[in]  numLevels       - Number of mipmap levels to allocate
- * @param[in]  flags           - Flags for extensions
- *
- * @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryAllocation
- */
-hipError_t hipMallocMipmappedArray(
-    hipMipmappedArray_t *mipmappedArray,
-    const struct hipChannelFormatDesc* desc,
-    struct hipExtent extent,
-    unsigned int numLevels,
-    unsigned int flags __dparm(0));
-/**
- * @brief Gets a mipmap level of a HIP mipmapped array
- *
- * @param[out] levelArray     - Returned mipmap level HIP array
- * @param[in]  mipmappedArray - HIP mipmapped array
- * @param[in]  level          - Mipmap level
- *
- * @return #hipSuccess, #hipErrorInvalidValue
- */
-hipError_t hipGetMipmappedArrayLevel(
-    hipArray_t *levelArray,
-    hipMipmappedArray_const_t mipmappedArray,
-    unsigned int level);
 /**
  * @brief Gets info about the specified array
  *
@@ -5042,15 +4983,15 @@ hipError_t hipModuleLoadDataEx(hipModule_t* module, const void* image, unsigned 
  * @param [in] kernelParams
  * @param [in] extra     Pointer to kernel arguments.   These are passed directly to the kernel and
  * must be in the memory layout and alignment expected by the kernel.
+ * All passed arguments must be naturally aligned according to their type. The memory address of each
+ * argument should be a multiple of its size in bytes. Please refer to hip_porting_driver_api.md
+ * for sample usage.
  *
  * Please note, HIP does not support kernel launch with total work items defined in dimension with
  * size gridDim x blockDim >= 2^32. So gridDim.x * blockDim.x, gridDim.y * blockDim.y
  * and gridDim.z * blockDim.z are always less than 2^32.
  *
  * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
- *
- * @warning kernellParams argument is not yet implemented in HIP. Please use extra instead. Please
- * refer to hip_porting_driver_api.md for sample usage.
  */
 hipError_t hipModuleLaunchKernel(hipFunction_t f, unsigned int gridDimX, unsigned int gridDimY,
                                  unsigned int gridDimZ, unsigned int blockDimX,
@@ -5459,22 +5400,6 @@ hipError_t hipExtLaunchKernel(const void* function_address, dim3 numBlocks, dim3
  */
 
 /**
- * @brief  Binds a mipmapped array to a texture.
- *
- * @param [in] tex  pointer to the texture reference to bind
- * @param [in] mipmappedArray  memory mipmapped array on the device
- * @param [in] desc  opointer to the channel format
- *
- * @returns #hipSuccess, #hipErrorInvalidValue
- *
- */
-DEPRECATED(DEPRECATED_MSG)
-hipError_t hipBindTextureToMipmappedArray(
-    const textureReference* tex,
-    hipMipmappedArray_const_t mipmappedArray,
-    const hipChannelFormatDesc* desc);
-
-/**
  * @brief Creates a texture object.
  *
  * @param [out] pTexObject  pointer to the texture object to create
@@ -5624,12 +5549,124 @@ hipError_t hipTexObjectGetTextureDesc(
     hipTextureObject_t texObject);
 
 /**
+ * @brief Allocate a mipmapped array on the device.
+ *
+ * @param[out] mipmappedArray  - Pointer to allocated mipmapped array in device memory
+ * @param[in]  desc            - Requested channel format
+ * @param[in]  extent          - Requested allocation size (width field in elements)
+ * @param[in]  numLevels       - Number of mipmap levels to allocate
+ * @param[in]  flags           - Flags for extensions
+ *
+ * @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryAllocation
+ *
+ * @note  This API is implemented on Windows, under development on Linux.
+ *
+ */
+hipError_t hipMallocMipmappedArray(
+    hipMipmappedArray_t *mipmappedArray,
+    const struct hipChannelFormatDesc* desc,
+    struct hipExtent extent,
+    unsigned int numLevels,
+    unsigned int flags __dparm(0));
+
+/**
+ * @brief Frees a mipmapped array on the device.
+ *
+ * @param[in] mipmappedArray - Pointer to mipmapped array to free
+ *
+ * @return #hipSuccess, #hipErrorInvalidValue
+ *
+ * @note  This API is implemented on Windows, under development on Linux.
+ *
+ */
+hipError_t hipFreeMipmappedArray(hipMipmappedArray_t mipmappedArray);
+
+/**
+ * @brief Gets a mipmap level of a HIP mipmapped array.
+ *
+ * @param[out] levelArray     - Returned mipmap level HIP array
+ * @param[in]  mipmappedArray - HIP mipmapped array
+ * @param[in]  level          - Mipmap level
+ *
+ * @return #hipSuccess, #hipErrorInvalidValue
+ *
+ * @note  This API is implemented on Windows, under development on Linux.
+ *
+ */
+hipError_t hipGetMipmappedArrayLevel(
+    hipArray_t *levelArray,
+    hipMipmappedArray_const_t mipmappedArray,
+    unsigned int level);
+
+/**
+ * @brief Create a mipmapped array.
+ *
+ * @param [out] pHandle  pointer to mipmapped array
+ * @param [in] pMipmappedArrayDesc  mipmapped array descriptor
+ * @param [in] numMipmapLevels  mipmap level
+ *
+ * @returns #hipSuccess, #hipErrorNotSupported, #hipErrorInvalidValue
+ *
+ * @note  This API is implemented on Windows, under development on Linux.
+ */
+hipError_t hipMipmappedArrayCreate(
+    hipMipmappedArray_t* pHandle,
+    HIP_ARRAY3D_DESCRIPTOR* pMipmappedArrayDesc,
+    unsigned int numMipmapLevels);
+
+/**
+ * @brief Destroy a mipmapped array.
+ *
+ * @param [out] hMipmappedArray  pointer to mipmapped array to destroy
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * @note  This API is implemented on Windows, under development on Linux.
+ *
+ */
+hipError_t hipMipmappedArrayDestroy(hipMipmappedArray_t hMipmappedArray);
+
+/**
+ * @brief Get a mipmapped array on a mipmapped level.
+ *
+ * @param [in] pLevelArray Pointer of array
+ * @param [out] hMipMappedArray Pointer of mipmapped array on the requested mipmap level
+ * @param [out] level  Mipmap level
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * @note  This API is implemented on Windows, under development on Linux.
+ *
+ */
+hipError_t hipMipmappedArrayGetLevel(
+    hipArray_t* pLevelArray,
+    hipMipmappedArray_t hMipMappedArray,
+    unsigned int level);
+
+/**
  *
  *  @addtogroup TextureD Texture Management [Deprecated]
  *  @{
  *  @ingroup Texture
  *  This section describes the deprecated texture management functions of HIP runtime API.
  */
+
+/**
+ * @brief  Binds a mipmapped array to a texture.
+ *
+ * @param [in] tex  pointer to the texture reference to bind
+ * @param [in] mipmappedArray memory mipmapped array on the device
+ * @param [in] desc  opointer to the channel format
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ */
+DEPRECATED(DEPRECATED_MSG)
+hipError_t hipBindTextureToMipmappedArray(
+    const textureReference* tex,
+    hipMipmappedArray_const_t mipmappedArray,
+    const hipChannelFormatDesc* desc);
+
 /**
  * @brief Gets the texture reference related with the symbol.
  *
@@ -5899,7 +5936,6 @@ DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefGetMipmapFilterMode(
     enum hipTextureFilterMode* pfm,
     const textureReference* texRef);
-DEPRECATED(DEPRECATED_MSG)
 /**
  * @brief Gets the mipmap level bias for a texture reference.
  *
@@ -5909,6 +5945,7 @@ DEPRECATED(DEPRECATED_MSG)
  * @warning This API is deprecated.
  *
  */
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefGetMipmapLevelBias(
     float* pbias,
     const textureReference* texRef);
@@ -6057,53 +6094,6 @@ hipError_t hipTexRefSetMipmappedArray(
     struct hipMipmappedArray* mipmappedArray,
     unsigned int Flags);
 
-/**
- *
- *  @addtogroup TextureU Texture Management [Not supported]
- *  @{
- *  @ingroup Texture
- *  This section describes the texture management functions currently unsupported in HIP runtime.
- */
-/**
- * @brief Create a mipmapped array.
- *
- * @param [out] pHandle  pointer to mipmapped array
- * @param [in] pMipmappedArrayDesc  mipmapped array descriptor
- * @param [in] numMipmapLevels  mipmap level
- *
- * @returns #hipSuccess, #hipErrorNotSupported, #hipErrorInvalidValue
- *
- */
-DEPRECATED(DEPRECATED_MSG)
-hipError_t hipMipmappedArrayCreate(
-    hipMipmappedArray_t* pHandle,
-    HIP_ARRAY3D_DESCRIPTOR* pMipmappedArrayDesc,
-    unsigned int numMipmapLevels);
-/**
- * @brief Destroy a mipmapped array.
- *
- * @param [out] hMipmappedArray  pointer to mipmapped array to destroy
- *
- * @returns #hipSuccess, #hipErrorInvalidValue
- *
- */
-DEPRECATED(DEPRECATED_MSG)
-hipError_t hipMipmappedArrayDestroy(hipMipmappedArray_t hMipmappedArray);
-/**
- * @brief Get a mipmapped array on a mipmapped level.
- *
- * @param [in] pLevelArray Pointer of array
- * @param [out] hMipMappedArray Pointer of mipmapped array on the requested mipmap level
- * @param [out] level  Mipmap level
- *
- * @returns #hipSuccess, #hipErrorInvalidValue
- *
- */
-DEPRECATED(DEPRECATED_MSG)
-hipError_t hipMipmappedArrayGetLevel(
-    hipArray_t* pLevelArray,
-    hipMipmappedArray_t hMipMappedArray,
-    unsigned int level);
 // doxygen end deprecated texture management
 /**
  * @}
@@ -7364,6 +7354,105 @@ hipError_t hipGraphNodeSetEnabled(hipGraphExec_t hGraphExec, hipGraphNode_t hNod
 hipError_t hipGraphNodeGetEnabled(hipGraphExec_t hGraphExec, hipGraphNode_t hNode,
                                   unsigned int* isEnabled);
 
+/**
+ * @brief Creates a external semaphor wait node and adds it to a graph.
+ *
+ * @param [out] pGraphNode - pointer to the graph node to create.
+ * @param [in] graph - instance of the graph to add the created node.
+ * @param [in] pDependencies - const pointer to the dependencies on the memset execution node.
+ * @param [in] numDependencies - the number of the dependencies.
+ * @param [in] nodeParams -pointer to the parameters.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphAddExternalSemaphoresWaitNode(hipGraphNode_t* pGraphNode, hipGraph_t graph,
+                               const hipGraphNode_t* pDependencies, size_t numDependencies,
+                               const hipExternalSemaphoreWaitNodeParams* nodeParams);
+
+/**
+ * @brief Creates a external semaphor signal node and adds it to a graph.
+ *
+ * @param [out] pGraphNode - pointer to the graph node to create.
+ * @param [in] graph - instance of the graph to add the created node.
+ * @param [in] pDependencies - const pointer to the dependencies on the memset execution node.
+ * @param [in] numDependencies - the number of the dependencies.
+ * @param [in] nodeParams -pointer to the parameters.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphAddExternalSemaphoresSignalNode(hipGraphNode_t* pGraphNode, hipGraph_t graph,
+                               const hipGraphNode_t* pDependencies, size_t numDependencies,
+                               const hipExternalSemaphoreSignalNodeParams* nodeParams);
+/**
+ * @brief Updates node parameters in the external semaphore signal node.
+ *
+ * @param [in]  hNode      - Node from the graph from which graphExec was instantiated.
+ * @param [in]  nodeParams  - Pointer to the params to be set.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphExternalSemaphoresSignalNodeSetParams(hipGraphNode_t hNode,
+                                                         const hipExternalSemaphoreSignalNodeParams* nodeParams);
+/**
+ * @brief Updates node parameters in the external semaphore wait node.
+ *
+ * @param [in]  hNode      - Node from the graph from which graphExec was instantiated.
+ * @param [in]  nodeParams  - Pointer to the params to be set.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphExternalSemaphoresWaitNodeSetParams(hipGraphNode_t hNode,
+                                                       const hipExternalSemaphoreWaitNodeParams* nodeParams);
+/**
+ * @brief Returns external semaphore signal node params.
+ *
+ * @param [in]   hNode       - Node from the graph from which graphExec was instantiated.
+ * @param [out]  params_out  - Pointer to params.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphExternalSemaphoresSignalNodeGetParams(hipGraphNode_t hNode,
+                                                         const hipExternalSemaphoreSignalNodeParams* params_out);
+/**
+ * @brief Returns external semaphore wait node params.
+ *
+ * @param [in]   hNode       - Node from the graph from which graphExec was instantiated.
+ * @param [out]  params_out  - Pointer to params.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphExternalSemaphoresWaitNodeGetParams(hipGraphNode_t hNode,
+                                                       const hipExternalSemaphoreWaitNodeParams* params_out);
+/**
+ * @brief Updates node parameters in the external semaphore signal node in the given graphExec.
+ *
+ * @param [in]  hGraphExec - The executable graph in which to set the specified node.
+ * @param [in]  hNode      - Node from the graph from which graphExec was instantiated.
+ * @param [in]  nodeParams  - Pointer to the params to be set.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphExecExternalSemaphoresSignalNodeSetParams(hipGraphExec_t hGraphExec, hipGraphNode_t hNode,
+                                                             const hipExternalSemaphoreSignalNodeParams* nodeParams);
+/**
+ * @brief Updates node parameters in the external semaphore wait node in the given graphExec.
+ *
+ * @param [in]  hGraphExec - The executable graph in which to set the specified node.
+ * @param [in]  hNode      - Node from the graph from which graphExec was instantiated.
+ * @param [in]  nodeParams  - Pointer to the params to be set.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphExecExternalSemaphoresWaitNodeSetParams(hipGraphExec_t hGraphExec, hipGraphNode_t hNode,
+                                                           const hipExternalSemaphoreWaitNodeParams* nodeParams);
 // doxygen end graph API
 /**
  * @}
@@ -7691,7 +7780,7 @@ hipError_t hipGraphicsUnmapResources(int count, hipGraphicsResource_t* resources
  * @brief Unregisters a graphics resource.
  *
  * @param [in] resource - Graphics resources to unregister.
- * 
+ *
  * @returns #hipSuccess
  *
  */
@@ -7701,7 +7790,40 @@ hipError_t hipGraphicsUnregisterResource(hipGraphicsResource_t resource);
  * @}
  */
 
+/**
+ *-------------------------------------------------------------------------------------------------
+ *-------------------------------------------------------------------------------------------------
+ * @defgroup Surface Surface Object
+ * @{
+ *
+ *  This section describes surface object functions of HIP runtime API.
+ *
+ *  @note  APIs in this section are under development.
+ *
+ */
 
+/**
+ * @brief Create a surface object.
+ *
+ * @param [out] pSurfObject  Pointer of surface object to be created.
+ * @param [in] pResDesc  Pointer of suface object descriptor.
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ */
+hipError_t hipCreateSurfaceObject(hipSurfaceObject_t* pSurfObject, const hipResourceDesc* pResDesc);
+/**
+ * @brief Destroy a surface object.
+ *
+ * @param [in] surfaceObject  Surface object to be destroyed.
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ */
+hipError_t hipDestroySurfaceObject(hipSurfaceObject_t surfaceObject);
+// end of surface
+/**
+* @}
+*/
 #ifdef __cplusplus
 } /* extern "c" */
 #endif
@@ -8058,42 +8180,6 @@ inline hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchPara
                                                      unsigned int  numDevices, unsigned int  flags = 0) {
     return hipExtLaunchMultiKernelMultiDevice(launchParamsList, numDevices, flags);
 }
-
-/**
- *-------------------------------------------------------------------------------------------------
- *-------------------------------------------------------------------------------------------------
- * @defgroup Surface Surface Object
- * @{
- *
- *  This section describes surface object functions of HIP runtime API.
- *
- *  @note  APIs in this section are under development.
- *
- */
-
-/**
- * @brief Create a surface object.
- *
- * @param [out] pSurfObject  Pointer of surface object to be created.
- * @param [in] pResDesc  Pointer of suface object descriptor.
- *
- * @returns #hipSuccess, #hipErrorInvalidValue
- *
- */
-hipError_t hipCreateSurfaceObject(hipSurfaceObject_t* pSurfObject, const hipResourceDesc* pResDesc);
-/**
- * @brief Destroy a surface object.
- *
- * @param [in] surfaceObject  Surface object to be destroyed.
- *
- * @returns #hipSuccess, #hipErrorInvalidValue
- */
-hipError_t hipDestroySurfaceObject(hipSurfaceObject_t surfaceObject);
-// end of surface
-/**
-* @}
-*/
-
 /**
  * @brief Binds a memory area to a texture.
  *
