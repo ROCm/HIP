@@ -523,7 +523,7 @@ typedef enum hipDeviceP2PAttr {
   hipDevP2PAttrHipArrayAccessSupported
 } hipDeviceP2PAttr;
 typedef struct ihipStream_t* hipStream_t;
-#define hipIpcMemLazyEnablePeerAccess 0
+#define hipIpcMemLazyEnablePeerAccess 0x01
 #define HIP_IPC_HANDLE_SIZE 64
 typedef struct hipIpcMemHandle_st {
     char reserved[HIP_IPC_HANDLE_SIZE];
