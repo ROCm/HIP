@@ -382,29 +382,29 @@ typedef struct hipMemcpy3DParms {
     enum hipMemcpyKind kind;
 } hipMemcpy3DParms;
 typedef struct HIP_MEMCPY3D {
-  unsigned int srcXInBytes;
-  unsigned int srcY;
-  unsigned int srcZ;
-  unsigned int srcLOD;
+  size_t srcXInBytes;
+  size_t srcY;
+  size_t srcZ;
+  size_t srcLOD;
   hipMemoryType srcMemoryType;
   const void* srcHost;
   hipDeviceptr_t srcDevice;
   hipArray_t srcArray;
-  unsigned int srcPitch;
-  unsigned int srcHeight;
-  unsigned int dstXInBytes;
-  unsigned int dstY;
-  unsigned int dstZ;
-  unsigned int dstLOD;
+  size_t srcPitch;
+  size_t srcHeight;
+  size_t dstXInBytes;
+  size_t dstY;
+  size_t dstZ;
+  size_t dstLOD;
   hipMemoryType dstMemoryType;
   void* dstHost;
   hipDeviceptr_t dstDevice;
   hipArray_t dstArray;
-  unsigned int dstPitch;
-  unsigned int dstHeight;
-  unsigned int WidthInBytes;
-  unsigned int Height;
-  unsigned int Depth;
+  size_t dstPitch;
+  size_t dstHeight;
+  size_t WidthInBytes;
+  size_t Height;
+  size_t Depth;
 } HIP_MEMCPY3D;
 static inline struct hipPitchedPtr make_hipPitchedPtr(void* d, size_t p, size_t xsz,
                                                           size_t ysz) {
