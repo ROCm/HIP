@@ -330,7 +330,7 @@ typedef enum __HIP_NODISCARD hipError_t {
 
 /**
  * hipDeviceAttribute_t
- *
+ * hipDeviceAttributeUnused number: 5
  */
 typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeCudaCompatibleBegin = 0,
@@ -403,7 +403,7 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeComputeCapabilityMinor,           ///< Minor compute capability version number.
     hipDeviceAttributeMultiGpuBoardGroupID,             ///< Cuda only. Unique ID of device group on the same multi-GPU board
     hipDeviceAttributeMultiprocessorCount,              ///< Number of multiprocessors on the device.
-    hipDeviceAttributeName,                             ///< Device name.
+    hipDeviceAttributeUnused1,                          ///< Previously hipDeviceAttributeName
     hipDeviceAttributePageableMemoryAccess,             ///< Device supports coherently accessing pageable memory
                                                         ///< without calling hipHostRegister on it
     hipDeviceAttributePageableMemoryAccessUsesHostPageTables, ///< Device accesses pageable memory via the host's page tables
@@ -426,8 +426,8 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeTexturePitchAlignment,            ///< Pitch alignment requirement for 2D texture references bound to pitched memory;
     hipDeviceAttributeTotalConstantMemory,              ///< Constant memory size in bytes.
     hipDeviceAttributeTotalGlobalMem,                   ///< Global memory available on devicice.
-    hipDeviceAttributeUnifiedAddressing,                ///< An unified address space shared with the host.
-    hipDeviceAttributeUuid,                             ///< Cuda only. Unique ID in 16 byte.
+    hipDeviceAttributeUnifiedAddressing,                ///< Cuda only. An unified address space shared with the host.
+    hipDeviceAttributeUnused2,                          ///< Previously hipDeviceAttributeUuid
     hipDeviceAttributeWarpSize,                         ///< Warp size in threads.
     hipDeviceAttributeMemoryPoolsSupported,             ///< Device supports HIP Stream Ordered Memory Allocator
     hipDeviceAttributeVirtualMemoryManagementSupported, ///< Device supports HIP virtual memory management
@@ -437,10 +437,10 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeAmdSpecificBegin = 10000,
 
     hipDeviceAttributeClockInstructionRate = hipDeviceAttributeAmdSpecificBegin,  ///< Frequency in khz of the timer used by the device-side "clock*"
-    hipDeviceAttributeArch,                                     ///< Device architecture
+    hipDeviceAttributeUnused3,                                  ///< Previously hipDeviceAttributeArch
     hipDeviceAttributeMaxSharedMemoryPerMultiprocessor,         ///< Maximum Shared Memory PerMultiprocessor.
-    hipDeviceAttributeGcnArch,                                  ///< Device gcn architecture
-    hipDeviceAttributeGcnArchName,                              ///< Device gcnArch name in 256 bytes
+    hipDeviceAttributeUnused4,                                  ///< Previously hipDeviceAttributeGcnArch
+    hipDeviceAttributeUnused5,                                  ///< Previously hipDeviceAttributeGcnArchName
     hipDeviceAttributeHdpMemFlushCntl,                          ///< Address of the HDP_MEM_COHERENCY_FLUSH_CNTL register
     hipDeviceAttributeHdpRegFlushCntl,                          ///< Address of the HDP_REG_COHERENCY_FLUSH_CNTL register
     hipDeviceAttributeCooperativeMultiDeviceUnmatchedFunc,      ///< Supports cooperative launch on multiple
