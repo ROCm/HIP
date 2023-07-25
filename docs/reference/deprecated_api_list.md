@@ -80,3 +80,4 @@ Should use roctracer/rocTX instead
 ### hipTexRefSetMipmapLevelBias
 ### hipTexRefSetMipmapLevelClamp
 ### hipTexRefSetMipmappedArray
+### hipBindTextureToMipmappedArray
