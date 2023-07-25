@@ -4213,7 +4213,7 @@ hipError_t hipMemPtrGetInfo(void* ptr, size_t* size);
  *
  *  @see hipMalloc, hipMallocPitch, hipFree, hipFreeArray, hipHostMalloc, hipHostFree
  */
-hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc, size_t width,
+hipError_t hipMallocArray(hipArray_t* array, const hipChannelFormatDesc* desc, size_t width,
                           size_t height __dparm(0), unsigned int flags __dparm(hipArrayDefault));
 /**
  *  @brief Create an array memory pointer on the device.
@@ -4225,7 +4225,7 @@ hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc, si
  *
  *  @see hipMallocArray, hipArrayDestroy, hipFreeArray
  */
-hipError_t hipArrayCreate(hipArray** pHandle, const HIP_ARRAY_DESCRIPTOR* pAllocateArray);
+hipError_t hipArrayCreate(hipArray_t* pHandle, const HIP_ARRAY_DESCRIPTOR* pAllocateArray);
  /**
  *  @brief Destroy an array memory pointer on the device.
  *
@@ -4235,7 +4235,7 @@ hipError_t hipArrayCreate(hipArray** pHandle, const HIP_ARRAY_DESCRIPTOR* pAlloc
  *
  *  @see hipArrayCreate, hipArrayDestroy, hipFreeArray
  */
-hipError_t hipArrayDestroy(hipArray* array);
+hipError_t hipArrayDestroy(hipArray_t array);
 /**
  *  @brief Create a 3D array memory pointer on the device.
  *
@@ -4246,7 +4246,7 @@ hipError_t hipArrayDestroy(hipArray* array);
  *
  *  @see hipMallocArray, hipArrayDestroy, hipFreeArray
  */
-hipError_t hipArray3DCreate(hipArray** array, const HIP_ARRAY3D_DESCRIPTOR* pAllocateArray);
+hipError_t hipArray3DCreate(hipArray_t* array, const HIP_ARRAY3D_DESCRIPTOR* pAllocateArray);
 /**
  *  @brief Create a 3D memory pointer on the device.
  *
@@ -4266,7 +4266,7 @@ hipError_t hipMalloc3D(hipPitchedPtr* pitchedDevPtr, hipExtent extent);
  *
  *  @see hipMalloc, hipMallocPitch, hipFree, hipMallocArray, hipHostMalloc, hipHostFree
  */
-hipError_t hipFreeArray(hipArray* array);
+hipError_t hipFreeArray(hipArray_t array);
 /**
  *  @brief Allocate an array on the device.
  *
@@ -4278,7 +4278,7 @@ hipError_t hipFreeArray(hipArray* array);
  *
  *  @see hipMalloc, hipMallocPitch, hipFree, hipFreeArray, hipHostMalloc, hipHostFree
  */
-hipError_t hipMalloc3DArray(hipArray** array, const struct hipChannelFormatDesc* desc,
+hipError_t hipMalloc3DArray(hipArray_t* array, const struct hipChannelFormatDesc* desc,
                             struct hipExtent extent, unsigned int flags);
 /**
  * @brief Gets info about the specified array
@@ -4293,7 +4293,7 @@ hipError_t hipMalloc3DArray(hipArray** array, const struct hipChannelFormatDesc*
  * @see hipArrayGetDescriptor, hipArray3DGetDescriptor
  */
 hipError_t hipArrayGetInfo(hipChannelFormatDesc* desc, hipExtent* extent, unsigned int* flags,
-                           hipArray* array);
+                           hipArray_t array);
 /**
  * @brief Gets a 1D or 2D array descriptor
  *
@@ -4311,7 +4311,7 @@ hipError_t hipArrayGetInfo(hipChannelFormatDesc* desc, hipExtent* extent, unsign
  * hipMemFreeHost, hipMemGetAddressRange, hipMemGetInfo, hipMemHostAlloc,
  * hipMemHostGetDevicePointer, hipMemsetD8, hipMemsetD16, hipMemsetD32, hipArrayGetInfo
  */
-hipError_t hipArrayGetDescriptor(HIP_ARRAY_DESCRIPTOR* pArrayDescriptor, hipArray* array);
+hipError_t hipArrayGetDescriptor(HIP_ARRAY_DESCRIPTOR* pArrayDescriptor, hipArray_t array);
 /**
  * @brief Gets a 3D array descriptor
  *
@@ -4329,7 +4329,7 @@ hipError_t hipArrayGetDescriptor(HIP_ARRAY_DESCRIPTOR* pArrayDescriptor, hipArra
  * hipMemFreeHost, hipMemGetAddressRange, hipMemGetInfo, hipMemHostAlloc,
  * hipMemHostGetDevicePointer, hipMemsetD8, hipMemsetD16, hipMemsetD32, hipArrayGetInfo
  */
-hipError_t hipArray3DGetDescriptor(HIP_ARRAY3D_DESCRIPTOR* pArrayDescriptor, hipArray* array);
+hipError_t hipArray3DGetDescriptor(HIP_ARRAY3D_DESCRIPTOR* pArrayDescriptor, hipArray_t array);
 /**
  *  @brief Copies data between host and device.
  *
@@ -4405,7 +4405,7 @@ hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t sp
  *  @see hipMemcpy, hipMemcpyToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol,
  * hipMemcpyAsync
  */
-hipError_t hipMemcpy2DToArray(hipArray* dst, size_t wOffset, size_t hOffset, const void* src,
+hipError_t hipMemcpy2DToArray(hipArray_t dst, size_t wOffset, size_t hOffset, const void* src,
                               size_t spitch, size_t width, size_t height, hipMemcpyKind kind);
 /**
  *  @brief Copies data between host and device.
@@ -4425,7 +4425,7 @@ hipError_t hipMemcpy2DToArray(hipArray* dst, size_t wOffset, size_t hOffset, con
  *  @see hipMemcpy, hipMemcpyToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol,
  * hipMemcpyAsync
  */
-hipError_t hipMemcpy2DToArrayAsync(hipArray* dst, size_t wOffset, size_t hOffset, const void* src,
+hipError_t hipMemcpy2DToArrayAsync(hipArray_t dst, size_t wOffset, size_t hOffset, const void* src,
                                    size_t spitch, size_t width, size_t height, hipMemcpyKind kind,
                                    hipStream_t stream __dparm(0));
 /**
@@ -4445,7 +4445,7 @@ hipError_t hipMemcpy2DToArrayAsync(hipArray* dst, size_t wOffset, size_t hOffset
  *  @warning  This API is deprecated.
  */
 DEPRECATED(DEPRECATED_MSG)
-hipError_t hipMemcpyToArray(hipArray* dst, size_t wOffset, size_t hOffset, const void* src,
+hipError_t hipMemcpyToArray(hipArray_t dst, size_t wOffset, size_t hOffset, const void* src,
                             size_t count, hipMemcpyKind kind);
 /**
  *  @brief Copies data between host and device.
@@ -4516,7 +4516,7 @@ hipError_t hipMemcpy2DFromArrayAsync( void* dst, size_t dpitch, hipArray_const_t
  *  @see hipMemcpy, hipMemcpy2DToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol,
  * hipMemcpyAsync
  */
-hipError_t hipMemcpyAtoH(void* dst, hipArray* srcArray, size_t srcOffset, size_t count);
+hipError_t hipMemcpyAtoH(void* dst, hipArray_t srcArray, size_t srcOffset, size_t count);
 /**
  *  @brief Copies data between host and device.
  *
@@ -4530,7 +4530,7 @@ hipError_t hipMemcpyAtoH(void* dst, hipArray* srcArray, size_t srcOffset, size_t
  *  @see hipMemcpy, hipMemcpy2DToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol,
  * hipMemcpyAsync
  */
-hipError_t hipMemcpyHtoA(hipArray* dstArray, size_t dstOffset, const void* srcHost, size_t count);
+hipError_t hipMemcpyHtoA(hipArray_t dstArray, size_t dstOffset, const void* srcHost, size_t count);
 /**
  *  @brief Copies data between host and device.
  *
