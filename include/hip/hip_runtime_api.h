@@ -282,7 +282,7 @@ typedef enum __HIP_NODISCARD hipError_t {
     hipErrorPeerAccessNotEnabled =
         705,  ///< Peer access was never enabled from the current device.
     hipErrorSetOnActiveProcess = 708,   ///< The process is active.
-    hipErrorContextIsDestroyed = 709,   ///< The context is already destroyed 
+    hipErrorContextIsDestroyed = 709,   ///< The context is already destroyed
     hipErrorAssert = 710,  ///< Produced when the kernel calls assert.
     hipErrorHostMemoryAlreadyRegistered =
         712,  ///< Produced when trying to lock a page-locked memory.
@@ -435,6 +435,7 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeWarpSize,                         ///< Warp size in threads.
     hipDeviceAttributeMemoryPoolsSupported,             ///< Device supports HIP Stream Ordered Memory Allocator
     hipDeviceAttributeVirtualMemoryManagementSupported, ///< Device supports HIP virtual memory management
+    hipDeviceAttributeHostRegisterSupported,            ///< Host memory registeration through device support
 
     hipDeviceAttributeCudaCompatibleEnd = 9999,
     hipDeviceAttributeAmdSpecificBegin = 10000,
@@ -555,7 +556,7 @@ typedef struct hipFuncAttributes {
 } hipFuncAttributes;
 typedef struct ihipEvent_t* hipEvent_t;
 enum hipLimit_t {
-    hipLimitStackSize = 0x0,        ///< limit of stack size in bytes on the current device 
+    hipLimitStackSize = 0x0,        ///< limit of stack size in bytes on the current device
     hipLimitPrintfFifoSize = 0x01,  ///< size limit in bytes of fifo used by printf call on the device
     hipLimitMallocHeapSize = 0x02,  ///< limit of heap size in bytes on the current device
     hipLimitRange                   ///< supported limit range
@@ -721,7 +722,7 @@ typedef enum hipMemoryAdvise {
     hipMemAdviseSetPreferredLocation = 3,   ///< Set the preferred location for the data as
                                             ///< the specified device
     hipMemAdviseUnsetPreferredLocation = 4, ///< Clear the preferred location for the data
-    hipMemAdviseSetAccessedBy = 5,          ///< Data will be accessed by the specified device 
+    hipMemAdviseSetAccessedBy = 5,          ///< Data will be accessed by the specified device
                                             ///< so prevent page faults as much as possible
     hipMemAdviseUnsetAccessedBy = 6,        ///< Let HIP to decide on the page faulting policy
                                             ///< for the specified device
@@ -1378,7 +1379,7 @@ typedef struct hipArrayMapInfo {
 } hipArrayMapInfo;
 // Doxygen end group GlobalDefs
 /**
-* @} 
+* @}
 */
 /**
  *  @defgroup API HIP API
@@ -2840,11 +2841,11 @@ hipError_t hipMemAllocHost(void** ptr, size_t size);
  *  When the memory accesses are infrequent, zero-copy memory can be a good choice, for coherent
  *  allocation. GPU can directly access the host memory over the CPU/GPU interconnect, without need
  *  to copy the data.
- *  
+ *
  *  Currently the allocation granularity is 4KB for the API.
- *  
+ *
  *  Developers need to choose proper allocation flag with consideration of synchronization.
- * 
+ *
  *  @param[out] ptr Pointer to the allocated host pinned memory
  *  @param[in]  size Requested memory size in bytes
  *  If size is 0, no memory is allocated, *ptr returns nullptr, and hipSuccess is returned.
