@@ -100,7 +100,7 @@ Reading symbols from ./hipTexObjPitch...
 (gdb) break main
 Breakpoint 1 at 0x4013d1: file /home/test/hip/tests/src/texture/hipTexObjPitch.cpp, line 98.
 (gdb) run
-Starting program: /home/test/hip/build/directed_tests/texture/hipTexObjPitch 
+Starting program: /home/test/hip/build/directed_tests/texture/hipTexObjPitch
 [Thread debugging using libthread_db enabled]
 Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
 
@@ -112,11 +112,11 @@ Breakpoint 1, main ()
 ```
 
 ### Other Debugging Tools
-There are also other debugging tools available online developers can google and choose the one best suits the debugging requirements.
+There are also other debugging tools available online developers can google and choose the one best suits the debugging requirements. For example, Microsoft Visual Studio and Windgb tools are options on Windows.
 
 ## Debugging HIP Applications
 
-Below is an example to show how to get useful information from the debugger while running a simple memory copy test, which caused an issue of segmentation fault.
+Below is an example on Linux to show how to get useful information from the debugger while running a simple memory copy test, which caused an issue of segmentation fault.
 
 ```console
 test: simpleTest2<?> numElements=4194304 sizeElements=4194304 bytes
@@ -176,11 +176,14 @@ Thread 1 "hipMemcpy_simpl" received signal SIGSEGV, Segmentation fault.
 ...
 ```
 
+On Windows, debugging HIP applications on IDE like Microsoft Visual Studio tools, are more informative and visible to debug codes, inspect  variables, watch multiple details and examine the call stacks.
+
 ## Useful Environment Variables
-HIP provides some environment variables which allow HIP, hip-clang, or HSA driver to disable some feature or optimization.
+
+HIP provides some environment variables which allow HIP, hip-clang, or HSA driver on Linux to disable some feature or optimization.
 These are not intended for production but can be useful diagnose synchronization problems in the application (or driver).
 
-Some of the most useful environment variables are described here. They are supported on the ROCm path.
+Some of the most useful environment variables are described here. They are supported on the ROCm path on Linux and Windows as well.
 
 ### Kernel Enqueue Serialization
 Developers can control kernel command serialization from the host using the environment variable,
@@ -221,8 +224,8 @@ if (totalDeviceNum > 2) {
 Developers can dump code object to analyze compiler related issues via setting environment variable,
 GPU_DUMP_CODE_OBJECT
 
-### HSA related environment variables
-HSA provides some environment variables help to analyze issues in driver or hardware, for example,
+### HSA related environment variables on Linux
+On Linux with open source, HSA provides some environment variables help to analyze issues in driver or hardware, for example,
 
 HSA_ENABLE_SDMA=0
 It causes host-to-device and device-to-host copies to use compute shader blit kernels rather than the dedicated DMA copy engines.
@@ -246,12 +249,12 @@ The following is the summary of the most useful environment variables in HIP.
 | AMD_SERIALIZE_KERNEL <br><sub> Serialize kernel enqueue. </sub> |  0  | 1: Wait for completion before enqueue. <br> 2: Wait for completion after enqueue. <br> 3: Both. |
 | AMD_SERIALIZE_COPY <br><sub> Serialize copies. </sub> |  0  | 1: Wait for completion before enqueue. <br> 2: Wait for completion after enqueue. <br> 3: Both. |
 | HIP_HOST_COHERENT <br><sub> Coherent memory in hipHostMalloc. </sub> |  0  |  0: memory is not coherent between host and GPU. <br> 1: memory is coherent with host. |
-| AMD_DIRECT_DISPATCH <br><sub> Enable direct kernel dispatch. </sub> | 1  | 0: Disable. <br> 1: Enable. |
+| AMD_DIRECT_DISPATCH <br><sub> Enable direct kernel dispatch (Currently for Linux, under development on Windows). </sub> | 1  | 0: Disable. <br> 1: Enable. |
 | GPU_MAX_HW_QUEUES <br><sub> The maximum number of hardware queues allocated per device. </sub> | 4  | The variable controls how many independent hardware queues HIP runtime can create per process, per device. If application allocates more HIP streams than this number, then HIP runtime will reuse the same hardware queues for the new streams in round robin manner. Please note, this maximum number does not apply to either hardware queues that are created for CU masked HIP streams, or cooperative queue for HIP Cooperative Groups (there is only one single queue per device). |
 
 ## General Debugging Tips
 - 'gdb --args' can be used to conveniently pass the executable and arguments to gdb.
-- From inside GDB, you can set environment variables "set env".  Note the command does not use an '=' sign:
+- From inside GDB on Linux, you can set environment variables "set env".  Note the command does not use an '=' sign:
 
 ```
 (gdb) set env AMD_SERIALIZE_KERNEL 3

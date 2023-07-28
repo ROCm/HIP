@@ -14,10 +14,9 @@ GPU can directly access the host memory over the CPU/GPU interconnect, without n
 There are flags parameter which can specify options how to allocate the memory, for example,
 hipHostMallocPortable, the memory is considered allocated by all contexts, not just the one on which the allocation is made.
 hipHostMallocMapped, will map the allocation into the address space for the current device, and the device pointer can be obtained with the API hipHostGetDevicePointer().
-hipHostMallocNumaUser is the flag to allow host memory allocation to follow numa policy by user.
-All allocation flags are independent, and can be used in any combination without restriction, for instance, hipHostMalloc can be called with both hipHostMallocPortable and hipHostMallocMapped flags set. Both usage models described above use the same allocation flags, and the difference is in how the surrounding code uses the host memory.
+hipHostMallocNumaUser is the flag to allow host memory allocation to follow Numa policy by user. Please note this flag is currently only applicable on Linux, under development on Windows.
 
-See the hipHostMalloc API for more information.
+All allocation flags are independent, and can be used in any combination without restriction, for instance, hipHostMalloc can be called with both hipHostMallocPortable and hipHostMallocMapped flags set. Both usage models described above use the same allocation flags, and the difference is in how the surrounding code uses the host memory.
 
 ### Numa-aware host memory allocation
 Numa policy determines how memory is allocated.
@@ -25,44 +24,8 @@ Target of Numa policy is to select a CPU that is closest to each GPU.
 Numa distance is the measurement of how far between GPU and CPU devices.
 
 By default, each GPU selects a Numa CPU node that has the least Numa distance between them, that is, host memory will be automatically allocated closest on the memory pool of Numa node of the current GPU device. Using hipSetDevice API to a different GPU will still be able to access the host allocation, but can have longer Numa distance.
+Note, Numa policy is so far implemented on Linux, and under development on Windows.
 
-### Managed memory allocation
-Managed memory, including the `__managed__` keyword, is supported in HIP combined host/device compilation.
-
-Managed memory, via unified memory allocation, allows data be shared and accessible to both the CPU and GPU using a single pointer. 
-The allocation will be managed by AMD GPU driver using the linux HMM (Heterogeneous Memory Management) mechanism, the user can call managed memory API hipMallocManaged to allocate a large chuch of HMM memory, execute kernels on device and fetch data between the host and device as needed.
-
-In HIP application,  It is recommend to do the capability check before calling the managed memory APIs. For example:
-
-```
-int managed_memory = 0;
-HIPCHECK(hipDeviceGetAttribute(&managed_memory,
-  hipDeviceAttributeManagedMemory,p_gpuDevice));
-
-if (!managed_memory ) {
-  printf ("info: managed memory access not supported on the device %d\n Skipped\n", p_gpuDevice);
-}
-else {
-  HIPCHECK(hipSetDevice(p_gpuDevice));
-  HIPCHECK(hipMallocManaged(&Hmm, N * sizeof(T)));
-. . .
-}
-```
-Please note, the managed memory capability check may not be necessary, but if HMM is not supported, then managed malloc will fall back to using system memory and other managed memory API calls will have undefined behavior.
-For more details on managed memory APIs, please refer to the documentation HIP-API.pdf, and the application at (https://github.com/ROCm-Developer-Tools/HIP/blob/rocm-4.5.x/tests/src/runtimeApi/memory/hipMallocManaged.cpp) is a sample usage.
-
-### HIP Stream Memory Operations
-
-HIP supports Stream Memory Operations to enable direct synchronization between Network Nodes and GPU. Following new APIs are added,
-  hipStreamWaitValue32
-  hipStreamWaitValue64
-  hipStreamWriteValue32
-  hipStreamWriteValue64
-
-Note, CPU access to the semaphore's memory requires volatile keyword to disable CPU compiler's optimizations on memory access.
-For more details, please check the documentation HIP-API.pdf.
-
-Please note, HIP stream does not gurantee concurrency on AMD hardware for the case of multiple (at least 6) long running streams executing concurrently, using hipStreamSynchronize(nullptr) for synchronization.
 
 ### Coherency Controls
 ROCm defines two coherency options for host memory:
@@ -107,8 +70,49 @@ A stronger system-level fence can be specified when the event is created with hi
 - Coherent host memory is the default and is the easiest to use since the memory is visible to the CPU at typical synchronization points.  This memory allows in-kernel synchronization commands such as threadfence_system to work transparently.
 - HIP/ROCm also supports the ability to cache host memory in the GPU using the "Non-Coherent" host memory allocations. This can provide performance benefit, but care must be taken to use the correct synchronization.
 
+### Managed memory allocation
+Managed memory, including the `__managed__` keyword, is supported in HIP combined host/device compilation, on Linux, not on Windows (under development).
+
+Managed memory, via unified memory allocation, allows data be shared and accessible to both the CPU and GPU using a single pointer.
+The allocation will be managed by AMD GPU driver using the linux HMM (Heterogeneous Memory Management) mechanism, the user can call managed memory API hipMallocManaged to allocate a large chuch of HMM memory, execute kernels on device and fetch data between the host and device as needed.
+
+In HIP application,  It is recommend to do the capability check before calling the managed memory APIs. For example:
+
+```
+int managed_memory = 0;
+HIPCHECK(hipDeviceGetAttribute(&managed_memory,
+  hipDeviceAttributeManagedMemory,p_gpuDevice));
+
+if (!managed_memory ) {
+  printf ("info: managed memory access not supported on the device %d\n Skipped\n", p_gpuDevice);
+}
+else {
+  HIPCHECK(hipSetDevice(p_gpuDevice));
+  HIPCHECK(hipMallocManaged(&Hmm, N * sizeof(T)));
+. . .
+}
+```
+Please note, the managed memory capability check may not be necessary, but if HMM is not supported, then managed malloc will fall back to using system memory and other managed memory API calls will have undefined behavior.
+For more details on managed memory APIs, please refer to the documentation HIP-API.pdf, and the application at (https://github.com/ROCm-Developer-Tools/HIP/blob/rocm-4.5.x/tests/src/runtimeApi/memory/hipMallocManaged.cpp) is a sample usage.
+
+Note, managed memory management is implemented on Linux, not supported on Windows yet.
+
+### HIP Stream Memory Operations
+
+HIP supports Stream Memory Operations to enable direct synchronization between Network Nodes and GPU. Following new APIs are added,
+  hipStreamWaitValue32
+  hipStreamWaitValue64
+  hipStreamWriteValue32
+  hipStreamWriteValue64
+
+Note, CPU access to the semaphore's memory requires volatile keyword to disable CPU compiler's optimizations on memory access.
+For more details, please check the documentation HIP-API.pdf.
+
+Please note, HIP stream does not gurantee concurrency on AMD hardware for the case of multiple (at least 6) long running streams executing concurrently, using hipStreamSynchronize(nullptr) for synchronization.
+
 ## Direct Dispatch
-HIP runtime has Direct Dispatch enabled by default in ROCM 4.4. With this feature we move away from our conventional producer-consumer model where the runtime creates a worker thread(consumer) for each HIP Stream, and the host thread(producer) enqueues commands to a command queue(per stream).
+HIP runtime has Direct Dispatch enabled by default in ROCM 4.4 on Linux.
+With this feature we move away from our conventional producer-consumer model where the runtime creates a worker thread(consumer) for each HIP Stream, and the host thread(producer) enqueues commands to a command queue(per stream).
 
 For Direct Dispatch, HIP runtime would directly enqueue a packet to the AQL queue (user mode queue on GPU) on the Dispatch API call from the application. That has shown to reduce the latency to launch the first wave on the idle GPU and total time of tiny dispatches synchronized with the host.
 
@@ -117,14 +121,15 @@ In addition, eliminating the threads in runtime has reduced the variance in the 
 This feature can be disabled via setting the following environment variable,
 AMD_DIRECT_DISPATCH=0
 
+Note, Direct Dispatch is implemented on Linux. It is currently not supported on Windows.
+
 ## HIP Runtime Compilation
 HIP now supports runtime compilation (hipRTC), the usage of which will provide the possibility of optimizations and performance improvement compared with other APIs via regular offline static compilation.
 
 hipRTC APIs accept HIP source files in character string format as input parameters and create handles of programs by compiling the HIP source files without spawning separate processes.
 
-For more details on hipRTC APIs, refer to HIP-API.pdf in GitHub (https://github.com/RadeonOpenCompute/ROCm).
-
-The link here(https://github.com/ROCm-Developer-Tools/HIP/blob/main/tests/src/hiprtc/saxpy.cpp) shows an example how to program HIP application using runtime compilation mechanism, and detail hipRTC programming guide is also available in Github (https://github.com/ROCm-Developer-Tools/HIP/blob/main/docs/markdown/hip_rtc.md).
+For more details on hipRTC APIs, refer to HIP-API.pdf in GitHub (https://docs.amd.com/category/api_documentation).
+For Linux developers, the link here(https://github.com/ROCm-Developer-Tools/hip-tests/blob/develop/samples/2_Cookbook/23_cmake_hiprtc/saxpy.cpp) shows an example how to program HIP application using runtime compilation mechanism, and detail hipRTC programming guide is also available in Github (https://github.com/ROCm-Developer-Tools/HIP/blob/develop/docs/user_guide/hip_rtc.md).
 
 ## HIP Graph
 HIP graph is supported. For more details, refer to the HIP API Guide.
@@ -143,7 +148,7 @@ The per-thread default stream is a blocking stream and will synchronize with the
 The per-thread default stream can be enabled via adding a compilation option,
 “-fgpu-default-stream=per-thread”.
 
-And users can explicitly use "hipStreamPerThread" as per-thread default stream handle as input in API commands. There are test codes as examples in the link (https://github.com/ROCm-Developer-Tools/HIP/tree/develop/tests/catch/unit/streamperthread).
+And users can explicitly use "hipStreamPerThread" as per-thread default stream handle as input in API commands. There are test codes as examples in the link (https://github.com/ROCm-Developer-Tools/hip-tests/tree/develop/catch/unit/streamperthread).
 
 ## Use of Long Double Type
 

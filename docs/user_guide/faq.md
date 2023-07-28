@@ -148,6 +148,9 @@ ROCclr (Radeon Open Compute Common Language Runtime) is a virtual device interfa
 ## What is HIPAMD?
 HIPAMD is a repository branched out from HIP, mainly the implementation for AMD GPU.
 
+## Can I get HIP open source repository for Windows?
+No, there is no HIP repository open publicly on Windows.
+
 ## Can a HIP binary run on both AMD and Nvidia platforms?
 HIP is a source-portable language that can be compiled to run on either AMD or NVIDIA platform. HIP tools don't create a "fat binary" that can run on either platform, however.
 
@@ -236,6 +239,11 @@ In ROCm, a compilation option should be added in order to compile the translatio
 Once source is compiled with per-thread default stream enabled, all APIs will be executed on per thread default stream, hence there will not be any implicit synchronization with other streams.
 
 Besides, per-thread default stream be enabled per translation unit, users can compile some files with feature enabled and some with feature disabled. Feature enabled translation unit will have default stream as per thread and there will not be any implicit synchronization done but other modules will have legacy default stream which will do implicit synchronization.
+
+## Can I develop applications with HIP APIs on Windows the same on Linux?
+
+Yes, HIP APIs are available to use on both Linux and Windows.
+Due to different working mechanisms on operating systems like Windows vs Linux, HIP APIs call corresponding lower level backend runtime libraries and kernel drivers for the OS, in order to control the executions on GPU hardware accordingly. There might be a few differences on the related backend software and driver support, which might affect usage of HIP APIs. See OS support details in HIP API document.
 
 ## How can I know the version of HIP?
 
