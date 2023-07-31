@@ -11,7 +11,8 @@ updates:
     schedule:
       interval: "daily"
     labels:
-      - "dependencies"
       - "type:doc"
+      - "dependencies"
+      - "ci:docs-only"
     reviewers:
       - "samjwu"
