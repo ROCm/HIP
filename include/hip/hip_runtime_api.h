@@ -41,7 +41,16 @@ enum {
     HIP_ERROR_NOT_INITIALIZED,
     HIP_ERROR_LAUNCH_OUT_OF_RESOURCES
 };
-
+// hack to get these to show up in Doxygen:
+/**
+ * @defgroup GlobalDefs Global enum and defines
+ * @{
+ *
+ */
+/**
+ * hipDeviceArch_t
+ *
+ */
 typedef struct {
     // 32-bit Atomics
     unsigned hasGlobalInt32Atomics : 1;     ///< 32-bit integer atomics for global memory.
@@ -185,14 +194,6 @@ typedef struct hipPointerAttribute_t {
     unsigned allocationFlags; /* flags specified when memory was allocated*/
     /* peers? */
 } hipPointerAttribute_t;
-
-
-// hack to get these to show up in Doxygen:
-/**
- *     @defgroup GlobalDefs Global enum and defines
- *     @{
- *
- */
 
 // Ignoring error-code return values from hip APIs is discouraged. On C++17,
 // we can make that yield a warning
@@ -473,10 +474,6 @@ enum hipComputeMode {
     hipComputeModeExclusiveProcess = 3
 };
 
-/**
- * @}
- */
-
 #if (defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) && !(defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__))
 
 #include <stdint.h>
@@ -561,10 +558,7 @@ enum hipLimit_t {
     hipLimitMallocHeapSize = 0x02,  // limit heap size
     hipLimitRange                   // supported limit range
 };
-/**
- * @addtogroup GlobalDefs More
- * @{
- */
+
 //Flags that can be used with hipStreamCreateWithFlags.
 /** Default stream creation flags. These are used with hipStreamCreate().*/
 #define hipStreamDefault  0x00
@@ -1383,18 +1377,9 @@ typedef struct hipArrayMapInfo {
      unsigned int reserved[2];                       ///< Reserved for future use, must be zero now.
 } hipArrayMapInfo;
 // Doxygen end group GlobalDefs
-/**  @} */
-//-------------------------------------------------------------------------------------------------
-// The handle allows the async commands to use the stream even if the parent hipStream_t goes
-// out-of-scope.
-// typedef class ihipStream_t * hipStream_t;
-/*
- * Opaque structure allows the true event (pointed at by the handle) to remain "live" even if the
- * surrounding hipEvent_t goes out-of-scope. This is handy for cases where the hipEvent_t goes
- * out-of-scope but the true event is being written by some async queue or device */
-// typedef struct hipEvent_t {
-//    struct ihipEvent_t *_handle;
-//} hipEvent_t;
+/**
+* @}
+*/
 /**
  *  @defgroup API HIP API
  *  @{
@@ -5902,7 +5887,6 @@ DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefGetMipmapFilterMode(
     enum hipTextureFilterMode* pfm,
     const textureReference* texRef);
-DEPRECATED(DEPRECATED_MSG)
 /**
  * @brief Gets the mipmap level bias for a texture reference. [Deprecated]
  *
@@ -7693,7 +7677,40 @@ hipError_t hipGraphicsUnregisterResource(hipGraphicsResource_t resource);
  * @}
  */
 
+/**
+ *-------------------------------------------------------------------------------------------------
+ *-------------------------------------------------------------------------------------------------
+ * @defgroup Surface Surface Object
+ * @{
+ *
+ *  This section describes surface object functions of HIP runtime API.
+ *
+ *  @note  APIs in this section are under development.
+ *
+ */
 
+/**
+ * @brief Create a surface object.
+ *
+ * @param [out] pSurfObject  Pointer of surface object to be created.
+ * @param [in] pResDesc  Pointer of suface object descriptor.
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ */
+hipError_t hipCreateSurfaceObject(hipSurfaceObject_t* pSurfObject, const hipResourceDesc* pResDesc);
+/**
+ * @brief Destroy a surface object.
+ *
+ * @param [in] surfaceObject  Surface object to be destroyed.
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ */
+hipError_t hipDestroySurfaceObject(hipSurfaceObject_t surfaceObject);
+// end of surface
+/**
+* @}
+*/
 #ifdef __cplusplus
 } /* extern "c" */
 #endif
@@ -8050,42 +8067,6 @@ inline hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchPara
                                                      unsigned int  numDevices, unsigned int  flags = 0) {
     return hipExtLaunchMultiKernelMultiDevice(launchParamsList, numDevices, flags);
 }
-
-/**
- *-------------------------------------------------------------------------------------------------
- *-------------------------------------------------------------------------------------------------
- * @defgroup Surface Surface Object
- * @{
- *
- *  This section describes surface object functions of HIP runtime API.
- *
- *  @note  APIs in this section are under development.
- *
- */
-
-/**
- * @brief Create a surface object.
- *
- * @param [out] pSurfObject  Pointer of surface object to be created.
- * @param [in] pResDesc  Pointer of suface object descriptor.
- *
- * @returns #hipSuccess, #hipErrorInvalidValue
- *
- */
-hipError_t hipCreateSurfaceObject(hipSurfaceObject_t* pSurfObject, const hipResourceDesc* pResDesc);
-/**
- * @brief Destroy a surface object.
- *
- * @param [in] surfaceObject  Surface object to be destroyed.
- *
- * @returns #hipSuccess, #hipErrorInvalidValue
- */
-hipError_t hipDestroySurfaceObject(hipSurfaceObject_t surfaceObject);
-// end of surface
-/**
-* @}
-*/
-
 /**
  * @brief Binds a memory area to a texture. [Deprecated]
  * @ingroup TextureD

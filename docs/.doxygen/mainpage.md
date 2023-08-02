@@ -11,6 +11,7 @@ This is the full HIP Runtime API reference. The API is organized into
 - @ref Error
 - @ref Stream
 - @ref StreamM
+- @ref Event
 - @ref Memory
   - @ref External
   - @ref MemoryM
@@ -24,10 +25,9 @@ This is the full HIP Runtime API reference. The API is organized into
 - @ref Clang
 - @ref Texture
   - @ref TextureD
-  - @ref TextureU
 - @ref Runtime
 - @ref Callback
 - @ref Graph
 - @ref Virtual
 - @ref GL
-- [Surface Object](#Surface)
+- @ref Surface
