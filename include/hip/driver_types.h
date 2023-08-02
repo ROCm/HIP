@@ -27,13 +27,10 @@ THE SOFTWARE.
 #include <hip/hip_common.h>
 #endif
 
-#if !(defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) && (defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__))
+#if !defined(__HIP_PLATFORM_AMD__) && defined(__HIP_PLATFORM_NVIDIA__)
 #include "driver_types.h"
-#elif (defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) && !(defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__))
+#elif defined(__HIP_PLATFORM_AMD__) && !defined(__HIP_PLATFORM_NVIDIA__)
 
-// The follow macro should be removed after upstream updation.
-// It's defined here for workarround of rocThrust building failure.
-#define HIP_INCLUDE_HIP_HCC_DETAIL_DRIVER_TYPES_H
 #if !defined(__HIPCC_RTC__)
 #ifndef __cplusplus
 #include <stdbool.h>
