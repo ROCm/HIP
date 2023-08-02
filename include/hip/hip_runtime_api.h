@@ -983,6 +983,7 @@ typedef enum hipExternalMemoryHandleType_enum {
   hipExternalMemoryHandleTypeD3D12Resource = 5,
   hipExternalMemoryHandleTypeD3D11Resource = 6,
   hipExternalMemoryHandleTypeD3D11ResourceKmt = 7,
+  hipExternalMemoryHandleTypeNvSciBuf         = 8
 } hipExternalMemoryHandleType;
 typedef struct hipExternalMemoryHandleDesc_st {
   hipExternalMemoryHandleType type;
@@ -992,21 +993,30 @@ typedef struct hipExternalMemoryHandleDesc_st {
       void *handle;
       const void *name;
     } win32;
+    const void *nvSciBufObject;
   } handle;
   unsigned long long size;
   unsigned int flags;
+  unsigned int reserved[16];
 } hipExternalMemoryHandleDesc;
 typedef struct hipExternalMemoryBufferDesc_st {
   unsigned long long offset;
   unsigned long long size;
   unsigned int flags;
+  unsigned int reserved[16];
 } hipExternalMemoryBufferDesc;
 typedef void* hipExternalMemory_t;
 typedef enum hipExternalSemaphoreHandleType_enum {
   hipExternalSemaphoreHandleTypeOpaqueFd = 1,
   hipExternalSemaphoreHandleTypeOpaqueWin32 = 2,
   hipExternalSemaphoreHandleTypeOpaqueWin32Kmt = 3,
-  hipExternalSemaphoreHandleTypeD3D12Fence = 4
+  hipExternalSemaphoreHandleTypeD3D12Fence = 4,
+  hipExternalSemaphoreHandleTypeD3D11Fence = 5,
+  hipExternalSemaphoreHandleTypeNvSciSync = 6,
+  hipExternalSemaphoreHandleTypeKeyedMutex = 7,
+  hipExternalSemaphoreHandleTypeKeyedMutexKmt = 8,
+  hipExternalSemaphoreHandleTypeTimelineSemaphoreFd = 9,
+  hipExternalSemaphoreHandleTypeTimelineSemaphoreWin32 = 10
 } hipExternalSemaphoreHandleType;
 typedef struct hipExternalSemaphoreHandleDesc_st {
   hipExternalSemaphoreHandleType type;
@@ -1016,8 +1026,10 @@ typedef struct hipExternalSemaphoreHandleDesc_st {
       void* handle;
       const void* name;
     } win32;
+    const void* NvSciSyncObj;
   } handle;
   unsigned int flags;
+  unsigned int reserved[16];
 } hipExternalSemaphoreHandleDesc;
 typedef void* hipExternalSemaphore_t;
 typedef struct hipExternalSemaphoreSignalParams_st {
@@ -1025,6 +1037,10 @@ typedef struct hipExternalSemaphoreSignalParams_st {
     struct {
       unsigned long long value;
     } fence;
+    union {
+      void *fence;
+      unsigned long long reserved;
+    } nvSciSync;
     struct {
       unsigned long long key;
     } keyedMutex;
@@ -1041,6 +1057,10 @@ typedef struct hipExternalSemaphoreWaitParams_st {
     struct {
       unsigned long long value;
     } fence;
+    union {
+      void *fence;
+      unsigned long long reserved;
+    } nvSciSync;
     struct {
       unsigned long long key;
       unsigned int timeoutMs;
