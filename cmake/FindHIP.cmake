@@ -81,8 +81,11 @@ elseif (HIP_CXX_COMPILER MATCHES ".*clang\\+\\+")
   set(HIP_CLANG_PATH "${_HIP_CLANG_BIN_PATH}")
 endif()
 
-
-get_filename_component(_IMPORT_PREFIX "${CMAKE_CURRENT_LIST_DIR}/../" REALPATH)
+# Get FindHIP.cmake file path with symlinks resolved
+# RealPath: /opt/rocm-ver/lib/cmake/hip/FindHIP.cmake
+# Go 4 level up to get IMPORT PREFIX as /opt/rocm-ver
+get_filename_component(_FILE_PATH "${CMAKE_CURRENT_LIST_FILE}" REALPATH)
+get_filename_component(_IMPORT_PREFIX "${_FILE_PATH}/../../../../" ABSOLUTE)
 
 # HIP is currently not supported for apple
 if(NOT APPLE)
