@@ -10,10 +10,17 @@ These documents are targeted at authors of HIP libraries and applications.
 ::::{grid} 1 1 2 2
 :gutter: 1
 
-:::{grid-item-card} Tutorials
+:::{grid-item-card} Reference
 
-- {doc}`/tutorials/saxpy`
+- {doc}`/.doxygen/docBin/html/index`
+  - {doc}`/.doxygen/docBin/html/modules`
+- {doc}`/reference/kernel_language`
+- {doc}`/reference/math_api`
+- {doc}`/reference/deprecated_api_list`
 
+:::
+
+:::{grid-item-card} Understand HIP
 :::
 
 :::{grid-item-card} How-to Guides
@@ -22,16 +29,9 @@ These documents are targeted at authors of HIP libraries and applications.
 
 :::
 
-:::{grid-item-card} Understand HIP
-:::
+:::{grid-item-card} Tutorials
 
-:::{grid-item-card} Reference
-
-- {doc}`/.doxygen/docBin/html/index`
-  - {doc}`/.doxygen/docBin/html/modules`
-- {doc}`/reference/kernel_language`
-- {doc}`/reference/math_api`
-- {doc}`/reference/deprecated_api_list`
+- {doc}`/tutorials/saxpy`
 
 :::
 
@@ -45,7 +45,10 @@ the accompanying host/device compiler.
 ::::{grid} 1 1 2 2
 :gutter: 1
 
-:::{grid-item-card} Tutorials
+:::{grid-item-card} Reference
+:::
+
+:::{grid-item-card} Background
 :::
 
 :::{grid-item-card} How-to Guides
@@ -54,10 +57,7 @@ the accompanying host/device compiler.
 
 :::
 
-:::{grid-item-card} Background
-:::
-
-:::{grid-item-card} Reference
+:::{grid-item-card} Tutorials
 :::
 
 ::::
