@@ -23,7 +23,7 @@ THE SOFTWARE.
 /* Tests 6 and 7 are skipped for CUDA 11.2 due to cuda runtime issues */
 /* HIT_START
  * BUILD_CMD: tex2d_kernel.code %hc --genco %S/tex2d_kernel.cpp -o tex2d_kernel.code
- * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11
+ * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11 LINK_OPTIONS -lpthread
  * TEST: %t --tests 0x01
  * TEST: %t --tests 0x02
  * TEST: %t --tests 0x03
@@ -592,13 +592,8 @@ bool testTexSingleStreamMultGPU(unsigned int numOfGPUs,
 
 int main(int argc, char** argv) {
   HipTest::parseStandardArguments(argc, argv, true);
-  int imageSupport = 0;
-  hipDeviceGetAttribute(&imageSupport, hipDeviceAttributeImageSupport,
-                            p_gpuDevice);
-  if (!imageSupport) {
-    printf("Texture is not support on the device\n");
-    passed();
-  }
+  checkImageSupport();
+
   bool TestPassed = true;
   if (p_tests == 0x01) {
     TestPassed = testTexType<float>(HIP_AD_FORMAT_FLOAT,

@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp
+ * BUILD: %t %s ../../test_common.cpp LINK_OPTIONS -lpthread
  * TEST: %t
  * HIT_END
  */
@@ -40,7 +40,7 @@ size_t Nbytes = 0;
 
 bool operator==(const hipPointerAttribute_t& lhs, const hipPointerAttribute_t& rhs) {
     return ((lhs.hostPointer == rhs.hostPointer) && (lhs.devicePointer == rhs.devicePointer) &&
-            (lhs.memoryType == rhs.memoryType) && (lhs.device == rhs.device) &&
+            (lhs.type == rhs.type) && (lhs.device == rhs.device) &&
             (lhs.allocationFlags == rhs.allocationFlags));
 };
 
@@ -65,7 +65,7 @@ const char* memoryTypeToString(hipMemoryType memoryType) {
 void resetAttribs(hipPointerAttribute_t* attribs) {
     attribs->hostPointer = (void*)(-1);
     attribs->devicePointer = (void*)(-1);
-    attribs->memoryType = hipMemoryTypeHost;
+    attribs->type = hipMemoryTypeHost;
     attribs->device = -2;
     attribs->isManaged = -1;
     attribs->allocationFlags = 0xffff;
@@ -74,9 +74,9 @@ void resetAttribs(hipPointerAttribute_t* attribs) {
 
 void printAttribs(const hipPointerAttribute_t* attribs) {
     printf(
-        "hostPointer:%p devicePointer:%p  memoryType:%s deviceId:%d isManaged:%d "
+        "hostPointer:%p devicePointer:%p  type:%s deviceId:%d isManaged:%d "
         "allocationFlags:%u\n",
-        attribs->hostPointer, attribs->devicePointer, memoryTypeToString(attribs->memoryType),
+        attribs->hostPointer, attribs->devicePointer, memoryTypeToString(attribs->type),
         attribs->device, attribs->isManaged, attribs->allocationFlags);
 };
 
@@ -229,13 +229,13 @@ void clusterAllocs(int numAllocs, size_t minSize, size_t maxSize) {
         if (isDevice) {
             totalDeviceAllocated[reference[i]._attrib.device] += reference[i]._sizeBytes;
             HIPCHECK(hipMalloc((void**)&ptr, reference[i]._sizeBytes));
-            reference[i]._attrib.memoryType = hipMemoryTypeDevice;
+            reference[i]._attrib.type = hipMemoryTypeDevice;
             reference[i]._attrib.devicePointer = ptr;
             reference[i]._attrib.hostPointer = NULL;
             reference[i]._attrib.allocationFlags = 0;  // TODO-randomize these.
         } else {
             HIPCHECK(hipHostMalloc((void**)&ptr, reference[i]._sizeBytes, hipHostMallocDefault));
-            reference[i]._attrib.memoryType = hipMemoryTypeHost;
+            reference[i]._attrib.type = hipMemoryTypeHost;
             reference[i]._attrib.devicePointer = ptr;
             reference[i]._attrib.hostPointer = ptr;
             reference[i]._attrib.allocationFlags = 0;  // TODO-randomize these.
@@ -265,7 +265,7 @@ void clusterAllocs(int numAllocs, size_t minSize, size_t maxSize) {
             checkPointer(ref, i, 2, (char*)ref._pointer + ref._sizeBytes - 1);
         }
 
-        if (ref._attrib.memoryType == hipMemoryTypeDevice) {
+        if (ref._attrib.type == hipMemoryTypeDevice) {
             hipFree(ref._pointer);
         } else {
             hipHostFree(ref._pointer);

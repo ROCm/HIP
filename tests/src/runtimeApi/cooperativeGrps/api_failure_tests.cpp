@@ -60,7 +60,7 @@ static inline void hipCheckAndFail(hipError_t errval,
     std::cerr << "hip error: " << hipGetErrorString(errval);
     std::cerr << std::endl;
     std::cerr << "    Location: " << file << ":" << line << std::endl;
-    failed("");
+    failed("\n");
   }
   if (last_err != errval) {
     std::cerr << "Error: the return value of a function was not the same ";
@@ -70,7 +70,7 @@ static inline void hipCheckAndFail(hipError_t errval,
     std::cerr << " (" << errval << ")" << std::endl;
     std::cerr << "hipGetLastError() returned: " << hipGetErrorString(last_err);
     std::cerr << " (" << last_err << ")" << std::endl;
-    failed("");
+    failed("\n");
   }
 }
 #define hipCheckErr(errval) \
@@ -124,6 +124,13 @@ __global__ void test_kernel(long long *array) {
   array[rank] += clock64();
 }
 
+__global__ void test_kernel_gfx11(long long *array) {
+#ifdef __HIP_PLATFORM_AMD__
+  unsigned int rank = blockIdx.x * blockDim.x + threadIdx.x;
+  array[rank] += wall_clock64();
+#endif
+}
+
 int main(int argc, char** argv) {
   hipError_t err;
   int device_num, FailFlag = 0;
@@ -155,6 +162,7 @@ int main(int argc, char** argv) {
     int num_sms = device_properties.multiProcessorCount;
     int max_num_threads = device_properties.maxThreadsPerBlock;
 
+    auto test_kernel_used = IsGfx11() ? test_kernel_gfx11 : test_kernel;
     // Check single-thread block, all numbers of warps, then too-large block
     for (int block_size = 0; block_size <= (max_num_threads + warp_size);
          block_size += warp_size) {
@@ -163,9 +171,8 @@ int main(int argc, char** argv) {
       }
       int max_blocks_per_sm;
       // Calculate the device occupancy to know how many blocks can be run.
-      HIPCHECK(hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
-              &max_blocks_per_sm, test_kernel, block_size, 0,
-              hipOccupancyDefault));
+      HIPCHECK(hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(&max_blocks_per_sm,
+               test_kernel_used, block_size, 0, hipOccupancyDefault));
 
       if ((block_size > max_num_threads) && (max_blocks_per_sm != 0)) {
         std::cerr << "ERROR! Occupancy API indicated that we can have >0 ";
@@ -173,7 +180,7 @@ int main(int argc, char** argv) {
         std::cerr << "to work on the device." << std::endl;
         std::cerr << "This is incorrect, and could possibly lead users ";
         std::cerr << "to try to launch kernels that will fail." << std::endl;
-        //failed("");
+        //failed("\n");
         FailFlag = 1;
         break;
       }
@@ -212,7 +219,7 @@ int main(int argc, char** argv) {
         coop_params[i][0] = reinterpret_cast<void*>(&dev_array[i]);
       }
 
-      err = hipLaunchCooperativeKernel(reinterpret_cast<void*>(test_kernel),
+      err = hipLaunchCooperativeKernel(reinterpret_cast<void*>(test_kernel_used),
                                        2 * desired_blocks, block_size,
                                        coop_params[0], 0, streams[0]);
 
@@ -235,9 +242,8 @@ int main(int argc, char** argv) {
       }
 
       HIPCHECK(hipDeviceSynchronize());
-      err = hipLaunchCooperativeKernel(reinterpret_cast<void*>(test_kernel),
-                                       desired_blocks, block_size,
-                                       coop_params[1], 0, streams[1]);
+      err = hipLaunchCooperativeKernel(reinterpret_cast<void*>(test_kernel_used), desired_blocks,
+                                       block_size, coop_params[1], 0, streams[1]);
 
       if (expect_fail) {
         expect_to_see = hipErrorInvalidConfiguration;
@@ -273,7 +279,7 @@ int main(int argc, char** argv) {
       for (int m = 0; m < 2; ++m) {
         HIPCHECK(hipFree(dev_array[m]));
       }
-      failed("");
+      failed("\n");
     }
   }
   passed();

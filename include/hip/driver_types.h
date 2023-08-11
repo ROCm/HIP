@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015 - 2021 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,7 +23,9 @@ THE SOFTWARE.
 #ifndef HIP_INCLUDE_HIP_DRIVER_TYPES_H
 #define HIP_INCLUDE_HIP_DRIVER_TYPES_H
 
+#if !defined(__HIPCC_RTC__)
 #include <hip/hip_common.h>
+#endif
 
 #if !(defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) && (defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__))
 #include "driver_types.h"
@@ -90,6 +92,7 @@ typedef struct hipArray {
     unsigned int NumChannels;
     bool isDrv;
     unsigned int textureType;
+    unsigned int flags;
 }hipArray;
 #if !defined(__HIPCC_RTC__)
 typedef struct hip_Memcpy2D {
@@ -125,8 +128,10 @@ typedef struct hipMipmappedArray {
   unsigned int max_mipmap_level;
   unsigned int flags;
   enum hipArray_Format format;
+  unsigned int num_channels;
 } hipMipmappedArray;
 typedef struct hipMipmappedArray* hipMipmappedArray_t;
+typedef hipMipmappedArray_t hipmipmappedArray;
 typedef const struct hipMipmappedArray* hipMipmappedArray_const_t;
 /**
  * hip resource types
@@ -142,7 +147,7 @@ typedef enum HIPresourcetype_enum {
     HIP_RESOURCE_TYPE_MIPMAPPED_ARRAY = 0x01, /**< Mipmapped array resource */
     HIP_RESOURCE_TYPE_LINEAR          = 0x02, /**< Linear resource */
     HIP_RESOURCE_TYPE_PITCH2D         = 0x03  /**< Pitch 2D resource */
-} HIPresourcetype;
+} HIPresourcetype, hipResourcetype;
 /**
  * hip address modes
  */

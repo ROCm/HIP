@@ -171,14 +171,9 @@ bool runTest(int argc, char** argv) {
 }
 
 int main(int argc, char** argv) {
+  checkImageSupport();
+
   bool testResult = true;
-  int imageSupport = 0;
-  hipDeviceGetAttribute(&imageSupport, hipDeviceAttributeImageSupport,
-                            p_gpuDevice);
-  if (!imageSupport) {
-    printf("Texture is not support on the device\n");
-    passed();
-  }
 #ifdef _WIN32
   testResult = runTest(argc, argv);
 #else

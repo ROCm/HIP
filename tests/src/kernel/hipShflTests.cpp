@@ -28,6 +28,7 @@ THE SOFTWARE.
 #include <iostream>
 #include <hip/hip_runtime.h>
 #include "test_common.h"
+#include <hip/hip_fp16.h>
 
 #define WIDTH 4
 
@@ -40,7 +41,7 @@ THE SOFTWARE.
 // Device (Kernel) function, it must be void
 template <typename T>
 __global__ void matrixTranspose(T* out, T* in, const int width) {
-    int x = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
+    int x = blockDim.x * blockIdx.x + threadIdx.x;
     T val = in[x];
     for (int i = 0; i < width; i++) {
         for (int j = 0; j < width; j++) out[i * width + j] = __shfl(val, j * width + i);
@@ -60,11 +61,52 @@ void matrixTransposeCPUReference(T* output, T* input, const unsigned int width) 
 void getFactor(int& fact) { fact = 101; }
 void getFactor(unsigned int& fact) { fact = static_cast<unsigned int>(INT32_MAX)+1; }
 void getFactor(float& fact) { fact = 2.5; }
+void getFactor(__half& fact) { fact = 2.5; }
 void getFactor(double& fact) { fact = 2.5; }
 void getFactor(long& fact) { fact = 202; }
 void getFactor(unsigned long& fact) { fact = static_cast<unsigned long>(__LONG_MAX__)+1; }
 void getFactor(long long& fact) { fact = 303; }
 void getFactor(unsigned long long& fact) { fact = static_cast<unsigned long long>(__LONG_LONG_MAX__)+1; }
+
+template <typename T> int compare(T* TransposeMatrix, T* cpuTransposeMatrix) {
+    int errors = 0;
+    for (int i = 0; i < NUM; i++) {
+        if (TransposeMatrix[i] != cpuTransposeMatrix[i]) {
+            errors++;
+        }
+    }
+    return errors;
+}
+
+template <> int compare<__half>(__half* TransposeMatrix, __half* cpuTransposeMatrix) {
+    int errors = 0;
+    for (int i = 0; i < NUM; i++) {
+        if (__half2float(TransposeMatrix[i]) != __half2float(cpuTransposeMatrix[i])) {
+            errors++;
+        }
+    }
+    return errors;
+}
+
+template <typename T>
+void init(T* Matrix) {
+    // initialize the input data
+    T factor;
+    getFactor(factor);
+    for (int i = 0; i < NUM; i++) {
+        Matrix[i] = (T)i + factor;
+    }
+}
+
+template <>
+void init(__half* Matrix) {
+    // initialize the input data
+    __half factor;
+    getFactor(factor);
+    for (int i = 0; i < NUM; i++) {
+        Matrix[i] = i + __half2float(factor);
+    }
+}
 
 template<typename T>
 void runTest() {
@@ -78,19 +120,13 @@ void runTest() {
     hipDeviceProp_t devProp;
     hipGetDeviceProperties(&devProp, 0);
 
-    int i;
     int errors;
 
     Matrix = (T*)malloc(NUM * sizeof(T));
     TransposeMatrix = (T*)malloc(NUM * sizeof(T));
     cpuTransposeMatrix = (T*)malloc(NUM * sizeof(T));
 
-    // initialize the input data
-    T factor;
-    getFactor(factor);
-    for (i = 0; i < NUM; i++) {
-        Matrix[i] = (T)i + factor;
-    }
+    init(Matrix);
 
     // allocate the memory on the device side
     hipMalloc((void**)&gpuMatrix, NUM * sizeof(T));
@@ -110,14 +146,8 @@ void runTest() {
     matrixTransposeCPUReference(cpuTransposeMatrix, Matrix, WIDTH);
 
     // verify the results
-    errors = 0;
+    errors = compare(TransposeMatrix, cpuTransposeMatrix);
     double eps = 1.0E-6;
-    for (i = 0; i < NUM; i++) {
-        if (TransposeMatrix[i] != cpuTransposeMatrix[i]) {
-            errors++;
-        }
-    }
-
     // free the resources on device side
     hipFree(gpuMatrix);
     hipFree(gpuTransposeMatrix);
@@ -137,6 +167,7 @@ int main() {
     runTest<float>();
     runTest<double>();
     runTest<long>();
+    runTest<__half>();
     runTest<long long>();
     runTest<unsigned int>();
     runTest<unsigned long>();

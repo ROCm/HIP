@@ -79,5 +79,41 @@ extern "C" __global__ void FourSecKernel(int clockrate) {
   }
 }
 
+extern "C" __global__ void SixteenSecKernel_gfx11(int clockrate) {
+#ifdef __HIP_PLATFORM_AMD__
+  uint64_t wait_t = 16000,
+  start = wall_clock64()/clockrate, cur;
+  do { cur = wall_clock64()/clockrate-start;}while (cur < wait_t);
+#endif
+}
+
+extern "C" __global__ void TwoSecKernel_gfx11(int clockrate) {
+#ifdef __HIP_PLATFORM_AMD__
+  if (deviceGlobal == 0x2222) {
+    deviceGlobal = 0x3333;
+  }
+  uint64_t wait_t = 2000,
+  start = wall_clock64()/clockrate, cur;
+  do { cur = wall_clock64()/clockrate-start;}while (cur < wait_t);
+  if (deviceGlobal != 0x3333) {
+    deviceGlobal = 0x5555;
+  }
+#endif
+}
+
+extern "C" __global__ void FourSecKernel_gfx11(int clockrate) {
+#ifdef __HIP_PLATFORM_AMD__
+  if (deviceGlobal == 1) {
+    deviceGlobal = 0x2222;
+  }
+  uint64_t wait_t = 4000,
+  start = wall_clock64()/clockrate, cur;
+  do { cur = wall_clock64()/clockrate-start;}while (cur < wait_t);
+  if (deviceGlobal == 0x2222) {
+    deviceGlobal = 0x4444;
+  }
+#endif
+}
+
 extern "C" __global__ void dummyKernel() {
 }

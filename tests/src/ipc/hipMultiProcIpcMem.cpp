@@ -18,8 +18,8 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp
- * TEST: %t
+ * BUILD: %t %s ../test_common.cpp LINK_OPTIONS -lrt
+ * TEST: %t --N 4
  * HIT_END
  */
 

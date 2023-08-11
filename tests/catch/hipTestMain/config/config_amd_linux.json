@@ -1,7 +1,0 @@
-{
-    "DisabledTests":
-	[
-	   "Unit_hipStreamPerThread_DeviceReset_1"
-	]
-
-}
