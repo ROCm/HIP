@@ -116,7 +116,7 @@ requests==2.31.0
     # via
     #   pygithub
     #   sphinx
-rocm-docs-core[api_reference]==0.20.0
+rocm-docs-core[api_reference]>=0.20.0
     # via -r requirements.in
 smmap==5.0.0
     # via gitdb
