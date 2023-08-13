@@ -164,6 +164,13 @@ typedef struct hipDeviceProp_t {
  /**
  * hipMemoryType (for pointer attributes)
  *
+ * @note  hipMemoryType enum values are different from cudaMemoryType enum values.
+ * In this case, memory type translation for hipPointerGetAttributes needs to be handled properly
+ * on nvidia platform to get the correct memory type in CUDA. Developers should use '#ifdef' in order
+ * to assign the correct enum values depending on Nvidia or AMD platform.
+ *
+ * @note  cudaMemoryTypeUnregistered is currently not supported due to HIP functionality backward
+ * compatibility.
  */
 typedef enum hipMemoryType {
     hipMemoryTypeHost = 0,    ///< Memory is physically located on host
@@ -2616,12 +2623,17 @@ hipError_t hipPointerSetAttribute(const void* value, hipPointer_attribute attrib
  *  @param [out]  attributes  attributes for the specified pointer
  *  @param [in]   ptr         pointer to get attributes for
  *
- *  Note: To get pointer's memory type, the parameter attributes has 'type' as member variable.
- *  The 'type' indicates input pointer is allocated on device or host.
+ *  @note  To get pointer's memory type, the parameter attributes has 'type' as member variable.
+ *  The 'type' indicates input pointer is allocated on device or host. That means the input
+ *  pointer must be returned or passed through an HIP API such as hipHostMalloc, hipMallocManaged,
+ *  hipHostRegister, etc. Otherwise, the pointer couldn't be handled by this API and attributes
+ *  returned hipErrorInvalidValue, due to the hipMemoryType enums values, unrecognized memory type
+ *  is currently not supported due to HIP functionality backward compatibility. 
  *
  *  @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
  *
  *  @see hipPointerGetAttribute
+ *
  */
 hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, const void* ptr);
 /**
@@ -2797,7 +2809,7 @@ hipError_t hipExtMallocWithFlags(void** ptr, size_t sizeBytes, unsigned int flag
  *
  *  @return #hipSuccess, #hipErrorOutOfMemory
  *
- *  @deprecated use hipHostMalloc() instead
+ *  @warning  This API is deprecated use hipHostMalloc() instead
  */
 DEPRECATED("use hipHostMalloc instead")
 hipError_t hipMallocHost(void** ptr, size_t size);
@@ -2811,7 +2823,7 @@ hipError_t hipMallocHost(void** ptr, size_t size);
  *
  *  @return #hipSuccess, #hipErrorOutOfMemory
  *
- *  @deprecated use hipHostMalloc() instead
+ *  @warning  This API is deprecated, use hipHostMalloc() instead
  */
 DEPRECATED("use hipHostMalloc instead")
 hipError_t hipMemAllocHost(void** ptr, size_t size);
@@ -2863,7 +2875,7 @@ hipError_t hipHostMalloc(void** ptr, size_t size, unsigned int flags);
 /**
  * @brief Allocates memory that will be automatically managed by HIP.
  *
- * This API is used for managed memory, allows data be shared and accessible to both the CPU and
+ * This API is used for managed memory, allows data be shared and accessible to both CPU and
  * GPU using a single pointer.
  *
  * The API returns the allocation pointer, managed by HMM, can be used further to execute kernels
@@ -2902,11 +2914,17 @@ hipError_t hipMemPrefetchAsync(const void* dev_ptr,
  * @brief Advise about the usage of a given memory range to HIP.
  *
  * @param [in] dev_ptr  pointer to memory to set the advice for
- * @param [in] count    size in bytes of the memory range, it should be 4KB alligned.
+ * @param [in] count    size in bytes of the memory range, it should be CPU page size alligned.
  * @param [in] advice   advice to be applied for the specified memory range
  * @param [in] device   device to apply the advice for
  *
  * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * This HIP API advises about the usage to be applied on unified memory allocation in the
+ * range starting from the pointer address devPtr, with the size of count bytes. The memory range
+ * must refer to managed memory allocated via the API hipMallocManaged, and the range will be
+ * handled with proper round down and round up respectively in the driver to be aligned to
+ * CPU page size.
  *
  * @note  This API is implemented on Linux, under development on Windows.
  */
@@ -3543,13 +3561,13 @@ hipError_t hipMemAllocPitch(hipDeviceptr_t* dptr, size_t* pitch, size_t widthInB
  */
 hipError_t hipFree(void* ptr);
 /**
- *  @brief Free memory allocated by the hcc hip host memory allocation API.  [Deprecated]
+ *  @brief Free memory allocated by the hcc hip host memory allocation API [Deprecated]
  *
  *  @param[in] ptr Pointer to memory to be freed
- *  @return #hipSuccess,
- *          #hipErrorInvalidValue (if pointer is invalid, including device pointers allocated with
- hipMalloc)
- *  @deprecated use hipHostFree() instead
+ *  @return #hipSuccess, #hipErrorInvalidValue (if pointer is invalid, including device pointers
+ *  allocated with hipMalloc)
+ *
+ *  @warning  This API is deprecated, use hipHostFree() instead
  */
 DEPRECATED("use hipHostFree instead")
 hipError_t hipFreeHost(void* ptr);
@@ -4282,6 +4300,8 @@ hipError_t hipMemcpy2DToArrayAsync(hipArray* dst, size_t wOffset, size_t hOffset
  *
  *  @see hipMemcpy, hipMemcpy2DToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol,
  * hipMemcpyAsync
+ *
+ * @warning  This API is deprecated.
  */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipMemcpyToArray(hipArray* dst, size_t wOffset, size_t hOffset, const void* src,
@@ -4291,7 +4311,7 @@ hipError_t hipMemcpyToArray(hipArray* dst, size_t wOffset, size_t hOffset, const
  *
  *  @param[in]   dst       Destination memory address
  *  @param[in]   srcArray  Source memory address
- *  @param[in]   woffset   Source starting X offset
+ *  @param[in]   wOffset   Source starting X offset
  *  @param[in]   hOffset   Source starting Y offset
  *  @param[in]   count     Size in bytes to copy
  *  @param[in]   kind      Type of transfer
@@ -4300,6 +4320,8 @@ hipError_t hipMemcpyToArray(hipArray* dst, size_t wOffset, size_t hOffset, const
  *
  *  @see hipMemcpy, hipMemcpy2DToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol,
  * hipMemcpyAsync
+ *
+ * @warning  This API is deprecated.
  */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipMemcpyFromArray(void* dst, hipArray_const_t srcArray, size_t wOffset, size_t hOffset,
@@ -4537,7 +4559,7 @@ hipError_t hipMemcpyPeerAsync(void* dst, int dstDeviceId, const void* src, int s
  *  This section describes the deprecated context management functions of HIP runtime API.
  */
 /**
- * @brief Create a context and set it as current/default context
+ * @brief Create a context and set it as current/default context.
  *
  * @param [out] ctx  Context to create
  * @param [in] flags  Context creation flags
@@ -4581,7 +4603,7 @@ hipError_t hipCtxDestroy(hipCtx_t ctx);
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxPopCurrent(hipCtx_t* ctx);
 /**
- * @brief Push the context to be set as current/ default context
+ * @brief Push the context to be set as current/ default context.
  *
  * @param [in] ctx
  *
@@ -4595,7 +4617,7 @@ hipError_t hipCtxPopCurrent(hipCtx_t* ctx);
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxPushCurrent(hipCtx_t ctx);
 /**
- * @brief Set the passed context as current/default
+ * @brief Set the passed context as current/default.
  *
  * @param [in] ctx
  *
@@ -4609,7 +4631,7 @@ hipError_t hipCtxPushCurrent(hipCtx_t ctx);
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxSetCurrent(hipCtx_t ctx);
 /**
- * @brief Get the handle of the current/ default context
+ * @brief Get the handle of the current/ default context.
  *
  * @param [out] ctx
  *
@@ -4623,7 +4645,7 @@ hipError_t hipCtxSetCurrent(hipCtx_t ctx);
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxGetCurrent(hipCtx_t* ctx);
 /**
- * @brief Get the handle of the device associated with current/default context
+ * @brief Get the handle of the device associated with current/default context.
  *
  * @param [out] device
  *
@@ -4658,7 +4680,7 @@ hipError_t hipCtxGetDevice(hipDevice_t* device);
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxGetApiVersion(hipCtx_t ctx, int* apiVersion);
 /**
- * @brief Get Cache configuration for a specific function
+ * @brief Get Cache configuration for a specific function.
  *
  * @param [out] cacheConfig  Cache configuration
  *
@@ -4763,7 +4785,7 @@ hipError_t hipCtxGetFlags(unsigned int* flags);
  * accessible from the current device until a call to hipDeviceDisablePeerAccess or hipDeviceReset.
  *
  *
- * @param [in] peerCtx  Peer context 
+ * @param [in] peerCtx  Peer context
  * @param [in] flags  flags, need to set as 0
  *
  * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue,
@@ -5216,16 +5238,16 @@ hipError_t hipOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize,
  */
 // TODO - expand descriptions:
 /**
- * @brief Start recording of profiling information
+ * @brief Start recording of profiling information.
  * When using this API, start the profiler with profiling disabled.  (--startdisabled)
- * @warning : hipProfilerStart API is under development.
+ * @warning  hipProfilerStart API is deprecated, use roctracer/rocTX instead.
  */
 DEPRECATED("use roctracer/rocTX instead")
 hipError_t hipProfilerStart();
 /**
  * @brief Stop recording of profiling information.
  * When using this API, start the profiler with profiling disabled.  (--startdisabled)
- * @warning : hipProfilerStop API is under development.
+ * @warning  hipProfilerStop API is deprecated, use roctracer/rocTX instead.
  */
 DEPRECATED("use roctracer/rocTX instead")
 hipError_t hipProfilerStop();
@@ -8182,7 +8204,7 @@ inline hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchPara
 }
 /**
  * @brief Binds a memory area to a texture.
- *
+ * @ingroup TextureD
  * @param [in] offset  Offset in bytes.
  * @param [in] tex  Texture to bind.
  * @param [in] devPtr  Pointer of memory on the device.
@@ -8199,7 +8221,7 @@ static inline hipError_t hipBindTexture(size_t* offset, const struct texture<T, 
 }
 /**
  * @brief Binds a memory area to a texture.
- *
+ * @ingroup TextureD
  * @param [in] offset  Offset in bytes.
  * @param [in] tex  Texture to bind.
  * @param [in] devPtr  Pointer of memory on the device.
@@ -8218,7 +8240,7 @@ static inline hipError_t
 }
 /**
  * @brief Binds a 2D memory area to a texture.
- *
+ * @ingroup TextureD
  * @param [in] offset  Offset in bytes.
  * @param [in] tex  Texture to bind.
  * @param [in] devPtr  Pointer of 2D memory area on the device.
@@ -8243,7 +8265,7 @@ static inline hipError_t hipBindTexture2D(
 }
 /**
  * @brief Binds a 2D memory area to a texture.
- *
+ * @ingroup TextureD
  * @param [in] offset  Offset in bytes.
  * @param [in] tex  Texture to bind.
  * @param [in] devPtr  Pointer of 2D memory area on the device.
@@ -8268,9 +8290,10 @@ static inline hipError_t hipBindTexture2D(
 {
   return hipBindTexture2D(offset, &tex, devPtr, &desc, width, height, pitch);
 }
+
 /**
  * @brief Binds an array to a texture.
- *
+ * @ingroup TextureD
  * @param [in] tex  Texture to bind.
  * @param [in] array  Array of memory on the device.
  *
@@ -8289,7 +8312,7 @@ static inline hipError_t hipBindTextureToArray(
 }
 /**
  * @brief Binds an array to a texture.
- *
+ * @ingroup TextureD
  * @param [in] tex  Texture to bind.
  * @param [in] array  Array of memory on the device.
  * @param [in] desc  Texture channel format.
@@ -8308,7 +8331,7 @@ static inline hipError_t hipBindTextureToArray(
 }
 /**
  * @brief Binds a mipmapped array to a texture.
- *
+ * @ingroup TextureD
  * @param [in] tex  Texture to bind.
  * @param [in] mipmappedArray  Mipmapped Array of memory on the device.
  *
@@ -8332,7 +8355,7 @@ static inline hipError_t hipBindTextureToMipmappedArray(
 }
 /**
  * @brief Binds a mipmapped array to a texture.
- *
+ * @ingroup TextureD
  * @param [in] tex  Texture to bind.
  * @param [in] mipmappedArray  Mipmapped Array of memory on the device.
  * @param [in] desc  Texture channel format.
@@ -8351,7 +8374,7 @@ static inline hipError_t hipBindTextureToMipmappedArray(
 }
 /**
  * @brief Unbinds a texture.
- *
+ * @ingroup TextureD
  * @param [in] tex  Texture to unbind.
  *
  * @warning This API is deprecated.

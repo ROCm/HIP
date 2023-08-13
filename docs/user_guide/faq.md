@@ -148,6 +148,9 @@ ROCclr (Radeon Open Compute Common Language Runtime) is a virtual device interfa
 ## What is HIPAMD?
 HIPAMD is a repository branched out from HIP, mainly the implementation for AMD GPU.
 
+## Can I get HIP open source repository for Windows?
+No, there is no HIP repository open publicly on Windows.
+
 ## Can a HIP binary run on both AMD and Nvidia platforms?
 HIP is a source-portable language that can be compiled to run on either AMD or NVIDIA platform. HIP tools don't create a "fat binary" that can run on either platform, however.
 
@@ -223,7 +226,7 @@ If you have compiled the application yourself, make sure you have given the corr
 If you have a precompiled application/library (like rocblas, tensorflow etc) which gives you such error, there are one of two possibilities.
 
  - The application/library does not ship code object bundles for *all* of your device(s): in this case you need to recompile the application/library yourself with correct `--offload-arch`.
- - The application/library does not ship code object bundles for *some* of your device(s), for example you have a system with an APU + GPU and the library does not ship code objects for your APU. For this you can set the environment variable `HIP_VISIBLE_DEVICES` to only enable GPUs for which code object is available. This will limit the GPUs visible to your application and allow it to run.
+ - The application/library does not ship code object bundles for *some* of your device(s), for example you have a system with an APU + GPU and the library does not ship code objects for your APU. For this you can set the environment variable `HIP_VISIBLE_DEVICES` or `CUDA_VISIBLE_DEVICES` on NVdia platform, to only enable GPUs for which code object is available. This will limit the GPUs visible to your application and allow it to run.
 
 ## How to use per-thread default stream in HIP?
 
@@ -232,10 +235,15 @@ The per-thread default stream is an implicit stream local to both the thread and
 The per-thread default stream is a blocking stream and will synchronize with the default null stream if both are used in a program.
 
 In ROCm, a compilation option should be added in order to compile the translation unit with per-thread default stream enabled.
-“-fgpu-default-stream=per-thread”.
+"-fgpu-default-stream=per-thread".
 Once source is compiled with per-thread default stream enabled, all APIs will be executed on per thread default stream, hence there will not be any implicit synchronization with other streams.
 
 Besides, per-thread default stream be enabled per translation unit, users can compile some files with feature enabled and some with feature disabled. Feature enabled translation unit will have default stream as per thread and there will not be any implicit synchronization done but other modules will have legacy default stream which will do implicit synchronization.
+
+## Can I develop applications with HIP APIs on Windows the same on Linux?
+
+Yes, HIP APIs are available to use on both Linux and Windows.
+Due to different working mechanisms on operating systems like Windows vs Linux, HIP APIs call corresponding lower level backend runtime libraries and kernel drivers for the OS, in order to control the executions on GPU hardware accordingly. There might be a few differences on the related backend software and driver support, which might affect usage of HIP APIs. See OS support details in HIP API document.
 
 ## How can I know the version of HIP?
 
