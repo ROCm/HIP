@@ -7433,7 +7433,7 @@ hipError_t hipGraphExternalSemaphoresWaitNodeSetParams(hipGraphNode_t hNode,
  * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphExternalSemaphoresSignalNodeGetParams(hipGraphNode_t hNode,
-                                                         const hipExternalSemaphoreSignalNodeParams* params_out);
+                                                         hipExternalSemaphoreSignalNodeParams* params_out);
 /**
  * @brief Returns external semaphore wait node params.
  *
@@ -7444,7 +7444,7 @@ hipError_t hipGraphExternalSemaphoresSignalNodeGetParams(hipGraphNode_t hNode,
  * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphExternalSemaphoresWaitNodeGetParams(hipGraphNode_t hNode,
-                                                       const hipExternalSemaphoreWaitNodeParams* params_out);
+                                                       hipExternalSemaphoreWaitNodeParams* params_out);
 /**
  * @brief Updates node parameters in the external semaphore signal node in the given graphExec.
  *
