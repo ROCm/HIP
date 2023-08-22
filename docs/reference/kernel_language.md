@@ -561,10 +561,10 @@ Warp cross-lane functions operate across all lanes in a warp. The hardware guara
 Note that Nvidia and AMD devices have different warp sizes, so portable code should use the warpSize built-ins to query the warp size. Hipified code from the Cuda path requires careful review to ensure it doesn’t assume a waveSize of 32. "Wave-aware" code that assumes a waveSize of 32 will run on a wave-64 machine, but it will utilize only half of the machine resources. WarpSize built-ins should only be used in device functions and its value depends on GPU arch. Users should not assume warpSize to be a compile-time constant. Host functions should use hipGetDeviceProperties to get the default warp size of a GPU device:
 
 ```
-	cudaDeviceProp props;
-	cudaGetDeviceProperties(&props, deviceID);
-    int w = props.warpSize;
-    // implement portable algorithm based on w (rather than assume 32 or 64)
+cudaDeviceProp props;
+cudaGetDeviceProperties(&props, deviceID);
+int w = props.warpSize;
+// implement portable algorithm based on w (rather than assume 32 or 64)
 ```
 
 Note that assembly kernels may be built for a warp size which is different than the default warp size.
@@ -602,6 +602,26 @@ int   __shfl_xor  (int var,   int laneMask, int width=warpSize);
 float __shfl_xor  (float var, int laneMask, int width=warpSize);
 
 ```
+
+### Unsupported Cuda 9 Synchronized Data Exchange Primitives
+Cuda 9 introduced synchronized data exchange primitives. For example:
+
+```
+int __shfl_sync(unsigned mask, int val, int src_line, int width=warpSize);
+int __shfl_down_sync(unsigned mask, int var, unsigned detla, int width=warpSize);
+```
+
+These sync primivites are not supported. The first argument is a 32-bit mask representing all the threads in the warp, but HIP applications using warpSize 64 would need a 64-bit mask. If the application is using a full mask such as 0xffffffff for 32 threads, this is equivalent to calling the non-sync version of the primitive on HIP. Code can be modified as follows:
+
+```
+#ifdef __HIP_PLATFORM_NVIDIA__
+  __shfl_down_sync(0xffffffff, var, delta);
+#else // __HIP_PLATFORM_AMD__
+  __shfl_down(var, delta);
+#endif
+```
+
+Any use of the sync primitives that does not use a full mask does not have a direct porting to HIP. Such code will need to be rewritten to avoid using the sync primitive.
 
 ## Cooperative Groups Functions
 

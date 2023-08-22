@@ -78,19 +78,26 @@ directory names.
 
 ### Library Equivalents
 
-| CUDA Library | ROCm Library | Comment |
-|------- | ---------   | -----   |
-| cuBLAS        |    rocBLAS     | Basic Linear Algebra Subroutines
-| cuFFT        |    rocFFT     | Fast Fourier Transfer Library
-| cuSPARSE     |    rocSPARSE   | Sparse BLAS  + SPMV
-| cuSolver     |    rocSOLVER   | Lapack library
-| AMG-X    |    rocALUTION   | Sparse iterative solvers and preconditioners with Geometric and Algebraic MultiGrid
-| Thrust    |    rocThrust | C++ parallel algorithms library
-| CUB     |    rocPRIM | Low Level Optimized Parallel Primitives
-| cuDNN    |    MIOpen | Deep learning Solver Library
-| cuRAND    |    rocRAND | Random Number Generator Library
-| EIGEN    |    EIGEN – HIP port | C++ template library for linear algebra: matrices, vectors, numerical solvers,
-| NCCL    |    RCCL  | Communications Primitives Library based on the MPI equivalents
+Most CUDA libraries have a corresponding ROCm library with similar functionality and APIs. However, ROCm also provides HIP marshalling libraries that greatly simplify the porting process because they more precisely reflect their CUDA counterparts and can be used with either the AMD or NVIDIA platforms (see "Identifying HIP Target Platform" below). There are a few notable exceptions:
+  - MIOpen does not have a marshalling library interface to ease porting from cuDNN.
+  - RCCL is a drop-in replacement for NCCL and implements the NCCL APIs.
+  - hipBLASLt does not have a ROCm library but can still target the NVIDIA platform, as needed.
+  - EIGEN's HIP support is part of the library.
+
+| CUDA Library | HIP Library | ROCm Library | Comment |
+|------------- | ----------- | ------------ | ------- |
+| cuBLAS       | hipBLAS     | rocBLAS      | Basic Linear Algebra Subroutines
+| cuBLASLt     | hipBLASLt   | N/A          | Basic Linear Algebra Subroutines, lightweight and new flexible API
+| cuFFT        | hipFFT      | rocFFT       | Fast Fourier Transfer Library
+| cuSPARSE     | hipSPARSE   | rocSPARSE    | Sparse BLAS  + SPMV
+| cuSolver     | hipSOLVER   | rocSOLVER    | Lapack library
+| AMG-X        | N/A         | rocALUTION   | Sparse iterative solvers and preconditioners with Geometric and Algebraic MultiGrid
+| Thrust       | N/A         | rocThrust    | C++ parallel algorithms library
+| CUB          | hipCUB      | rocPRIM      | Low Level Optimized Parallel Primitives
+| cuDNN        | N/A         | MIOpen       | Deep learning Solver Library
+| cuRAND       | hipRAND     | rocRAND      | Random Number Generator Library
+| EIGEN        | EIGEN       | N/A          | C++ template library for linear algebra: matrices, vectors, numerical solvers,
+| NCCL         | N/A         | RCCL         | Communications Primitives Library based on the MPI equivalents
 
 
 
@@ -354,7 +361,7 @@ run hipcc when appropriate.
 ## Workarounds
 
 ### warpSize
-Code should not assume a warp size of 32 or 64.  See [Warp Cross-Lane Functions](hip_kernel_language.md#warp-cross-lane-functions) for information on how to write portable wave-aware code.
+Code should not assume a warp size of 32 or 64.  See [Warp Cross-Lane Functions](/docs/reference/kernel_language.md#warp-cross-lane-functions) for information on how to write portable wave-aware code.
 
 ### Kernel launch with group size > 256
 Kernel code should use ``` __attribute__((amdgpu_flat_work_group_size(<min>,<max>)))```.
