@@ -3,6 +3,7 @@ subtrees:
 - caption: User Reference
   entries:
     - file: .doxygen/docBin/html/index
+    - file: reference/programming_model
     - file: reference/kernel_language
     - file: reference/math_api
     - file: reference/glossary
