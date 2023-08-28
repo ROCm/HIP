@@ -16,6 +16,8 @@ all uniquely identified by a set of integral values which are referred to as
 thread IDs. The set of integers identifying a thread relate to the hierarchy in
 which threads execute.
 
+(inherent_tread_model)=
+
 ### Inherent Thread Model
 
 The thread hiearchy inherent to how AMD GPUs operate manifest as depicted in
@@ -56,3 +58,8 @@ Hierarchy of thread groups.
   within the block.
 
 ### Cooperative Groups Thread Model
+
+The Cooperative Groups API introduces new APIs to launch and identify threads,
+as well as a matching threading model to think in terms of. It relaxes some of
+the restrictions of the {ref}`inherent_tread_model` imposed by the strict 1:1
+mapping of architectural details to the programming model.
