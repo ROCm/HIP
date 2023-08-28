@@ -1,100 +1,42 @@
-# HIP Documentation
+# HIP Runtime documentation
 
-HIP is a C++ runtime API and kernel language that allows developers to create
-portable applications for AMD and NVIDIA GPUs from single source code.
+HIP Runtime is a C++ API and kernel language that you can use to create portable applications for
+AMD and NVIDIA GPUs from single source code.
 
-## Programmer Manual
-
-These documents are targeted at authors of HIP libraries and applications.
+If you want to contribute to the HIP Runtime documentation, first review our
+{doc}`/developer_guide/contributing`.
 
 ::::{grid} 1 1 2 2
 :gutter: 1
 
+:::{grid-item-card} Conceptual
+
+- {doc}`/user_guide/hip_rtc`
+- {doc}`/user_guide/programming_manual`
+:::
+
+:::{grid-item-card} How-to
+
+- {doc}`/how_to_guides/install`
+- {doc}`/developer_guide/build`
+- {doc}`/how_to_guides/debugging`
+- {doc}`/user_guide/hip_porting_guide`
+:::
+
 :::{grid-item-card} Reference
 
 - {doc}`/.doxygen/docBin/html/index`
-  - {doc}`/.doxygen/docBin/html/modules`
+- {doc}`/.doxygen/docBin/html/modules`
 - {doc}`/reference/kernel_language`
 - {doc}`/reference/math_api`
 - {doc}`/reference/deprecated_api_list`
-
-:::
-
-:::{grid-item-card} Understand HIP
-:::
-
-:::{grid-item-card} How-to Guides
-
-- {doc}`/how_to_guides/install`
-
+- {doc}`/reference/terms`
+- {doc}`/developer_guide/logging`
 :::
 
 :::{grid-item-card} Tutorials
 
 - {doc}`/tutorials/saxpy`
-
-:::
-
-::::
-
-## Contributor Manual
-
-These documents are targeted at authors contributing to the HIP runtime and
-the accompanying host/device compiler.
-
-::::{grid} 1 1 2 2
-:gutter: 1
-
-:::{grid-item-card} Reference
-:::
-
-:::{grid-item-card} Background
-:::
-
-:::{grid-item-card} How-to Guides
-
-- {doc}`/developer_guide/build`
-
-:::
-
-:::{grid-item-card} Tutorials
-:::
-
-::::
-
-## Legacy Content
-
-Materials listed here don't fit well the new documentation system and will be
-removed once their contents are appropriately covered.
-
-::::{grid} 1 1 2 2
-:gutter: 1
-
-:::{grid-item-card} User Guide
-
-- {doc}`/user_guide/programming_manual`
-- {doc}`/user_guide/hip_rtc`
-- {doc}`/user_guide/faq`
-
-:::
-
-:::{grid-item-card} How to Guides
-
-- {doc}`/how_to_guides/debugging`
-
-:::
-
-:::{grid-item-card} Reference
-
-- {doc}`/reference/terms`
-
-:::
-
-:::{grid-item-card} Developer Guide
-
-- {doc}`/developer_guide/logging`
-- {doc}`/developer_guide/contributing`
-
 :::
 
 ::::
