@@ -6649,6 +6649,23 @@ hipError_t hipGraphExecKernelNodeSetParams(hipGraphExec_t hGraphExec, hipGraphNo
 /**
  * @brief Creates a memcpy node and adds it to a graph.
  *
+ * @param [out] phGraphNode - pointer to graph node to create.
+ * @param [in] hGraph - instance of graph to add the created node.
+ * @param [in] dependencies - const pointer to the dependencies on the memcpy execution node.
+ * @param [in] numDependencies - the number of the dependencies.
+ * @param [in] copyParams - const pointer to the parameters for the memory copy.
+ * @param [in] ctx - cotext related to current device.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipDrvGraphAddMemcpyNode(hipGraphNode_t* phGraphNode, hipGraph_t hGraph,
+                                    const hipGraphNode_t* dependencies,
+                                    size_t numDependencies,
+                                    const HIP_MEMCPY3D* copyParams, hipCtx_t ctx);
+/**
+ * @brief Creates a memcpy node and adds it to a graph.
+ *
  * @param [out] pGraphNode - pointer to graph node to create.
  * @param [in] graph - instance of graph to add the created node.
  * @param [in] pDependencies - const pointer to the dependencies on the memcpy execution node.
