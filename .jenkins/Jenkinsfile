@@ -3,6 +3,7 @@ def hipBuildTest(String backendLabel) {
           stage("SYNC - ${backendLabel}") {
             // Delete the workspace
             sh "rm ${env.WORKSPACE}/* -fr"
+            sh "ls -lart ${env.WORKSPACE}"
             // Checkout hip repository with the PR patch
             dir("${WORKSPACE}/hip") {
                checkout scm
