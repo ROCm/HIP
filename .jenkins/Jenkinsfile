@@ -4,6 +4,8 @@ def hipBuildTest(String backendLabel) {
             // Delete the workspace
             sh "rm ${env.WORKSPACE}/* -fr"
             sh "ls -lart ${env.WORKSPACE}"
+            sh "hostname -I"
+            sh "env"
             // Checkout hip repository with the PR patch
             dir("${WORKSPACE}/hip") {
                checkout scm
