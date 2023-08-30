@@ -7,7 +7,7 @@
 from rocm_docs import ROCmDocs
 from typing import Any, Dict, List
 
-docs_core = ROCmDocs("HIP Documentation")
+docs_core = ROCmDocs("HIP Runtime documentation")
 docs_core.run_doxygen()
 docs_core.enable_api_reference()
 docs_core.setup()

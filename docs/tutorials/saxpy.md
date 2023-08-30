@@ -11,7 +11,7 @@ In order to follow this tutorial you will need properly installed drivers and a
 HIP compiler toolchain to compile your code. Because HIP provided by ROCm
 supports compiling and running on Linux and Windows with AMD and NVIDIA GPUs
 alike, the combination of install instructions are more then worth covering as
-part of this tutorial. Please refer to {doc}`/how_to_guides/install` on how to
+part of this tutorial. Please refer to {doc}`/how_to/install` on how to
 install HIP development packages.
 
 ## Heterogenous Programming

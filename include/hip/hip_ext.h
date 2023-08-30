@@ -50,7 +50,7 @@ THE SOFTWARE.
  * @param [in] extra  Pointer to kernel arguments. These are passed directly to the kernel and
  * must be in the memory layout and alignment expected by the kernel.
  * All passed arguments must be naturally aligned according to their type. The memory address of each
- * argument should be a multiple of its size in bytes. Please refer to hip_porting_driver_api.md
+ * argument should be a multiple of its size in bytes. Please refer to porting_driver.md
  * for sample usage.
  * @param [in] startEvent  If non-null, specified event will be updated to track the start time of
  * the kernel launch. The event must be created before calling this API.

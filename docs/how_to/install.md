@@ -48,6 +48,6 @@ Run hipconfig (instructions below assume default installation path):
 # How to build HIP from source
 
 Developers can build HIP from source on either AMD or NVIDIA platforms, see
-detailed instructions at  [building HIP from source](../developer_guide/build.md).
+detailed instructions at  [building HIP from source](../how_to/build.md).
 
 

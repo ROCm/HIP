@@ -34,16 +34,15 @@ HIP releases are typically naming convention for each ROCM release to help diffe
   This type of release is typically made once a month.*
 
 ## More Info:
-- [Installation](docs/how_to_guides/install.md)
-- [HIP FAQ](docs/user_guide/faq.md)
+- [Installation](docs/how_to/install.md)
 - [HIP Kernel Language](docs/reference/kernel_language.md)
-- [HIP Porting Guide](docs/user_guide/hip_porting_guide.md)
-- [HIP Porting Driver Guide](docs/user_guide/hip_porting_driver_api.md)
-- [HIP Programming Guide](docs/user_guide/programming_manual.md)
-- [HIP Logging ](docs/developer_guide/logging.md)
-- [Building HIP From Source](docs/developer_guide/build.md)
-- [HIP Debugging ](docs/how_to_guides/debugging.md)
-- [HIP RTC](docs/user_guide/hip_rtc.md)
+- [HIP Porting Guide](docs/how_to/hip_porting_guide.md)
+- [HIP Porting Driver Guide](docs/conceptual/porting_driver.md)
+- [HIP Programming Guide](docs/conceptual/programming_manual.md)
+- [HIP Logging ](docs/reference/logging.md)
+- [Building HIP From Source](docs/how_to/build.md)
+- [HIP Debugging ](docs/how_to/debugging.md)
+- [HIP RTC](docs/conceptual/hip_rtc.md)
 - [HIP Terminology](docs/reference/terms.md) (including Rosetta Stone of GPU computing terms across CUDA/HIP/OpenCL)
 - [HIPIFY](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/amd-staging/README.md)
 - Supported CUDA APIs:
@@ -56,12 +55,12 @@ HIP releases are typically naming convention for each ROCM release to help diffe
   * [cuDNN](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/master/doc/markdown/CUDNN_API_supported_by_HIP.md)
   * [cuFFT](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/master/doc/markdown/CUFFT_API_supported_by_HIP.md)
   * [cuSPARSE](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/master/doc/markdown/CUSPARSE_API_supported_by_HIP.md)
-- [Developer/CONTRIBUTING Info](docs/developer_guide/contributing.md)
+- [Developer/CONTRIBUTING Info](docs/additional_resources/contributing.md)
 - [Release Notes](RELEASE.md)
 
 ## How do I get set up?
 
-See the [Installation](docs/how_to_guides/install.md) notes.
+See the [Installation](docs/how_to/install.md) notes.
 
 ## Simple Example
 The HIP API includes functions such as hipMalloc, hipMemcpy, and hipFree.
@@ -131,7 +130,7 @@ cd samples/01_Intro/square
 # follow README / blog steps to hipify the application.
 ```
 
-* Guide to [Porting a New Cuda Project](docs/user_guide/hip_porting_guide.md/"Porting a New CUDA Project")
+* Guide to [Porting a New Cuda Project](docs/how_to/porting.md/"Porting a New CUDA Project")
 
 
 ## More Examples

@@ -2,25 +2,26 @@ root: index
 subtrees:
 - caption: Conceptual
   entries:
-    - file: user_guide/hip_rtc
-    - file: user_guide/programming_manual
+    - file: conceptual/hip_rtc
+    - file: conceptual/programming_manual
 - caption: How-to
   entries:
-    - file: how_to_guides/install.md
-    - file: developer_guide/build
-    - file: how_to_guides/debugging
-    - file: user_guide/hip_porting_guide
+    - file: how_to/install
+    - file: how_to/build
+    - file: how_to/debugging
+    - file: how_to/porting
 - caption:  Reference
   entries:
     - file: .doxygen/docBin/html/index
+    - file: reference/programming_model
     - file: reference/kernel_language
     - file: reference/math_api
     - file: reference/deprecated_api_list
     - file: reference/terms
-    - file: developer_guide/logging
+    - file: reference/logging
 - caption: Tutorials
   entries:
     - file: tutorials/saxpy
 - caption: Additional resources
   entries:
-    - file: developer_guide/contributing
+    - file: additional_resources/contributing

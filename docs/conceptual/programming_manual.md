@@ -129,7 +129,7 @@ HIP now supports runtime compilation (hipRTC), the usage of which will provide t
 hipRTC APIs accept HIP source files in character string format as input parameters and create handles of programs by compiling the HIP source files without spawning separate processes.
 
 For more details on hipRTC APIs, refer to HIP-API.pdf in GitHub (https://docs.amd.com/category/api_documentation).
-For Linux developers, the link here(https://github.com/ROCm-Developer-Tools/hip-tests/blob/develop/samples/2_Cookbook/23_cmake_hiprtc/saxpy.cpp) shows an example how to program HIP application using runtime compilation mechanism, and detail hipRTC programming guide is also available in Github (https://github.com/ROCm-Developer-Tools/HIP/blob/develop/docs/user_guide/hip_rtc.md).
+For Linux developers, the link here(https://github.com/ROCm-Developer-Tools/hip-tests/blob/develop/samples/2_Cookbook/23_cmake_hiprtc/saxpy.cpp) shows an example how to program HIP application using runtime compilation mechanism, and detail hipRTC programming guide is also available in Github (https://github.com/ROCm-Developer-Tools/HIP/blob/develop/docs/conceptual/hip_rtc.md).
 
 ## HIP Graph
 HIP graph is supported. For more details, refer to the HIP API Guide.

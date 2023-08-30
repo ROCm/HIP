@@ -195,7 +195,7 @@ hipCUResultTohipError
 If platform portability is important, use #ifdef __HIP_PLATFORM_NVIDIA__ to guard the CUDA-specific code.
 
 ## How do I trace HIP application flow?
-See {doc}`/developer_guide/logging` for more information.
+See {doc}`/reference/logging` for more information.
 
 ## What is maximum limit of kernel launching parameter?
 Product of block.x, block.y, and block.z should be less than 1024.
