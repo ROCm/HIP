@@ -111,11 +111,21 @@ part of the API, typically but not necessarily `tiled_partition`.
 ## Memory Model
 
 The hierarchy of threads introduced by {ref}`inherent_tread_model` is induced
-by the memory subsystem of GPUs. _LINK_ summarizes that memory namespaces and
+by the memory subsystem of GPUs. {numref}`memory_hierarchy` summarizes that memory namespaces and
 how they relate to the various levels of the threading model.
 
-- Per-thread memory or local memory is read-write storage only visible to the
-  threads defining the given variables. This is the default memory namespace.
+:::{figure-md} memory_hierarchy
+
+<img src="../data/reference/programming_model/memory_hierarchy.svg" alt="Memory hierarchy.">
+
+Memory hierarchy.
+:::
+
+- Local or per-thread memory is read-write storage only visible to the
+  threads defining the given variables. The size of a block for a given kernel,
+  the number of concurrent warps are limited by local memory usage.
+  This relates to an important aspect: occupancy. This is the default memory
+  namespace.
 
 - Shared memory is read-write storage visible to all the threads in a given
   block.
@@ -136,3 +146,38 @@ how they relate to the various levels of the threading model.
   - Surface is a writable version of texture memory.
 
 ## Execution Model
+
+HIP programs consist of two distinct scopes:
+
+- The host-side API running on the host processor. There are to APIs available:
+
+  - The HIP runtime API which enables use of the single-source programming
+    model.
+
+  - The HIP driver API which sits at a lower level and most importantly differs
+    by removing some of the facilities provided by the runtime API, most
+    importantly around kernel launching and argument setting. It is geared
+    towards implementing abstractions atop, such as the runtime API itself.
+
+- The device-side kernels running on GPUs. Both the host and the device-side
+  APIs have synchronous and asynchronous functions in them.
+
+### Host-side execution
+
+The part of the host-side API which deals with device management and their
+queries are synchronous. All asynchronous APIs, such as kernel execution, data
+movement and potentially data allocation/freeing all happen in the context of
+device streams.
+
+Streams are FIFO buffers of commands to execute relating to a given device.
+Commands which enqueue tasks on a stream all return promptly and the command is
+executed asynchronously. All side-effects of a command on a stream are visible
+to all subsequent commands on the same stream. Multiple streams may point to
+the same device and those streams may be fed from multiple concurrent host-side
+threads. Execution on multiple streams may be concurrent but isn't required to
+be.
+
+Asynchronous APIs involving a stream all return a stream event which may be
+used to synchronize the execution of multiple streams.
+
+### Device-side execution
