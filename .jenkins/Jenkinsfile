@@ -47,6 +47,9 @@ def hipBuildTest(String backendLabel) {
                     # Check if backend label contains string "amd" or backend host is a server with amd gpu
                     if [[ $backendLabel =~ amd ]]; then
                         sleep 120
+                        env
+                        ls -laRt ${WORKSPACE}
+                        sh "hostname -I"
                         cmake -DCLR_BUILD_HIP=ON -DHIP_PATH=\$PWD/install -DHIPCC_BIN_DIR=\$HIPCC_DIR/bin -DHIP_COMMON_DIR=\$HIP_DIR -DCMAKE_PREFIX_PATH="/opt/rocm/" -DCMAKE_INSTALL_PREFIX=\$PWD/install ..
                     else
                         cmake -DCLR_BUILD_HIP=ON -DHIP_PLATFORM=nvidia -DHIPCC_BIN_DIR=\$HIPCC_DIR/bin -DHIP_COMMON_DIR=\$HIP_DIR -DCMAKE_INSTALL_PREFIX=\$PWD/install ..
