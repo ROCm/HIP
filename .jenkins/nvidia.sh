@@ -1,8 +1,6 @@
 #!/bin/bash
 
 export WORKSPACE=$PWD/hipanl
-rm -rf $WORKSPACE
-mkdir $WORKSPACE
 cd ${WORKSPACE}
                
             
