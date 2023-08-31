@@ -37,9 +37,9 @@ def hipBuildTest(String backendLabel) {
               url: 'https://github.com/ROCm-Developer-Tools/hipcc'
               env.HIPCC_DIR = "${WORKSPACE}" + "/hipcc"
             }
-        }
+          }
 
-        stage("BUILD/TEST HIP - ${backendLabel}") {
+          stage("BUILD/TEST HIP - ${backendLabel}") {
                 sh  """#!/usr/bin/env bash
                 if [[ $backendLabel =~ amd ]]; then
                 ${WORKSPACE}/hip/.jenkins/amd.sh
@@ -47,6 +47,7 @@ def hipBuildTest(String backendLabel) {
                 ${WORKSPACE}/hip/.jenkins/nvidia.sh
                 fi
                 """
+          }
         }
 }
 
