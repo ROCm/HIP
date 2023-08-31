@@ -37,7 +37,7 @@ THE SOFTWARE.
 #ifndef HIP_INCLUDE_HIP_HIP_RUNTIME_H
 #define HIP_INCLUDE_HIP_HIP_RUNTIME_H
 
-#if __HIP_DEVICE_COMPILE__ && !__GFX8__ && !__GFX9__ && __AMDGCN_WAVEFRONT_SIZE == 64
+#if __HIP_DEVICE_COMPILE__ && !__GFX7__ && !__GFX8__ && !__GFX9__ && __AMDGCN_WAVEFRONT_SIZE == 64
 #error HIP is not supported on the specified GPU ARCH with wavefront size 64
 #endif
 
