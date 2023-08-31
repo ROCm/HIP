@@ -12,14 +12,14 @@ def hipBuildTest(String backendLabel) {
             }
             dir("${WORKSPACE}/hipanl/hip") {
                checkout scm
-               env.HIP_DIR = "${WORKSPACE}" + "/hip"
+               env.HIP_DIR = "${WORKSPACE}/hipanl" + "/hip"
             }
 
             // Clone hip-tests repository
             dir("${WORKSPACE}/hipanl/hip-tests") {
               git branch: 'develop',
               url: 'https://github.com/ROCm-Developer-Tools/hip-tests'
-              env.HIP_TESTS_DIR = "${WORKSPACE}" + "/hip-tests"
+              env.HIP_TESTS_DIR = "${WORKSPACE}/hipanl" + "/hip-tests"
             }
 
             // Clone clr repository
@@ -27,7 +27,7 @@ def hipBuildTest(String backendLabel) {
               git branch: 'develop',
               credentialsId: 'branch-credentials',
               url: 'https://github.com/ROCm-Developer-Tools/clr'
-              env.CLR_DIR = "${WORKSPACE}" + "/clr"
+              env.CLR_DIR = "${WORKSPACE}/hipanl" + "/clr"
             }
 
             // Clone hipcc repspoitory
@@ -35,7 +35,7 @@ def hipBuildTest(String backendLabel) {
               git branch: 'develop',
               credentialsId: 'branch-credentials',
               url: 'https://github.com/ROCm-Developer-Tools/hipcc'
-              env.HIPCC_DIR = "${WORKSPACE}" + "/hipcc"
+              env.HIPCC_DIR = "${WORKSPACE}/hipanl" + "/hipcc"
             }
           }
 
