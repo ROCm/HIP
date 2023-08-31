@@ -1,5 +1,6 @@
 
 #!/bin/bash
+set -x 
 
 export WORKSPACE=$PWD/hipanl
 cd ${WORKSPACE}
