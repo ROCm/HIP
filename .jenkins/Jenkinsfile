@@ -2,10 +2,8 @@ def hipBuildTest(String backendLabel) {
         node(backendLabel) {
           stage("SYNC - ${backendLabel}") {
             // Delete the workspace
-            sh "rm -rf ${env.WORKSPACE}"
-            sh "ls -ld ${env.WORKSPACE}"
-            sh "mkdir ${env.WORKSPACE}"
-            sh "ls -ld ${env.WORKSPACE}"
+            sh "rm -rf ${env.WORKSPACE}/*"
+            sh "ls -laRt ${env.WORKSPACE}"
             sh "hostname -I"
             sh "env"
             // Checkout hip repository with the PR patch
