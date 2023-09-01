@@ -1391,8 +1391,11 @@ typedef struct hipArrayMapInfo {
  *
  * Most HIP APIs implicitly initialize the HIP runtime.
  * This API provides control over the timing of the initialization.
+ *
+ * @param [in] flags Flags to init HIP runtime with, currently it must be 0
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
  */
-// TODO-ctx - more description on error codes.
 hipError_t hipInit(unsigned int flags);
 /**
  * @brief Returns the approximate HIP driver version.
