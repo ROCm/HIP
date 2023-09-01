@@ -87,7 +87,7 @@ typedef struct hipUUID_t {
 } hipUUID;
 
 //---
-// Common headers for both NVCC and HCC paths:
+// Common headers for both NVCC and HIP:
 
 /**
  * hipDeviceProp
@@ -106,10 +106,10 @@ typedef struct hipDeviceProp_t {
     int memoryClockRate;       ///< Max global memory clock frequency in khz.
     int memoryBusWidth;        ///< Global memory bus width in bits.
     size_t totalConstMem;      ///< Size of shared memory region (in bytes).
-    int major;  ///< Major compute capability.  On HCC, this is an approximation and features may
+    int major;  ///< Major compute capability.  On HIP, this is an approximation and features may
                 ///< differ from CUDA CC.  See the arch feature flags for portable ways to query
                 ///< feature caps.
-    int minor;  ///< Minor compute capability.  On HCC, this is an approximation and features may
+    int minor;  ///< Minor compute capability.  On HIP, this is an approximation and features may
                 ///< differ from CUDA CC.  See the arch feature flags for portable ways to query
                 ///< feature caps.
     int multiProcessorCount;          ///< Number of multi-processors (compute units).
@@ -161,9 +161,10 @@ typedef struct hipDeviceProp_t {
     int pageableMemoryAccessUsesHostPageTables; ///< Device accesses pageable memory via the host's page tables
 } hipDeviceProp_t;
 
- /**
- * hipMemoryType (for pointer attributes)
- *
+
+ /*
+ * @brief HIP Memory type (for pointer attributes)
+ * @ingroup Enumerations
  */
 typedef enum hipMemoryType {
     hipMemoryTypeHost = 0,    ///< Memory is physically located on host
@@ -193,6 +194,13 @@ typedef struct hipPointerAttribute_t {
     /* peers? */
 } hipPointerAttribute_t;
 
+
+// hack to get these to show up in Doxygen:
+/**
+ * @defgroup GlobalDefs Global enum and defines
+ * @{
+ */
+
 // Ignoring error-code return values from hip APIs is discouraged. On C++17,
 // we can make that yield a warning
 #if __cplusplus >= 201703L
@@ -201,13 +209,12 @@ typedef struct hipPointerAttribute_t {
 #define __HIP_NODISCARD
 #endif
 
-/**
- * HIP error type
- *
- */
 // Developer note - when updating these, update the hipErrorName and hipErrorString functions in
-// NVCC and HCC paths Also update the hipCUDAErrorTohipError function in NVCC path.
-
+// NVCC and HIP. Also update the hipCUDAErrorTohipError function in NVCC.
+/*
+ * @brief HIP error type
+ * @ingroup Enumerations
+ */
 typedef enum __HIP_NODISCARD hipError_t {
     hipSuccess = 0,  ///< Successful completion.
     hipErrorInvalidValue = 1,  ///< One or more of the parameters passed to the API call is NULL
@@ -233,8 +240,8 @@ typedef enum __HIP_NODISCARD hipError_t {
     hipErrorPriorLaunchFailure = 53,
     hipErrorInvalidDeviceFunction = 98,  ///< Invalid device function
     hipErrorNoDevice = 100,  ///< Call to hipGetDeviceCount returned 0 devices
-    hipErrorInvalidDevice = 101,  ///< DeviceID must be in range from 0 to compute-devices.
-    hipErrorInvalidImage = 200,   ///< Invalid image
+    hipErrorInvalidDevice = 101,  ///< DeviceID must be in range 0...\#compute-devices.
+    hipErrorInvalidImage = 200,
     hipErrorInvalidContext = 201,  ///< Produced when input context is invalid.
     hipErrorContextAlreadyCurrent = 202,
     hipErrorMapFailed = 205,
@@ -326,9 +333,9 @@ typedef enum __HIP_NODISCARD hipError_t {
 
 #undef __HIP_NODISCARD
 
-/**
- * hipDeviceAttribute_t
- *
+/*
+ * @brief hipDeviceAttribute_t
+ * @ingroup Enumerations
  */
 typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeCudaCompatibleBegin = 0,
@@ -555,7 +562,8 @@ enum hipLimit_t {
     hipLimitRange                   ///< supported limit range
 };
 /**
- * Flags that can be used with hipStreamCreateWithFlags.
+ * @addtogroup GlobalDefs Global enum and defines
+ * @{
  */
 //Flags that can be used with hipStreamCreateWithFlags.
 /** Default stream creation flags. These are used with hipStreamCreate().*/
@@ -688,6 +696,7 @@ enum hipLimit_t {
 #define hipCooperativeLaunchMultiDeviceNoPreSync 0x01
 #define hipCooperativeLaunchMultiDeviceNoPostSync 0x02
 #define hipCpuDeviceId ((int)-1)
+/** Device id that represents an invalid device */
 #define hipInvalidDeviceId ((int)-2)
 //Flags that can be used with hipExtLaunch Set of APIs.
 /** AnyOrderLaunch of kernels.*/
@@ -706,6 +715,8 @@ enum hipLimit_t {
 /**
  * HIP Memory Advise values
  *
+ * @brief HIP Memory Advise values
+ * @ingroup Enumerations
  * @note This memory advise enumeration is used on Linux, not Windows.
  */
 typedef enum hipMemoryAdvise {
@@ -727,7 +738,8 @@ typedef enum hipMemoryAdvise {
     hipMemAdviseUnsetCoarseGrain = 101      ///< Restores cache coherency policy back to fine-grain
 } hipMemoryAdvise;
 /**
- * HIP Coherency Mode
+ * @brief HIP Coherency Mode
+ * @ingroup Enumerations
  */
 typedef enum hipMemRangeCoherencyMode {
     hipMemRangeCoherencyModeFineGrain = 0,      ///< Updates to memory with this attribute can be
@@ -739,7 +751,8 @@ typedef enum hipMemRangeCoherencyMode {
                                                 ///< hipMemRangeCoherencyModeCoarseGrain attributes
 } hipMemRangeCoherencyMode;
 /**
- * HIP range attributes
+ * @brief HIP range attributes
+ * @ingroup Enumerations
  */
 typedef enum hipMemRangeAttribute {
     hipMemRangeAttributeReadMostly = 1,         ///< Whether the range will mostly be read and
@@ -754,7 +767,8 @@ typedef enum hipMemRangeAttribute {
 } hipMemRangeAttribute;
 
 /**
- * HIP memory pool attributes
+ * @brief HIP memory pool attributes
+ * @ingroup Enumerations
  */
 typedef enum hipMemPoolAttr
 {
@@ -813,7 +827,8 @@ typedef enum hipMemPoolAttr
     hipMemPoolAttrUsedMemHigh                = 0x8
 } hipMemPoolAttr;
 /**
- * Specifies the type of location
+ * @brief Specifies the type of location
+ * @ingroup Enumerations
  */
  typedef enum hipMemLocationType {
     hipMemLocationTypeInvalid = 0,
@@ -829,8 +844,8 @@ typedef struct hipMemLocation {
     int id;                   ///< Identifier for the provided location type @p hipMemLocationType
 } hipMemLocation;
 /**
- * Specifies the memory protection flags for mapping
- *
+ * @brief Specifies the memory protection flags for mapping
+ * @ingroup Enumerations
  */
 typedef enum hipMemAccessFlags {
     hipMemAccessFlagsProtNone      = 0,  ///< Default, make the address range not accessible
@@ -845,7 +860,8 @@ typedef struct hipMemAccessDesc {
     hipMemAccessFlags   flags;    ///< Accessibility flags to set
 } hipMemAccessDesc;
 /**
- * Defines the allocation types
+ * @brief Defines the allocation types
+ * @ingroup Enumerations
  */
 typedef enum hipMemAllocationType {
     hipMemAllocationTypeInvalid = 0x0,
@@ -856,8 +872,8 @@ typedef enum hipMemAllocationType {
     hipMemAllocationTypeMax     = 0x7FFFFFFF
 } hipMemAllocationType;
 /**
- * Flags for specifying handle types for memory pool allocations
- *
+ * @brief Flags for specifying handle types for memory pool allocations
+ * @ingroup Enumerations
  */
 typedef enum hipMemAllocationHandleType {
     hipMemHandleTypeNone                    = 0x0,  ///< Does not allow any export mechanism
@@ -886,7 +902,8 @@ typedef struct hipMemPoolPtrExportData {
 } hipMemPoolPtrExportData;
 
 /**
- * hipJitOption
+ * @brief hipJitOption
+ * @ingroup Enumerations
  */
 typedef enum hipJitOption {
     hipJitOptionMaxRegisters = 0,
@@ -1057,7 +1074,8 @@ typedef struct hipExternalSemaphoreWaitParams_st {
 #endif
 
 /**
- * HIP Devices used by current OpenGL Context.
+ * @brief HIP Devices used by current OpenGL Context.
+ * @ingroup Enumerations
  */
 typedef enum hipGLDeviceList {
     hipGLDeviceListAll = 1,           ///< All hip devices used by current OpenGL context.
@@ -1067,8 +1085,9 @@ typedef enum hipGLDeviceList {
                                     ///< frame.
 } hipGLDeviceList;
 
-/**
- * HIP Access falgs for Interop resources.
+/*
+ * @brief HIP Access falgs for Interop resources.
+ * @ingroup Enumerations
  */
 typedef enum hipGraphicsRegisterFlags {
     hipGraphicsRegisterFlagsNone = 0,
@@ -1104,7 +1123,8 @@ typedef struct hipUserObject* hipUserObject_t;
 
 
 /**
- * hipGraphNodeType
+ * @brief hipGraphNodeType
+ *
  */
 typedef enum hipGraphNodeType {
   hipGraphNodeTypeKernel = 0,             ///< GPU kernel node
@@ -1157,7 +1177,8 @@ typedef struct hipMemAllocNodeParams {
 } hipMemAllocNodeParams;
 
 /**
- * Kernel node attributeID
+ * @brief hipKernelNodeAttrID
+ *
  */
 typedef enum hipKernelNodeAttrID {
     hipKernelNodeAttributeAccessPolicyWindow = 1,
@@ -1181,7 +1202,8 @@ typedef union hipKernelNodeAttrValue {
 } hipKernelNodeAttrValue;
 
 /**
- * Graph execution update result
+ * @brief hipGraphExecUpdateResult
+ *
  */
 typedef enum hipGraphExecUpdateResult {
   hipGraphExecUpdateSuccess = 0x0,  ///< The update succeeded
@@ -1303,7 +1325,8 @@ typedef struct hipExternalSemaphoreWaitNodeParams {
 typedef struct ihipMemGenericAllocationHandle* hipMemGenericAllocationHandle_t;
 
 /**
- * Flags for granularity
+ * @brief Flags for granularity
+ * @ingroup Enumerations
  */
 typedef enum hipMemAllocationGranularity_flags {
     hipMemAllocationGranularityMinimum     = 0x0,  ///< Minimum granularity
@@ -1311,14 +1334,16 @@ typedef enum hipMemAllocationGranularity_flags {
 } hipMemAllocationGranularity_flags;
 
 /**
- * Memory handle type
+ * @brief Memory handle type
+ * @ingroup Enumerations
  */
 typedef enum hipMemHandleType {
     hipMemHandleTypeGeneric = 0x0  ///< Generic handle type
 } hipMemHandleType;
 
 /**
- * Memory operation types
+ * @brief Memory operation types
+ * @ingroup Enumerations
  */
 typedef enum hipMemOperationType {
     hipMemOperationTypeMap   = 0x1,   ///< Map operation
@@ -1326,7 +1351,8 @@ typedef enum hipMemOperationType {
 } hipMemOperationType;
 
 /**
- * Subresource types for sparse arrays
+ * @brief Subresource types for sparse arrays
+ * @ingroup Enumerations
  */
 typedef enum hipArraySparseSubresourceType {
     hipArraySparseSubresourceTypeSparseLevel = 0x0, ///< Sparse level
@@ -1559,7 +1585,7 @@ hipError_t hipDeviceReset(void);
  * practice is to always call hipSetDevice at the start of HIP coding sequency to establish a known
  * standard device.
  *
- * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorDeviceAlreadyInUse
+ * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorContextAlreadyInUse
  *
  * @see hipGetDevice, hipGetDeviceCount
  */
@@ -1665,9 +1691,9 @@ hipError_t hipDeviceGetMemPool(hipMemPool_t* mem_pool, int device);
  * @param [in]  deviceId which device to query for information
  *
  * @return #hipSuccess, #hipErrorInvalidDevice
- * @bug HCC always returns 0 for maxThreadsPerMultiProcessor
- * @bug HCC always returns 0 for regsPerBlock
- * @bug HCC always returns 0 for l2CacheSize
+ * @bug HIP always returns 0 for maxThreadsPerMultiProcessor
+ * @bug HIP always returns 0 for regsPerBlock
+ * @bug HIP always returns 0 for l2CacheSize
  *
  * Populates hipGetDeviceProperties with information for the specified device.
  */
@@ -1796,7 +1822,7 @@ hipError_t hipChooseDevice(int* device, const hipDeviceProp_t* prop);
  *
  * Queries and returns the HSA link type and the hop count between the two specified devices.
  *
- * @returns #hipSuccess, #hipInvalidDevice, #hipErrorRuntimeOther
+ * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorRuntimeOther
  */
 hipError_t hipExtGetLinkTypeAndHopCount(int device1, int device2, uint32_t* linktype, uint32_t* hopcount);
 // TODO: implement IPC apis
@@ -3535,7 +3561,7 @@ hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height
  */
 hipError_t hipMemAllocPitch(hipDeviceptr_t* dptr, size_t* pitch, size_t widthInBytes, size_t height, unsigned int elementSizeBytes);
 /**
- *  @brief Free memory allocated by the hcc hip memory allocation API.
+ *  @brief Free memory allocated by the hip memory allocation API.
  *  This API performs an implicit hipDeviceSynchronize() call.
  *  If pointer is NULL, the hip runtime is initialized and hipSuccess is returned.
  *
@@ -3549,7 +3575,7 @@ hipError_t hipMemAllocPitch(hipDeviceptr_t* dptr, size_t* pitch, size_t widthInB
  */
 hipError_t hipFree(void* ptr);
 /**
- *  @brief Free memory allocated by the hcc hip host memory allocation API.  [Deprecated]
+ *  @brief Free memory allocated by the hip host memory allocation API.  [Deprecated]
  *
  *  @param[in] ptr Pointer to memory to be freed
  *  @return #hipSuccess,
@@ -3560,7 +3586,7 @@ hipError_t hipFree(void* ptr);
 DEPRECATED("use hipHostFree instead")
 hipError_t hipFreeHost(void* ptr);
 /**
- *  @brief Free memory allocated by the hcc hip host memory allocation API
+ *  @brief Free memory allocated by the hip host memory allocation API
  *  This API performs an implicit hipDeviceSynchronize() call.
  *  If pointer is NULL, the hip runtime is initialized and hipSuccess is returned.
  *
@@ -3846,7 +3872,7 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbol,
  *  @warning If host or dest are not pinned, the memory copy will be performed synchronously.  For
  * best performance, use hipHostMalloc to allocate host memory that is transferred asynchronously.
  *
- *  @warning on HCC hipMemcpyAsync does not support overlapped H2D and D2H copies.
+ *  @warning on hipMemcpyAsync does not support overlapped H2D and D2H copies.
  *  For hipMemcpy, the copy is always performed by the device associated with the specified stream.
  *
  *  For multi-gpu or peer-to-peer configurations, it is recommended to use a stream which is a
@@ -4830,7 +4856,7 @@ hipError_t hipDevicePrimaryCtxGetState(hipDevice_t dev, unsigned int* flags, int
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  * @warning This function return #hipSuccess though doesn't release the primaryCtx by design on
- * HIP/HCC path.
+ * HIP.
  */
 hipError_t hipDevicePrimaryCtxRelease(hipDevice_t dev);
 /**
@@ -4997,7 +5023,10 @@ hipError_t hipModuleLoadDataEx(hipModule_t* module, const void* image, unsigned 
  * size gridDim x blockDim >= 2^32. So gridDim.x * blockDim.x, gridDim.y * blockDim.y
  * and gridDim.z * blockDim.z are always less than 2^32.
  *
- * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
+ * @returns hipSuccess, hipErrorInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
+ *
+ * @warning kernellParams argument is not yet implemented in HIP. Please use extra instead. Please
+ * refer to hip_porting_driver_api.md for sample usage.
  */
 hipError_t hipModuleLaunchKernel(hipFunction_t f, unsigned int gridDimX, unsigned int gridDimY,
                                  unsigned int gridDimZ, unsigned int blockDimX,
@@ -5067,7 +5096,7 @@ hipError_t hipModuleLaunchCooperativeKernelMultiDevice(hipFunctionLaunchParams* 
  * Please note, HIP does not support kernel launch with total work items defined in dimension with
  * size gridDim x blockDim >= 2^32.
  *
- * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue, hipErrorCooperativeLaunchTooLarge
+ * @returns hipSuccess, hipErrorInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue, hipErrorCooperativeLaunchTooLarge
  */
 hipError_t hipLaunchCooperativeKernel(const void* f, dim3 gridDim, dim3 blockDimX,
                                       void** kernelParams, unsigned int sharedMemBytes,
@@ -5080,7 +5109,7 @@ hipError_t hipLaunchCooperativeKernel(const void* f, dim3 gridDim, dim3 blockDim
  * @param [in] numDevices               Size of the launchParamsList array.
  * @param [in] flags                    Flags to control launch behavior.
  *
- * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue, hipErrorCooperativeLaunchTooLarge
+ * @returns hipSuccess, hipErrorInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue, hipErrorCooperativeLaunchTooLarge
  */
 hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsList,
                                                  int  numDevices, unsigned int  flags);
@@ -5093,7 +5122,7 @@ hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsLi
  * @param [in] numDevices               Size of the launchParamsList array.
  * @param [in] flags                    Flags to control launch behavior.
  *
- * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
+ * @returns hipSuccess, hipErrorInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
  */
 hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
                                               int  numDevices, unsigned int  flags);
@@ -5122,7 +5151,7 @@ hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
  * Please note, HIP does not support kernel launch with total work items defined in dimension with
  * size gridDim x blockDim >= 2^32.
  *
- * @returns hipSuccess, hipInvalidDevice, hipErrorInvalidValue
+ * @returns hipSuccess, hipErrorInvalidDevice, hipErrorInvalidValue
  */
 //TODO - Match CUoccupancyB2DSize
 hipError_t hipModuleOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize,
@@ -5141,7 +5170,7 @@ hipError_t hipModuleOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize
  * Please note, HIP does not support kernel launch with total work items defined in dimension with
  * size gridDim x blockDim >= 2^32.
  *
- * @returns hipSuccess, hipInvalidDevice, hipErrorInvalidValue
+ * @returns hipSuccess, hipErrorInvalidDevice, hipErrorInvalidValue
  */
 //TODO - Match CUoccupancyB2DSize
 hipError_t hipModuleOccupancyMaxPotentialBlockSizeWithFlags(int* gridSize, int* blockSize,
@@ -5201,7 +5230,7 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
  * Please note, HIP does not support kernel launch with total work items defined in dimension with
  * size gridDim x blockDim >= 2^32.
  *
- * @returns hipSuccess, hipInvalidDevice, hipErrorInvalidValue
+ * @returns hipSuccess, hipErrorInvalidDevice, hipErrorInvalidValue
  */
 hipError_t hipOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize,
                                              const void* f, size_t dynSharedMemPerBlk,
@@ -5259,14 +5288,14 @@ hipError_t hipProfilerStop();
  * Please note, HIP does not support kernel launch with total work items defined in dimension with
  * size gridDim x blockDim >= 2^32.
  *
- * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
+ * @returns hipSuccess, hipErrorInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
  *
  */
 hipError_t hipConfigureCall(dim3 gridDim, dim3 blockDim, size_t sharedMem __dparm(0), hipStream_t stream __dparm(0));
 /**
  * @brief Set a kernel argument.
  *
- * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
+ * @returns hipSuccess, hipErrorInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
  *
  * @param [in] arg    Pointer the argument in host memory.
  * @param [in] size   Size of the argument.
@@ -5279,7 +5308,7 @@ hipError_t hipSetupArgument(const void* arg, size_t size, size_t offset);
  *
  * @param [in] func Kernel to launch.
  *
- * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
+ * @returns hipSuccess, hipErrorInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
  *
  */
 hipError_t hipLaunchByPtr(const void* func);
@@ -5296,7 +5325,7 @@ hipError_t hipLaunchByPtr(const void* func);
  * Please note, HIP does not support kernel launch with total work items defined in dimension with
  * size gridDim x blockDim >= 2^32.
  *
- * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
+ * @returns hipSuccess, hipErrorInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
  *
  */
 hipError_t __hipPushCallConfiguration(dim3 gridDim,
@@ -5319,7 +5348,7 @@ hipError_t __hipPushCallConfiguration(dim3 gridDim,
  * Please note, HIP does not support kernel launch with total work items defined in dimension with
  * size gridDim x blockDim >= 2^32.
  *
- * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
+ * @returns hipSuccess, hipErrorInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
  *
  */
 hipError_t __hipPopCallConfiguration(dim3 *gridDim,
@@ -5338,7 +5367,7 @@ hipError_t __hipPopCallConfiguration(dim3 *gridDim,
  * @param [in] stream - Stream where the kernel should be dispatched.  May be 0, in which case th
  *  default stream is used with associated synchronization rules.
  *
- * @returns #hipSuccess, #hipErrorInvalidValue, hipInvalidDevice
+ * @returns #hipSuccess, #hipErrorInvalidValue, hipErrorInvalidDevice
  *
  */
 hipError_t hipLaunchKernel(const void* function_address,
@@ -5387,7 +5416,7 @@ hipError_t hipDrvMemcpy2DUnaligned(const hip_Memcpy2D* pCopy);
  * the kernel launch. The event must be created before calling this API.
  * @param [in] flags. The value of hipExtAnyOrderLaunch, signifies if kernel can be
  * launched in any order.
- * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue.
+ * @returns hipSuccess, hipErrorInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue.
  *
  */
 hipError_t hipExtLaunchKernel(const void* function_address, dim3 numBlocks, dim3 dimBlocks,
