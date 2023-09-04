@@ -64,10 +64,10 @@ def hipBuildTest(String backendLabel) {
                     echo "testing $HIP_PATH"
                     # Check if backend label contains string "amd" or backend host is a server with amd gpu
                     if [[ $backendLabel =~ amd ]]; then
-                        cmake -DHIP_PLATFORM=amd -DHIP_PATH=\$CLR_DIR/build/install ../catch 
+                        cmake -DHIP_PLATFORM=amd -DHIP_PATH=$CLR_DIR/build/install ../catch 
                     else
                         export HIP_PLATFORM=nvidia
-                        cmake -DHIP_PLATFORM=nvidia -DHIP_PATH=\$CLR_DIR/build/install ../catch
+                        cmake -DHIP_PLATFORM=nvidia -DHIP_PATH=$CLR_DIR/build/install ../catch
                     fi
                     make -j\$(nproc) build_tests
                     """
