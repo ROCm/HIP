@@ -37,17 +37,17 @@ def hipBuildTest(String backendLabel) {
             dir("${WORKSPACE}/clr") {
                 sh  """#!/usr/bin/env bash
                     set -x
-                    rm -rf build
-                    mkdir -p build
-                    cd build
+                    rm -rf build;
+                    mkdir -p build;
+                    cd build;
                     # Check if backend label contains string "amd" or backend host is a server with amd gpu
                     if [[ $backendLabel =~ amd ]]; then
-                        cmake -DCLR_BUILD_HIP=ON -DHIP_PATH=$PWD/install -DHIPCC_BIN_DIR=$HIPCC_DIR/bin -DHIP_COMMON_DIR=$HIP_DIR -DCMAKE_PREFIX_PATH="/opt/rocm/" -DCMAKE_INSTALL_PREFIX=$PWD/install ..
+                        cmake -DCLR_BUILD_HIP=ON -DHIP_PATH=$PWD/install -DHIPCC_BIN_DIR=$HIPCC_DIR/bin -DHIP_COMMON_DIR=$HIP_DIR -DCMAKE_PREFIX_PATH="/opt/rocm/" -DCMAKE_INSTALL_PREFIX=$PWD/install .. ;
                     else
-                        cmake -DCLR_BUILD_HIP=ON -DHIP_PLATFORM=nvidia -DHIPCC_BIN_DIR=$HIPCC_DIR/bin -DHIP_COMMON_DIR=$HIP_DIR -DCMAKE_INSTALL_PREFIX=$PWD/install ..
+                        cmake -DCLR_BUILD_HIP=ON -DHIP_PLATFORM=nvidia -DHIPCC_BIN_DIR=$HIPCC_DIR/bin -DHIP_COMMON_DIR=$HIP_DIR -DCMAKE_INSTALL_PREFIX=$PWD/install .. ;
                     fi
-                    make -j\$(nproc)
-                    make install  -j\$(nproc)
+                    make -j$(nproc) ;
+                    make install  -j$(nproc) ;
                     """
             }
         }
@@ -58,17 +58,19 @@ def hipBuildTest(String backendLabel) {
                 env.HIP_PATH = "${CLR_DIR}" + "/build/install"
                 sh  """#!/usr/bin/env bash
                     set -x
-                    rm -rf build
-                    mkdir -p build
-                    cd build
-                    echo "testing $HIP_PATH"
+                    rm -rf build ;
+                    mkdir -p build ;
+                    cd build ; 
+                    echo "testing $HIP_PATH";
                     # Check if backend label contains string "amd" or backend host is a server with amd gpu
                     if [[ $backendLabel =~ amd ]]; then
-                        cmake -DHIP_PLATFORM=amd -DHIP_PATH=$CLR_DIR/build/install ../catch 
+                        cmake -DHIP_PLATFORM=amd -DHIP_PATH=$CLR_DIR/build/install ../catch ;
                     else
                         export HIP_PLATFORM=nvidia
-                        cmake -DHIP_PLATFORM=nvidia -DHIP_PATH=$CLR_DIR/build/install ../catch
+                        cmake -DHIP_PLATFORM=nvidia -DHIP_PATH=$CLR_DIR/build/install ../catch ;
                     fi
+                    pwd;
+                    ls -lart;
                     make -j\$(nproc) build_tests
                     """
             }
