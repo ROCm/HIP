@@ -46,8 +46,8 @@ def hipBuildTest(String backendLabel) {
                     else
                         cmake -DCLR_BUILD_HIP=ON -DHIP_PLATFORM=nvidia -DHIPCC_BIN_DIR=$HIPCC_DIR/bin -DHIP_COMMON_DIR=$HIP_DIR -DCMAKE_INSTALL_PREFIX=$PWD/install .. ;
                     fi
-                    make -j$(nproc) ;
-                    make install  -j$(nproc) ;
+                    make -j\$(nproc) ;
+                    make install  -j\$(nproc) ;
                     """
             }
         }
