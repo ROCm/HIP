@@ -178,6 +178,25 @@ threads. Execution on multiple streams may be concurrent but isn't required to
 be.
 
 Asynchronous APIs involving a stream all return a stream event which may be
-used to synchronize the execution of multiple streams.
+used to synchronize the execution of multiple streams. A user may enqueue a
+barrier onto a stream referencing an event. The barrier will will block until
+the command related to the event does not complete, at which point all
+side-effects of the command shall be visible to commands following the barrier,
+even if those side-effects manifest on different devices.
+
+Streams also support executing user-defined functions as callbacks on the host.
+The stream will not launch subsequent commands until the callback completes.
 
 ### Device-side execution
+
+The SIMT programming model behind the HIP device-side execution is a
+middle-ground between SMT (Simultaneous Multi-Threading) programming known from
+multi-core CPUs, and SIMD (Single Instruction, Multiple Data) programming
+mostly known from exploiting relevant instruction sets on CPUs (eg.
+SSE/AVX/Neon).
+
+A HIP device compiler maps our SIMT code written in HIP C++ to an inherently
+SIMD architecture (like GPUs) not by exploiting data parallelism within a
+single instance of a kernel and spreading identical instructions over the SIMD
+engines at hand, but by scalarizing the entire kernel and issuing the scalar
+instructions of multiple kernel instances to each of the SIMD engine lanes.
