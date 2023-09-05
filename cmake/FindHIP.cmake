@@ -81,8 +81,16 @@ elseif (HIP_CXX_COMPILER MATCHES ".*clang\\+\\+")
   set(HIP_CLANG_PATH "${_HIP_CLANG_BIN_PATH}")
 endif()
 
-
-get_filename_component(_IMPORT_PREFIX "${CMAKE_CURRENT_LIST_DIR}/../" REALPATH)
+if(WIN32)
+    # In windows FindHIP.cmake is installed in <Install_Prefix>/cmake
+    get_filename_component(_IMPORT_PREFIX "${CMAKE_CURRENT_LIST_DIR}/../" REALPATH)
+else()
+    # In Linux FindHIP.cmake is installed in <Install_Prefix>/lib/cmake/hip
+    # RealPath: <Install_Prefix>/lib/cmake/hip/FindHIP.cmake
+    # Go 4 level up to get IMPORT PREFIX as <Install_Prefix>
+    get_filename_component(_FILE_PATH "${CMAKE_CURRENT_LIST_FILE}" REALPATH)
+    get_filename_component(_IMPORT_PREFIX "${_FILE_PATH}/../../../../" ABSOLUTE)
+endif()
 
 # HIP is currently not supported for apple
 if(NOT APPLE)
