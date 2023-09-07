@@ -2072,7 +2072,7 @@ hipError_t hipDrvGetErrorString(hipError_t hipError, const char** errorString);
  * Create a new asynchronous stream.  @p stream returns an opaque handle that can be used to
  * reference the newly created stream in subsequent hipStream* commands.  The stream is allocated on
  * the heap and will remain allocated even if the handle goes out-of-scope.  To release the memory
- * used by the stream, applicaiton must call hipStreamDestroy.
+ * used by the stream, application must call hipStreamDestroy.
  *
  * @return #hipSuccess, #hipErrorInvalidValue
  *
@@ -2089,7 +2089,7 @@ hipError_t hipStreamCreate(hipStream_t* stream);
  * Create a new asynchronous stream.  @p stream returns an opaque handle that can be used to
  * reference the newly created stream in subsequent hipStream* commands.  The stream is allocated on
  * the heap and will remain allocated even if the handle goes out-of-scope.  To release the memory
- * used by the stream, applicaiton must call hipStreamDestroy. Flags controls behavior of the
+ * used by the stream, application must call hipStreamDestroy. Flags controls behavior of the
  * stream.  See #hipStreamDefault, #hipStreamNonBlocking.
  *
  *
@@ -2107,7 +2107,7 @@ hipError_t hipStreamCreateWithFlags(hipStream_t* stream, unsigned int flags);
  * Create a new asynchronous stream with the specified priority.  @p stream returns an opaque handle
  * that can be used to reference the newly created stream in subsequent hipStream* commands.  The
  * stream is allocated on the heap and will remain allocated even if the handle goes out-of-scope.
- * To release the memory used by the stream, applicaiton must call hipStreamDestroy. Flags controls
+ * To release the memory used by the stream, application must call hipStreamDestroy. Flags controls
  * behavior of the stream.  See #hipStreamDefault, #hipStreamNonBlocking.
  *
  *
@@ -2124,7 +2124,7 @@ hipError_t hipStreamCreateWithPriority(hipStream_t* stream, unsigned int flags, 
  * and greatest stream priority respectively. Stream priorities follow a convention where lower numbers
  * imply greater priorities. The range of meaningful stream priorities is given by
  * [*greatestPriority, *leastPriority]. If the user attempts to create a stream with a priority value
- * that is outside the the meaningful range as specified by this API, the priority is automatically
+ * that is outside the meaningful range as specified by this API, the priority is automatically
  * clamped to within the valid range.
  */
 hipError_t hipDeviceGetStreamPriorityRange(int* leastPriority, int* greatestPriority);
@@ -2195,8 +2195,8 @@ hipError_t hipStreamSynchronize(hipStream_t stream);
  * All future work submitted to @p stream will wait until @p event reports completion before
  * beginning execution.
  *
- * This function only waits for commands in the current stream to complete.  Notably,, this function
- * does not impliciy wait for commands in the default stream to complete, even if the specified
+ * This function only waits for commands in the current stream to complete.  Notably, this function
+ * does not implicitly wait for commands in the default stream to complete, even if the specified
  * stream is created with hipStreamNonBlocking = 0.
  *
  * @see hipStreamCreate, hipStreamCreateWithFlags, hipStreamCreateWithPriority, hipStreamSynchronize, hipStreamDestroy
@@ -3013,7 +3013,7 @@ hipError_t hipStreamAttachMemAsync(hipStream_t stream,
  *
  * Inserts a memory allocation operation into @p stream.
  * A pointer to the allocated memory is returned immediately in *dptr.
- * The allocation must not be accessed until the the allocation operation completes.
+ * The allocation must not be accessed until the allocation operation completes.
  * The allocation comes from the memory pool associated with the stream's device.
  *
  * @note The default memory pool of a device contains device memory from that device.
@@ -3265,7 +3265,7 @@ hipError_t hipMemPoolDestroy(hipMemPool_t mem_pool);
  *
  * Inserts an allocation operation into @p stream.
  * A pointer to the allocated memory is returned immediately in @p dev_ptr.
- * The allocation must not be accessed until the the allocation operation completes.
+ * The allocation must not be accessed until the allocation operation completes.
  * The allocation comes from the specified memory pool.
  *
  * @note The specified memory pool may be from a device different than that of the specified @p stream.
@@ -5848,7 +5848,7 @@ hipError_t hipGetTextureAlignmentOffset(
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipUnbindTexture(const textureReference* tex);
 /**
- * @brief Gets the the address for a texture reference.
+ * @brief Gets the address for a texture reference.
  *
  * @param [out] dev_ptr  Pointer of device address.
  * @param [in] texRef  Pointer of texture reference.
