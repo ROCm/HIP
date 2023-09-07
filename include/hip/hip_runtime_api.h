@@ -2863,7 +2863,7 @@ hipError_t hipHostMalloc(void** ptr, size_t size, unsigned int flags);
 /**
  * @brief Allocates memory that will be automatically managed by HIP.
  *
- * This API is used for managed memory, allows data be shared and accessible to both the CPU and
+ * This API is used for managed memory, allows data be shared and accessible to both CPU and
  * GPU using a single pointer.
  *
  * The API returns the allocation pointer, managed by HMM, can be used further to execute kernels
@@ -2902,11 +2902,17 @@ hipError_t hipMemPrefetchAsync(const void* dev_ptr,
  * @brief Advise about the usage of a given memory range to HIP.
  *
  * @param [in] dev_ptr  pointer to memory to set the advice for
- * @param [in] count    size in bytes of the memory range, it should be 4KB alligned.
+ * @param [in] count    size in bytes of the memory range, it should be CPU page size alligned.
  * @param [in] advice   advice to be applied for the specified memory range
  * @param [in] device   device to apply the advice for
  *
  * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * This HIP advises about the usage to be applied on unified memory allocation in the
+ * range starting from the pointer address devPtr, with the size of count bytes.
+ * The memory range must refer to managed memory allocated via the API hipMallocManaged, and the
+ * range will be handled with proper round down and round up respectively in the driver to
+ * be aligned to CPU page size.
  *
  * @note  This API is implemented on Linux, under development on Windows.
  */
