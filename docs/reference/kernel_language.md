@@ -130,7 +130,7 @@ The `__restrict__` keyword tells the compiler that the associated memory pointer
 Built-ins determine the coordinate of the active work item in the execution grid. They are defined in amd_hip_runtime.h (rather than being implicitly defined by the compiler).
 In HIP, built-ins coordinate variable definitions are the same as in CUDA, for instance:
 `threadIdx.x`, `blockIdx.y`, `gridDim.y`, etc.
-The products `gridDim.x * blockDim.x`, `gridDim.y * blockDim.y` and `gridDim.z * blockDim.z` are always less than 2^32.
+The products `gridDim.x * blockDim.x`, `gridDim.y * blockDim.y` and `gridDim.z * blockDim.z` are always less than 2<sup>32</sup>.
 Coordinates builtins are implemented as structures for better performance. When used with printf, they needs to be casted to integer types explicitly.
 
 ### warpSize
@@ -396,11 +396,10 @@ Following is the list of supported integer intrinsics. Note that intrinsics are 
 | unsigned int __popcll ( unsigned long long int x )<br><sub>Count the number of bits that are set to 1 in a 64 bit integer.</sub> |
 | int __mul24 ( int x, int y )<br><sub>Multiply two 24bit integers.</sub> |
 | unsigned int __umul24 ( unsigned int x, unsigned int y )<br><sub>Multiply two 24bit unsigned integers.</sub> |
-<sub>[^f3]
-The HIP-Clang implementation of __ffs() and __ffsll() contains code to add a constant +1 to produce the ffs result format.
+[^f3]: The HIP-Clang implementation of `__ffs()` and `__ffsll()` contains code to add a constant +1 to produce the ffs result format.
 For the cases where this overhead is not acceptable and programmer is willing to specialize for the platform,
-HIP-Clang provides __lastbit_u32_u32(unsigned int input) and __lastbit_u32_u64(unsigned long long int input).
-The index returned by __lastbit_ instructions starts at -1, while for ffs the index starts at 0.
+HIP-Clang provides `__lastbit_u32_u32(unsigned int input)` and `__lastbit_u32_u64(unsigned long long int input)`.
+The index returned by `__lastbit_ instructions` starts at -1, while for ffs the index starts at 0.
 
 ### Floating-point Intrinsics
 Following is the list of supported floating-point intrinsics. Note that intrinsics are supported on device only.
@@ -520,7 +519,7 @@ HIP supports the following atomic operations.
 | int atomicXor_system(int* address, int val)                                                                          |  ✓                    |  ✓                     |
 | unsigned int atomicXor(unsigned int* address,unsigned int val)                                                       |  ✓                    |  ✓                     |
 | unsigned int atomicXor_system(unsigned int* address, unsigned int val)                                               |  ✓                    |  ✓                     |
-| unsigned long long atomicXor(unsigned long long* address,unsigned long long val))                                    |  ✓                    |  ✓                     |
+| unsigned long long atomicXor(unsigned long long* address,unsigned long long val)                                    |  ✓                    |  ✓                     |
 | unsigned long long atomicXor_system(unsigned long long* address, unsigned long long val)                             |  ✓                    |  ✓                     |
 
 ### Unsafe Floating-Point Atomic RMW Operations
