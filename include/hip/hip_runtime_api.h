@@ -915,8 +915,16 @@ typedef enum hipJitOption {
  * @warning On AMD devices and some Nvidia devices, these hints and controls are ignored.
  */
 typedef enum hipFuncAttribute {
-    hipFuncAttributeMaxDynamicSharedMemorySize = 8,
-    hipFuncAttributePreferredSharedMemoryCarveout = 9,
+    hipFuncAttributeMaxThreadsPerBlock,
+    hipFuncAttributeSharedSizeBytes,
+    hipFuncAttributeConstSizeBytes,
+    hipFuncAttributeLocalSizeBytes,
+    hipFuncAttributeNumRegs,
+    hipFuncAttributePTXVersion,
+    hipFuncAttributeBinaryVersion,
+    hipFuncAttributeCacheModeCA,
+    hipFuncAttributeMaxDynamicSharedMemorySize,
+    hipFuncAttributePreferredSharedMemoryCarveout,
     hipFuncAttributeMax
 } hipFuncAttribute;
 /**
@@ -4961,7 +4969,7 @@ hipError_t hipFuncGetAttributes(struct hipFuncAttributes* attr, const void* func
  *
  * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidDeviceFunction
  */
-hipError_t hipFuncGetAttribute(int* value, hipFunction_attribute attrib, hipFunction_t hfunc);
+hipError_t hipFuncGetAttribute(int* value, hipFuncAttribute attrib, hipFunction_t hfunc);
 /**
  * @brief returns the handle of the texture reference with the name from the module.
  *
