@@ -760,6 +760,9 @@ Platform-specific coding techniques such as `#ifdef` can be used to specify diff
 Unlike nvcc, HIP-Clang does not support the `--maxregcount` option.  Instead, users are encouraged to use the `hip_launch_bounds` directive since the parameters are more intuitive and portable than
 micro-architecture details like registers, and also the directive allows per-kernel control rather than an entire file.  `hip_launch_bounds` works on both HIP-Clang and nvcc targets.
 
+## Asynchronous Functions
+
+See [asynchronous functions](kernel_language_async).
 
 ## Register Keyword
 The register keyword is deprecated in C++, and is silently ignored by both nvcc and HIP-Clang.  You can pass the option `-Wdeprecated-register` the compiler warning message.
