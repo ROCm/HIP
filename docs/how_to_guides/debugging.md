@@ -98,16 +98,16 @@ Find the GDB manual and other documentation resources online at:
 ...
 Reading symbols from ./hipTexObjPitch...
 (gdb) break main
-Breakpoint 1 at 0x4013d1: file /home/test/hip/tests/src/texture/hipTexObjPitch.cpp, line 98.
+Breakpoint 1 at 0x4013d1: file /home/<your_awesome_name>/hip-tests/samples/2_Cookbook/0_MatrixTranspose/MatrixTranspose.cpp, line 56.
 (gdb) run
-Starting program: /home/test/hip/build/directed_tests/texture/hipTexObjPitch
+Starting program: MatrixTranspose
 [Thread debugging using libthread_db enabled]
 Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
 
 Breakpoint 1, main ()
-    at /home/test/hip/tests/src/texture/hipTexObjPitch.cpp:98
-98	    texture2Dtest<float>();
-(gdb)c
+    at MatrixTranspose.cpp:56
+56	    int main() {
+(gdb) c
 
 ```
 
@@ -116,65 +116,95 @@ There are also other debugging tools available online developers can google and 
 
 ## Debugging HIP Applications
 
-Below is an example on Linux to show how to get useful information from the debugger while running a simple memory copy test, which caused an issue of segmentation fault.
+Below is an example on Linux to show how to get useful information from the debugger while running a simple hip application, which caused an issue of segmentation fault.
+
+Simple HIP Program:
+
+```cpp
+#include <hip/hip_runtime.h>
+#include <iostream>
+#include <vector>
+
+__global__ void kernel_add(int* a, int b) {
+  int i = threadIdx.x;
+  a[i] += b;
+}
+
+int main() {
+  constexpr size_t size = 1024;
+  int* ptr;
+  hipMalloc(&ptr, sizeof(int) * size);
+  hipMemset(ptr, 0, sizeof(int) * size);
+  std::vector<int> input(size, 0);
+  size_t i = 100;
+  std::for_each(input.begin(), input.end(), [&](int& a) { a = i; });
+  hipMemcpy(ptr, input.data(), sizeof(int) * size, hipMemcpyHostToDevice);
+  kernel_add<<<1, size>>>(ptr, 10);
+  std::vector<int> output = input;
+  hipMemcpy(output.data(), ptr, sizeof(int) * size, hipMemcpyDeviceToHost);
+  std::cout << ((std::all_of(output.begin(), output.end(), [&](int a) { return a == (i + 10); }))
+                    ? "passed"
+                    : "failed")
+            << std::endl;
+  hipFree(ptr);
+}
+```
+
+Compile and run command:
 
 ```console
-test: simpleTest2<?> numElements=4194304 sizeElements=4194304 bytes
-Segmentation fault (core dumped)
+hipcc app.cpp -ggdb -o app
+rocgdb ./app
+```
+
+```console
+(gdb) b main
+Breakpoint 1 at 0x21275e: file app.cpp, line 14.
 
 (gdb) run
-Starting program: /home/test/hipamd/build/directed_tests/runtimeApi/memory/hipMemcpy_simple
+Starting program: /home/<your_awesome_name>/app
+warning: os_agent_id 31475: `Device 1002:164e' architecture not supported.
 [Thread debugging using libthread_db enabled]
 Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
 
-Breakpoint 1, main (argc=1, argv=0x7fffffffdea8)
-    at /home/test/hip/tests/src/runtimeApi/memory/hipMemcpy_simple.cpp:147
-147     int main(int argc, char* argv[]) {
-(gdb) c
-Continuing.
-[New Thread 0x7ffff64c4700 (LWP 146066)]
+Breakpoint 1, hipMalloc<int> (devPtr=0x7fffffffe098, size=4096) at /opt/rocm/include/hip/hip_runtime_api.h:8487
+8487        return hipMalloc((void**)devPtr, size);
 
-Thread 1 "hipMemcpy_simpl" received signal SIGSEGV, Segmentation fault.
-0x000000000020f78e in simpleTest2<float> (numElements=4194304, usePinnedHost=true)
-    at /home/test/hip/tests/src/runtimeApi/memory/hipMemcpy_simple.cpp:104
-104             A_h1[i] = 3.14f + 1000 * i;
 (gdb) bt
-#0  0x000000000020f78e in simpleTest2<float> (numElements=4194304, usePinnedHost=true)
-    at /home/test/hip/tests/src/runtimeApi/memory/hipMemcpy_simple.cpp:104
-#1  0x000000000020e96c in main (argc=<optimized out>, argv=<optimized out>)
-    at /home/test/hip/tests/src/runtimeApi/memory/hipMemcpy_simple.cpp:163
-(gdb) info thread
-  Id   Target Id                                            Frame
-* 1    Thread 0x7ffff64c5880 (LWP 146060) "hipMemcpy_simpl" 0x000000000020f78e in simpleTest2<float> (numElements=4194304, usePinnedHost=true)
-    at /home/test/hip/tests/src/runtimeApi/memory/hipMemcpy_simple.cpp:104
-  2    Thread 0x7ffff64c4700 (LWP 146066) "hipMemcpy_simpl" 0x00007ffff6b0850b in ioctl
-    () from /lib/x86_64-linux-gnu/libc.so.6
+#0  hipMalloc<int> (devPtr=0x7fffffffe098, size=4096) at /opt/rocm/include/hip/hip_runtime_api.h:8487
+#1  main () at app.cpp:14
+
+(gdb) n
+[New Thread 0x7fffeb7ff640 (LWP 1524879)]
+[New Thread 0x7fffeaffe640 (LWP 1524880)]
+[Thread 0x7fffeaffe640 (LWP 1524880) exited]
+main () at app.cpp:15
+15        hipMemset(ptr, 0, sizeof(int) * size);
+
+(gdb) info threads
+  Id   Target Id                                 Frame
+* 1    Thread 0x7ffff7e6ba80 (LWP 1524135) "app" main () at app.cpp:15
+  2    Thread 0x7fffeb7ff640 (LWP 1524879) "app" __GI___ioctl (fd=3, request=3222817548) at ../sysdeps/unix/sysv/linux/ioctl.c:36
+
 (gdb) thread 2
-[Switching to thread 2 (Thread 0x7ffff64c4700 (LWP 146066))]
-#0  0x00007ffff6b0850b in ioctl () from /lib/x86_64-linux-gnu/libc.so.6
+[Switching to thread 2 (Thread 0x7fffeb7ff640 (LWP 1524879))]
+#0  __GI___ioctl (fd=3, request=3222817548) at ../sysdeps/unix/sysv/linux/ioctl.c:36
+36      ../sysdeps/unix/sysv/linux/ioctl.c: No such file or directory.
+
 (gdb) bt
-#0  0x00007ffff6b0850b in ioctl () from /lib/x86_64-linux-gnu/libc.so.6
-#1  0x00007ffff6604568 in ?? () from /opt/rocm/lib/libhsa-runtime64.so.1
-#2  0x00007ffff65fe73a in ?? () from /opt/rocm/lib/libhsa-runtime64.so.1
-#3  0x00007ffff659e4d6 in ?? () from /opt/rocm/lib/libhsa-runtime64.so.1
-#4  0x00007ffff65807de in ?? () from /opt/rocm/lib/libhsa-runtime64.so.1
-#5  0x00007ffff65932a2 in ?? () from /opt/rocm/lib/libhsa-runtime64.so.1
-#6  0x00007ffff654f547 in ?? () from /opt/rocm/lib/libhsa-runtime64.so.1
-#7  0x00007ffff7f76609 in start_thread () from /lib/x86_64-linux-gnu/libpthread.so.0
-#8  0x00007ffff6b13293 in clone () from /lib/x86_64-linux-gnu/libc.so.6
-(gdb) thread 1
-[Switching to thread 1 (Thread 0x7ffff64c5880 (LWP 146060))]
-#0  0x000000000020f78e in simpleTest2<float> (numElements=4194304, usePinnedHost=true)
-    at /home/test/hip/tests/src/runtimeApi/memory/hipMemcpy_simple.cpp:104
-104             A_h1[i] = 3.14f + 1000 * i;
-(gdb) bt
-#0  0x000000000020f78e in simpleTest2<float> (numElements=4194304, usePinnedHost=true)
-    at /home/test/hip/tests/src/runtimeApi/memory/hipMemcpy_simple.cpp:104
-#1  0x000000000020e96c in main (argc=<optimized out>, argv=<optimized out>)
-    at /home/test/hip/tests/src/runtimeApi/memory/hipMemcpy_simple.cpp:163
-(gdb)
+#0  __GI___ioctl (fd=3, request=3222817548) at ../sysdeps/unix/sysv/linux/ioctl.c:36
+#1  0x00007fffeb8fda80 in ?? () from /opt/rocm/lib/libhsa-runtime64.so.1
+#2  0x00007fffeb8f6912 in ?? () from /opt/rocm/lib/libhsa-runtime64.so.1
+#3  0x00007fffeb883021 in ?? () from /opt/rocm/lib/libhsa-runtime64.so.1
+#4  0x00007fffeb85e026 in ?? () from /opt/rocm/lib/libhsa-runtime64.so.1
+#5  0x00007fffeb874b6a in ?? () from /opt/rocm/lib/libhsa-runtime64.so.1
+#6  0x00007fffeb828fdb in ?? () from /opt/rocm/lib/libhsa-runtime64.so.1
+#7  0x00007ffff5c94b43 in start_thread (arg=<optimised out>) at ./nptl/pthread_create.c:442
+#8  0x00007ffff5d26a00 in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:81
 ...
 ```
+
+A complete guide to `rocgdb` can be found [here](https://rocm.docs.amd.com/projects/ROCgdb/en/latest/).
 
 On Windows, debugging HIP applications on IDE like Microsoft Visual Studio tools, are more informative and visible to debug codes, inspect  variables, watch multiple details and examine the call stacks.
 

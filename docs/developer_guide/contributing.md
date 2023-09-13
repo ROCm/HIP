@@ -59,16 +59,16 @@ Selected multilib: .;@m64
 
 ## Unit Testing Environment
 
-HIP includes unit tests in the tests/src directory.
-When adding a new HIP feature, add a new unit test as well.
-See [tests/README.md](README.md) for more information.
+Tests for HIP are hosted at [ROCm-Developer-Tools/hip-tests](https://github.com/ROCm-Developer-Tools/hip-tests).
+
+To run `hip-tests` please go to the repo and follow the steps.
 
 ## Development Flow
 
-Directed tests provide a great place to develop new features alongside the associated test.
+`hip-tests` provide a great place to develop new features alongside the associated test.
 
-For applications and benchmarks outside the directed test environment, developments should use a two-step development flow:
-- #1. Compile, link, and install HIP/ROCclr.  See [Installation](README.md#Installation) notes.
+For applications and benchmarks outside the hip-tests environment, developments should use a two-step development flow:
+- #1. Compile, link, and install HIP/ROCclr. See [Installation](README.md#Installation) notes.
 - #2. Relink the target application to include changes in HIP runtime file.
 
 ## Environment Variables
@@ -124,13 +124,7 @@ Differences or limitations of HIP APIs as compared to CUDA APIs should be clearl
 
 
 ### Presubmit Testing:
-Before checking in or submitting a pull request, run all directed tests (see tests/README.md) and all Rodinia tests.
-Ensure pass results match starting point:
-
-```console
-> cd examples/
-> ./run_all.sh
-```
+Before checking in or submitting a pull request, run all hip-tests (see [ROCm-Developer-Tools/hip-tests](https://github.com/ROCm-Developer-Tools/hip-tests)).
 
 
 ### Checkin messages

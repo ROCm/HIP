@@ -93,7 +93,6 @@ else {
 }
 ```
 Please note, the managed memory capability check may not be necessary, but if HMM is not supported, then managed malloc will fall back to using system memory and other managed memory API calls will have undefined behavior.
-For more details on managed memory APIs, please refer to the documentation HIP-API.pdf, and the application at (https://github.com/ROCm-Developer-Tools/HIP/blob/rocm-4.5.x/tests/src/runtimeApi/memory/hipMallocManaged.cpp) is a sample usage.
 
 Note, managed memory management is implemented on Linux, not supported on Windows yet.
 
@@ -138,8 +137,6 @@ HIP graph is supported. For more details, refer to the HIP API Guide.
 
 HIP-Clang now supports device-side malloc and free.
 This implementation does not require the use of `hipDeviceSetLimit(hipLimitMallocHeapSize,value)` nor respects any setting. The heap is fully dynamic and can grow until the available free memory on the device is consumed.
-
-The test codes in the link (https://github.com/ROCm-Developer-Tools/HIP/blob/develop/tests/src/deviceLib/hipDeviceMalloc.cpp) show how to implement application using malloc and free functions in device kernels.
 
 ## Use of Per-thread default stream
 
