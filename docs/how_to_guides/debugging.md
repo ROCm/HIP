@@ -179,6 +179,7 @@ Thread 1 "hipMemcpy_simpl" received signal SIGSEGV, Segmentation fault.
 On Windows, debugging HIP applications on IDE like Microsoft Visual Studio tools, are more informative and visible to debug codes, inspect  variables, watch multiple details and examine the call stacks.
 
 ## Useful Environment Variables
+
 HIP provides some environment variables which allow HIP, hip-clang, or HSA driver on Linux to disable some feature or optimization.
 These are not intended for production but can be useful diagnose synchronization problems in the application (or driver).
 

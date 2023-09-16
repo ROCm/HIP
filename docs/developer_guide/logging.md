@@ -163,18 +163,18 @@ memInfo.free:                     7.98 GB (100%)
 ```
 
 On Windows, AMD_LOG_LEVEL can be set via environment variable from advanced system setting, or from Command prompt run as administrator, as shown below as an example, which shows some debug log information calling backend runtime on Windows.
-```console
+```
 C:\hip\bin>set AMD_LOG_LEVEL=4
 C:\hip\bin>hipinfo
 :3:C:\constructicon\builds\gfx\two\22.40\drivers\compute\vdi\device\comgrctx.cpp:33  : 605413686305 us: 29864: [tid:0x9298] Loading COMGR library.
 :4:C:\constructicon\builds\gfx\two\22.40\drivers\compute\vdi\platform\runtime.cpp:83  : 605413869411 us: 29864: [tid:0x9298] init
 :3:C:\constructicon\builds\gfx\two\22.40\drivers\compute\hipamd\src\hip_context.cpp:47  : 605413869502 us: 29864: [tid:0x9298] Direct Dispatch: 0
 :3:C:\constructicon\builds\gfx\two\22.40\drivers\compute\hipamd\src\hip_device_runtime.cpp:543 : 605413870553 us: 29864: [tid:0x9298] hipGetDeviceCount: Returned hipSuccess :
-:3:C:\constructicon\builds\gfx\two\22.40\drivers\compute\hipamd\src\hip_device_runtime.cpp:556 : 605413870631 us: 29864: [tid:0x9298] <-[32m hipSetDevice ( 0 ) <-[0m
+:3:C:\constructicon\builds\gfx\two\22.40\drivers\compute\hipamd\src\hip_device_runtime.cpp:556 : 605413870631 us: 29864: [tid:0x9298] ←[32m hipSetDevice ( 0 ) ←[0m
 :3:C:\constructicon\builds\gfx\two\22.40\drivers\compute\hipamd\src\hip_device_runtime.cpp:561 : 605413870848 us: 29864: [tid:0x9298] hipSetDevice: Returned hipSuccess :
 --------------------------------------------------------------------------------
 device#                           0
-:3:C:\constructicon\builds\gfx\two\22.40\drivers\compute\hipamd\src\hip_device.cpp:346 : 605413871623 us: 29864: [tid:0x9298] <-[32m hipGetDeviceProperties ( 0000008AEBEFF8C8, 0 ) <-[0m
+:3:C:\constructicon\builds\gfx\two\22.40\drivers\compute\hipamd\src\hip_device.cpp:346 : 605413871623 us: 29864: [tid:0x9298] ←[32m hipGetDeviceProperties ( 0000008AEBEFF8C8, 0 ) ←[0m
 :3:C:\constructicon\builds\gfx\two\22.40\drivers\compute\hipamd\src\hip_device.cpp:348 : 605413871695 us: 29864: [tid:0x9298] hipGetDeviceProperties: Returned hipSuccess :
 Name:                             AMD Radeon(TM) Graphics
 pciBusID:                         3
@@ -191,11 +191,11 @@ totalConstMem:                    2147483647
 sharedMemPerBlock:                64.00 KB
 ...
 gcnArchName:                      gfx90c:xnack-
-:3:C:\constructicon\builds\gfx\two\22.40\drivers\compute\hipamd\src\hip_device_runtime.cpp:541 : 605413924779 us: 29864: [tid:0x9298] <-[32m hipGetDeviceCount ( 0000008AEBEFF8A4 ) <-[0m
+:3:C:\constructicon\builds\gfx\two\22.40\drivers\compute\hipamd\src\hip_device_runtime.cpp:541 : 605413924779 us: 29864: [tid:0x9298] ←[32m hipGetDeviceCount ( 0000008AEBEFF8A4 ) ←[0m
 :3:C:\constructicon\builds\gfx\two\22.40\drivers\compute\hipamd\src\hip_device_runtime.cpp:543 : 605413925075 us: 29864: [tid:0x9298] hipGetDeviceCount: Returned hipSuccess :
-peers:                            :3:C:\constructicon\builds\gfx\two\22.40\drivers\compute\hipamd\src\hip_peer.cpp:176 : 605413928643 us: 29864: [tid:0x9298] <-[32m hipDeviceCanAccessPeer ( 0000008AEBEFF890, 0, 0 ) <-[0m
+peers:                            :3:C:\constructicon\builds\gfx\two\22.40\drivers\compute\hipamd\src\hip_peer.cpp:176 : 605413928643 us: 29864: [tid:0x9298] ←[32m hipDeviceCanAccessPeer ( 0000008AEBEFF890, 0, 0 ) ←[0m
 :3:C:\constructicon\builds\gfx\two\22.40\drivers\compute\hipamd\src\hip_peer.cpp:177 : 605413928743 us: 29864: [tid:0x9298] hipDeviceCanAccessPeer: Returned hipSuccess :
-non-peers:                        :3:C:\constructicon\builds\gfx\two\22.40\drivers\compute\hipamd\src\hip_peer.cpp:176 : 605413930830 us: 29864: [tid:0x9298] <-[32m hipDeviceCanAccessPeer ( 0000008AEBEFF890, 0, 0 ) <-[0m
+non-peers:                        :3:C:\constructicon\builds\gfx\two\22.40\drivers\compute\hipamd\src\hip_peer.cpp:176 : 605413930830 us: 29864: [tid:0x9298] ←[32m hipDeviceCanAccessPeer ( 0000008AEBEFF890, 0, 0 ) ←[0m
 :3:C:\constructicon\builds\gfx\two\22.40\drivers\compute\hipamd\src\hip_peer.cpp:177 : 605413930882 us: 29864: [tid:0x9298] hipDeviceCanAccessPeer: Returned hipSuccess :
 device#0
 ...

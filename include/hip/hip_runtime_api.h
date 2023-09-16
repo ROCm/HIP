@@ -2920,11 +2920,11 @@ hipError_t hipMemPrefetchAsync(const void* dev_ptr,
  *
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
- * This HIP API advises about the usage to be applied on unified memory allocation in the
- * range starting from the pointer address devPtr, with the size of count bytes. The memory range
- * must refer to managed memory allocated via the API hipMallocManaged, and the range will be
- * handled with proper round down and round up respectively in the driver to be aligned to
- * CPU page size.
+ * This HIP advises about the usage to be applied on unified memory allocation in the
+ * range starting from the pointer address devPtr, with the size of count bytes.
+ * The memory range must refer to managed memory allocated via the API hipMallocManaged, and the
+ * range will be handled with proper round down and round up respectively in the driver to
+ * be aligned to CPU page size.
  *
  * @note  This API is implemented on Linux, under development on Windows.
  */

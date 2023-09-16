@@ -6,7 +6,7 @@ HIP code can be developed either on AMD ROCm platform using HIP-Clang compiler, 
 Before build and run HIP, make sure drivers and pre-build packages are installed properly on the platform.
 
 ### AMD platform
-Install ROCm packages (see ROCm Installation Guide on AMD public documentation site (https://docs.amd.com/)) or install pre-built binary packages using the package manager,
+Install ROCm packages (see ROCm Installation Guide on AMD public documentation site (https://docs.amd.com/) or install pre-built binary packages using the package manager,
 
 ```shell
 sudo apt install mesa-common-dev
@@ -23,9 +23,9 @@ Install Nvidia driver and pre-build packages (see HIP Installation Guide at http
 ### Branch of repository
 
 Before get HIP source code, set the expected branch of repository at the variable `ROCM_BRANCH`.
-For example, for ROCm5.7 release branch, set
+For example, for ROCm5.6 release branch, set
 ```shell
-export ROCM_BRANCH=rocm-5.7.x
+export ROCM_BRANCH=rocm-5.6.x
 ```
 
 ROCm5.6 release branch, set
@@ -83,6 +83,7 @@ sudo make install
 
 Note, if `CMAKE_INSTALL_PREFIX` is not specified, hip runtime will be installed to `<ROCM_PATH>/hip`.
 By default, release version of HIP is built.
+
 
 ### Default paths and environment variables
 
@@ -212,6 +213,15 @@ git clone -b "$ROCM_BRANCH" https://github.com/ROCm-Developer-Tools/HIPCC.git
 export HIP_DIR="$(readlink -f hip)"
 export CLR_DIR="$(readlink -f hipamd)"
 export HIPCC_DIR="$(readlink -f hipcc)"
+```
+
+### Build the HIPCC runtime
+
+```shell
+cd "$HIPCC_DIR"
+mkdir -p build; cd build
+cmake ..
+make -j4
 ```
 
 ### Build the HIPCC runtime

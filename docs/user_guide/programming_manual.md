@@ -26,6 +26,7 @@ Numa distance is the measurement of how far between GPU and CPU devices.
 By default, each GPU selects a Numa CPU node that has the least Numa distance between them, that is, host memory will be automatically allocated closest on the memory pool of Numa node of the current GPU device. Using hipSetDevice API to a different GPU will still be able to access the host allocation, but can have longer Numa distance.
 Note, Numa policy is so far implemented on Linux, and under development on Windows.
 
+
 ### Coherency Controls
 ROCm defines two coherency options for host memory:
 - Coherent memory : Supports fine-grain synchronization while the kernel is running.  For example, a kernel can perform atomic operations that are visible to the host CPU or to other (peer) GPUs.  Synchronization instructions include threadfence_system and C++11-style atomic operations.
