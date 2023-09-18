@@ -4447,8 +4447,8 @@ hipError_t hipDrvMemcpy3DAsync(const HIP_MEMCPY3D* pCopy, hipStream_t stream);
  * @brief Determine if a device can access a peer's memory.
  *
  * @param [out] canAccessPeer Returns the peer access capability (0 or 1)
- * @param [in] device - device from where memory may be accessed.
- * @param [in] peerDevice - device where memory is physically located
+ * @param [in] deviceId - device from where memory may be accessed.
+ * @param [in] peerDeviceId - device where memory is physically located
  *
  * Returns "1" in @p canAccessPeer if the specified @p device is capable
  * of directly accessing memory physically located on peerDevice , or "0" if not.
@@ -4470,8 +4470,8 @@ hipError_t hipDeviceCanAccessPeer(int* canAccessPeer, int deviceId, int peerDevi
  * accessible from the current device until a call to hipDeviceDisablePeerAccess or hipDeviceReset.
  *
  *
- * @param [in] peerDeviceId
- * @param [in] flags
+ * @param [in] peerDeviceId  Peer device to enable direct access to from the current device
+ * @param [in] flags  Reserved for future use, must be zero
  *
  * Returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue,
  * @returns #hipErrorPeerAccessAlreadyEnabled if peer access is already enabled for this device.
@@ -4484,7 +4484,7 @@ hipError_t hipDeviceEnablePeerAccess(int peerDeviceId, unsigned int flags);
  * Returns hipErrorPeerAccessNotEnabled if direct access to memory on peerDevice has not yet been
  * enabled from the current device.
  *
- * @param [in] peerDeviceId
+ * @param [in] peerDeviceId  Peer device to disable direct access to
  *
  * @returns #hipSuccess, #hipErrorPeerAccessNotEnabled
  */
@@ -4523,7 +4523,7 @@ hipError_t hipMemcpyPeer(void* dst, int dstDeviceId, const void* src, int srcDev
  * @brief Copies memory from one device to memory on another device.
  *
  * @param [out] dst - Destination device pointer.
- * @param [in] dstDevice - Destination device
+ * @param [in] dstDeviceId - Destination device
  * @param [in] src - Source device pointer
  * @param [in] srcDevice - Source device
  * @param [in] sizeBytes - Size of memory copy in bytes
@@ -4585,7 +4585,7 @@ hipError_t hipCtxDestroy(hipCtx_t ctx);
 /**
  * @brief Pop the current/default context and return the popped context.
  *
- * @param [out] ctx
+ * @param [out] ctx  The current context to pop
  *
  * @returns #hipSuccess, #hipErrorInvalidContext
  *
@@ -4599,7 +4599,7 @@ hipError_t hipCtxPopCurrent(hipCtx_t* ctx);
 /**
  * @brief Push the context to be set as current/ default context
  *
- * @param [in] ctx
+ * @param [in] ctx  The current context to push
  *
  * @returns #hipSuccess, #hipErrorInvalidContext
  *
@@ -4613,7 +4613,7 @@ hipError_t hipCtxPushCurrent(hipCtx_t ctx);
 /**
  * @brief Set the passed context as current/default
  *
- * @param [in] ctx
+ * @param [in] ctx The context to set as current
  *
  * @returns #hipSuccess, #hipErrorInvalidContext
  *
@@ -4627,7 +4627,7 @@ hipError_t hipCtxSetCurrent(hipCtx_t ctx);
 /**
  * @brief Get the handle of the current/ default context
  *
- * @param [out] ctx
+ * @param [out] ctx  The context to get as current
  *
  * @returns #hipSuccess, #hipErrorInvalidContext
  *
@@ -4641,7 +4641,7 @@ hipError_t hipCtxGetCurrent(hipCtx_t* ctx);
 /**
  * @brief Get the handle of the device associated with current/default context
  *
- * @param [out] device
+ * @param [out] device The device from the current context 
  *
  * @returns #hipSuccess, #hipErrorInvalidContext
  *
@@ -4656,7 +4656,7 @@ hipError_t hipCtxGetDevice(hipDevice_t* device);
  * @brief Returns the approximate HIP api version.
  *
  * @param [in]  ctx Context to check
- * @param [out] apiVersion
+ * @param [out] apiVersion API version to get
  *
  * @return #hipSuccess
  *
@@ -4961,8 +4961,8 @@ hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const
  * @brief builds module from code object which resides in host memory. Image is pointer to that
  * location.
  *
- * @param [in] image
- * @param [out] module
+ * @param [in] image  The pointer to the location of data
+ * @param [out] module  Retuned module
  *
  * @returns hipSuccess, hipErrorNotInitialized, hipErrorOutOfMemory, hipErrorNotInitialized
  */
@@ -4971,11 +4971,11 @@ hipError_t hipModuleLoadData(hipModule_t* module, const void* image);
  * @brief builds module from code object which resides in host memory. Image is pointer to that
  * location. Options are not used. hipModuleLoadData is called.
  *
- * @param [in] image
- * @param [out] module
- * @param [in] number of options
- * @param [in] options for JIT
- * @param [in] option values for JIT
+ * @param [in] image  The pointer to the location of data
+ * @param [out] module  Retuned module
+ * @param [in] numOptions Number of options
+ * @param [in] options Options for JIT
+ * @param [in] optionValues  Option values for JIT
  *
  * @returns hipSuccess, hipErrorNotInitialized, hipErrorOutOfMemory, hipErrorNotInitialized
  */
@@ -4996,7 +4996,7 @@ hipError_t hipModuleLoadDataEx(hipModule_t* module, const void* image, unsigned 
  * HIP-Clang compiler provides support for extern shared declarations.
  * @param [in] stream    Stream where the kernel should be dispatched.  May be 0, in which case th
  * default stream is used with associated synchronization rules.
- * @param [in] kernelParams
+ * @param [in] kernelParams  Kernel parameters to launch
  * @param [in] extra     Pointer to kernel arguments.   These are passed directly to the kernel and
  * must be in the memory layout and alignment expected by the kernel.
  * All passed arguments must be naturally aligned according to their type. The memory address of each
@@ -5067,7 +5067,7 @@ hipError_t hipModuleLaunchCooperativeKernelMultiDevice(hipFunctionLaunchParams* 
  *
  * @param [in] f         Kernel to launch.
  * @param [in] gridDim   Grid dimensions specified as multiple of blockDim.
- * @param [in] blockDim  Block dimensions specified in work-items
+ * @param [in] blockDimX  Block dimensions specified in work-items
  * @param [in] kernelParams A list of kernel arguments
  * @param [in] sharedMemBytes Amount of dynamic shared memory to allocate for this kernel. The
  * HIP-Clang compiler provides support for extern shared declarations.
@@ -5099,7 +5099,7 @@ hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsLi
  * on respective streams before enqueuing any other work on the specified streams from any other threads
  *
  *
- * @param [in] hipLaunchParams          List of launch parameters, one per device.
+ * @param [in] launchParamsList          List of launch parameters, one per device.
  * @param [in] numDevices               Size of the launchParamsList array.
  * @param [in] flags                    Flags to control launch behavior.
  *
@@ -5161,9 +5161,9 @@ hipError_t hipModuleOccupancyMaxPotentialBlockSizeWithFlags(int* gridSize, int* 
  * @brief Returns occupancy for a device function.
  *
  * @param [out] numBlocks        Returned occupancy
- * @param [in]  func             Kernel function (hipFunction) for which occupancy is calulated
+ * @param [in]  f                Kernel function (hipFunction) for which occupancy is calulated
  * @param [in]  blockSize        Block size the kernel is intended to be launched with
- * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
+ * @param [in]  dynSharedMemPerBlk Dynamic shared memory usage (in bytes) intended for each block
  */
 hipError_t hipModuleOccupancyMaxActiveBlocksPerMultiprocessor(
    int* numBlocks, hipFunction_t f, int blockSize, size_t dynSharedMemPerBlk);
@@ -5173,7 +5173,7 @@ hipError_t hipModuleOccupancyMaxActiveBlocksPerMultiprocessor(
  * @param [out] numBlocks        Returned occupancy
  * @param [in]  f                Kernel function(hipFunction_t) for which occupancy is calulated
  * @param [in]  blockSize        Block size the kernel is intended to be launched with
- * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
+ * @param [in]  dynSharedMemPerBlk Dynamic shared memory usage (in bytes) intended for each block
  * @param [in]  flags            Extra flags for occupancy calculation (only default supported)
  */
 hipError_t hipModuleOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
@@ -5182,9 +5182,9 @@ hipError_t hipModuleOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
  * @brief Returns occupancy for a device function.
  *
  * @param [out] numBlocks        Returned occupancy
- * @param [in]  func             Kernel function for which occupancy is calulated
+ * @param [in]  f                Kernel function for which occupancy is calulated
  * @param [in]  blockSize        Block size the kernel is intended to be launched with
- * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
+ * @param [in]  dynSharedMemPerBlk Dynamic shared memory usage (in bytes) intended for each block
  */
 hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
    int* numBlocks, const void* f, int blockSize, size_t dynSharedMemPerBlk);
@@ -5194,7 +5194,7 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
  * @param [out] numBlocks        Returned occupancy
  * @param [in]  f                Kernel function for which occupancy is calulated
  * @param [in]  blockSize        Block size the kernel is intended to be launched with
- * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
+ * @param [in]  dynSharedMemPerBlk Dynamic shared memory usage (in bytes) intended for each block
  * @param [in]  flags            Extra flags for occupancy calculation (currently ignored)
  */
 hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
@@ -6152,7 +6152,7 @@ const char* hipApiName(uint32_t id);
 /**
  * @brief Returns kernel name reference by function name.
  *
- * @param [in] f name of function
+ * @param [in] f Name of function
  *
  * @returns hipSuccess, hipErrorInvalidValue
  *
@@ -6162,7 +6162,7 @@ const char* hipKernelNameRef(const hipFunction_t f);
  * @brief Retrives kernel for a given host pointer, unless stated otherwise.
  *
  * @param [in] hostFunction Pointer of host function.
- * @param [in] stream stream the kernel is executed on.
+ * @param [in] stream Stream the kernel is executed on.
  *
  * @returns hipSuccess, hipErrorInvalidValue
  *
@@ -6171,7 +6171,7 @@ const char* hipKernelNameRefByPtr(const void* hostFunction, hipStream_t stream);
 /**
  * @brief Returns device ID on the stream.
  *
- * @param [in] stream stream of device executed on.
+ * @param [in] stream Stream of device executed on.
  *
  * @returns hipSuccess, hipErrorInvalidValue
  *
