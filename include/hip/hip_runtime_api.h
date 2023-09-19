@@ -1396,8 +1396,12 @@ typedef struct hipArrayMapInfo {
 /**
  * @brief Explicitly initializes the HIP runtime.
  *
+ * @param [in] flags  Initialization flag, should be zero.
+ *
  * Most HIP APIs implicitly initialize the HIP runtime.
  * This API provides control over the timing of the initialization.
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
  */
 // TODO-ctx - more description on error codes.
 hipError_t hipInit(unsigned int flags);
@@ -2126,6 +2130,7 @@ hipError_t hipStreamCreateWithPriority(hipStream_t* stream, unsigned int flags, 
  *
  * @param[in, out] leastPriority pointer in which value corresponding to least priority is returned.
  * @param[in, out] greatestPriority pointer in which value corresponding to greatest priority is returned.
+ * @returns #hipSuccess
  *
  * Returns in *leastPriority and *greatestPriority the numerical values that correspond to the least
  * and greatest stream priority respectively. Stream priorities follow a convention where lower numbers
@@ -2760,7 +2765,7 @@ hipError_t hipExternalMemoryGetMappedBuffer(void **devPtr, hipExternalMemory_t e
 *
 *  @param[in] extMem  External memory object to be destroyed
 *
-*  @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
+*  @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
 *
 *  @see
 */
@@ -2808,7 +2813,7 @@ hipError_t hipExtMallocWithFlags(void** ptr, size_t sizeBytes, unsigned int flag
  *
  *  @return #hipSuccess, #hipErrorOutOfMemory
  *
- *  @deprecated use hipHostMalloc() instead
+ *  @warning  This API is deprecated, use hipHostMalloc() instead
  */
 DEPRECATED("use hipHostMalloc instead")
 hipError_t hipMallocHost(void** ptr, size_t size);
@@ -2822,7 +2827,7 @@ hipError_t hipMallocHost(void** ptr, size_t size);
  *
  *  @return #hipSuccess, #hipErrorOutOfMemory
  *
- *  @deprecated use hipHostMalloc() instead
+ *  @warning  This API is deprecated, use hipHostMalloc() instead
  */
 DEPRECATED("use hipHostMalloc instead")
 hipError_t hipMemAllocHost(void** ptr, size_t size);
@@ -3544,7 +3549,8 @@ hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height
  *  @see hipMalloc, hipFree, hipMallocArray, hipFreeArray, hipHostFree, hipMalloc3D,
  * hipMalloc3DArray, hipHostMalloc
  */
-hipError_t hipMemAllocPitch(hipDeviceptr_t* dptr, size_t* pitch, size_t widthInBytes, size_t height, unsigned int elementSizeBytes);
+hipError_t hipMemAllocPitch(hipDeviceptr_t* dptr, size_t* pitch, size_t widthInBytes, size_t height,
+   unsigned int elementSizeBytes);
 /**
  *  @brief Free memory allocated by the hcc hip memory allocation API.
  *  This API performs an implicit hipDeviceSynchronize() call.
@@ -3560,13 +3566,14 @@ hipError_t hipMemAllocPitch(hipDeviceptr_t* dptr, size_t* pitch, size_t widthInB
  */
 hipError_t hipFree(void* ptr);
 /**
- *  @brief Free memory allocated by the hcc hip host memory allocation API.  [Deprecated]
+ *  @brief Free memory allocated by the hcc hip host memory allocation API [Deprecated]
  *
  *  @param[in] ptr Pointer to memory to be freed
  *  @return #hipSuccess,
- *          #hipErrorInvalidValue (if pointer is invalid, including device pointers allocated with
- hipMalloc)
- *  @deprecated use hipHostFree() instead
+ *          #hipErrorInvalidValue (if pointer is invalid, including device pointers allocated
+ *  with hipMalloc)
+ *
+ *  @warning  This API is deprecated, use hipHostFree() instead
  */
 DEPRECATED("use hipHostFree instead")
 hipError_t hipFreeHost(void* ptr);
@@ -4298,7 +4305,8 @@ hipError_t hipMemcpy2DToArrayAsync(hipArray* dst, size_t wOffset, size_t hOffset
  * #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
  *
  *  @see hipMemcpy, hipMemcpy2DToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol,
- * hipMemcpyAsync
+ *  hipMemcpyAsync
+ *  @warning  This API is deprecated.
  */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipMemcpyToArray(hipArray* dst, size_t wOffset, size_t hOffset, const void* src,
@@ -4317,6 +4325,7 @@ hipError_t hipMemcpyToArray(hipArray* dst, size_t wOffset, size_t hOffset, const
  *
  *  @see hipMemcpy, hipMemcpy2DToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol,
  * hipMemcpyAsync
+ * @warning  This API is deprecated.
  */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipMemcpyFromArray(void* dst, hipArray_const_t srcArray, size_t wOffset, size_t hOffset,
@@ -4952,7 +4961,7 @@ hipError_t hipFuncGetAttribute(int* value, hipFunction_attribute attrib, hipFunc
  * @brief returns the handle of the texture reference with the name from the module.
  *
  * @param [in] hmod  Module
- * @param [in] name  Pointer of name of texture reference 
+ * @param [in] name  Pointer of name of texture reference
  * @param [out] texRef  Pointer of texture reference
  *
  * @returns #hipSuccess, #hipErrorNotInitialized, #hipErrorNotFound, #hipErrorInvalidValue
@@ -5165,6 +5174,8 @@ hipError_t hipModuleOccupancyMaxPotentialBlockSizeWithFlags(int* gridSize, int* 
  * @param [in]  f                Kernel function (hipFunction) for which occupancy is calulated
  * @param [in]  blockSize        Block size the kernel is intended to be launched with
  * @param [in]  dynSharedMemPerBlk Dynamic shared memory usage (in bytes) intended for each block
+ * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
+ * @returns  #hipSuccess, #hipInvalidDevice, #hipErrorInvalidValue
  */
 hipError_t hipModuleOccupancyMaxActiveBlocksPerMultiprocessor(
    int* numBlocks, hipFunction_t f, int blockSize, size_t dynSharedMemPerBlk);
@@ -5176,6 +5187,7 @@ hipError_t hipModuleOccupancyMaxActiveBlocksPerMultiprocessor(
  * @param [in]  blockSize        Block size the kernel is intended to be launched with
  * @param [in]  dynSharedMemPerBlk Dynamic shared memory usage (in bytes) intended for each block
  * @param [in]  flags            Extra flags for occupancy calculation (only default supported)
+ * @returns  #hipSuccess, #hipInvalidDevice, #hipErrorInvalidValue
  */
 hipError_t hipModuleOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
    int* numBlocks, hipFunction_t f, int blockSize, size_t dynSharedMemPerBlk, unsigned int flags);
@@ -5186,6 +5198,8 @@ hipError_t hipModuleOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
  * @param [in]  f                Kernel function for which occupancy is calulated
  * @param [in]  blockSize        Block size the kernel is intended to be launched with
  * @param [in]  dynSharedMemPerBlk Dynamic shared memory usage (in bytes) intended for each block
+ * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
+ * @returns  #hipSuccess, #hipInvalidDevice, #hipErrorInvalidDeviceFunction, #hipErrorInvalidValue
  */
 hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
    int* numBlocks, const void* f, int blockSize, size_t dynSharedMemPerBlk);
@@ -5197,6 +5211,7 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
  * @param [in]  blockSize        Block size the kernel is intended to be launched with
  * @param [in]  dynSharedMemPerBlk Dynamic shared memory usage (in bytes) intended for each block
  * @param [in]  flags            Extra flags for occupancy calculation (currently ignored)
+ * @returns  #hipSuccess, #hipInvalidDevice, #hipErrorInvalidDeviceFunction, #hipErrorInvalidValue
  */
 hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
    int* numBlocks, const void* f, int blockSize, size_t dynSharedMemPerBlk, unsigned int flags __dparm(hipOccupancyDefault));
@@ -5212,7 +5227,7 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
  * Please note, HIP does not support kernel launch with total work items defined in dimension with
  * size gridDim x blockDim >= 2^32.
  *
- * @returns hipSuccess, hipInvalidDevice, hipErrorInvalidValue
+ * @returns #hipSuccess, #hipInvalidDevice, #hipErrorInvalidValue
  */
 hipError_t hipOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize,
                                              const void* f, size_t dynSharedMemPerBlk,
@@ -5235,14 +5250,16 @@ hipError_t hipOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize,
 /**
  * @brief Start recording of profiling information
  * When using this API, start the profiler with profiling disabled.  (--startdisabled)
- * @warning : hipProfilerStart API is under development.
+ * @returns  #hipErrorNotSupported
+ * @warning : hipProfilerStart API is deprecated, use roctracer/rocTX instead.
  */
 DEPRECATED("use roctracer/rocTX instead")
 hipError_t hipProfilerStart();
 /**
  * @brief Stop recording of profiling information.
  * When using this API, start the profiler with profiling disabled.  (--startdisabled)
- * @warning : hipProfilerStop API is under development.
+ * @returns  #hipErrorNotSupported
+ * @warning  hipProfilerStart API is deprecated, use roctracer/rocTX instead.
  */
 DEPRECATED("use roctracer/rocTX instead")
 hipError_t hipProfilerStop();
@@ -5695,7 +5712,7 @@ hipError_t hipBindTextureToMipmappedArray(
  *
  */
 DEPRECATED(DEPRECATED_MSG)
- hipError_t hipGetTextureReference(
+hipError_t hipGetTextureReference(
     const textureReference** texref,
     const void* symbol);
 /**
@@ -5787,6 +5804,8 @@ hipError_t hipTexRefSetFormat(
  * @param [in] desc  Pointer of channel format descriptor.
  * @param [in] size  Size of memory in bites.
  *
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ *
  * @warning This API is deprecated.
  *
  */
@@ -5808,6 +5827,8 @@ hipError_t hipBindTexture(
  * @param [in] height  Height in texel units.
  * @param [in] pitch  Pitch in bytes.
  *
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ *
  * @warning This API is deprecated.
  *
  */
@@ -5827,6 +5848,8 @@ hipError_t hipBindTexture2D(
  * @param [in] array  Array to bind.
  * @param [in] desc  Pointer of channel format descriptor.
  *
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ *
  * @warning This API is deprecated.
  *
  */
@@ -5841,6 +5864,8 @@ hipError_t hipBindTextureToArray(
  * @param [in] offset  Offset in bytes.
  * @param [in] texref  Pointer of texture reference.
  *
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ *
  * @warning This API is deprecated.
  *
  */
@@ -5853,6 +5878,8 @@ hipError_t hipGetTextureAlignmentOffset(
  *
  * @param [in] tex  Texture to unbind.
  *
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ *
  * @warning This API is deprecated.
  *
  */
@@ -5863,6 +5890,8 @@ hipError_t hipUnbindTexture(const textureReference* tex);
  *
  * @param [out] dev_ptr  Pointer of device address.
  * @param [in] texRef  Pointer of texture reference.
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
  *
  * @warning This API is deprecated.
  *
@@ -5878,6 +5907,8 @@ hipError_t hipTexRefGetAddress(
  * @param [in] texRef  Pointer of texture reference.
  * @param [in] dim  Dimension.
  *
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ *
  * @warning This API is deprecated.
  *
  */
@@ -5892,6 +5923,8 @@ hipError_t hipTexRefGetAddressMode(
  * @param [out] pfm  Pointer of filter mode.
  * @param [in] texRef  Pointer of texture reference.
  *
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ *
  * @warning This API is deprecated.
  *
  */
@@ -5904,6 +5937,8 @@ hipError_t hipTexRefGetFilterMode(
  *
  * @param [out] pFlags  Pointer of flags.
  * @param [in] texRef  Pointer of texture reference.
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
  *
  * @warning This API is deprecated.
  *
@@ -5919,6 +5954,8 @@ hipError_t hipTexRefGetFlags(
  * @param [out] pNumChannels  Pointer of number of channels.
  * @param [in] texRef  Pointer of texture reference.
  *
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ *
  * @warning This API is deprecated.
  *
  */
@@ -5933,6 +5970,8 @@ hipError_t hipTexRefGetFormat(
  * @param [out] pmaxAnsio  Pointer of the maximum anisotropy.
  * @param [in] texRef  Pointer of texture reference.
  *
+ * @returns #hipErrorInvalidValue, #hipErrorNotSupported
+ *
  * @warning This API is deprecated.
  *
  */
@@ -5946,6 +5985,8 @@ hipError_t hipTexRefGetMaxAnisotropy(
  * @param [out] pfm  Pointer of the mipmap filter mode.
  * @param [in] texRef  Pointer of texture reference.
  *
+ * @returns #hipErrorInvalidValue, #hipErrorNotSupported
+ *
  * @warning This API is deprecated.
  *
  */
@@ -5958,6 +5999,8 @@ hipError_t hipTexRefGetMipmapFilterMode(
  *
  * @param [out] pbias  Pointer of the mipmap level bias.
  * @param [in] texRef  Pointer of texture reference.
+ *
+ * @returns #hipErrorInvalidValue, #hipErrorNotSupported
  *
  * @warning This API is deprecated.
  *
@@ -5973,6 +6016,8 @@ hipError_t hipTexRefGetMipmapLevelBias(
  * @param [out] pmaxMipmapLevelClamp  Pointer of the maximum mipmap level clamp.
  * @param [in] texRef  Pointer of texture reference.
  *
+ * @returns #hipErrorInvalidValue, #hipErrorNotSupported
+ *
  * @warning This API is deprecated.
  *
  */
@@ -5986,6 +6031,8 @@ hipError_t hipTexRefGetMipmapLevelClamp(
  *
  * @param [out] pArray  Pointer of the mipmapped array.
  * @param [in] texRef  Pointer of texture reference.
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
  *
  * @warning This API is deprecated.
  *
@@ -6001,6 +6048,8 @@ hipError_t hipTexRefGetMipMappedArray(
  * @param [in] texRef  Pointer of texture reference.
  * @param [in] dptr  Pointer of device address to bind.
  * @param [in] bytes  Size in bytes.
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
  *
  * @warning This API is deprecated.
  *
@@ -6019,6 +6068,8 @@ hipError_t hipTexRefSetAddress(
  * @param [in] dptr  Pointer of device address to bind.
  * @param [in] Pitch  Pitch in bytes.
  *
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ *
  * @warning This API is deprecated.
  *
  */
@@ -6034,6 +6085,8 @@ hipError_t hipTexRefSetAddress2D(
  * @param [in] texRef  Pointer of texture reference.
  * @param [out] maxAniso  Value of the maximum anisotropy.
  *
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ *
  * @warning This API is deprecated.
  *
  */
@@ -6046,6 +6099,8 @@ hipError_t hipTexRefSetMaxAnisotropy(
  *
  * @param [in] texRef  Pointer of texture reference.
  * @param [in] pBorderColor  Pointer of border color.
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
  *
  * @warning This API is deprecated.
  *
@@ -6060,6 +6115,8 @@ hipError_t hipTexRefSetBorderColor(
  * @param [in] texRef  Pointer of texture reference.
  * @param [in] fm  Value of filter mode.
  *
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ *
  * @warning This API is deprecated.
  *
  */
@@ -6072,6 +6129,8 @@ hipError_t hipTexRefSetMipmapFilterMode(
  *
  * @param [in] texRef  Pointer of texture reference.
  * @param [in] bias  Value of mipmap bias.
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
  *
  * @warning This API is deprecated.
  *
@@ -6087,6 +6146,8 @@ hipError_t hipTexRefSetMipmapLevelBias(
  * @param [in] minMipMapLevelClamp  Value of minimum mipmap level clamp.
  * @param [in] maxMipMapLevelClamp  Value of maximum mipmap level clamp.
  *
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ *
  * @warning This API is deprecated.
  *
  */
@@ -6101,6 +6162,8 @@ hipError_t hipTexRefSetMipmapLevelClamp(
  * @param [in] texRef  Pointer of texture reference to bind.
  * @param [in] mipmappedArray  Pointer of mipmapped array to bind.
  * @param [in] Flags  Flags should be set as HIP_TRSA_OVERRIDE_FORMAT, as a valid value.
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
  *
  * @warning This API is deprecated.
  *
@@ -6146,7 +6209,7 @@ hipError_t hipTexRefSetMipmappedArray(
  *
  * @param [in] id ID of HIP API
  *
- * @returns hipSuccess, hipErrorInvalidValue
+ * @returns #hipSuccess, #hipErrorInvalidValue
  *
  */
 const char* hipApiName(uint32_t id);
@@ -6155,7 +6218,7 @@ const char* hipApiName(uint32_t id);
  *
  * @param [in] f Name of function
  *
- * @returns hipSuccess, hipErrorInvalidValue
+ * @returns #hipSuccess, #hipErrorInvalidValue
  *
  */
 const char* hipKernelNameRef(const hipFunction_t f);
@@ -6165,7 +6228,7 @@ const char* hipKernelNameRef(const hipFunction_t f);
  * @param [in] hostFunction Pointer of host function.
  * @param [in] stream Stream the kernel is executed on.
  *
- * @returns hipSuccess, hipErrorInvalidValue
+ * @returns #hipSuccess, #hipErrorInvalidValue
  *
  */
 const char* hipKernelNameRefByPtr(const void* hostFunction, hipStream_t stream);
@@ -6174,7 +6237,7 @@ const char* hipKernelNameRefByPtr(const void* hostFunction, hipStream_t stream);
  *
  * @param [in] stream Stream of device executed on.
  *
- * @returns hipSuccess, hipErrorInvalidValue
+ * @returns #hipSuccess, #hipErrorInvalidValue
  *
  */
 int hipGetStreamDeviceId(hipStream_t stream);
@@ -7244,6 +7307,8 @@ hipError_t hipDeviceSetGraphMemAttribute(int device, hipGraphMemAttributeType at
  * @brief Free unused memory on specific device used for graph back to OS.
  *
  * @param [in] device - device the memory is used for graphs
+ * @returns #hipSuccess, #hipErrorInvalidDevice
+ *
  * @warning : This API is marked as beta, meaning, while this is feature complete,
  * it is still open to changes and may have outstanding issues.
  */
@@ -8217,6 +8282,8 @@ inline hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchPara
 /**
  * @brief Binds a memory area to a texture.
  *
+ * @ingroup TextureD
+ *
  * @param [in] offset  Offset in bytes.
  * @param [in] tex  Texture to bind.
  * @param [in] devPtr  Pointer of memory on the device.
@@ -8233,6 +8300,8 @@ static inline hipError_t hipBindTexture(size_t* offset, const struct texture<T, 
 }
 /**
  * @brief Binds a memory area to a texture.
+ *
+ * @ingroup TextureD
  *
  * @param [in] offset  Offset in bytes.
  * @param [in] tex  Texture to bind.
@@ -8252,6 +8321,8 @@ static inline hipError_t
 }
 /**
  * @brief Binds a 2D memory area to a texture.
+ *
+ * @ingroup TextureD
  *
  * @param [in] offset  Offset in bytes.
  * @param [in] tex  Texture to bind.
@@ -8277,6 +8348,8 @@ static inline hipError_t hipBindTexture2D(
 }
 /**
  * @brief Binds a 2D memory area to a texture.
+ *
+ * @ingroup TextureD
  *
  * @param [in] offset  Offset in bytes.
  * @param [in] tex  Texture to bind.
@@ -8305,6 +8378,8 @@ static inline hipError_t hipBindTexture2D(
 /**
  * @brief Binds an array to a texture.
  *
+ * @ingroup TextureD
+ *
  * @param [in] tex  Texture to bind.
  * @param [in] array  Array of memory on the device.
  *
@@ -8324,6 +8399,8 @@ static inline hipError_t hipBindTextureToArray(
 /**
  * @brief Binds an array to a texture.
  *
+ * @ingroup TextureD
+ *
  * @param [in] tex  Texture to bind.
  * @param [in] array  Array of memory on the device.
  * @param [in] desc  Texture channel format.
@@ -8342,6 +8419,8 @@ static inline hipError_t hipBindTextureToArray(
 }
 /**
  * @brief Binds a mipmapped array to a texture.
+ *
+ * @ingroup TextureD
  *
  * @param [in] tex  Texture to bind.
  * @param [in] mipmappedArray  Mipmapped Array of memory on the device.
@@ -8367,6 +8446,8 @@ static inline hipError_t hipBindTextureToMipmappedArray(
 /**
  * @brief Binds a mipmapped array to a texture.
  *
+ * @ingroup TextureD
+ *
  * @param [in] tex  Texture to bind.
  * @param [in] mipmappedArray  Mipmapped Array of memory on the device.
  * @param [in] desc  Texture channel format.
@@ -8385,6 +8466,8 @@ static inline hipError_t hipBindTextureToMipmappedArray(
 }
 /**
  * @brief Unbinds a texture.
+ *
+ * @ingroup TextureD
  *
  * @param [in] tex  Texture to unbind.
  *
