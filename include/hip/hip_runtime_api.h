@@ -430,7 +430,7 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeTexturePitchAlignment,            ///< Pitch alignment requirement for 2D texture references bound to pitched memory;
     hipDeviceAttributeTotalConstantMemory,              ///< Constant memory size in bytes.
     hipDeviceAttributeTotalGlobalMem,                   ///< Global memory available on devicice.
-    hipDeviceAttributeUnifiedAddressing,                ///< Cuda only. An unified address space shared with the host.
+    hipDeviceAttributeUnifiedAddressing,                ///< An unified address space shared with the host.
     hipDeviceAttributeUuid,                             ///< Cuda only. Unique ID in 16 byte.
     hipDeviceAttributeWarpSize,                         ///< Warp size in threads.
     hipDeviceAttributeMemoryPoolsSupported,             ///< Device supports HIP Stream Ordered Memory Allocator
