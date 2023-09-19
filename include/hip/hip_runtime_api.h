@@ -7565,6 +7565,28 @@ hipError_t hipGraphExecExternalSemaphoresSignalNodeSetParams(hipGraphExec_t hGra
  */
 hipError_t hipGraphExecExternalSemaphoresWaitNodeSetParams(hipGraphExec_t hGraphExec, hipGraphNode_t hNode,
                                                            const hipExternalSemaphoreWaitNodeParams* nodeParams);
+
+/**
+ * @brief Gets a memcpy node's parameters.
+ *
+ * @param [in] hNode - instance of the node to get parameters from.
+ * @param [out] nodeParams - pointer to the parameters.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipDrvGraphMemcpyNodeGetParams(hipGraphNode_t hNode, HIP_MEMCPY3D* nodeParams);
+
+/**
+ * @brief Sets a memcpy node's parameters.
+ *
+ * @param [in] hNode - instance of the node to Set parameters for.
+ * @param [out] nodeParams - pointer to the parameters.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipDrvGraphMemcpyNodeSetParams(hipGraphNode_t hNode, const HIP_MEMCPY3D* nodeParams);
 // doxygen end graph API
 /**
  * @}
