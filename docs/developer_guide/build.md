@@ -6,7 +6,7 @@ HIP code can be developed either on AMD ROCm platform using HIP-Clang compiler, 
 Before build and run HIP, make sure drivers and pre-build packages are installed properly on the platform.
 
 ### AMD platform
-Install ROCm packages (see ROCm Installation Guide on AMD public documentation site (https://docs.amd.com/) or install pre-built binary packages using the package manager,
+Install ROCm packages or pre-built binary packages using the package manager. Refer to the ROCm Installation Guide at https://rocm.docs.amd.com for more information on installing ROCm.
 
 ```shell
 sudo apt install mesa-common-dev
@@ -23,14 +23,14 @@ Install Nvidia driver and pre-build packages (see HIP Installation Guide at http
 ### Branch of repository
 
 Before get HIP source code, set the expected branch of repository at the variable `ROCM_BRANCH`.
-For example, for ROCm5.6 release branch, set
+For example, for ROCm6.0 release branch, set
 ```shell
-export ROCM_BRANCH=rocm-5.6.x
+export ROCM_BRANCH=rocm-6.0.x
 ```
 
-ROCm5.6 release branch, set
+ROCm5.7 release branch, set
 ```shell
-export ROCM_BRANCH=rocm-5.6.x
+export ROCM_BRANCH=rocm-5.7.x
 ```
 Similiar format for future branches.
 

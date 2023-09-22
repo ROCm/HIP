@@ -89,7 +89,7 @@ directory names.
 | CUB     |    rocPRIM | Low Level Optimized Parallel Primitives
 | cuDNN    |    MIOpen | Deep learning Solver Library
 | cuRAND    |    rocRAND | Random Number Generator Library
-| EIGEN    |    EIGEN – HIP port | C++ template library for linear algebra: matrices, vectors, numerical solvers,
+| EIGEN    |    EIGEN - HIP port | C++ template library for linear algebra: matrices, vectors, numerical solvers,
 | NCCL    |    RCCL  | Communications Primitives Library based on the MPI equivalents
 
 
@@ -333,7 +333,7 @@ CPPFLAGS += $(shell $(HIP_PATH)/bin/hipconfig --cpp_config)
 
 nvcc includes some headers by default.  However, HIP does not include default headers, and instead all required files must be explicitly included.
 Specifically, files that call HIP run-time APIs or define HIP kernels must explicitly include the appropriate HIP headers.
-If the compilation process reports that it cannot find necessary APIs (for example, "error: identifier hipSetDevice is undefined"),
+If the compilation process reports that it cannot find necessary APIs (for example, "error: identifier hipSetDevice is undefined"),
 ensure that the file includes hip_runtime.h (or hip_runtime_api.h, if appropriate).
 The hipify-perl script automatically converts "cuda_runtime.h" to "hip_runtime.h," and it converts "cuda_runtime_api.h" to "hip_runtime_api.h", but it may miss nested headers or macros.
 
@@ -465,7 +465,7 @@ As an example, please see the code from the [link](github.com/ROCm-Developer-Too
 
 With the #ifdef condition, HIP APIs work as expected on both AMD and NVIDIA platforms.
 
-Note, cudaMemoryType enum value cudaMemoryTypeUnregstered is not supported currently in hipMemoryType, due to HIP functionality backward compatibility.
+Note, cudaMemoryTypeUnregstered is currently not supported in hipMemoryType enum, due to HIP functionality backward compatibility.
 
 ## threadfence_system
 Threadfence_system makes all device memory writes, all writes to mapped host memory, and all writes to peer memory visible to CPU and other GPU devices.

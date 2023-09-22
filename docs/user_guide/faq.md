@@ -280,7 +280,7 @@ The per-thread default stream is an implicit stream local to both the thread and
 The per-thread default stream is a blocking stream and will synchronize with the default null stream if both are used in a program.
 
 In ROCm, a compilation option should be added in order to compile the translation unit with per-thread default stream enabled.
-“-fgpu-default-stream=per-thread”.
+"-fgpu-default-stream=per-thread".
 Once source is compiled with per-thread default stream enabled, all APIs will be executed on per thread default stream, hence there will not be any implicit synchronization with other streams.
 
 Besides, per-thread default stream be enabled per translation unit, users can compile some files with feature enabled and some with feature disabled. Feature enabled translation unit will have default stream as per thread and there will not be any implicit synchronization done but other modules will have legacy default stream which will do implicit synchronization.

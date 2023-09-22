@@ -29,10 +29,10 @@ Note, Numa policy is so far implemented on Linux, and under development on Windo
 
 ### Coherency Controls
 ROCm defines two coherency options for host memory:
-- Coherent memory : Supports fine-grain synchronization while the kernel is running.  For example, a kernel can perform atomic operations that are visible to the host CPU or to other (peer) GPUs.  Synchronization instructions include threadfence_system and C++11-style atomic operations.
+- Coherent memory : Supports fine-grain synchronization while the kernel is running.  For example, a kernel can perform atomic operations that are visible to the host CPU or to other (peer) GPUs.  Synchronization instructions include threadfence_system and C++11-style atomic operations.
 In order to achieve this fine-grained coherence, many AMD GPUs use a limited cache policy, such as leaving these allocations uncached by the GPU, or making them read-only.
 
-- Non-coherent memory : Can be cached by GPU, but cannot support synchronization while the kernel is running.  Non-coherent memory can be optionally synchronized only at command (end-of-kernel or copy command) boundaries.  This memory is appropriate for high-performance access when fine-grain synchronization is not required.
+- Non-coherent memory : Can be cached by GPU, but cannot support synchronization while the kernel is running.  Non-coherent memory can be optionally synchronized only at command (end-of-kernel or copy command) boundaries.  This memory is appropriate for high-performance access when fine-grain synchronization is not required.
 
 HIP provides the developer with controls to select which type of memory is used via allocation flags passed to hipHostMalloc and the HIP_HOST_COHERENT environment variable. By default, the environment variable HIP_HOST_COHERENT is set to 0 in HIP.
 The control logic in the current version of HIP is as follows:
@@ -59,10 +59,10 @@ Non-coherent
 
 ### hipEventSynchronize
 Developers can control the release scope for hipEvents:
-- By default, the GPU performs a device-scope acquire and release operation with each recorded event.  This will make host and device memory visible to other commands executing on the same device.
+- By default, the GPU performs a device-scope acquire and release operation with each recorded event.  This will make host and device memory visible to other commands executing on the same device.
 
 A stronger system-level fence can be specified when the event is created with hipEventCreateWithFlags:
-- hipEventReleaseToSystem : Perform a system-scope release operation when the event is recorded.  This will make both Coherent and Non-Coherent host memory visible to other agents in the system, but may involve heavyweight operations such as cache flushing.  Coherent memory will typically use lighter-weight in-kernel synchronization mechanisms such as an atomic operation and thus does not need to use hipEventReleaseToSystem.
+- hipEventReleaseToSystem : Perform a system-scope release operation when the event is recorded.  This will make both Coherent and Non-Coherent host memory visible to other agents in the system, but may involve heavyweight operations such as cache flushing.  Coherent memory will typically use lighter-weight in-kernel synchronization mechanisms such as an atomic operation and thus does not need to use hipEventReleaseToSystem.
 - hipEventDisableTiming: Events created with this flag would not record profiling data and provide best performance if used for synchronization.
 
 ### Summary and Recommendations:
@@ -146,7 +146,7 @@ The test codes in the link (https://github.com/ROCm-Developer-Tools/HIP/blob/dev
 The per-thread default stream is supported in HIP. It is an implicit stream local to both the thread and the current device. This means that the command issued to the per-thread default stream by the thread does not implicitly synchronize with other streams (like explicitly created streams), or default per-thread stream on other threads.
 The per-thread default stream is a blocking stream and will synchronize with the default null stream if both are used in a program.
 The per-thread default stream can be enabled via adding a compilation option,
-“-fgpu-default-stream=per-thread”.
+"-fgpu-default-stream=per-thread".
 
 And users can explicitly use "hipStreamPerThread" as per-thread default stream handle as input in API commands. There are test codes as examples in the link (https://github.com/ROCm-Developer-Tools/hip-tests/tree/develop/catch/unit/streamperthread).
 
@@ -193,4 +193,4 @@ Here is an example to create and use static libraries:
     hipcc libHipDevice.a test.cpp -fgpu-rdc -o test.out
     ```
 
-For more information, please see samples/2_Cookbook/15_static_library/host_functions and samples/2_Cookbook/15_static_library/device_functions.
+For more information, please see [HIP samples](https://github.com/ROCm-Developer-Tools/hip-tests/tree/rocm-5.5.x/samples/2_Cookbook/15_static_library/host_functions) and [samples](https://github.com/ROCm-Developer-Tools/hip-tests/tree/rocm-5.5.x/samples/2_Cookbook/15_static_library/device_functions).
