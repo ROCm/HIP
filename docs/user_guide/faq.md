@@ -159,6 +159,51 @@ Yes.  HIP generates the object code which conforms to the GCC ABI, and also link
 with GPU code compiled with HIP.  Larger projects often contain a mixture of accelerator code (initially written in CUDA with nvcc) and host code (compiled with gcc, icc, or clang).   These projects
 can convert the accelerator code to HIP, compile that code with hipcc, and link with object code from their preferred compiler.
 
+## Can HIP API support C style application? What is the differentce between C and C++ ?
+HIP is C++ runtime APIs, supports C style applications as well.
+
+Some C style applications (and also interfaces to other languages (Fortran, Python)) would call certain HIP APIs but not make use of any kernel programming in them.
+They can be compiled with a C compiler and run correctly, however, there are small details need to take into accout in the codes, for example, initializtion, as shown in the simple application below, which uses HIP structs dim3, with file name "test.hip.cpp"
+```
+#include "hip/hip_runtime_api.h"
+#include "stdio.h"
+
+int main(int argc, char** argv) {
+  dim3 grid1;
+  printf("dim3 grid1; x=%d, y=%d, z=%d\n",grid1.x,grid1.y,grid1.z);
+  dim3 grid2 = {1,1,1};
+  printf("dim3 grid2 = {1,1,1}; x=%d, y=%d, z=%d\n",grid2.x,grid2.y,grid2.z);
+  return 0;
+}
+```
+
+Using C++ compiler,
+```
+$ gcc -x c++  $(hipconfig --cpp_config) test3.hip.cpp -o test
+$ ./test
+dim3 grid1; x=1, y=1, z=1
+dim3 grid2 = {1,1,1}; x=1, y=1, z=1
+```
+In which, "dim3 grid1;" will yield a dim3 grid with all dimentional members x,y,z initalized to 1, as the default constructor behaves that way.
+Further, if write,
+```
+dim3 grid(2); // yields {2,1,1}
+dim3 grid(2,3); yields {2,3,1}
+```
+
+In comparison, using C compiler,
+```
+$ gcc -x c $(hipconfig --cpp_config) test.hip.cpp -o test
+$ ./test
+dim3 grid1; x=646881376, y=21975, z=1517277280
+dim3 grid2 = {1,1,1}; x=1, y=1, z=1
+```
+In which, "dim3 grid;" does not imply any initialization, no constructor is called, dimentional values x,y,z of grid are undefined.
+To get the C++ default behavior, C programmers must additionally specify the right-hand side as shown below,
+```
+dim3 grid = {1,1,1}; // initialized as in C++
+```
+
 
 ## Can I install both CUDA SDK and HIP-Clang on the same machine?
 Yes. You can use HIP_PLATFORM to choose which path hipcc targets.  This configuration can be useful when using HIP to develop an application which is portable to both AMD and NVIDIA.
