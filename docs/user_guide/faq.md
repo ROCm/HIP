@@ -160,10 +160,10 @@ with GPU code compiled with HIP.  Larger projects often contain a mixture of acc
 can convert the accelerator code to HIP, compile that code with hipcc, and link with object code from their preferred compiler.
 
 ## Can HIP API support C style application? What is the differentce between C and C++ ?
-HIP is C++ runtime APIs, supports C style applications as well.
+HIP is C++ runtime API that supports C style applications as well.
 
-Some C style applications (and also interfaces to other languages (Fortran, Python)) would call certain HIP APIs but not make use of any kernel programming in them.
-They can be compiled with a C compiler and run correctly, however, there are small details need to take into accout in the codes, for example, initializtion, as shown in the simple application below, which uses HIP structs dim3, with file name "test.hip.cpp"
+Some C style applications (and interfaces to other languages (Fortran, Python)) would call certain HIP APIs but not use kernel programming.
+They can be compiled with a C compiler and run correctly, however, small details must be considered in the code. For example, initializtion, as shown in the simple application below, uses HIP structs dim3 with the file name "test.hip.cpp"
 ```
 #include "hip/hip_runtime_api.h"
 #include "stdio.h"
@@ -177,29 +177,29 @@ int main(int argc, char** argv) {
 }
 ```
 
-Using C++ compiler,
+When using a C++ compiler,
 ```
 $ gcc -x c++  $(hipconfig --cpp_config) test3.hip.cpp -o test
 $ ./test
 dim3 grid1; x=1, y=1, z=1
 dim3 grid2 = {1,1,1}; x=1, y=1, z=1
 ```
-In which, "dim3 grid1;" will yield a dim3 grid with all dimentional members x,y,z initalized to 1, as the default constructor behaves that way.
+In which "dim3 grid1;" will yield a dim3 grid with all dimentional members x,y,z initalized to 1, as the default constructor behaves that way.
 Further, if write,
 ```
 dim3 grid(2); // yields {2,1,1}
 dim3 grid(2,3); yields {2,3,1}
 ```
 
-In comparison, using C compiler,
+In comparison, when using the C compiler,
 ```
 $ gcc -x c $(hipconfig --cpp_config) test.hip.cpp -o test
 $ ./test
 dim3 grid1; x=646881376, y=21975, z=1517277280
 dim3 grid2 = {1,1,1}; x=1, y=1, z=1
 ```
-In which, "dim3 grid;" does not imply any initialization, no constructor is called, dimentional values x,y,z of grid are undefined.
-To get the C++ default behavior, C programmers must additionally specify the right-hand side as shown below,
+In which "dim3 grid;" does not imply any initialization, no constructor is called, and dimentional values x,y,z of grid are undefined.
+NOTE: To get the C++ default behavior, C programmers must additionally specify the right-hand side as shown below,
 ```
 dim3 grid = {1,1,1}; // initialized as in C++
 ```
