@@ -1721,24 +1721,32 @@ hipError_t hipDeviceSetCacheConfig(hipFuncCache_t cacheConfig);
 hipError_t hipDeviceGetCacheConfig(hipFuncCache_t* cacheConfig);
 /**
  * @brief Gets resource limits of current device
- * The funtion querys the size of limit value, as required input enum hipLimit_t, can be either
- * hipLimitStackSize, or hipLimitMallocHeapSize.
  *
- * @param [out] pValue returns the size of the limit in bytes
- * @param [in]  limit the limit to query
+ * The funtion querys the size of limit value, as required input enum hipLimit_t, it can be either
+ * #hipLimitStackSize, or #hipLimitMallocHeapSize. Any other input as default, the funtion will
+ * return #hipErrorUnsupportedLimit.
+ *
+ * @param [out] pValue Returns the size of the limit in bytes
+ * @param [in]  limit The limit to query
  *
  * @returns #hipSuccess, #hipErrorUnsupportedLimit, #hipErrorInvalidValue
  *
  */
 hipError_t hipDeviceGetLimit(size_t* pValue, enum hipLimit_t limit);
 /**
- * @brief Sets resource limits of current device
- * As the input enum limit, hipLimitStackSize sets the limit value of the stack size on current
- * GPU devie, hipLimitMallocHeapSize sets the limit value of the heap used by the malloc()/free()
- * calls. 
+ * @brief Sets resource limits of current device.
  * 
- * @param [in] limit enum of hipLimit_t to set
- * @param [in] value the size of limit value in bytes
+ * As the input enum limit,
+ * #hipLimitStackSize sets the limit value of the stack size on the current GPU device, per thread.
+ * The limit size can get via hipDeviceSetLimit.
+ *
+ * #hipLimitMallocHeapSize sets the limit value of the heap used by the malloc()/free()
+ * calls.
+ *
+ * Any other input as default, the funtion will return hipErrorUnsupportedLimit.
+ *
+ * @param [in] limit Enum of hipLimit_t to set
+ * @param [in] value The size of limit value in bytes
  *
  * @returns #hipSuccess, #hipErrorUnsupportedLimit, #hipErrorInvalidValue
  *
@@ -1747,7 +1755,7 @@ hipError_t hipDeviceSetLimit ( enum hipLimit_t limit, size_t value );
 /**
  * @brief Returns bank width of shared memory for current device
  *
- * @param [out] pConfig The pointer of the bank width for shared memory 
+ * @param [out] pConfig The pointer of the bank width for shared memory
  *
  * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized
  *
