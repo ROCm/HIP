@@ -1704,24 +1704,32 @@ hipError_t hipDeviceSetCacheConfig(hipFuncCache_t cacheConfig);
 hipError_t hipDeviceGetCacheConfig(hipFuncCache_t* cacheConfig);
 /**
  * @brief Gets resource limits of current device
- * The funtion querys the size of limit value, as required input enum hipLimit_t, can be either
- * hipLimitStackSize, or hipLimitMallocHeapSize.
  *
- * @param [out] pValue returns the size of the limit in bytes
- * @param [in]  limit the limit to query
+ * The function queries the size of limit value, as required by the input enum value hipLimit_t,
+ * which can be either #hipLimitStackSize, or #hipLimitMallocHeapSize. Any other input as
+ * default, the function will return #hipErrorUnsupportedLimit.
+ *
+ * @param [out] pValue Returns the size of the limit in bytes
+ * @param [in]  limit The limit to query
  *
  * @returns #hipSuccess, #hipErrorUnsupportedLimit, #hipErrorInvalidValue
  *
  */
 hipError_t hipDeviceGetLimit(size_t* pValue, enum hipLimit_t limit);
 /**
- * @brief Sets resource limits of current device
- * As the input enum limit, hipLimitStackSize sets the limit value of the stack size on current
- * GPU devie, hipLimitMallocHeapSize sets the limit value of the heap used by the malloc()/free()
- * calls. 
+ * @brief Sets resource limits of current device.
  * 
- * @param [in] limit enum of hipLimit_t to set
- * @param [in] value the size of limit value in bytes
+ * As the input enum limit,
+ * #hipLimitStackSize sets the limit value of the stack size on the current GPU device, per thread.
+ * The limit size can get via hipDeviceSetLimit.
+ *
+ * #hipLimitMallocHeapSize sets the limit value of the heap used by the malloc()/free()
+ * calls.
+ *
+ * Any other input as default, the funtion will return hipErrorUnsupportedLimit.
+ *
+ * @param [in] limit Enum of hipLimit_t to set
+ * @param [in] value The size of limit value in bytes
  *
  * @returns #hipSuccess, #hipErrorUnsupportedLimit, #hipErrorInvalidValue
  *
@@ -1730,7 +1738,7 @@ hipError_t hipDeviceSetLimit ( enum hipLimit_t limit, size_t value );
 /**
  * @brief Returns bank width of shared memory for current device
  *
- * @param [out] pConfig The pointer of the bank width for shared memory 
+ * @param [out] pConfig The pointer of the bank width for shared memory
  *
  * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized
  *
@@ -2766,6 +2774,11 @@ hipError_t hipExternalMemoryGetMappedBuffer(void **devPtr, hipExternalMemory_t e
 *  @see
 */
 hipError_t hipDestroyExternalMemory(hipExternalMemory_t extMem);
+// end of external resource
+ /**
+ * @}
+ */
+
 /**
  *  @brief Allocate memory on the default accelerator
  *
@@ -2778,10 +2791,6 @@ hipError_t hipDestroyExternalMemory(hipExternalMemory_t extMem);
  *
  *  @see hipMallocPitch, hipFree, hipMallocArray, hipFreeArray, hipMalloc3D, hipMalloc3DArray,
  * hipHostFree, hipHostMalloc
- */
- // end of external resource
- /**
- * @}
  */
 hipError_t hipMalloc(void** ptr, size_t size);
 /**
@@ -2842,17 +2851,27 @@ hipError_t hipMemAllocHost(void** ptr, size_t size);
  *  When the memory accesses are infrequent, zero-copy memory can be a good choice, for coherent
  *  allocation. GPU can directly access the host memory over the CPU/GPU interconnect, without need
  *  to copy the data.
- *  
+ *
  *  Currently the allocation granularity is 4KB for the API.
- *  
+ *
  *  Developers need to choose proper allocation flag with consideration of synchronization.
- * 
+ *
  *  @param[out] ptr Pointer to the allocated host pinned memory
  *  @param[in]  size Requested memory size in bytes
  *  If size is 0, no memory is allocated, *ptr returns nullptr, and hipSuccess is returned.
  *  @param[in]  flags Type of host memory allocation
  *
- *  If no input for flags, it will be the default pinned memory allocation on the host.
+ * The flags are defined as #hipHostMallocDefault, #hipHostMallocPortable, #hipHostMallocMapped,
+ * #hipHostMallocWriteCombined, #hipHostMallocNumaUser, #hipHostMallocCoherent, and
+ * #hipHostMallocNonCoherent.
+ *
+ * All flags are independent, and can be used in any combination, for instance, hipHostMalloc
+ * can be called with both #hipHostMallocPortable and #hipHostMallocMapped flags set. Both models
+ * use the same allocation flags, the difference is how the surrounding code uses the host
+ * memory.
+ * #hipHostMallocCoherent and #hipHostMallocNonCoherent are used as coherency control options.
+ *
+ * If no input for flags, it will be the default pinned memory allocation on the host.
  *
  *  @return #hipSuccess, #hipErrorOutOfMemory
  *
@@ -2885,8 +2904,8 @@ hipError_t hipHostMalloc(void** ptr, size_t size, unsigned int flags);
  *
  * @param [out] dev_ptr - pointer to allocated device memory
  * @param [in]  size    - requested allocation size in bytes, it should be granularity of 4KB
- * @param [in]  flags   - must be either hipMemAttachGlobal or hipMemAttachHost
- *                        (defaults to hipMemAttachGlobal)
+ * @param [in]  flags   - must be either #hipMemAttachGlobal or #hipMemAttachHost
+ *                        (defaults to #hipMemAttachGlobal)
  *
  * @returns #hipSuccess, #hipErrorMemoryAllocation, #hipErrorNotSupported, #hipErrorInvalidValue
  *
@@ -2913,18 +2932,19 @@ hipError_t hipMemPrefetchAsync(const void* dev_ptr,
 /**
  * @brief Advise about the usage of a given memory range to HIP.
  *
- * @param [in] dev_ptr  pointer to memory to set the advice for
- * @param [in] count    size in bytes of the memory range, it should be CPU page size alligned.
- * @param [in] advice   advice to be applied for the specified memory range
- * @param [in] device   device to apply the advice for
+ * @param [in] dev_ptr  Pointer to memory to set the advice for
+ * @param [in] count    Size in bytes of the memory range, it should be CPU page size alligned.
+ * @param [in] advice   Advice to be applied for the specified memory range
+ * @param [in] device   Device to apply the advice for
  *
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
  * This HIP API advises about the usage to be applied on unified memory allocation in the
- * range starting from the pointer address devPtr, with the size of count bytes. The memory range
- * must refer to managed memory allocated via the API hipMallocManaged, and the range will be
- * handled with proper round down and round up respectively in the driver to be aligned to
- * CPU page size.
+ * range starting from the pointer address devPtr, with the size of count bytes. The advice
+ * can be one of enumeration value as defined in #hipMemoryAdvise.
+ * The memory range must refer to managed memory allocated via the API hipMallocManaged.
+ * And the range will be handled with proper round down and round up respectively in the driver
+ * to be aligned to CPU page size, the same way as coresponding CUDA API behaves.
  *
  * @note  This API is implemented on Linux, under development on Windows.
  */
