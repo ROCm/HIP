@@ -461,10 +461,11 @@ In this case, memory type translation for hipPointerGetAttributes needs to be ha
 
 So in any HIP applications which use HIP APIs involving memory types, developers should use #ifdef in order to assign the correct enum values depending on Nvidia or AMD platform.
 
-As an example, please see the code from the link,
-github.com/ROCm-Developer-Tools/HIP/blob/develop/tests/catch/unit/memory/hipMemcpyParam2D.cc#L77-L96.
+As an example, please see the code from the [link](github.com/ROCm-Developer-Tools/HIP/blob/develop/tests/catch/unit/memory/hipMemcpyParam2D.cc).
 
 With the #ifdef condition, HIP APIs work as expected on both AMD and NVIDIA platforms.
+
+Note, cudaMemoryType enum value cudaMemoryTypeUnregstered is not supported currently in hipMemoryType, due to HIP functionality backward compatibility.
 
 ## threadfence_system
 Threadfence_system makes all device memory writes, all writes to mapped host memory, and all writes to peer memory visible to CPU and other GPU devices.
@@ -506,24 +507,26 @@ It can be set as one of the following values,
 
 ```
 enum LogMask {
-  LOG_API       = 0x00000001, //!< API call
-  LOG_CMD       = 0x00000002, //!< Kernel and Copy Commands and Barriers
-  LOG_WAIT      = 0x00000004, //!< Synchronization and waiting for commands to finish
-  LOG_AQL       = 0x00000008, //!< Decode and display AQL packets
-  LOG_QUEUE     = 0x00000010, //!< Queue commands and queue contents
-  LOG_SIG       = 0x00000020, //!< Signal creation, allocation, pool
-  LOG_LOCK      = 0x00000040, //!< Locks and thread-safety code.
-  LOG_KERN      = 0x00000080, //!< kernel creations and arguments, etc.
-  LOG_COPY      = 0x00000100, //!< Copy debug
-  LOG_COPY2     = 0x00000200, //!< Detailed copy debug
-  LOG_RESOURCE  = 0x00000400, //!< Resource allocation, performance-impacting events.
-  LOG_INIT      = 0x00000800, //!< Initialization and shutdown
-  LOG_MISC      = 0x00001000, //!< misc debug, not yet classified
-  LOG_AQL2      = 0x00002000, //!< Show raw bytes of AQL packet
-  LOG_CODE      = 0x00004000, //!< Show code creation debug
-  LOG_CMD2      = 0x00008000, //!< More detailed command info, including barrier commands
-  LOG_LOCATION  = 0x00010000, //!< Log message location
-  LOG_ALWAYS    = 0xFFFFFFFF, //!< Log always even mask flag is zero
+  LOG_API       = 1,      //!< (0x1)     API call
+  LOG_CMD       = 2,      //!< (0x2)     Kernel and Copy Commands and Barriers
+  LOG_WAIT      = 4,      //!< (0x4)     Synchronization and waiting for commands to finish
+  LOG_AQL       = 8,      //!< (0x8)     Decode and display AQL packets
+  LOG_QUEUE     = 16,     //!< (0x10)    Queue commands and queue contents
+  LOG_SIG       = 32,     //!< (0x20)    Signal creation, allocation, pool
+  LOG_LOCK      = 64,     //!< (0x40)    Locks and thread-safety code.
+  LOG_KERN      = 128,    //!< (0x80)    Kernel creations and arguments, etc.
+  LOG_COPY      = 256,    //!< (0x100)   Copy debug
+  LOG_COPY2     = 512,    //!< (0x200)   Detailed copy debug
+  LOG_RESOURCE  = 1024,   //!< (0x400)   Resource allocation, performance-impacting events.
+  LOG_INIT      = 2048,   //!< (0x800)   Initialization and shutdown
+  LOG_MISC      = 4096,   //!< (0x1000)  Misc debug, not yet classified
+  LOG_AQL2      = 8192,   //!< (0x2000)  Show raw bytes of AQL packet
+  LOG_CODE      = 16384,  //!< (0x4000)  Show code creation debug
+  LOG_CMD2      = 32768,  //!< (0x8000)  More detailed command info, including barrier commands
+  LOG_LOCATION  = 65536,  //!< (0x10000) Log message location
+  LOG_MEM       = 131072, //!< (0x20000) Memory allocation
+  LOG_MEM_POOL  = 262144, //!< (0x40000) Memory pool allocation, including memory in graphs
+  LOG_ALWAYS    = -1      //!< (0xFFFFFFFF) Log always even mask flag is zero
 };
 ```
 

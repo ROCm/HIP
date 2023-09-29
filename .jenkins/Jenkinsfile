@@ -32,48 +32,6 @@ def hipBuildTest(String backendLabel) {
             }
         }
 
-        stage("BUILD - HIT ${backendLabel}") {
-            // Running the build on clr workspace
-            dir("${WORKSPACE}/clr") {
-                sh  """#!/usr/bin/env bash
-                    set -x
-                    rm -rf build
-                    mkdir build
-                    cd build
-                    # Check if backend label contains string "amd" or backend host is a server with amd gpu
-                    if [[ $backendLabel =~ amd ]]; then
-                        cmake -DCLR_BUILD_HIP=ON -DHIP_CATCH_TEST=0 -DHIPCC_BIN_DIR=$HIPCC_DIR/bin -DHIP_COMMON_DIR=$HIP_DIR -DCMAKE_PREFIX_PATH="/opt/rocm/" -DCMAKE_INSTALL_PREFIX=\$PWD/install ..
-                    else
-                        cmake -DCLR_BUILD_HIP=ON -DHIP_CATCH_TEST=0 -DHIP_PLATFORM=nvidia -DHIPCC_BIN_DIR=$HIPCC_DIR/bin -DHIP_COMMON_DIR=$HIP_DIR -DCMAKE_INSTALL_PREFIX=\$PWD/install ..
-                    fi
-                    make -j\$(nproc)
-                    make install -j\$(nproc)
-                    if [[ $backendLabel =~ amd ]]; then
-                        make build_tests -j\$(nproc)
-                    else
-                        HIP_COMPILER=nvcc HIP_PLATFORM=nvidia make build_tests -j\$(nproc)
-                    fi
-                    """
-            }
-        }
-
-        timeout(time: 1, unit: 'HOURS') {
-            stage("TEST - HIT ${backendLabel}") {
-                dir("${WORKSPACE}/clr/build/hipamd") {
-                    sh  """#!/usr/bin/env bash
-                        set -x
-                        # Check if backend label contains string "amd" or backend host is a server with amd gpu
-                        if [[ $backendLabel =~ amd ]]; then
-                            sleep 120
-                            LLVM_PATH=/opt/rocm/llvm ctest --overwrite BuildDirectory=. --output-junit hiptest_output_hit_amd.xml -E 'cooperative_streams_least_capacity.tst|cooperative_streams_half_capacity.tst|cooperative_streams_full_capacity.tst|grid_group_data_sharing.tst|hipIpcMemAccessTest.tst|p2p_copy_coherency.tst'
-                        else
-                            ctest --overwrite BuildDirectory=. --output-junit hiptest_output_hit_nvidia.xml
-                        fi
-                        """
-                }
-            }
-        }
-
         stage("BUILD HIP - ${backendLabel}") {
             // Running the build on clr workspace
             dir("${WORKSPACE}/clr") {
@@ -93,6 +51,7 @@ def hipBuildTest(String backendLabel) {
                     """
             }
         }
+        
         stage("BUILD HIP TESTS - ${backendLabel}") {
             // Running the build on HIP TESTS workspace
             dir("${WORKSPACE}/hip-tests") {
@@ -105,10 +64,10 @@ def hipBuildTest(String backendLabel) {
                     echo "testing $HIP_PATH"
                     # Check if backend label contains string "amd" or backend host is a server with amd gpu
                     if [[ $backendLabel =~ amd ]]; then
-                        cmake -DHIP_PLATFORM=amd ../catch 
+                        cmake -DHIP_PLATFORM=amd -DHIP_PATH=\$CLR_DIR/build/install ../catch 
                     else
                         export HIP_PLATFORM=nvidia
-                        cmake -DHIP_PLATFORM=nvidia ../catch
+                        cmake -DHIP_PLATFORM=nvidia -DHIP_PATH=\$CLR_DIR/build/install ../catch
                     fi
                     make -j\$(nproc) build_tests
                     """
@@ -116,7 +75,7 @@ def hipBuildTest(String backendLabel) {
         }
 
         timeout(time: 1, unit: 'HOURS') {
-            stage("TEST - CATCH2 ${backendLabel}") {
+            stage("TEST - ${backendLabel}") {
                 dir("${WORKSPACE}/hip-tests") {
                     sh  """#!/usr/bin/env bash
                         set -x
@@ -138,7 +97,7 @@ timestamps {
         skipDefaultCheckout()
 
         // labels belonging to each backend - AMD, NVIDIA
-        String[] labels = ['hip-amd-vg20-ubu1804', 'hip-nvidia-rtx5000-ubu1804']
+        String[] labels = ['hip-amd-mi100-ubu2004', 'hip-nvidia-rtx5000-ubu2004']
         buildMap = [:]
 
         labels.each { backendLabel ->
