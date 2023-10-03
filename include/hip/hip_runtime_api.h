@@ -7828,6 +7828,13 @@ hipError_t hipMemUnmap(void* ptr, size_t size);
 /**
  * @}
  */
+/**
+ *-------------------------------------------------------------------------------------------------
+ *-------------------------------------------------------------------------------------------------
+ * @defgroup GL OpenGL Interop
+ * @{
+ * This section describes the OpenGL and graphics interoperability functions of HIP runtime API.
+ */
 
 /**
  * @brief Maps a graphics resource for access.
@@ -7835,7 +7842,7 @@ hipError_t hipMemUnmap(void* ptr, size_t size);
  * @param [in] count - Number of resources to map.
  * @param [in] resources - Pointer of resources to map.
  * @param [in] stream - Stream for synchronization.
- * 
+ *
  * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorUnknown, #hipErrorInvalidResourceHandle
  *
  */
