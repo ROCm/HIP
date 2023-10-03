@@ -429,6 +429,19 @@ static inline struct hipExtent make_hipExtent(size_t w, size_t h, size_t d) {
     e.depth = d;
     return e;
 }
+typedef enum hipFunction_attribute {
+    HIP_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK,
+    HIP_FUNC_ATTRIBUTE_SHARED_SIZE_BYTES,
+    HIP_FUNC_ATTRIBUTE_CONST_SIZE_BYTES,
+    HIP_FUNC_ATTRIBUTE_LOCAL_SIZE_BYTES,
+    HIP_FUNC_ATTRIBUTE_NUM_REGS,
+    HIP_FUNC_ATTRIBUTE_PTX_VERSION,
+    HIP_FUNC_ATTRIBUTE_BINARY_VERSION,
+    HIP_FUNC_ATTRIBUTE_CACHE_MODE_CA,
+    HIP_FUNC_ATTRIBUTE_MAX_DYNAMIC_SHARED_SIZE_BYTES,
+    HIP_FUNC_ATTRIBUTE_PREFERRED_SHARED_MEMORY_CARVEOUT,
+    HIP_FUNC_ATTRIBUTE_MAX
+} hipFunction_attribute;
 
 typedef enum hipPointer_attribute {
     HIP_POINTER_ATTRIBUTE_CONTEXT = 1,   ///< The context on which a pointer was allocated
