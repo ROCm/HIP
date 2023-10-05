@@ -88,17 +88,15 @@ By default, release version of HIP is built.
 ### Default paths and environment variables
 
    * By default HIP looks for HSA in `<ROCM_PATH>/hsa` (can be overridden by setting `HSA_PATH` environment variable).
-   * By default HIP is installed into `<ROCM_PATH>/hip` (can be overridden by setting HIP_PATH environment variable).
+   * By default HIP is installed into `<ROCM_PATH>/hip`.
    * By default HIP looks for clang in `<ROCM_PATH>/llvm/bin` (can be overridden by setting `HIP_CLANG_PATH` environment variable)
    * By default HIP looks for device library in `<ROCM_PATH>/lib` (can be overridden by setting `DEVICE_LIB_PATH` environment variable).
    * Optionally, consider adding `<ROCM_PATH>/bin` to your `PATH` to make it easier to use the tools.
    * Optionally, set `HIPCC_VERBOSE=7` to output the command line for compilation.
 
-After make install command, make sure `HIP_PATH` is pointed to `$PWD/install/hip`.
-
 ### Generating profiling header after adding/changing a HIP API
 
-When you add or change a HIP API, you might need to generate a new `hip_prof_str.h` header. This header is used by rocm tools to track HIP APIs like rocprofiler/roctracer etc.
+When you add or change a HIP API, you must generate a new `hip_prof_str.h` header. ROCm tools like ROCProfiler and ROCTracer use this header to track HIP APIs.
 To generate the header after your change, use the tool `hip_prof_gen.py` present in `hipamd/src`.
 
 Usage:
@@ -136,12 +134,20 @@ git clone -b "$ROCM_BRANCH" https://github.com/ROCm-Developer-Tools/hip-tests.gi
 export HIPTESTS_DIR="$(readlink -f hip-tests)"
 cd "$HIPTESTS_DIR"
 mkdir -p build; cd build
-export HIP_PATH=$CLR_DIR/build/install (or any path where HIP is installed, for example, /opt/rocm)
-cmake ../catch/ -DHIP_PLATFORM=amd
-make -j$(nproc) build_tests
-ctest # run tests
+cmake ../catch -DHIP_PLATFORM=amd -DHIP_PATH=$CLR_DIR/build/install # or any path where HIP is installed, for example, /opt/rocm.
+make -j$(nproc) build_tests # build tests
+cd build/catch_tests && ctest # to run all tests.
 ```
 HIP catch tests are built under the folder $HIPTESTS_DIR/build.
+Note that when using ctest, you can use different ctest options, for example, to run all tests with the keyword hipMemset,
+```
+ctest -R hipMemset
+```
+Use the below option will print test failures for failed tests,
+```
+ctest --output-on-failure
+```
+For more information, refer to https://cmake.org/cmake/help/v3.5/manual/ctest.1.html.
 
 To run any single catch test, the following is an example,
 
