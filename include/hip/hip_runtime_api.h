@@ -1822,9 +1822,9 @@ hipError_t hipDeviceGetCacheConfig(hipFuncCache_t* cacheConfig);
 /**
  * @brief Gets resource limits of current device
  *
- * The funtion querys the size of limit value, as required input enum hipLimit_t, it can be either
- * #hipLimitStackSize, or #hipLimitMallocHeapSize. Any other input as default, the funtion will
- * return #hipErrorUnsupportedLimit.
+ * The function queries the size of limit value, as required by the input enum value hipLimit_t,
+ * which can be either #hipLimitStackSize, or #hipLimitMallocHeapSize. Any other input as
+ * default, the function will return #hipErrorUnsupportedLimit.
  *
  * @param [out] pValue Returns the size of the limit in bytes
  * @param [in]  limit The limit to query
