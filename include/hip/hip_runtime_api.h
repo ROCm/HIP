@@ -186,7 +186,11 @@ typedef enum hipMemoryType {
  * Pointer attributes
  */
 typedef struct hipPointerAttribute_t {
-    enum hipMemoryType type;
+  union {
+      // Deprecated, use instead type
+      enum hipMemoryType memoryType;
+      enum hipMemoryType type;
+    };
     int device;
     void* devicePointer;
     void* hostPointer;
