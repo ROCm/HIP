@@ -27,7 +27,7 @@ THE SOFTWARE.
 #include <hip/hip_common.h>
 #endif
 
-#if defined(__HIP_PLATFORM_AMD__) && !defined(__HIP_PLATFORM_NVIDIA__)
+#if (defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) && !(defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__))
 
 typedef enum hipDataType {
   HIP_R_32F   =  0,
@@ -66,7 +66,7 @@ typedef enum hipLibraryPropertyType {
   HIP_LIBRARY_PATCH_LEVEL
 } hipLibraryPropertyType;
 
-#elif !defined(__HIP_PLATFORM_AMD__) && defined(__HIP_PLATFORM_NVIDIA__)
+#elif !(defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) && (defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__))
 #include "library_types.h"
 #else
 #error("Must define exactly one of __HIP_PLATFORM_AMD__ or __HIP_PLATFORM_NVIDIA__");
