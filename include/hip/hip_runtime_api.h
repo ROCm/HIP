@@ -1829,7 +1829,7 @@ hipError_t hipDeviceGetCacheConfig(hipFuncCache_t* cacheConfig);
 hipError_t hipDeviceGetLimit(size_t* pValue, enum hipLimit_t limit);
 /**
  * @brief Sets resource limits of current device.
- * 
+ *
  * As the input enum limit,
  * #hipLimitStackSize sets the limit value of the stack size on the current GPU device, per thread.
  * The limit size can get via hipDeviceSetLimit.
@@ -1861,7 +1861,7 @@ hipError_t hipDeviceGetSharedMemConfig(hipSharedMemConfig* pConfig);
 /**
  * @brief Gets the flags set for current device
  *
- * @param [out] flags Pointer of the flags 
+ * @param [out] flags Pointer of the flags
  *
  * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
  */
@@ -1881,7 +1881,7 @@ hipError_t hipDeviceSetSharedMemConfig(hipSharedMemConfig config);
 /**
  * @brief The current device behavior is changed according the flags passed.
  *
- * @param [in] flags Flag to set on the current device 
+ * @param [in] flags Flag to set on the current device
  *
  * The schedule flags impact how HIP waits for the completion of a command running on a device.
  * hipDeviceScheduleSpin         : HIP runtime will actively spin in the thread which submitted the
@@ -2748,7 +2748,7 @@ hipError_t hipPointerSetAttribute(const void* value, hipPointer_attribute attrib
  *  must be returned or passed through an HIP API such as hipHostMalloc, hipMallocManaged,
  *  hipHostRegister, etc. Otherwise, the pointer can't be handled by this API and attributes
  *  returned hipErrorInvalidValue, due to the hipMemoryType enums values, unrecognized memory type
- *  is currently not supported due to HIP functionality backward compatibility. 
+ *  is currently not supported due to HIP functionality backward compatibility.
  *
  *  @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
  *
@@ -2796,7 +2796,7 @@ hipError_t hipDrvPointerGetAttributes(unsigned int numAttributes, hipPointer_att
  *  @{
  *  @ingroup API
  *
- *  This section describes the external resource interoperability functions of HIP runtime API. 
+ *  This section describes the external resource interoperability functions of HIP runtime API.
  *
  */
 /**
@@ -3740,7 +3740,7 @@ hipError_t hipHostFree(void* ptr);
  *  @param[out]  dst Data being copy to
  *  @param[in]  src Data being copy from
  *  @param[in]  sizeBytes Data size in bytes
- *  @param[in]  copyType Memory copy type
+ *  @param[in]  kind Kind of transfer
  *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree, #hipErrorUnknown
  *
  *  @see hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc, hipMemAllocHost,
@@ -3758,7 +3758,7 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
  *  @param[out]  dst Data being copy to
  *  @param[in]  src Data being copy from
  *  @param[in]  sizeBytes Data size in bytes
- *  @param[in]  copyType Memory copy type
+ *  @param[in]  kind Kind of transfer
  *  @param[in]  stream Valid stream
  *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree, #hipErrorUnknown, #hipErrorContextIsDestroyed
  *
@@ -4781,7 +4781,7 @@ hipError_t hipCtxGetCurrent(hipCtx_t* ctx);
 /**
  * @brief Get the handle of the device associated with current/default context
  *
- * @param [out] device The device from the current context 
+ * @param [out] device The device from the current context
  *
  * @returns #hipSuccess, #hipErrorInvalidContext
  *
@@ -4919,7 +4919,7 @@ hipError_t hipCtxGetFlags(unsigned int* flags);
  * accessible from the current device until a call to hipDeviceDisablePeerAccess or hipDeviceReset.
  *
  *
- * @param [in] peerCtx  Peer context 
+ * @param [in] peerCtx  Peer context
  * @param [in] flags  flags, need to set as 0
  *
  * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue,
@@ -5034,7 +5034,7 @@ hipError_t hipDevicePrimaryCtxSetFlags(hipDevice_t dev, unsigned int flags);
  *
  */
 /**
- * @brief Loads code object from file into a module the currrent context. 
+ * @brief Loads code object from file into a module the currrent context.
  *
  * @param [in] fname  Filename of code object to load
 
@@ -5060,9 +5060,9 @@ hipError_t hipModuleUnload(hipModule_t module);
 /**
  * @brief Function with kname will be extracted if present in module
  *
- * @param [in] module  Module to get function from 
+ * @param [in] module  Module to get function from
  * @param [in] kname  Pointer to the name of function
- * @param [out] function  Pointer to function handle 
+ * @param [out] function  Pointer to function handle
  *
  * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidContext, #hipErrorNotInitialized,
  * #hipErrorNotFound,
@@ -7994,7 +7994,7 @@ hipError_t hipGraphicsResourceGetMappedPointer(void** devPtr, size_t* size,
  * @param [in] count - Number of resources to unmap.
  * @param [in] resources - Pointer of resources to unmap.
  * @param [in] stream - Stream for synchronization.
- * 
+ *
  * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorUnknown, #hipErrorContextIsDestroyed
  *
  */
