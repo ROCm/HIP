@@ -57,7 +57,7 @@ HIP releases are typically naming convention for each ROCM release to help diffe
   * [cuFFT](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/master/doc/markdown/CUFFT_API_supported_by_HIP.md)
   * [cuSPARSE](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/master/doc/markdown/CUSPARSE_API_supported_by_HIP.md)
 - [Developer/CONTRIBUTING Info](docs/developer_guide/contributing.md)
-- [Release Notes](RELEASE.md)
+- [Release Notes](https://github.com/RadeonOpenCompute/ROCm/blob/develop/CHANGELOG.md) 
 
 ## How do I get set up?
 
