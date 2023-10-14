@@ -169,7 +169,7 @@ can be contracted. Tolerance should be used for floating point comparsions.
 
 ## Math functions with special rounding modes
 
-HIP does not support math functions with rounding modes ru (round up), rd (round down), and rz (round towards zero). HIP only supports math function with rounding mode rn (round to nearest). The math functions with postfixes _ru, _rd and _rz are implemented in the same way as math functions with postfix _rn. They serve as a workaround to get programs using them compiled.
+Note: Currently, HIP only supports basic math functions with rounding mode rn (round to nearest). HIP does not support basic math functions with rounding modes ru (round up), rd (round down), and rz (round towards zero).
 
 ## Creating Static Libraries
 
