@@ -1,15 +1,15 @@
-# HIP MATH APIs Documentation 
+# HIP MATH APIs Documentation
 HIP supports most of the device functions supported by CUDA. Way to find the unsupported one is to search for the function and check its description
 Note: This document is not human generated. Any changes to this file will be discarded. Please make changes to Python3 script docs/markdown/device_md_gen.py
 
-## For Developers 
+## For Developers
 If you add or fixed a device function, make sure to add a signature of the function and definition later.
-For example, if you want to add `__device__ float __dotf(float4, float4)`, which does a dot product on 4 float vector components 
-The way to add to the header is, 
-```cpp 
-__device__ static float __dotf(float4, float4); 
+For example, if you want to add `__device__ float __dotf(float4, float4)`, which does a dot product on 4 float vector components
+The way to add to the header is,
+```cpp
+__device__ static float __dotf(float4, float4);
 /*Way down in the file....*/
-__device__ static inline float __dotf(float4 x, float4 y) { 
+__device__ static inline float __dotf(float4 x, float4 y) {
  /*implementation*/
 }
 ```
@@ -21,7 +21,7 @@ From the above example, it can be writtern as,
 `deviceFuncDesc['__dotf'] = 'This functions takes 2 4 component float vector and outputs dot product across them'`
 
 ### acosf
-```cpp 
+```cpp
 __device__ float acosf(float x);
 
 ```
@@ -29,7 +29,7 @@ __device__ float acosf(float x);
 
 
 ### acoshf
-```cpp 
+```cpp
 __device__ float acoshf(float x);
 
 ```
@@ -37,7 +37,7 @@ __device__ float acoshf(float x);
 
 
 ### asinf
-```cpp 
+```cpp
 __device__ float asinf(float x);
 
 ```
@@ -45,7 +45,7 @@ __device__ float asinf(float x);
 
 
 ### asinhf
-```cpp 
+```cpp
 __device__ float asinhf(float x);
 
 ```
@@ -53,7 +53,7 @@ __device__ float asinhf(float x);
 
 
 ### atan2f
-```cpp 
+```cpp
 __device__ float atan2f(float y, float x);
 
 ```
@@ -61,7 +61,7 @@ __device__ float atan2f(float y, float x);
 
 
 ### atanf
-```cpp 
+```cpp
 __device__ float atanf(float x);
 
 ```
@@ -69,7 +69,7 @@ __device__ float atanf(float x);
 
 
 ### atanhf
-```cpp 
+```cpp
 __device__ float atanhf(float x);
 
 ```
@@ -77,7 +77,7 @@ __device__ float atanhf(float x);
 
 
 ### cbrtf
-```cpp 
+```cpp
 __device__ float cbrtf(float x);
 
 ```
@@ -85,7 +85,7 @@ __device__ float cbrtf(float x);
 
 
 ### ceilf
-```cpp 
+```cpp
 __device__ float ceilf(float x);
 
 ```
@@ -93,7 +93,7 @@ __device__ float ceilf(float x);
 
 
 ### copysignf
-```cpp 
+```cpp
 __device__ float copysignf(float x, float y);
 
 ```
@@ -101,7 +101,7 @@ __device__ float copysignf(float x, float y);
 
 
 ### cosf
-```cpp 
+```cpp
 __device__ float cosf(float x);
 
 ```
@@ -109,7 +109,7 @@ __device__ float cosf(float x);
 
 
 ### coshf
-```cpp 
+```cpp
 __device__ float coshf(float x);
 
 ```
@@ -117,7 +117,7 @@ __device__ float coshf(float x);
 
 
 ### cospif
-```cpp 
+```cpp
 __device__ float cospif(float x);
 
 ```
@@ -125,7 +125,7 @@ __device__ float cospif(float x);
 
 
 ### cyl_bessel_i0f
-```cpp 
+```cpp
 //__device__ float cyl_bessel_i0f(float x);
 
 ```
@@ -133,7 +133,7 @@ __device__ float cospif(float x);
 
 
 ### cyl_bessel_i1f
-```cpp 
+```cpp
 //__device__ float cyl_bessel_i1f(float x);
 
 ```
@@ -141,7 +141,7 @@ __device__ float cospif(float x);
 
 
 ### erfcf
-```cpp 
+```cpp
 __device__ float erfcf(float x);
 
 ```
@@ -149,7 +149,7 @@ __device__ float erfcf(float x);
 
 
 ### erfcinvf
-```cpp 
+```cpp
 __device__  float erfcinvf(float y);
 
 ```
@@ -157,7 +157,7 @@ __device__  float erfcinvf(float y);
 
 
 ### erfcxf
-```cpp 
+```cpp
 __device__ float erfcxf(float x);
 
 ```
@@ -165,7 +165,7 @@ __device__ float erfcxf(float x);
 
 
 ### erff
-```cpp 
+```cpp
 __device__ float erff(float x);
 
 ```
@@ -173,7 +173,7 @@ __device__ float erff(float x);
 
 
 ### erfinvf
-```cpp 
+```cpp
 __device__ float erfinvf(float y);
 
 ```
@@ -181,7 +181,7 @@ __device__ float erfinvf(float y);
 
 
 ### exp10f
-```cpp 
+```cpp
 __device__ float exp10f(float x);
 
 ```
@@ -189,7 +189,7 @@ __device__ float exp10f(float x);
 
 
 ### exp2f
-```cpp 
+```cpp
 __device__ float exp2f(float x);
 
 ```
@@ -197,7 +197,7 @@ __device__ float exp2f(float x);
 
 
 ### expf
-```cpp 
+```cpp
 __device__ float expf(float x);
 
 ```
@@ -205,7 +205,7 @@ __device__ float expf(float x);
 
 
 ### expm1f
-```cpp 
+```cpp
 __device__ float expm1f(float x);
 
 ```
@@ -213,7 +213,7 @@ __device__ float expm1f(float x);
 
 
 ### fabsf
-```cpp 
+```cpp
 __device__ float fabsf(float x);
 
 ```
@@ -221,7 +221,7 @@ __device__ float fabsf(float x);
 
 
 ### fdimf
-```cpp 
+```cpp
 __device__ float fdimf(float x, float y);
 
 ```
@@ -229,7 +229,7 @@ __device__ float fdimf(float x, float y);
 
 
 ### fdividef
-```cpp 
+```cpp
 __device__ float fdividef(float x, float y);
 
 ```
@@ -237,7 +237,7 @@ __device__ float fdividef(float x, float y);
 
 
 ### floorf
-```cpp 
+```cpp
 __device__ float floorf(float x);
 
 ```
@@ -245,7 +245,7 @@ __device__ float floorf(float x);
 
 
 ### fmaf
-```cpp 
+```cpp
 __device__ float fmaf(float x, float y, float z);
 
 ```
@@ -253,7 +253,7 @@ __device__ float fmaf(float x, float y, float z);
 
 
 ### fmaxf
-```cpp 
+```cpp
 __device__ float fmaxf(float x, float y);
 
 ```
@@ -261,7 +261,7 @@ __device__ float fmaxf(float x, float y);
 
 
 ### fminf
-```cpp 
+```cpp
 __device__ float fminf(float x, float y);
 
 ```
@@ -269,7 +269,7 @@ __device__ float fminf(float x, float y);
 
 
 ### fmodf
-```cpp 
+```cpp
 __device__ float fmodf(float x, float y);
 
 ```
@@ -277,7 +277,7 @@ __device__ float fmodf(float x, float y);
 
 
 ### frexpf
-```cpp 
+```cpp
 //__device__ float frexpf(float x, int* nptr);
 
 ```
@@ -285,7 +285,7 @@ __device__ float fmodf(float x, float y);
 
 
 ### hypotf
-```cpp 
+```cpp
 __device__ float hypotf(float x, float y);
 
 ```
@@ -293,7 +293,7 @@ __device__ float hypotf(float x, float y);
 
 
 ### ilogbf
-```cpp 
+```cpp
 __device__ float ilogbf(float x);
 
 ```
@@ -301,7 +301,7 @@ __device__ float ilogbf(float x);
 
 
 ### isfinite
-```cpp 
+```cpp
 __device__ int isfinite(float a);
 
 ```
@@ -309,7 +309,7 @@ __device__ int isfinite(float a);
 
 
 ### isinf
-```cpp 
+```cpp
 __device__ unsigned isinf(float a);
 
 ```
@@ -317,7 +317,7 @@ __device__ unsigned isinf(float a);
 
 
 ### isnan
-```cpp 
+```cpp
 __device__ unsigned isnan(float a);
 
 ```
@@ -325,7 +325,7 @@ __device__ unsigned isnan(float a);
 
 
 ### j0f
-```cpp 
+```cpp
 __device__ float j0f(float x);
 
 ```
@@ -333,7 +333,7 @@ __device__ float j0f(float x);
 
 
 ### j1f
-```cpp 
+```cpp
 __device__ float j1f(float x);
 
 ```
@@ -341,7 +341,7 @@ __device__ float j1f(float x);
 
 
 ### jnf
-```cpp 
+```cpp
 __device__ float jnf(int n, float x);
 
 ```
@@ -349,7 +349,7 @@ __device__ float jnf(int n, float x);
 
 
 ### ldexpf
-```cpp 
+```cpp
 __device__ float ldexpf(float x, int exp);
 
 ```
@@ -357,7 +357,7 @@ __device__ float ldexpf(float x, int exp);
 
 
 ### lgammaf
-```cpp 
+```cpp
 //__device__ float lgammaf(float x);
 
 ```
@@ -365,7 +365,7 @@ __device__ float ldexpf(float x, int exp);
 
 
 ### llrintf
-```cpp 
+```cpp
 __device__ long long int llrintf(float x);
 
 ```
@@ -373,7 +373,7 @@ __device__ long long int llrintf(float x);
 
 
 ### llroundf
-```cpp 
+```cpp
 __device__ long long int llroundf(float x);
 
 ```
@@ -381,7 +381,7 @@ __device__ long long int llroundf(float x);
 
 
 ### log10f
-```cpp 
+```cpp
 __device__ float log10f(float x);
 
 ```
@@ -389,7 +389,7 @@ __device__ float log10f(float x);
 
 
 ### log1pf
-```cpp 
+```cpp
 __device__ float log1pf(float x);
 
 ```
@@ -397,7 +397,7 @@ __device__ float log1pf(float x);
 
 
 ### logbf
-```cpp 
+```cpp
 __device__ float logbf(float x);
 
 ```
@@ -405,7 +405,7 @@ __device__ float logbf(float x);
 
 
 ### lrintf
-```cpp 
+```cpp
 __device__ long int lrintf(float x);
 
 ```
@@ -413,7 +413,7 @@ __device__ long int lrintf(float x);
 
 
 ### lroundf
-```cpp 
+```cpp
 __device__ long int lroundf(float x);
 
 ```
@@ -421,7 +421,7 @@ __device__ long int lroundf(float x);
 
 
 ### modff
-```cpp 
+```cpp
 //__device__ float modff(float x, float *iptr);
 
 ```
@@ -429,7 +429,7 @@ __device__ long int lroundf(float x);
 
 
 ### nanf
-```cpp 
+```cpp
 __device__ float nanf(const char* tagp);
 
 ```
@@ -437,7 +437,7 @@ __device__ float nanf(const char* tagp);
 
 
 ### nearbyintf
-```cpp 
+```cpp
 __device__ float nearbyintf(float x);
 
 ```
@@ -445,7 +445,7 @@ __device__ float nearbyintf(float x);
 
 
 ### nextafterf
-```cpp 
+```cpp
 //__device__ float nextafterf(float x, float y);
 
 ```
@@ -453,7 +453,7 @@ __device__ float nearbyintf(float x);
 
 
 ### norm3df
-```cpp 
+```cpp
 __device__ float norm3df(float a, float b, float c);
 
 ```
@@ -461,7 +461,7 @@ __device__ float norm3df(float a, float b, float c);
 
 
 ### norm4df
-```cpp 
+```cpp
 __device__ float norm4df(float a, float b, float c, float d);
 
 ```
@@ -469,7 +469,7 @@ __device__ float norm4df(float a, float b, float c, float d);
 
 
 ### normcdff
-```cpp 
+```cpp
 __device__ float normcdff(float y);
 
 ```
@@ -477,7 +477,7 @@ __device__ float normcdff(float y);
 
 
 ### normcdfinvf
-```cpp 
+```cpp
 __device__ float normcdfinvf(float y);
 
 ```
@@ -485,7 +485,7 @@ __device__ float normcdfinvf(float y);
 
 
 ### normf
-```cpp 
+```cpp
 __device__ float normf(int dim, const float *a);
 
 ```
@@ -493,7 +493,7 @@ __device__ float normf(int dim, const float *a);
 
 
 ### powf
-```cpp 
+```cpp
 __device__ float powf(float x, float y);
 
 ```
@@ -501,7 +501,7 @@ __device__ float powf(float x, float y);
 
 
 ### rcbrtf
-```cpp 
+```cpp
 __device__ float rcbrtf(float x);
 
 ```
@@ -509,7 +509,7 @@ __device__ float rcbrtf(float x);
 
 
 ### remainderf
-```cpp 
+```cpp
 __device__ float remainderf(float x, float y);
 
 ```
@@ -517,7 +517,7 @@ __device__ float remainderf(float x, float y);
 
 
 ### remquof
-```cpp 
+```cpp
 __device__ float remquof(float x, float y, int *quo);
 
 ```
@@ -525,7 +525,7 @@ __device__ float remquof(float x, float y, int *quo);
 
 
 ### rhypotf
-```cpp 
+```cpp
 __device__ float rhypotf(float x, float y);
 
 ```
@@ -533,7 +533,7 @@ __device__ float rhypotf(float x, float y);
 
 
 ### rintf
-```cpp 
+```cpp
 __device__ float rintf(float x);
 
 ```
@@ -541,7 +541,7 @@ __device__ float rintf(float x);
 
 
 ### rnorm3df
-```cpp 
+```cpp
 __device__ float rnorm3df(float a, float b, float c);
 
 ```
@@ -549,7 +549,7 @@ __device__ float rnorm3df(float a, float b, float c);
 
 
 ### rnorm4df
-```cpp 
+```cpp
 __device__ float rnorm4df(float a, float b, float c, float d);
 
 ```
@@ -557,7 +557,7 @@ __device__ float rnorm4df(float a, float b, float c, float d);
 
 
 ### rnormf
-```cpp 
+```cpp
 __device__ float rnormf(int dim, const float* a);
 
 ```
@@ -565,7 +565,7 @@ __device__ float rnormf(int dim, const float* a);
 
 
 ### roundf
-```cpp 
+```cpp
 __device__ float roundf(float x);
 
 ```
@@ -573,7 +573,7 @@ __device__ float roundf(float x);
 
 
 ### rsqrtf
-```cpp 
+```cpp
 __device__ float rsqrtf(float x);
 
 ```
@@ -581,7 +581,7 @@ __device__ float rsqrtf(float x);
 
 
 ### scalblnf
-```cpp 
+```cpp
 __device__ float scalblnf(float x, long int n);
 
 ```
@@ -589,7 +589,7 @@ __device__ float scalblnf(float x, long int n);
 
 
 ### scalbnf
-```cpp 
+```cpp
 __device__ float scalbnf(float x, int n);
 
 ```
@@ -597,7 +597,7 @@ __device__ float scalbnf(float x, int n);
 
 
 ### signbit
-```cpp 
+```cpp
 __device__ int signbit(float a);
 
 ```
@@ -605,7 +605,7 @@ __device__ int signbit(float a);
 
 
 ### sincosf
-```cpp 
+```cpp
 __device__ void sincosf(float x, float *sptr, float *cptr);
 
 ```
@@ -613,7 +613,7 @@ __device__ void sincosf(float x, float *sptr, float *cptr);
 
 
 ### sincospif
-```cpp 
+```cpp
 __device__ void sincospif(float x, float *sptr, float *cptr);
 
 ```
@@ -621,7 +621,7 @@ __device__ void sincospif(float x, float *sptr, float *cptr);
 
 
 ### sinf
-```cpp 
+```cpp
 __device__ float sinf(float x);
 
 ```
@@ -629,7 +629,7 @@ __device__ float sinf(float x);
 
 
 ### sinhf
-```cpp 
+```cpp
 __device__ float sinhf(float x);
 
 ```
@@ -637,7 +637,7 @@ __device__ float sinhf(float x);
 
 
 ### sinpif
-```cpp 
+```cpp
 __device__ float sinpif(float x);
 
 ```
@@ -645,7 +645,7 @@ __device__ float sinpif(float x);
 
 
 ### sqrtf
-```cpp 
+```cpp
 __device__ float sqrtf(float x);
 
 ```
@@ -653,7 +653,7 @@ __device__ float sqrtf(float x);
 
 
 ### tanf
-```cpp 
+```cpp
 __device__ float tanf(float x);
 
 ```
@@ -661,7 +661,7 @@ __device__ float tanf(float x);
 
 
 ### tanhf
-```cpp 
+```cpp
 __device__ float tanhf(float x);
 
 ```
@@ -669,7 +669,7 @@ __device__ float tanhf(float x);
 
 
 ### tgammaf
-```cpp 
+```cpp
 __device__ float tgammaf(float x);
 
 ```
@@ -677,7 +677,7 @@ __device__ float tgammaf(float x);
 
 
 ### truncf
-```cpp 
+```cpp
 __device__ float truncf(float x);
 
 ```
@@ -685,7 +685,7 @@ __device__ float truncf(float x);
 
 
 ### y0f
-```cpp 
+```cpp
 __device__ float y0f(float x);
 
 ```
@@ -693,7 +693,7 @@ __device__ float y0f(float x);
 
 
 ### y1f
-```cpp 
+```cpp
 __device__ float y1f(float x);
 
 ```
@@ -701,7 +701,7 @@ __device__ float y1f(float x);
 
 
 ### ynf
-```cpp 
+```cpp
 __device__ float ynf(int n, float x);
 
 ```
@@ -709,7 +709,7 @@ __device__ float ynf(int n, float x);
 
 
 ### acos
-```cpp 
+```cpp
 __device__ double acos(double x);
 
 ```
@@ -717,7 +717,7 @@ __device__ double acos(double x);
 
 
 ### acosh
-```cpp 
+```cpp
 __device__ double acosh(double x);
 
 ```
@@ -725,7 +725,7 @@ __device__ double acosh(double x);
 
 
 ### asin
-```cpp 
+```cpp
 __device__ double asin(double x);
 
 ```
@@ -733,7 +733,7 @@ __device__ double asin(double x);
 
 
 ### asinh
-```cpp 
+```cpp
 __device__ double asinh(double x);
 
 ```
@@ -741,7 +741,7 @@ __device__ double asinh(double x);
 
 
 ### atan
-```cpp 
+```cpp
 __device__ double atan(double x);
 
 ```
@@ -749,7 +749,7 @@ __device__ double atan(double x);
 
 
 ### atan2
-```cpp 
+```cpp
 __device__ double atan2(double y, double x);
 
 ```
@@ -757,7 +757,7 @@ __device__ double atan2(double y, double x);
 
 
 ### atanh
-```cpp 
+```cpp
 __device__ double atanh(double x);
 
 ```
@@ -765,7 +765,7 @@ __device__ double atanh(double x);
 
 
 ### cbrt
-```cpp 
+```cpp
 __device__ double cbrt(double x);
 
 ```
@@ -773,7 +773,7 @@ __device__ double cbrt(double x);
 
 
 ### ceil
-```cpp 
+```cpp
 __device__ double ceil(double x);
 
 ```
@@ -781,7 +781,7 @@ __device__ double ceil(double x);
 
 
 ### copysign
-```cpp 
+```cpp
 __device__ double copysign(double x, double y);
 
 ```
@@ -789,7 +789,7 @@ __device__ double copysign(double x, double y);
 
 
 ### cos
-```cpp 
+```cpp
 __device__ double cos(double x);
 
 ```
@@ -797,7 +797,7 @@ __device__ double cos(double x);
 
 
 ### cosh
-```cpp 
+```cpp
 __device__ double cosh(double x);
 
 ```
@@ -805,7 +805,7 @@ __device__ double cosh(double x);
 
 
 ### cospi
-```cpp 
+```cpp
 __device__ double cospi(double x);
 
 ```
@@ -813,7 +813,7 @@ __device__ double cospi(double x);
 
 
 ### cyl_bessel_i0
-```cpp 
+```cpp
 //__device__ double cyl_bessel_i0(double x);
 
 ```
@@ -821,7 +821,7 @@ __device__ double cospi(double x);
 
 
 ### cyl_bessel_i1
-```cpp 
+```cpp
 //__device__ double cyl_bessel_i1(double x);
 
 ```
@@ -829,7 +829,7 @@ __device__ double cospi(double x);
 
 
 ### erf
-```cpp 
+```cpp
 __device__ double erf(double x);
 
 ```
@@ -837,7 +837,7 @@ __device__ double erf(double x);
 
 
 ### erfc
-```cpp 
+```cpp
 __device__ double erfc(double x);
 
 ```
@@ -845,7 +845,7 @@ __device__ double erfc(double x);
 
 
 ### erfcinv
-```cpp 
+```cpp
 __device__ double erfcinv(double y);
 
 ```
@@ -853,7 +853,7 @@ __device__ double erfcinv(double y);
 
 
 ### erfcx
-```cpp 
+```cpp
 __device__ double erfcx(double x);
 
 ```
@@ -861,7 +861,7 @@ __device__ double erfcx(double x);
 
 
 ### erfinv
-```cpp 
+```cpp
 __device__ double erfinv(double x);
 
 ```
@@ -869,7 +869,7 @@ __device__ double erfinv(double x);
 
 
 ### exp
-```cpp 
+```cpp
 __device__ double exp(double x);
 
 ```
@@ -877,7 +877,7 @@ __device__ double exp(double x);
 
 
 ### exp10
-```cpp 
+```cpp
 __device__ double exp10(double x);
 
 ```
@@ -885,7 +885,7 @@ __device__ double exp10(double x);
 
 
 ### exp2
-```cpp 
+```cpp
 __device__ double exp2(double x);
 
 ```
@@ -893,7 +893,7 @@ __device__ double exp2(double x);
 
 
 ### expm1
-```cpp 
+```cpp
 __device__ double expm1(double x);
 
 ```
@@ -901,7 +901,7 @@ __device__ double expm1(double x);
 
 
 ### fabs
-```cpp 
+```cpp
 __device__ double fabs(double x);
 
 ```
@@ -909,7 +909,7 @@ __device__ double fabs(double x);
 
 
 ### fdim
-```cpp 
+```cpp
 __device__ double fdim(double x, double y);
 
 ```
@@ -917,7 +917,7 @@ __device__ double fdim(double x, double y);
 
 
 ### floor
-```cpp 
+```cpp
 __device__ double floor(double x);
 
 ```
@@ -925,7 +925,7 @@ __device__ double floor(double x);
 
 
 ### fma
-```cpp 
+```cpp
 __device__ double fma(double x, double y, double z);
 
 ```
@@ -933,7 +933,7 @@ __device__ double fma(double x, double y, double z);
 
 
 ### fmax
-```cpp 
+```cpp
 __device__ double fmax(double x, double y);
 
 ```
@@ -941,7 +941,7 @@ __device__ double fmax(double x, double y);
 
 
 ### fmin
-```cpp 
+```cpp
 __device__ double fmin(double x, double y);
 
 ```
@@ -949,7 +949,7 @@ __device__ double fmin(double x, double y);
 
 
 ### fmod
-```cpp 
+```cpp
 __device__ double fmod(double x, double y);
 
 ```
@@ -957,7 +957,7 @@ __device__ double fmod(double x, double y);
 
 
 ### frexp
-```cpp 
+```cpp
 //__device__ double frexp(double x, int *nptr);
 
 ```
@@ -965,7 +965,7 @@ __device__ double fmod(double x, double y);
 
 
 ### hypot
-```cpp 
+```cpp
 __device__ double hypot(double x, double y);
 
 ```
@@ -973,7 +973,7 @@ __device__ double hypot(double x, double y);
 
 
 ### ilogb
-```cpp 
+```cpp
 __device__ double ilogb(double x);
 
 ```
@@ -981,7 +981,7 @@ __device__ double ilogb(double x);
 
 
 ### isfinite
-```cpp 
+```cpp
 __device__ int isfinite(double x);
 
 ```
@@ -989,7 +989,7 @@ __device__ int isfinite(double x);
 
 
 ### isinf
-```cpp 
+```cpp
 __device__ unsigned isinf(double x);
 
 ```
@@ -997,7 +997,7 @@ __device__ unsigned isinf(double x);
 
 
 ### isnan
-```cpp 
+```cpp
 __device__ unsigned isnan(double x);
 
 ```
@@ -1005,7 +1005,7 @@ __device__ unsigned isnan(double x);
 
 
 ### j0
-```cpp 
+```cpp
 __device__ double j0(double x);
 
 ```
@@ -1013,7 +1013,7 @@ __device__ double j0(double x);
 
 
 ### j1
-```cpp 
+```cpp
 __device__ double j1(double x);
 
 ```
@@ -1021,7 +1021,7 @@ __device__ double j1(double x);
 
 
 ### jn
-```cpp 
+```cpp
 __device__ double jn(int n, double x);
 
 ```
@@ -1029,7 +1029,7 @@ __device__ double jn(int n, double x);
 
 
 ### ldexp
-```cpp 
+```cpp
 __device__ double ldexp(double x, int exp);
 
 ```
@@ -1037,7 +1037,7 @@ __device__ double ldexp(double x, int exp);
 
 
 ### lgamma
-```cpp 
+```cpp
 __device__ double lgamma(double x);
 
 ```
@@ -1045,7 +1045,7 @@ __device__ double lgamma(double x);
 
 
 ### llrint
-```cpp 
+```cpp
 __device__ long long llrint(double x);
 
 ```
@@ -1053,7 +1053,7 @@ __device__ long long llrint(double x);
 
 
 ### llround
-```cpp 
+```cpp
 __device__ long long llround(double x);
 
 ```
@@ -1061,7 +1061,7 @@ __device__ long long llround(double x);
 
 
 ### log
-```cpp 
+```cpp
 __device__ double log(double x);
 
 ```
@@ -1069,7 +1069,7 @@ __device__ double log(double x);
 
 
 ### log10
-```cpp 
+```cpp
 __device__ double log10(double x);
 
 ```
@@ -1077,7 +1077,7 @@ __device__ double log10(double x);
 
 
 ### log1p
-```cpp 
+```cpp
 __device__ double log1p(double x);
 
 ```
@@ -1085,7 +1085,7 @@ __device__ double log1p(double x);
 
 
 ### log2
-```cpp 
+```cpp
 __device__ double log2(double x);
 
 ```
@@ -1093,7 +1093,7 @@ __device__ double log2(double x);
 
 
 ### logb
-```cpp 
+```cpp
 __device__ double logb(double x);
 
 ```
@@ -1101,7 +1101,7 @@ __device__ double logb(double x);
 
 
 ### lrint
-```cpp 
+```cpp
 __device__ long int lrint(double x);
 
 ```
@@ -1109,7 +1109,7 @@ __device__ long int lrint(double x);
 
 
 ### lround
-```cpp 
+```cpp
 __device__ long int lround(double x);
 
 ```
@@ -1117,7 +1117,7 @@ __device__ long int lround(double x);
 
 
 ### modf
-```cpp 
+```cpp
 //__device__ double modf(double x, double *iptr);
 
 ```
@@ -1125,7 +1125,7 @@ __device__ long int lround(double x);
 
 
 ### nan
-```cpp 
+```cpp
 __device__ double nan(const char* tagp);
 
 ```
@@ -1133,7 +1133,7 @@ __device__ double nan(const char* tagp);
 
 
 ### nearbyint
-```cpp 
+```cpp
 __device__ double nearbyint(double x);
 
 ```
@@ -1141,7 +1141,7 @@ __device__ double nearbyint(double x);
 
 
 ### nextafter
-```cpp 
+```cpp
 __device__ double nextafter(double x, double y);
 
 ```
@@ -1149,7 +1149,7 @@ __device__ double nextafter(double x, double y);
 
 
 ### norm
-```cpp 
+```cpp
 __device__ double norm(int dim, const double* t);
 
 ```
@@ -1157,7 +1157,7 @@ __device__ double norm(int dim, const double* t);
 
 
 ### norm3d
-```cpp 
+```cpp
 __device__ double norm3d(double a, double b, double c);
 
 ```
@@ -1165,7 +1165,7 @@ __device__ double norm3d(double a, double b, double c);
 
 
 ### norm4d
-```cpp 
+```cpp
 __device__ double norm4d(double a, double b, double c, double d);
 
 ```
@@ -1173,7 +1173,7 @@ __device__ double norm4d(double a, double b, double c, double d);
 
 
 ### normcdf
-```cpp 
+```cpp
 __device__ double normcdf(double y);
 
 ```
@@ -1181,7 +1181,7 @@ __device__ double normcdf(double y);
 
 
 ### normcdfinv
-```cpp 
+```cpp
 __device__ double normcdfinv(double y);
 
 ```
@@ -1189,7 +1189,7 @@ __device__ double normcdfinv(double y);
 
 
 ### pow
-```cpp 
+```cpp
 __device__ double pow(double x, double y);
 
 ```
@@ -1197,7 +1197,7 @@ __device__ double pow(double x, double y);
 
 
 ### rcbrt
-```cpp 
+```cpp
 __device__ double rcbrt(double x);
 
 ```
@@ -1205,7 +1205,7 @@ __device__ double rcbrt(double x);
 
 
 ### remainder
-```cpp 
+```cpp
 __device__ double remainder(double x, double y);
 
 ```
@@ -1213,7 +1213,7 @@ __device__ double remainder(double x, double y);
 
 
 ### remquo
-```cpp 
+```cpp
 //__device__ double remquo(double x, double y, int *quo);
 
 ```
@@ -1221,7 +1221,7 @@ __device__ double remainder(double x, double y);
 
 
 ### rhypot
-```cpp 
+```cpp
 __device__ double rhypot(double x, double y);
 
 ```
@@ -1229,7 +1229,7 @@ __device__ double rhypot(double x, double y);
 
 
 ### rint
-```cpp 
+```cpp
 __device__ double rint(double x);
 
 ```
@@ -1237,7 +1237,7 @@ __device__ double rint(double x);
 
 
 ### rnorm
-```cpp 
+```cpp
 __device__ double rnorm(int dim, const double* t);
 
 ```
@@ -1245,7 +1245,7 @@ __device__ double rnorm(int dim, const double* t);
 
 
 ### rnorm3d
-```cpp 
+```cpp
 __device__ double rnorm3d(double a, double b, double c);
 
 ```
@@ -1253,7 +1253,7 @@ __device__ double rnorm3d(double a, double b, double c);
 
 
 ### rnorm4d
-```cpp 
+```cpp
 __device__ double rnorm4d(double a, double b, double c, double d);
 
 ```
@@ -1261,7 +1261,7 @@ __device__ double rnorm4d(double a, double b, double c, double d);
 
 
 ### round
-```cpp 
+```cpp
 __device__ double round(double x);
 
 ```
@@ -1269,7 +1269,7 @@ __device__ double round(double x);
 
 
 ### rsqrt
-```cpp 
+```cpp
 __device__ double rsqrt(double x);
 
 ```
@@ -1277,7 +1277,7 @@ __device__ double rsqrt(double x);
 
 
 ### scalbln
-```cpp 
+```cpp
 __device__ double scalbln(double x, long int n);
 
 ```
@@ -1285,7 +1285,7 @@ __device__ double scalbln(double x, long int n);
 
 
 ### scalbn
-```cpp 
+```cpp
 __device__ double scalbn(double x, int n);
 
 ```
@@ -1293,7 +1293,7 @@ __device__ double scalbn(double x, int n);
 
 
 ### signbit
-```cpp 
+```cpp
 __device__ int signbit(double a);
 
 ```
@@ -1301,7 +1301,7 @@ __device__ int signbit(double a);
 
 
 ### sin
-```cpp 
+```cpp
 __device__ double sin(double a);
 
 ```
@@ -1309,7 +1309,7 @@ __device__ double sin(double a);
 
 
 ### sincos
-```cpp 
+```cpp
 __device__ void sincos(double x, double *sptr, double *cptr);
 
 ```
@@ -1317,7 +1317,7 @@ __device__ void sincos(double x, double *sptr, double *cptr);
 
 
 ### sincospi
-```cpp 
+```cpp
 __device__ void sincospi(double x, double *sptr, double *cptr);
 
 ```
@@ -1325,7 +1325,7 @@ __device__ void sincospi(double x, double *sptr, double *cptr);
 
 
 ### sinh
-```cpp 
+```cpp
 __device__ double sinh(double x);
 
 ```
@@ -1333,7 +1333,7 @@ __device__ double sinh(double x);
 
 
 ### sinpi
-```cpp 
+```cpp
 __device__ double sinpi(double x);
 
 ```
@@ -1341,7 +1341,7 @@ __device__ double sinpi(double x);
 
 
 ### sqrt
-```cpp 
+```cpp
 __device__ double sqrt(double x);
 
 ```
@@ -1349,7 +1349,7 @@ __device__ double sqrt(double x);
 
 
 ### tan
-```cpp 
+```cpp
 __device__ double tan(double x);
 
 ```
@@ -1357,7 +1357,7 @@ __device__ double tan(double x);
 
 
 ### tanh
-```cpp 
+```cpp
 __device__ double tanh(double x);
 
 ```
@@ -1365,7 +1365,7 @@ __device__ double tanh(double x);
 
 
 ### tgamma
-```cpp 
+```cpp
 __device__ double tgamma(double x);
 
 ```
@@ -1373,7 +1373,7 @@ __device__ double tgamma(double x);
 
 
 ### trunc
-```cpp 
+```cpp
 __device__ double trunc(double x);
 
 ```
@@ -1381,7 +1381,7 @@ __device__ double trunc(double x);
 
 
 ### y0
-```cpp 
+```cpp
 __device__ double y0(double x);
 
 ```
@@ -1389,7 +1389,7 @@ __device__ double y0(double x);
 
 
 ### y1
-```cpp 
+```cpp
 __device__ double y1(double y);
 
 ```
@@ -1397,7 +1397,7 @@ __device__ double y1(double y);
 
 
 ### yn
-```cpp 
+```cpp
 __device__ double yn(int n, double x);
 
 ```
@@ -1405,7 +1405,7 @@ __device__ double yn(int n, double x);
 
 
 ### __cosf
-```cpp 
+```cpp
 __device__  float __cosf(float x);
 
 ```
@@ -1413,7 +1413,7 @@ __device__  float __cosf(float x);
 
 
 ### __exp10f
-```cpp 
+```cpp
 __device__  float __exp10f(float x);
 
 ```
@@ -1421,7 +1421,7 @@ __device__  float __exp10f(float x);
 
 
 ### __expf
-```cpp 
+```cpp
 __device__  float __expf(float x);
 
 ```
@@ -1429,7 +1429,7 @@ __device__  float __expf(float x);
 
 
 ### __fadd_rd
-```cpp 
+```cpp
 __device__ static  float __fadd_rd(float x, float y);
 
 ```
@@ -1437,15 +1437,15 @@ __device__ static  float __fadd_rd(float x, float y);
 
 
 ### __fadd_rn
-```cpp 
+```cpp
 __device__ static  float __fadd_rn(float x, float y);
 
 ```
-**Description:**  Unsupported
+**Description:**  Supported
 
 
 ### __fadd_ru
-```cpp 
+```cpp
 __device__ static  float __fadd_ru(float x, float y);
 
 ```
@@ -1453,7 +1453,7 @@ __device__ static  float __fadd_ru(float x, float y);
 
 
 ### __fadd_rz
-```cpp 
+```cpp
 __device__ static  float __fadd_rz(float x, float y);
 
 ```
@@ -1461,7 +1461,7 @@ __device__ static  float __fadd_rz(float x, float y);
 
 
 ### __fdiv_rd
-```cpp 
+```cpp
 __device__ static  float __fdiv_rd(float x, float y);
 
 ```
@@ -1469,15 +1469,15 @@ __device__ static  float __fdiv_rd(float x, float y);
 
 
 ### __fdiv_rn
-```cpp 
+```cpp
 __device__ static  float __fdiv_rn(float x, float y);
 
 ```
-**Description:**  Unsupported
+**Description:**  Supported
 
 
 ### __fdiv_ru
-```cpp 
+```cpp
 __device__ static  float __fdiv_ru(float x, float y);
 
 ```
@@ -1485,7 +1485,7 @@ __device__ static  float __fdiv_ru(float x, float y);
 
 
 ### __fdiv_rz
-```cpp 
+```cpp
 __device__ static  float __fdiv_rz(float x, float y);
 
 ```
@@ -1493,7 +1493,7 @@ __device__ static  float __fdiv_rz(float x, float y);
 
 
 ### __fdividef
-```cpp 
+```cpp
 __device__ static  float __fdividef(float x, float y);
 
 ```
@@ -1501,7 +1501,7 @@ __device__ static  float __fdividef(float x, float y);
 
 
 ### __fmaf_rd
-```cpp 
+```cpp
 __device__  float __fmaf_rd(float x, float y, float z);
 
 ```
@@ -1509,15 +1509,15 @@ __device__  float __fmaf_rd(float x, float y, float z);
 
 
 ### __fmaf_rn
-```cpp 
+```cpp
 __device__  float __fmaf_rn(float x, float y, float z);
 
 ```
-**Description:**  Unsupported
+**Description:**  Supported
 
 
 ### __fmaf_ru
-```cpp 
+```cpp
 __device__  float __fmaf_ru(float x, float y, float z);
 
 ```
@@ -1525,7 +1525,7 @@ __device__  float __fmaf_ru(float x, float y, float z);
 
 
 ### __fmaf_rz
-```cpp 
+```cpp
 __device__  float __fmaf_rz(float x, float y, float z);
 
 ```
@@ -1533,7 +1533,7 @@ __device__  float __fmaf_rz(float x, float y, float z);
 
 
 ### __fmul_rd
-```cpp 
+```cpp
 __device__ static  float __fmul_rd(float x, float y);
 
 ```
@@ -1541,15 +1541,15 @@ __device__ static  float __fmul_rd(float x, float y);
 
 
 ### __fmul_rn
-```cpp 
+```cpp
 __device__ static  float __fmul_rn(float x, float y);
 
 ```
-**Description:**  Unsupported
+**Description:**  Supported
 
 
 ### __fmul_ru
-```cpp 
+```cpp
 __device__ static  float __fmul_ru(float x, float y);
 
 ```
@@ -1557,7 +1557,7 @@ __device__ static  float __fmul_ru(float x, float y);
 
 
 ### __fmul_rz
-```cpp 
+```cpp
 __device__ static  float __fmul_rz(float x, float y);
 
 ```
@@ -1565,7 +1565,7 @@ __device__ static  float __fmul_rz(float x, float y);
 
 
 ### __frcp_rd
-```cpp 
+```cpp
 __device__  float __frcp_rd(float x);
 
 ```
@@ -1573,15 +1573,15 @@ __device__  float __frcp_rd(float x);
 
 
 ### __frcp_rn
-```cpp 
+```cpp
 __device__  float __frcp_rn(float x);
 
 ```
-**Description:**  Unsupported
+**Description:**  Supported
 
 
 ### __frcp_ru
-```cpp 
+```cpp
 __device__  float __frcp_ru(float x);
 
 ```
@@ -1589,7 +1589,7 @@ __device__  float __frcp_ru(float x);
 
 
 ### __frcp_rz
-```cpp 
+```cpp
 __device__  float __frcp_rz(float x);
 
 ```
@@ -1597,15 +1597,15 @@ __device__  float __frcp_rz(float x);
 
 
 ### __frsqrt_rn
-```cpp 
+```cpp
 __device__  float __frsqrt_rn(float x);
 
 ```
-**Description:**  Unsupported
+**Description:**  Supported
 
 
 ### __fsqrt_rd
-```cpp 
+```cpp
 __device__  float __fsqrt_rd(float x);
 
 ```
@@ -1613,15 +1613,15 @@ __device__  float __fsqrt_rd(float x);
 
 
 ### __fsqrt_rn
-```cpp 
+```cpp
 __device__  float __fsqrt_rn(float x);
 
 ```
-**Description:**  Unsupported
+**Description:**  Supported
 
 
 ### __fsqrt_ru
-```cpp 
+```cpp
 __device__  float __fsqrt_ru(float x);
 
 ```
@@ -1629,7 +1629,7 @@ __device__  float __fsqrt_ru(float x);
 
 
 ### __fsqrt_rz
-```cpp 
+```cpp
 __device__  float __fsqrt_rz(float x);
 
 ```
@@ -1637,7 +1637,7 @@ __device__  float __fsqrt_rz(float x);
 
 
 ### __fsub_rd
-```cpp 
+```cpp
 __device__ static  float __fsub_rd(float x, float y);
 
 ```
@@ -1645,15 +1645,15 @@ __device__ static  float __fsub_rd(float x, float y);
 
 
 ### __fsub_rn
-```cpp 
+```cpp
 __device__ static  float __fsub_rn(float x, float y);
 
 ```
-**Description:**  Unsupported
+**Description:**  Supported
 
 
 ### __fsub_ru
-```cpp 
+```cpp
 __device__ static  float __fsub_ru(float x, float y);
 
 ```
@@ -1661,7 +1661,7 @@ __device__ static  float __fsub_ru(float x, float y);
 
 
 ### __fsub_rz
-```cpp 
+```cpp
 __device__ static  float __fsub_rz(float x, float y);
 
 ```
@@ -1669,7 +1669,7 @@ __device__ static  float __fsub_rz(float x, float y);
 
 
 ### __log10f
-```cpp 
+```cpp
 __device__  float __log10f(float x);
 
 ```
@@ -1677,7 +1677,7 @@ __device__  float __log10f(float x);
 
 
 ### __log2f
-```cpp 
+```cpp
 __device__  float __log2f(float x);
 
 ```
@@ -1685,7 +1685,7 @@ __device__  float __log2f(float x);
 
 
 ### __logf
-```cpp 
+```cpp
 __device__  float __logf(float x);
 
 ```
@@ -1693,7 +1693,7 @@ __device__  float __logf(float x);
 
 
 ### __powf
-```cpp 
+```cpp
 __device__  float __powf(float base, float exponent);
 
 ```
@@ -1701,7 +1701,7 @@ __device__  float __powf(float base, float exponent);
 
 
 ### __saturatef
-```cpp 
+```cpp
 __device__ static  float __saturatef(float x);
 
 ```
@@ -1709,7 +1709,7 @@ __device__ static  float __saturatef(float x);
 
 
 ### __sincosf
-```cpp 
+```cpp
 __device__  void __sincosf(float x, float *s, float *c);
 
 ```
@@ -1717,7 +1717,7 @@ __device__  void __sincosf(float x, float *s, float *c);
 
 
 ### __sinf
-```cpp 
+```cpp
 __device__  float __sinf(float x);
 
 ```
@@ -1725,7 +1725,7 @@ __device__  float __sinf(float x);
 
 
 ### __tanf
-```cpp 
+```cpp
 __device__  float __tanf(float x);
 
 ```
@@ -1733,7 +1733,7 @@ __device__  float __tanf(float x);
 
 
 ### __dadd_rd
-```cpp 
+```cpp
 __device__ static  double __dadd_rd(double x, double y);
 
 ```
@@ -1741,15 +1741,15 @@ __device__ static  double __dadd_rd(double x, double y);
 
 
 ### __dadd_rn
-```cpp 
+```cpp
 __device__ static  double __dadd_rn(double x, double y);
 
 ```
-**Description:**  Unsupported
+**Description:**  Supported
 
 
 ### __dadd_ru
-```cpp 
+```cpp
 __device__ static  double __dadd_ru(double x, double y);
 
 ```
@@ -1757,7 +1757,7 @@ __device__ static  double __dadd_ru(double x, double y);
 
 
 ### __dadd_rz
-```cpp 
+```cpp
 __device__ static  double __dadd_rz(double x, double y);
 
 ```
@@ -1765,7 +1765,7 @@ __device__ static  double __dadd_rz(double x, double y);
 
 
 ### __ddiv_rd
-```cpp 
+```cpp
 __device__ static  double __ddiv_rd(double x, double y);
 
 ```
@@ -1773,15 +1773,15 @@ __device__ static  double __ddiv_rd(double x, double y);
 
 
 ### __ddiv_rn
-```cpp 
+```cpp
 __device__ static  double __ddiv_rn(double x, double y);
 
 ```
-**Description:**  Unsupported
+**Description:**  Supported
 
 
 ### __ddiv_ru
-```cpp 
+```cpp
 __device__ static  double __ddiv_ru(double x, double y);
 
 ```
@@ -1789,7 +1789,7 @@ __device__ static  double __ddiv_ru(double x, double y);
 
 
 ### __ddiv_rz
-```cpp 
+```cpp
 __device__ static  double __ddiv_rz(double x, double y);
 
 ```
@@ -1797,7 +1797,7 @@ __device__ static  double __ddiv_rz(double x, double y);
 
 
 ### __dmul_rd
-```cpp 
+```cpp
 __device__ static  double __dmul_rd(double x, double y);
 
 ```
@@ -1805,15 +1805,15 @@ __device__ static  double __dmul_rd(double x, double y);
 
 
 ### __dmul_rn
-```cpp 
+```cpp
 __device__ static  double __dmul_rn(double x, double y);
 
 ```
-**Description:**  Unsupported
+**Description:**  Supported
 
 
 ### __dmul_ru
-```cpp 
+```cpp
 __device__ static  double __dmul_ru(double x, double y);
 
 ```
@@ -1821,7 +1821,7 @@ __device__ static  double __dmul_ru(double x, double y);
 
 
 ### __dmul_rz
-```cpp 
+```cpp
 __device__ static  double __dmul_rz(double x, double y);
 
 ```
@@ -1829,7 +1829,7 @@ __device__ static  double __dmul_rz(double x, double y);
 
 
 ### __drcp_rd
-```cpp 
+```cpp
 __device__  double __drcp_rd(double x);
 
 ```
@@ -1837,15 +1837,15 @@ __device__  double __drcp_rd(double x);
 
 
 ### __drcp_rn
-```cpp 
+```cpp
 __device__  double __drcp_rn(double x);
 
 ```
-**Description:**  Unsupported
+**Description:**  Supported
 
 
 ### __drcp_ru
-```cpp 
+```cpp
 __device__  double __drcp_ru(double x);
 
 ```
@@ -1853,7 +1853,7 @@ __device__  double __drcp_ru(double x);
 
 
 ### __drcp_rz
-```cpp 
+```cpp
 __device__  double __drcp_rz(double x);
 
 ```
@@ -1861,7 +1861,7 @@ __device__  double __drcp_rz(double x);
 
 
 ### __dsqrt_rd
-```cpp 
+```cpp
 __device__  double __dsqrt_rd(double x);
 
 ```
@@ -1869,15 +1869,15 @@ __device__  double __dsqrt_rd(double x);
 
 
 ### __dsqrt_rn
-```cpp 
+```cpp
 __device__  double __dsqrt_rn(double x);
 
 ```
-**Description:**  Unsupported
+**Description:**  Supported
 
 
 ### __dsqrt_ru
-```cpp 
+```cpp
 __device__  double __dsqrt_ru(double x);
 
 ```
@@ -1885,7 +1885,7 @@ __device__  double __dsqrt_ru(double x);
 
 
 ### __dsqrt_rz
-```cpp 
+```cpp
 __device__  double __dsqrt_rz(double x);
 
 ```
@@ -1893,7 +1893,7 @@ __device__  double __dsqrt_rz(double x);
 
 
 ### __dsub_rd
-```cpp 
+```cpp
 __device__ static  double __dsub_rd(double x, double y);
 
 ```
@@ -1901,15 +1901,15 @@ __device__ static  double __dsub_rd(double x, double y);
 
 
 ### __dsub_rn
-```cpp 
+```cpp
 __device__ static  double __dsub_rn(double x, double y);
 
 ```
-**Description:**  Unsupported
+**Description:**  Supported
 
 
 ### __dsub_ru
-```cpp 
+```cpp
 __device__ static  double __dsub_ru(double x, double y);
 
 ```
@@ -1917,7 +1917,7 @@ __device__ static  double __dsub_ru(double x, double y);
 
 
 ### __dsub_rz
-```cpp 
+```cpp
 __device__ static  double __dsub_rz(double x, double y);
 
 ```
@@ -1925,7 +1925,7 @@ __device__ static  double __dsub_rz(double x, double y);
 
 
 ### __fma_rd
-```cpp 
+```cpp
 __device__  double __fma_rd(double x, double y, double z);
 
 ```
@@ -1933,15 +1933,15 @@ __device__  double __fma_rd(double x, double y, double z);
 
 
 ### __fma_rn
-```cpp 
+```cpp
 __device__  double __fma_rn(double x, double y, double z);
 
 ```
-**Description:**  Unsupported
+**Description:**  Supported
 
 
 ### __fma_ru
-```cpp 
+```cpp
 __device__  double __fma_ru(double x, double y, double z);
 
 ```
@@ -1949,7 +1949,7 @@ __device__  double __fma_ru(double x, double y, double z);
 
 
 ### __fma_rz
-```cpp 
+```cpp
 __device__  double __fma_rz(double x, double y, double z);
 
 ```
@@ -1957,7 +1957,7 @@ __device__  double __fma_rz(double x, double y, double z);
 
 
 ### __brev
-```cpp 
+```cpp
 __device__ unsigned int __brev( unsigned int x);
 
 ```
@@ -1965,7 +1965,7 @@ __device__ unsigned int __brev( unsigned int x);
 
 
 ### __brevll
-```cpp 
+```cpp
 __device__ unsigned long long int __brevll( unsigned long long int x);
 
 ```
@@ -1973,7 +1973,7 @@ __device__ unsigned long long int __brevll( unsigned long long int x);
 
 
 ### __byte_perm
-```cpp 
+```cpp
 __device__ unsigned int __byte_perm(unsigned int x, unsigned int y, unsigned int s);
 
 ```
@@ -1981,7 +1981,7 @@ __device__ unsigned int __byte_perm(unsigned int x, unsigned int y, unsigned int
 
 
 ### __clz
-```cpp 
+```cpp
 __device__ unsigned int __clz(int x);
 
 ```
@@ -1989,7 +1989,7 @@ __device__ unsigned int __clz(int x);
 
 
 ### __clzll
-```cpp 
+```cpp
 __device__ unsigned int __clzll(long long int x);
 
 ```
@@ -1997,7 +1997,7 @@ __device__ unsigned int __clzll(long long int x);
 
 
 ### __ffs
-```cpp 
+```cpp
 __device__ unsigned int __ffs(int x);
 
 ```
@@ -2005,7 +2005,7 @@ __device__ unsigned int __ffs(int x);
 
 
 ### __ffsll
-```cpp 
+```cpp
 __device__ unsigned int __ffsll(long long int x);
 
 ```
@@ -2013,7 +2013,7 @@ __device__ unsigned int __ffsll(long long int x);
 
 
 ### __hadd
-```cpp 
+```cpp
 __device__ static unsigned int __hadd(int x, int y);
 
 ```
@@ -2021,7 +2021,7 @@ __device__ static unsigned int __hadd(int x, int y);
 
 
 ### __mul24
-```cpp 
+```cpp
 __device__ static int __mul24(int x, int y);
 
 ```
@@ -2029,7 +2029,7 @@ __device__ static int __mul24(int x, int y);
 
 
 ### __mul64hi
-```cpp 
+```cpp
 __device__ long long int __mul64hi(long long int x, long long int y);
 
 ```
@@ -2037,7 +2037,7 @@ __device__ long long int __mul64hi(long long int x, long long int y);
 
 
 ### __mulhi
-```cpp 
+```cpp
 __device__ static int __mulhi(int x, int y);
 
 ```
@@ -2045,7 +2045,7 @@ __device__ static int __mulhi(int x, int y);
 
 
 ### __popc
-```cpp 
+```cpp
 __device__ unsigned int __popc(unsigned int x);
 
 ```
@@ -2053,7 +2053,7 @@ __device__ unsigned int __popc(unsigned int x);
 
 
 ### __popcll
-```cpp 
+```cpp
 __device__ unsigned int __popcll(unsigned long long int x);
 
 ```
@@ -2061,7 +2061,7 @@ __device__ unsigned int __popcll(unsigned long long int x);
 
 
 ### __rhadd
-```cpp 
+```cpp
 __device__ static int __rhadd(int x, int y);
 
 ```
@@ -2069,7 +2069,7 @@ __device__ static int __rhadd(int x, int y);
 
 
 ### __sad
-```cpp 
+```cpp
 __device__ static unsigned int __sad(int x, int y, int z);
 
 ```
@@ -2077,7 +2077,7 @@ __device__ static unsigned int __sad(int x, int y, int z);
 
 
 ### __uhadd
-```cpp 
+```cpp
 __device__ static unsigned int __uhadd(unsigned int x, unsigned int y);
 
 ```
@@ -2085,7 +2085,7 @@ __device__ static unsigned int __uhadd(unsigned int x, unsigned int y);
 
 
 ### __umul24
-```cpp 
+```cpp
 __device__ static int __umul24(unsigned int x, unsigned int y);
 
 ```
@@ -2093,7 +2093,7 @@ __device__ static int __umul24(unsigned int x, unsigned int y);
 
 
 ### __umul64hi
-```cpp 
+```cpp
 __device__ unsigned long long int __umul64hi(unsigned long long int x, unsigned long long int y);
 
 ```
@@ -2101,7 +2101,7 @@ __device__ unsigned long long int __umul64hi(unsigned long long int x, unsigned 
 
 
 ### __umulhi
-```cpp 
+```cpp
 __device__ static unsigned int __umulhi(unsigned int x, unsigned int y);
 
 ```
@@ -2109,7 +2109,7 @@ __device__ static unsigned int __umulhi(unsigned int x, unsigned int y);
 
 
 ### __urhadd
-```cpp 
+```cpp
 __device__ static unsigned int __urhadd(unsigned int x, unsigned int y);
 
 ```
@@ -2117,7 +2117,7 @@ __device__ static unsigned int __urhadd(unsigned int x, unsigned int y);
 
 
 ### __usad
-```cpp 
+```cpp
 __device__ static unsigned int __usad(unsigned int x, unsigned int y, unsigned int z);
 
 ```
@@ -2125,7 +2125,7 @@ __device__ static unsigned int __usad(unsigned int x, unsigned int y, unsigned i
 
 
 ### __double2float_rd
-```cpp 
+```cpp
 __device__ float __double2float_rd(double x);
 
 ```
@@ -2133,7 +2133,7 @@ __device__ float __double2float_rd(double x);
 
 
 ### __double2float_rn
-```cpp 
+```cpp
 __device__ float __double2float_rn(double x);
 
 ```
@@ -2141,7 +2141,7 @@ __device__ float __double2float_rn(double x);
 
 
 ### __double2float_ru
-```cpp 
+```cpp
 __device__ float __double2float_ru(double x);
 
 ```
@@ -2149,7 +2149,7 @@ __device__ float __double2float_ru(double x);
 
 
 ### __double2float_rz
-```cpp 
+```cpp
 __device__ float __double2float_rz(double x);
 
 ```
@@ -2157,7 +2157,7 @@ __device__ float __double2float_rz(double x);
 
 
 ### __double2hiint
-```cpp 
+```cpp
 __device__ int __double2hiint(double x);
 
 ```
@@ -2165,7 +2165,7 @@ __device__ int __double2hiint(double x);
 
 
 ### __double2int_rd
-```cpp 
+```cpp
 __device__ int __double2int_rd(double x);
 
 ```
@@ -2173,7 +2173,7 @@ __device__ int __double2int_rd(double x);
 
 
 ### __double2int_rn
-```cpp 
+```cpp
 __device__ int __double2int_rn(double x);
 
 ```
@@ -2181,7 +2181,7 @@ __device__ int __double2int_rn(double x);
 
 
 ### __double2int_ru
-```cpp 
+```cpp
 __device__ int __double2int_ru(double x);
 
 ```
@@ -2189,7 +2189,7 @@ __device__ int __double2int_ru(double x);
 
 
 ### __double2int_rz
-```cpp 
+```cpp
 __device__ int __double2int_rz(double x);
 
 ```
@@ -2197,7 +2197,7 @@ __device__ int __double2int_rz(double x);
 
 
 ### __double2ll_rd
-```cpp 
+```cpp
 __device__ long long int __double2ll_rd(double x);
 
 ```
@@ -2205,7 +2205,7 @@ __device__ long long int __double2ll_rd(double x);
 
 
 ### __double2ll_rn
-```cpp 
+```cpp
 __device__ long long int __double2ll_rn(double x);
 
 ```
@@ -2213,7 +2213,7 @@ __device__ long long int __double2ll_rn(double x);
 
 
 ### __double2ll_ru
-```cpp 
+```cpp
 __device__ long long int __double2ll_ru(double x);
 
 ```
@@ -2221,7 +2221,7 @@ __device__ long long int __double2ll_ru(double x);
 
 
 ### __double2ll_rz
-```cpp 
+```cpp
 __device__ long long int __double2ll_rz(double x);
 
 ```
@@ -2229,7 +2229,7 @@ __device__ long long int __double2ll_rz(double x);
 
 
 ### __double2loint
-```cpp 
+```cpp
 __device__ int __double2loint(double x);
 
 ```
@@ -2237,7 +2237,7 @@ __device__ int __double2loint(double x);
 
 
 ### __double2uint_rd
-```cpp 
+```cpp
 __device__ unsigned int __double2uint_rd(double x);
 
 ```
@@ -2245,7 +2245,7 @@ __device__ unsigned int __double2uint_rd(double x);
 
 
 ### __double2uint_rn
-```cpp 
+```cpp
 __device__ unsigned int __double2uint_rn(double x);
 
 ```
@@ -2253,7 +2253,7 @@ __device__ unsigned int __double2uint_rn(double x);
 
 
 ### __double2uint_ru
-```cpp 
+```cpp
 __device__ unsigned int __double2uint_ru(double x);
 
 ```
@@ -2261,7 +2261,7 @@ __device__ unsigned int __double2uint_ru(double x);
 
 
 ### __double2uint_rz
-```cpp 
+```cpp
 __device__ unsigned int __double2uint_rz(double x);
 
 ```
@@ -2269,7 +2269,7 @@ __device__ unsigned int __double2uint_rz(double x);
 
 
 ### __double2ull_rd
-```cpp 
+```cpp
 __device__ unsigned long long int __double2ull_rd(double x);
 
 ```
@@ -2277,7 +2277,7 @@ __device__ unsigned long long int __double2ull_rd(double x);
 
 
 ### __double2ull_rn
-```cpp 
+```cpp
 __device__ unsigned long long int __double2ull_rn(double x);
 
 ```
@@ -2285,7 +2285,7 @@ __device__ unsigned long long int __double2ull_rn(double x);
 
 
 ### __double2ull_ru
-```cpp 
+```cpp
 __device__ unsigned long long int __double2ull_ru(double x);
 
 ```
@@ -2293,7 +2293,7 @@ __device__ unsigned long long int __double2ull_ru(double x);
 
 
 ### __double2ull_rz
-```cpp 
+```cpp
 __device__ unsigned long long int __double2ull_rz(double x);
 
 ```
@@ -2301,7 +2301,7 @@ __device__ unsigned long long int __double2ull_rz(double x);
 
 
 ### __double_as_longlong
-```cpp 
+```cpp
 __device__ long long int __double_as_longlong(double x);
 
 ```
@@ -2309,7 +2309,7 @@ __device__ long long int __double_as_longlong(double x);
 
 
 ### __float2half_rn
-```cpp 
+```cpp
 __device__ unsigned short __float2half_rn(float x);
 
 ```
@@ -2317,7 +2317,7 @@ __device__ unsigned short __float2half_rn(float x);
 
 
 ### __half2float
-```cpp 
+```cpp
 __device__ float __half2float(unsigned short);
 
 ```
@@ -2325,7 +2325,7 @@ __device__ float __half2float(unsigned short);
 
 
 ### __float2half_rn
-```cpp 
+```cpp
 __device__ __half __float2half_rn(float x);
 
 ```
@@ -2333,7 +2333,7 @@ __device__ __half __float2half_rn(float x);
 
 
 ### __half2float
-```cpp 
+```cpp
 __device__ float __half2float(__half);
 
 ```
@@ -2341,7 +2341,7 @@ __device__ float __half2float(__half);
 
 
 ### __float2int_rd
-```cpp 
+```cpp
 __device__ int __float2int_rd(float x);
 
 ```
@@ -2349,7 +2349,7 @@ __device__ int __float2int_rd(float x);
 
 
 ### __float2int_rn
-```cpp 
+```cpp
 __device__ int __float2int_rn(float x);
 
 ```
@@ -2357,7 +2357,7 @@ __device__ int __float2int_rn(float x);
 
 
 ### __float2int_ru
-```cpp 
+```cpp
 __device__ int __float2int_ru(float x);
 
 ```
@@ -2365,7 +2365,7 @@ __device__ int __float2int_ru(float x);
 
 
 ### __float2int_rz
-```cpp 
+```cpp
 __device__ int __float2int_rz(float x);
 
 ```
@@ -2373,7 +2373,7 @@ __device__ int __float2int_rz(float x);
 
 
 ### __float2ll_rd
-```cpp 
+```cpp
 __device__ long long int __float2ll_rd(float x);
 
 ```
@@ -2381,7 +2381,7 @@ __device__ long long int __float2ll_rd(float x);
 
 
 ### __float2ll_rn
-```cpp 
+```cpp
 __device__ long long int __float2ll_rn(float x);
 
 ```
@@ -2389,7 +2389,7 @@ __device__ long long int __float2ll_rn(float x);
 
 
 ### __float2ll_ru
-```cpp 
+```cpp
 __device__ long long int __float2ll_ru(float x);
 
 ```
@@ -2397,7 +2397,7 @@ __device__ long long int __float2ll_ru(float x);
 
 
 ### __float2ll_rz
-```cpp 
+```cpp
 __device__ long long int __float2ll_rz(float x);
 
 ```
@@ -2405,7 +2405,7 @@ __device__ long long int __float2ll_rz(float x);
 
 
 ### __float2uint_rd
-```cpp 
+```cpp
 __device__ unsigned int __float2uint_rd(float x);
 
 ```
@@ -2413,7 +2413,7 @@ __device__ unsigned int __float2uint_rd(float x);
 
 
 ### __float2uint_rn
-```cpp 
+```cpp
 __device__ unsigned int __float2uint_rn(float x);
 
 ```
@@ -2421,7 +2421,7 @@ __device__ unsigned int __float2uint_rn(float x);
 
 
 ### __float2uint_ru
-```cpp 
+```cpp
 __device__ unsigned int __float2uint_ru(float x);
 
 ```
@@ -2429,7 +2429,7 @@ __device__ unsigned int __float2uint_ru(float x);
 
 
 ### __float2uint_rz
-```cpp 
+```cpp
 __device__ unsigned int __float2uint_rz(float x);
 
 ```
@@ -2437,7 +2437,7 @@ __device__ unsigned int __float2uint_rz(float x);
 
 
 ### __float2ull_rd
-```cpp 
+```cpp
 __device__ unsigned long long int __float2ull_rd(float x);
 
 ```
@@ -2445,7 +2445,7 @@ __device__ unsigned long long int __float2ull_rd(float x);
 
 
 ### __float2ull_rn
-```cpp 
+```cpp
 __device__ unsigned long long int __float2ull_rn(float x);
 
 ```
@@ -2453,7 +2453,7 @@ __device__ unsigned long long int __float2ull_rn(float x);
 
 
 ### __float2ull_ru
-```cpp 
+```cpp
 __device__ unsigned long long int __float2ull_ru(float x);
 
 ```
@@ -2461,7 +2461,7 @@ __device__ unsigned long long int __float2ull_ru(float x);
 
 
 ### __float2ull_rz
-```cpp 
+```cpp
 __device__ unsigned long long int __float2ull_rz(float x);
 
 ```
@@ -2469,7 +2469,7 @@ __device__ unsigned long long int __float2ull_rz(float x);
 
 
 ### __float_as_int
-```cpp 
+```cpp
 __device__ int __float_as_int(float x);
 
 ```
@@ -2477,7 +2477,7 @@ __device__ int __float_as_int(float x);
 
 
 ### __float_as_uint
-```cpp 
+```cpp
 __device__ unsigned int __float_as_uint(float x);
 
 ```
@@ -2485,7 +2485,7 @@ __device__ unsigned int __float_as_uint(float x);
 
 
 ### __hiloint2double
-```cpp 
+```cpp
 __device__ double __hiloint2double(int hi, int lo);
 
 ```
@@ -2493,7 +2493,7 @@ __device__ double __hiloint2double(int hi, int lo);
 
 
 ### __int2double_rn
-```cpp 
+```cpp
 __device__ double __int2double_rn(int x);
 
 ```
@@ -2501,7 +2501,7 @@ __device__ double __int2double_rn(int x);
 
 
 ### __int2float_rd
-```cpp 
+```cpp
 __device__ float __int2float_rd(int x);
 
 ```
@@ -2509,7 +2509,7 @@ __device__ float __int2float_rd(int x);
 
 
 ### __int2float_rn
-```cpp 
+```cpp
 __device__ float __int2float_rn(int x);
 
 ```
@@ -2517,7 +2517,7 @@ __device__ float __int2float_rn(int x);
 
 
 ### __int2float_ru
-```cpp 
+```cpp
 __device__ float __int2float_ru(int x);
 
 ```
@@ -2525,7 +2525,7 @@ __device__ float __int2float_ru(int x);
 
 
 ### __int2float_rz
-```cpp 
+```cpp
 __device__ float __int2float_rz(int x);
 
 ```
@@ -2533,7 +2533,7 @@ __device__ float __int2float_rz(int x);
 
 
 ### __int_as_float
-```cpp 
+```cpp
 __device__ float __int_as_float(int x);
 
 ```
@@ -2541,7 +2541,7 @@ __device__ float __int_as_float(int x);
 
 
 ### __ll2double_rd
-```cpp 
+```cpp
 __device__ double __ll2double_rd(long long int x);
 
 ```
@@ -2549,7 +2549,7 @@ __device__ double __ll2double_rd(long long int x);
 
 
 ### __ll2double_rn
-```cpp 
+```cpp
 __device__ double __ll2double_rn(long long int x);
 
 ```
@@ -2557,7 +2557,7 @@ __device__ double __ll2double_rn(long long int x);
 
 
 ### __ll2double_ru
-```cpp 
+```cpp
 __device__ double __ll2double_ru(long long int x);
 
 ```
@@ -2565,7 +2565,7 @@ __device__ double __ll2double_ru(long long int x);
 
 
 ### __ll2double_rz
-```cpp 
+```cpp
 __device__ double __ll2double_rz(long long int x);
 
 ```
@@ -2573,7 +2573,7 @@ __device__ double __ll2double_rz(long long int x);
 
 
 ### __ll2float_rd
-```cpp 
+```cpp
 __device__ float __ll2float_rd(long long int x);
 
 ```
@@ -2581,7 +2581,7 @@ __device__ float __ll2float_rd(long long int x);
 
 
 ### __ll2float_rn
-```cpp 
+```cpp
 __device__ float __ll2float_rn(long long int x);
 
 ```
@@ -2589,7 +2589,7 @@ __device__ float __ll2float_rn(long long int x);
 
 
 ### __ll2float_ru
-```cpp 
+```cpp
 __device__ float __ll2float_ru(long long int x);
 
 ```
@@ -2597,7 +2597,7 @@ __device__ float __ll2float_ru(long long int x);
 
 
 ### __ll2float_rz
-```cpp 
+```cpp
 __device__ float __ll2float_rz(long long int x);
 
 ```
@@ -2605,7 +2605,7 @@ __device__ float __ll2float_rz(long long int x);
 
 
 ### __longlong_as_double
-```cpp 
+```cpp
 __device__ double __longlong_as_double(long long int x);
 
 ```
@@ -2613,7 +2613,7 @@ __device__ double __longlong_as_double(long long int x);
 
 
 ### __uint2double_rn
-```cpp 
+```cpp
 __device__ double __uint2double_rn(int x);
 
 ```
@@ -2621,7 +2621,7 @@ __device__ double __uint2double_rn(int x);
 
 
 ### __uint2float_rd
-```cpp 
+```cpp
 __device__ float __uint2float_rd(unsigned int x);
 
 ```
@@ -2629,7 +2629,7 @@ __device__ float __uint2float_rd(unsigned int x);
 
 
 ### __uint2float_rn
-```cpp 
+```cpp
 __device__ float __uint2float_rn(unsigned int x);
 
 ```
@@ -2637,7 +2637,7 @@ __device__ float __uint2float_rn(unsigned int x);
 
 
 ### __uint2float_ru
-```cpp 
+```cpp
 __device__ float __uint2float_ru(unsigned int x);
 
 ```
@@ -2645,7 +2645,7 @@ __device__ float __uint2float_ru(unsigned int x);
 
 
 ### __uint2float_rz
-```cpp 
+```cpp
 __device__ float __uint2float_rz(unsigned int x);
 
 ```
@@ -2653,7 +2653,7 @@ __device__ float __uint2float_rz(unsigned int x);
 
 
 ### __uint_as_float
-```cpp 
+```cpp
 __device__ float __uint_as_float(unsigned int x);
 
 ```
@@ -2661,7 +2661,7 @@ __device__ float __uint_as_float(unsigned int x);
 
 
 ### __ull2double_rd
-```cpp 
+```cpp
 __device__ double __ull2double_rd(unsigned long long int x);
 
 ```
@@ -2669,7 +2669,7 @@ __device__ double __ull2double_rd(unsigned long long int x);
 
 
 ### __ull2double_rn
-```cpp 
+```cpp
 __device__ double __ull2double_rn(unsigned long long int x);
 
 ```
@@ -2677,7 +2677,7 @@ __device__ double __ull2double_rn(unsigned long long int x);
 
 
 ### __ull2double_ru
-```cpp 
+```cpp
 __device__ double __ull2double_ru(unsigned long long int x);
 
 ```
@@ -2685,7 +2685,7 @@ __device__ double __ull2double_ru(unsigned long long int x);
 
 
 ### __ull2double_rz
-```cpp 
+```cpp
 __device__ double __ull2double_rz(unsigned long long int x);
 
 ```
@@ -2693,7 +2693,7 @@ __device__ double __ull2double_rz(unsigned long long int x);
 
 
 ### __ull2float_rd
-```cpp 
+```cpp
 __device__ float __ull2float_rd(unsigned long long int x);
 
 ```
@@ -2701,7 +2701,7 @@ __device__ float __ull2float_rd(unsigned long long int x);
 
 
 ### __ull2float_rn
-```cpp 
+```cpp
 __device__ float __ull2float_rn(unsigned long long int x);
 
 ```
@@ -2709,7 +2709,7 @@ __device__ float __ull2float_rn(unsigned long long int x);
 
 
 ### __ull2float_ru
-```cpp 
+```cpp
 __device__ float __ull2float_ru(unsigned long long int x);
 
 ```
@@ -2717,7 +2717,7 @@ __device__ float __ull2float_ru(unsigned long long int x);
 
 
 ### __ull2float_rz
-```cpp 
+```cpp
 __device__ float __ull2float_rz(unsigned long long int x);
 
 ```
@@ -2725,7 +2725,7 @@ __device__ float __ull2float_rz(unsigned long long int x);
 
 
 ### __hadd
-```cpp 
+```cpp
 __device__ static __half __hadd(const __half a, const __half b);
 
 ```
@@ -2733,7 +2733,7 @@ __device__ static __half __hadd(const __half a, const __half b);
 
 
 ### __hadd_sat
-```cpp 
+```cpp
 __device__ static __half __hadd_sat(__half a, __half b);
 
 ```
@@ -2741,7 +2741,7 @@ __device__ static __half __hadd_sat(__half a, __half b);
 
 
 ### __hfma
-```cpp 
+```cpp
 __device__ static __half __hfma(__half a, __half b, __half c);
 
 ```
@@ -2749,7 +2749,7 @@ __device__ static __half __hfma(__half a, __half b, __half c);
 
 
 ### __hfma_sat
-```cpp 
+```cpp
 __device__ static __half __hfma_sat(__half a, __half b, __half c);
 
 ```
@@ -2757,7 +2757,7 @@ __device__ static __half __hfma_sat(__half a, __half b, __half c);
 
 
 ### __hmul
-```cpp 
+```cpp
 __device__ static __half __hmul(__half a, __half b);
 
 ```
@@ -2765,7 +2765,7 @@ __device__ static __half __hmul(__half a, __half b);
 
 
 ### __hmul_sat
-```cpp 
+```cpp
 __device__ static __half __hmul_sat(__half a, __half b);
 
 ```
@@ -2773,7 +2773,7 @@ __device__ static __half __hmul_sat(__half a, __half b);
 
 
 ### __hneg
-```cpp 
+```cpp
 __device__ static __half __hneg(__half a);
 
 ```
@@ -2781,7 +2781,7 @@ __device__ static __half __hneg(__half a);
 
 
 ### __hsub
-```cpp 
+```cpp
 __device__ static __half __hsub(__half a, __half b);
 
 ```
@@ -2789,7 +2789,7 @@ __device__ static __half __hsub(__half a, __half b);
 
 
 ### __hsub_sat
-```cpp 
+```cpp
 __device__ static __half __hsub_sat(__half a, __half b);
 
 ```
@@ -2797,7 +2797,7 @@ __device__ static __half __hsub_sat(__half a, __half b);
 
 
 ### hdiv
-```cpp 
+```cpp
 __device__ static __half hdiv(__half a, __half b);
 
 ```
@@ -2805,7 +2805,7 @@ __device__ static __half hdiv(__half a, __half b);
 
 
 ### __hadd2
-```cpp 
+```cpp
 __device__ static __half2 __hadd2(__half2 a, __half2 b);
 
 ```
@@ -2813,7 +2813,7 @@ __device__ static __half2 __hadd2(__half2 a, __half2 b);
 
 
 ### __hadd2_sat
-```cpp 
+```cpp
 __device__ static __half2 __hadd2_sat(__half2 a, __half2 b);
 
 ```
@@ -2821,7 +2821,7 @@ __device__ static __half2 __hadd2_sat(__half2 a, __half2 b);
 
 
 ### __hfma2
-```cpp 
+```cpp
 __device__ static __half2 __hfma2(__half2 a, __half2 b, __half2 c);
 
 ```
@@ -2829,7 +2829,7 @@ __device__ static __half2 __hfma2(__half2 a, __half2 b, __half2 c);
 
 
 ### __hfma2_sat
-```cpp 
+```cpp
 __device__ static __half2 __hfma2_sat(__half2 a, __half2 b, __half2 c);
 
 ```
@@ -2837,7 +2837,7 @@ __device__ static __half2 __hfma2_sat(__half2 a, __half2 b, __half2 c);
 
 
 ### __hmul2
-```cpp 
+```cpp
 __device__ static __half2 __hmul2(__half2 a, __half2 b);
 
 ```
@@ -2845,7 +2845,7 @@ __device__ static __half2 __hmul2(__half2 a, __half2 b);
 
 
 ### __hmul2_sat
-```cpp 
+```cpp
 __device__ static __half2 __hmul2_sat(__half2 a, __half2 b);
 
 ```
@@ -2853,7 +2853,7 @@ __device__ static __half2 __hmul2_sat(__half2 a, __half2 b);
 
 
 ### __hsub2
-```cpp 
+```cpp
 __device__ static __half2 __hsub2(__half2 a, __half2 b);
 
 ```
@@ -2861,7 +2861,7 @@ __device__ static __half2 __hsub2(__half2 a, __half2 b);
 
 
 ### __hneg2
-```cpp 
+```cpp
 __device__ static __half2 __hneg2(__half2 a);
 
 ```
@@ -2869,7 +2869,7 @@ __device__ static __half2 __hneg2(__half2 a);
 
 
 ### __hsub2_sat
-```cpp 
+```cpp
 __device__ static __half2 __hsub2_sat(__half2 a, __half2 b);
 
 ```
@@ -2877,7 +2877,7 @@ __device__ static __half2 __hsub2_sat(__half2 a, __half2 b);
 
 
 ### h2div
-```cpp 
+```cpp
 __device__ static __half2 h2div(__half2 a, __half2 b);
 
 ```
@@ -2885,7 +2885,7 @@ __device__ static __half2 h2div(__half2 a, __half2 b);
 
 
 ### __heq
-```cpp 
+```cpp
 __device__  bool __heq(__half a, __half b);
 
 ```
@@ -2893,7 +2893,7 @@ __device__  bool __heq(__half a, __half b);
 
 
 ### __hge
-```cpp 
+```cpp
 __device__  bool __hge(__half a, __half b);
 
 ```
@@ -2901,7 +2901,7 @@ __device__  bool __hge(__half a, __half b);
 
 
 ### __hgt
-```cpp 
+```cpp
 __device__  bool __hgt(__half a, __half b);
 
 ```
@@ -2909,7 +2909,7 @@ __device__  bool __hgt(__half a, __half b);
 
 
 ### __hisinf
-```cpp 
+```cpp
 __device__  bool __hisinf(__half a);
 
 ```
@@ -2917,7 +2917,7 @@ __device__  bool __hisinf(__half a);
 
 
 ### __hisnan
-```cpp 
+```cpp
 __device__  bool __hisnan(__half a);
 
 ```
@@ -2925,7 +2925,7 @@ __device__  bool __hisnan(__half a);
 
 
 ### __hle
-```cpp 
+```cpp
 __device__  bool __hle(__half a, __half b);
 
 ```
@@ -2933,7 +2933,7 @@ __device__  bool __hle(__half a, __half b);
 
 
 ### __hlt
-```cpp 
+```cpp
 __device__  bool __hlt(__half a, __half b);
 
 ```
@@ -2941,7 +2941,7 @@ __device__  bool __hlt(__half a, __half b);
 
 
 ### __hne
-```cpp 
+```cpp
 __device__  bool __hne(__half a, __half b);
 
 ```
@@ -2949,7 +2949,7 @@ __device__  bool __hne(__half a, __half b);
 
 
 ### __hbeq2
-```cpp 
+```cpp
 __device__  bool __hbeq2(__half2 a, __half2 b);
 
 ```
@@ -2957,7 +2957,7 @@ __device__  bool __hbeq2(__half2 a, __half2 b);
 
 
 ### __hbge2
-```cpp 
+```cpp
 __device__  bool __hbge2(__half2 a, __half2 b);
 
 ```
@@ -2965,7 +2965,7 @@ __device__  bool __hbge2(__half2 a, __half2 b);
 
 
 ### __hbgt2
-```cpp 
+```cpp
 __device__  bool __hbgt2(__half2 a, __half2 b);
 
 ```
@@ -2973,7 +2973,7 @@ __device__  bool __hbgt2(__half2 a, __half2 b);
 
 
 ### __hble2
-```cpp 
+```cpp
 __device__  bool __hble2(__half2 a, __half2 b);
 
 ```
@@ -2981,7 +2981,7 @@ __device__  bool __hble2(__half2 a, __half2 b);
 
 
 ### __hblt2
-```cpp 
+```cpp
 __device__  bool __hblt2(__half2 a, __half2 b);
 
 ```
@@ -2989,7 +2989,7 @@ __device__  bool __hblt2(__half2 a, __half2 b);
 
 
 ### __hbne2
-```cpp 
+```cpp
 __device__  bool __hbne2(__half2 a, __half2 b);
 
 ```
@@ -2997,7 +2997,7 @@ __device__  bool __hbne2(__half2 a, __half2 b);
 
 
 ### __heq2
-```cpp 
+```cpp
 __device__  __half2 __heq2(__half2 a, __half2 b);
 
 ```
@@ -3005,7 +3005,7 @@ __device__  __half2 __heq2(__half2 a, __half2 b);
 
 
 ### __hge2
-```cpp 
+```cpp
 __device__  __half2 __hge2(__half2 a, __half2 b);
 
 ```
@@ -3013,7 +3013,7 @@ __device__  __half2 __hge2(__half2 a, __half2 b);
 
 
 ### __hgt2
-```cpp 
+```cpp
 __device__  __half2 __hgt2(__half2 a, __half2 b);
 
 ```
@@ -3021,7 +3021,7 @@ __device__  __half2 __hgt2(__half2 a, __half2 b);
 
 
 ### __hisnan2
-```cpp 
+```cpp
 __device__  __half2 __hisnan2(__half2 a);
 
 ```
@@ -3029,7 +3029,7 @@ __device__  __half2 __hisnan2(__half2 a);
 
 
 ### __hle2
-```cpp 
+```cpp
 __device__  __half2 __hle2(__half2 a, __half2 b);
 
 ```
@@ -3037,7 +3037,7 @@ __device__  __half2 __hle2(__half2 a, __half2 b);
 
 
 ### __hlt2
-```cpp 
+```cpp
 __device__  __half2 __hlt2(__half2 a, __half2 b);
 
 ```
@@ -3045,7 +3045,7 @@ __device__  __half2 __hlt2(__half2 a, __half2 b);
 
 
 ### __hne2
-```cpp 
+```cpp
 __device__  __half2 __hne2(__half2 a, __half2 b);
 
 ```
@@ -3053,7 +3053,7 @@ __device__  __half2 __hne2(__half2 a, __half2 b);
 
 
 ### hceil
-```cpp 
+```cpp
 __device__ static __half hceil(const __half h);
 
 ```
@@ -3061,7 +3061,7 @@ __device__ static __half hceil(const __half h);
 
 
 ### hcos
-```cpp 
+```cpp
 __device__ static __half hcos(const __half h);
 
 ```
@@ -3069,7 +3069,7 @@ __device__ static __half hcos(const __half h);
 
 
 ### hexp
-```cpp 
+```cpp
 __device__ static __half hexp(const __half h);
 
 ```
@@ -3077,7 +3077,7 @@ __device__ static __half hexp(const __half h);
 
 
 ### hexp10
-```cpp 
+```cpp
 __device__ static __half hexp10(const __half h);
 
 ```
@@ -3085,7 +3085,7 @@ __device__ static __half hexp10(const __half h);
 
 
 ### hexp2
-```cpp 
+```cpp
 __device__ static __half hexp2(const __half h);
 
 ```
@@ -3093,7 +3093,7 @@ __device__ static __half hexp2(const __half h);
 
 
 ### hfloor
-```cpp 
+```cpp
 __device__ static __half hfloor(const __half h);
 
 ```
@@ -3101,7 +3101,7 @@ __device__ static __half hfloor(const __half h);
 
 
 ### hlog
-```cpp 
+```cpp
 __device__ static __half hlog(const __half h);
 
 ```
@@ -3109,7 +3109,7 @@ __device__ static __half hlog(const __half h);
 
 
 ### hlog10
-```cpp 
+```cpp
 __device__ static __half hlog10(const __half h);
 
 ```
@@ -3117,7 +3117,7 @@ __device__ static __half hlog10(const __half h);
 
 
 ### hlog2
-```cpp 
+```cpp
 __device__ static __half hlog2(const __half h);
 
 ```
@@ -3125,7 +3125,7 @@ __device__ static __half hlog2(const __half h);
 
 
 ### hrcp
-```cpp 
+```cpp
 //__device__ static __half hrcp(const __half h);
 
 ```
@@ -3133,7 +3133,7 @@ __device__ static __half hlog2(const __half h);
 
 
 ### hrint
-```cpp 
+```cpp
 __device__ static __half hrint(const __half h);
 
 ```
@@ -3141,7 +3141,7 @@ __device__ static __half hrint(const __half h);
 
 
 ### hsin
-```cpp 
+```cpp
 __device__ static __half hsin(const __half h);
 
 ```
@@ -3149,7 +3149,7 @@ __device__ static __half hsin(const __half h);
 
 
 ### hsqrt
-```cpp 
+```cpp
 __device__ static __half hsqrt(const __half a);
 
 ```
@@ -3157,7 +3157,7 @@ __device__ static __half hsqrt(const __half a);
 
 
 ### htrunc
-```cpp 
+```cpp
 __device__ static __half htrunc(const __half a);
 
 ```
@@ -3165,7 +3165,7 @@ __device__ static __half htrunc(const __half a);
 
 
 ### h2ceil
-```cpp 
+```cpp
 __device__ static __half2 h2ceil(const __half2 h);
 
 ```
@@ -3173,7 +3173,7 @@ __device__ static __half2 h2ceil(const __half2 h);
 
 
 ### h2exp
-```cpp 
+```cpp
 __device__ static __half2 h2exp(const __half2 h);
 
 ```
@@ -3181,7 +3181,7 @@ __device__ static __half2 h2exp(const __half2 h);
 
 
 ### h2exp10
-```cpp 
+```cpp
 __device__ static __half2 h2exp10(const __half2 h);
 
 ```
@@ -3189,7 +3189,7 @@ __device__ static __half2 h2exp10(const __half2 h);
 
 
 ### h2exp2
-```cpp 
+```cpp
 __device__ static __half2 h2exp2(const __half2 h);
 
 ```
@@ -3197,7 +3197,7 @@ __device__ static __half2 h2exp2(const __half2 h);
 
 
 ### h2floor
-```cpp 
+```cpp
 __device__ static __half2 h2floor(const __half2 h);
 
 ```
@@ -3205,7 +3205,7 @@ __device__ static __half2 h2floor(const __half2 h);
 
 
 ### h2log
-```cpp 
+```cpp
 __device__ static __half2 h2log(const __half2 h);
 
 ```
@@ -3213,7 +3213,7 @@ __device__ static __half2 h2log(const __half2 h);
 
 
 ### h2log10
-```cpp 
+```cpp
 __device__ static __half2 h2log10(const __half2 h);
 
 ```
@@ -3221,7 +3221,7 @@ __device__ static __half2 h2log10(const __half2 h);
 
 
 ### h2log2
-```cpp 
+```cpp
 __device__ static __half2 h2log2(const __half2 h);
 
 ```
@@ -3229,7 +3229,7 @@ __device__ static __half2 h2log2(const __half2 h);
 
 
 ### h2rcp
-```cpp 
+```cpp
 __device__ static __half2 h2rcp(const __half2 h);
 
 ```
@@ -3237,7 +3237,7 @@ __device__ static __half2 h2rcp(const __half2 h);
 
 
 ### h2rsqrt
-```cpp 
+```cpp
 __device__ static __half2 h2rsqrt(const __half2 h);
 
 ```
@@ -3245,7 +3245,7 @@ __device__ static __half2 h2rsqrt(const __half2 h);
 
 
 ### h2sin
-```cpp 
+```cpp
 __device__ static __half2 h2sin(const __half2 h);
 
 ```
@@ -3253,7 +3253,7 @@ __device__ static __half2 h2sin(const __half2 h);
 
 
 ### h2sqrt
-```cpp 
+```cpp
 __device__ static __half2 h2sqrt(const __half2 h);
 
 ```
@@ -3261,7 +3261,7 @@ __device__ static __half2 h2sqrt(const __half2 h);
 
 
 ### __float22half2_rn
-```cpp 
+```cpp
 __device__  __half2 __float22half2_rn(const float2 a);
 
 ```
@@ -3269,7 +3269,7 @@ __device__  __half2 __float22half2_rn(const float2 a);
 
 
 ### __float2half
-```cpp 
+```cpp
 __device__  __half __float2half(const float a);
 
 ```
@@ -3277,7 +3277,7 @@ __device__  __half __float2half(const float a);
 
 
 ### __float2half2_rn
-```cpp 
+```cpp
 __device__  __half2 __float2half2_rn(const float a);
 
 ```
@@ -3285,7 +3285,7 @@ __device__  __half2 __float2half2_rn(const float a);
 
 
 ### __float2half_rd
-```cpp 
+```cpp
 __device__  __half __float2half_rd(const float a);
 
 ```
@@ -3293,7 +3293,7 @@ __device__  __half __float2half_rd(const float a);
 
 
 ### __float2half_rn
-```cpp 
+```cpp
 __device__  __half __float2half_rn(const float a);
 
 ```
@@ -3301,7 +3301,7 @@ __device__  __half __float2half_rn(const float a);
 
 
 ### __float2half_ru
-```cpp 
+```cpp
 __device__  __half __float2half_ru(const float a);
 
 ```
@@ -3309,7 +3309,7 @@ __device__  __half __float2half_ru(const float a);
 
 
 ### __float2half_rz
-```cpp 
+```cpp
 __device__  __half __float2half_rz(const float a);
 
 ```
@@ -3317,7 +3317,7 @@ __device__  __half __float2half_rz(const float a);
 
 
 ### __floats2half2_rn
-```cpp 
+```cpp
 __device__  __half2 __floats2half2_rn(const float a, const float b);
 
 ```
@@ -3325,7 +3325,7 @@ __device__  __half2 __floats2half2_rn(const float a, const float b);
 
 
 ### __half22float2
-```cpp 
+```cpp
 __device__  float2 __half22float2(const __half2 a);
 
 ```
@@ -3333,7 +3333,7 @@ __device__  float2 __half22float2(const __half2 a);
 
 
 ### __half2float
-```cpp 
+```cpp
 __device__  float __half2float(const __half a);
 
 ```
@@ -3341,7 +3341,7 @@ __device__  float __half2float(const __half a);
 
 
 ### half2half2
-```cpp 
+```cpp
 __device__  __half2 half2half2(const __half a);
 
 ```
@@ -3349,7 +3349,7 @@ __device__  __half2 half2half2(const __half a);
 
 
 ### __half2int_rd
-```cpp 
+```cpp
 __device__  int __half2int_rd(__half h);
 
 ```
@@ -3357,7 +3357,7 @@ __device__  int __half2int_rd(__half h);
 
 
 ### __half2int_rn
-```cpp 
+```cpp
 __device__  int __half2int_rn(__half h);
 
 ```
@@ -3365,7 +3365,7 @@ __device__  int __half2int_rn(__half h);
 
 
 ### __half2int_ru
-```cpp 
+```cpp
 __device__  int __half2int_ru(__half h);
 
 ```
@@ -3373,7 +3373,7 @@ __device__  int __half2int_ru(__half h);
 
 
 ### __half2int_rz
-```cpp 
+```cpp
 __device__  int __half2int_rz(__half h);
 
 ```
@@ -3381,7 +3381,7 @@ __device__  int __half2int_rz(__half h);
 
 
 ### __half2ll_rd
-```cpp 
+```cpp
 __device__  long long int __half2ll_rd(__half h);
 
 ```
@@ -3389,7 +3389,7 @@ __device__  long long int __half2ll_rd(__half h);
 
 
 ### __half2ll_rn
-```cpp 
+```cpp
 __device__  long long int __half2ll_rn(__half h);
 
 ```
@@ -3397,7 +3397,7 @@ __device__  long long int __half2ll_rn(__half h);
 
 
 ### __half2ll_ru
-```cpp 
+```cpp
 __device__  long long int __half2ll_ru(__half h);
 
 ```
@@ -3405,7 +3405,7 @@ __device__  long long int __half2ll_ru(__half h);
 
 
 ### __half2ll_rz
-```cpp 
+```cpp
 __device__  long long int __half2ll_rz(__half h);
 
 ```
@@ -3413,7 +3413,7 @@ __device__  long long int __half2ll_rz(__half h);
 
 
 ### __half2short_rd
-```cpp 
+```cpp
 __device__  short __half2short_rd(__half h);
 
 ```
@@ -3421,7 +3421,7 @@ __device__  short __half2short_rd(__half h);
 
 
 ### __half2short_rn
-```cpp 
+```cpp
 __device__  short __half2short_rn(__half h);
 
 ```
@@ -3429,7 +3429,7 @@ __device__  short __half2short_rn(__half h);
 
 
 ### __half2short_ru
-```cpp 
+```cpp
 __device__  short __half2short_ru(__half h);
 
 ```
@@ -3437,7 +3437,7 @@ __device__  short __half2short_ru(__half h);
 
 
 ### __half2short_rz
-```cpp 
+```cpp
 __device__  short __half2short_rz(__half h);
 
 ```
@@ -3445,7 +3445,7 @@ __device__  short __half2short_rz(__half h);
 
 
 ### __half2uint_rd
-```cpp 
+```cpp
 __device__  unsigned int __half2uint_rd(__half h);
 
 ```
@@ -3453,7 +3453,7 @@ __device__  unsigned int __half2uint_rd(__half h);
 
 
 ### __half2uint_rn
-```cpp 
+```cpp
 __device__  unsigned int __half2uint_rn(__half h);
 
 ```
@@ -3461,7 +3461,7 @@ __device__  unsigned int __half2uint_rn(__half h);
 
 
 ### __half2uint_ru
-```cpp 
+```cpp
 __device__  unsigned int __half2uint_ru(__half h);
 
 ```
@@ -3469,7 +3469,7 @@ __device__  unsigned int __half2uint_ru(__half h);
 
 
 ### __half2uint_rz
-```cpp 
+```cpp
 __device__  unsigned int __half2uint_rz(__half h);
 
 ```
@@ -3477,7 +3477,7 @@ __device__  unsigned int __half2uint_rz(__half h);
 
 
 ### __half2ull_rd
-```cpp 
+```cpp
 __device__  unsigned long long int __half2ull_rd(__half h);
 
 ```
@@ -3485,7 +3485,7 @@ __device__  unsigned long long int __half2ull_rd(__half h);
 
 
 ### __half2ull_rn
-```cpp 
+```cpp
 __device__  unsigned long long int __half2ull_rn(__half h);
 
 ```
@@ -3493,7 +3493,7 @@ __device__  unsigned long long int __half2ull_rn(__half h);
 
 
 ### __half2ull_ru
-```cpp 
+```cpp
 __device__  unsigned long long int __half2ull_ru(__half h);
 
 ```
@@ -3501,7 +3501,7 @@ __device__  unsigned long long int __half2ull_ru(__half h);
 
 
 ### __half2ull_rz
-```cpp 
+```cpp
 __device__  unsigned long long int __half2ull_rz(__half h);
 
 ```
@@ -3509,7 +3509,7 @@ __device__  unsigned long long int __half2ull_rz(__half h);
 
 
 ### __half2ushort_rd
-```cpp 
+```cpp
 __device__  unsigned short int __half2ushort_rd(__half h);
 
 ```
@@ -3517,7 +3517,7 @@ __device__  unsigned short int __half2ushort_rd(__half h);
 
 
 ### __half2ushort_rn
-```cpp 
+```cpp
 __device__  unsigned short int __half2ushort_rn(__half h);
 
 ```
@@ -3525,7 +3525,7 @@ __device__  unsigned short int __half2ushort_rn(__half h);
 
 
 ### __half2ushort_ru
-```cpp 
+```cpp
 __device__  unsigned short int __half2ushort_ru(__half h);
 
 ```
@@ -3533,7 +3533,7 @@ __device__  unsigned short int __half2ushort_ru(__half h);
 
 
 ### __half2ushort_rz
-```cpp 
+```cpp
 __device__  unsigned short int __half2ushort_rz(__half h);
 
 ```
@@ -3541,7 +3541,7 @@ __device__  unsigned short int __half2ushort_rz(__half h);
 
 
 ### __half_as_short
-```cpp 
+```cpp
 __device__  short int __half_as_short(const __half h);
 
 ```
@@ -3549,7 +3549,7 @@ __device__  short int __half_as_short(const __half h);
 
 
 ### __half_as_ushort
-```cpp 
+```cpp
 __device__  unsigned short int __half_as_ushort(const __half h);
 
 ```
@@ -3557,7 +3557,7 @@ __device__  unsigned short int __half_as_ushort(const __half h);
 
 
 ### __halves2half2
-```cpp 
+```cpp
 __device__  __half2 __halves2half2(const __half a, const __half b);
 
 ```
@@ -3565,7 +3565,7 @@ __device__  __half2 __halves2half2(const __half a, const __half b);
 
 
 ### __high2float
-```cpp 
+```cpp
 __device__  float __high2float(const __half2 a);
 
 ```
@@ -3573,7 +3573,7 @@ __device__  float __high2float(const __half2 a);
 
 
 ### __high2half
-```cpp 
+```cpp
 __device__  __half __high2half(const __half2 a);
 
 ```
@@ -3581,7 +3581,7 @@ __device__  __half __high2half(const __half2 a);
 
 
 ### __high2half2
-```cpp 
+```cpp
 __device__  __half2 __high2half2(const __half2 a);
 
 ```
@@ -3589,7 +3589,7 @@ __device__  __half2 __high2half2(const __half2 a);
 
 
 ### __highs2half2
-```cpp 
+```cpp
 __device__  __half2 __highs2half2(const __half2 a, const __half2 b);
 
 ```
@@ -3597,7 +3597,7 @@ __device__  __half2 __highs2half2(const __half2 a, const __half2 b);
 
 
 ### __int2half_rd
-```cpp 
+```cpp
 __device__  __half __int2half_rd(int i);
 
 ```
@@ -3605,7 +3605,7 @@ __device__  __half __int2half_rd(int i);
 
 
 ### __int2half_rn
-```cpp 
+```cpp
 __device__  __half __int2half_rn(int i);
 
 ```
@@ -3613,7 +3613,7 @@ __device__  __half __int2half_rn(int i);
 
 
 ### __int2half_ru
-```cpp 
+```cpp
 __device__  __half __int2half_ru(int i);
 
 ```
@@ -3621,7 +3621,7 @@ __device__  __half __int2half_ru(int i);
 
 
 ### __int2half_rz
-```cpp 
+```cpp
 __device__  __half __int2half_rz(int i);
 
 ```
@@ -3629,7 +3629,7 @@ __device__  __half __int2half_rz(int i);
 
 
 ### __ll2half_rd
-```cpp 
+```cpp
 __device__  __half __ll2half_rd(long long int i);
 
 ```
@@ -3637,7 +3637,7 @@ __device__  __half __ll2half_rd(long long int i);
 
 
 ### __ll2half_rn
-```cpp 
+```cpp
 __device__  __half __ll2half_rn(long long int i);
 
 ```
@@ -3645,7 +3645,7 @@ __device__  __half __ll2half_rn(long long int i);
 
 
 ### __ll2half_ru
-```cpp 
+```cpp
 __device__  __half __ll2half_ru(long long int i);
 
 ```
@@ -3653,7 +3653,7 @@ __device__  __half __ll2half_ru(long long int i);
 
 
 ### __ll2half_rz
-```cpp 
+```cpp
 __device__  __half __ll2half_rz(long long int i);
 
 ```
@@ -3661,7 +3661,7 @@ __device__  __half __ll2half_rz(long long int i);
 
 
 ### __low2float
-```cpp 
+```cpp
 __device__  float __low2float(const __half2 a);
 
 ```
@@ -3669,7 +3669,7 @@ __device__  float __low2float(const __half2 a);
 
 
 ### __low2half
-```cpp 
+```cpp
 __device__ __half __low2half(const __half2 a);
 
 ```
@@ -3677,7 +3677,7 @@ __device__ __half __low2half(const __half2 a);
 
 
 ### __low2half2
-```cpp 
+```cpp
 __device__ __half2 __low2half2(const __half2 a, const __half2 b);
 
 ```
@@ -3685,7 +3685,7 @@ __device__ __half2 __low2half2(const __half2 a, const __half2 b);
 
 
 ### __low2half2
-```cpp 
+```cpp
 __device__ __half2 __low2half2(const __half2 a);
 
 ```
@@ -3693,7 +3693,7 @@ __device__ __half2 __low2half2(const __half2 a);
 
 
 ### __lowhigh2highlow
-```cpp 
+```cpp
 __device__ __half2 __lowhigh2highlow(const __half2 a);
 
 ```
@@ -3701,7 +3701,7 @@ __device__ __half2 __lowhigh2highlow(const __half2 a);
 
 
 ### __lows2half2
-```cpp 
+```cpp
 __device__ __half2 __lows2half2(const __half2 a, const __half2 b);
 
 ```
@@ -3709,7 +3709,7 @@ __device__ __half2 __lows2half2(const __half2 a, const __half2 b);
 
 
 ### __short2half_rd
-```cpp 
+```cpp
 __device__  __half __short2half_rd(short int i);
 
 ```
@@ -3717,7 +3717,7 @@ __device__  __half __short2half_rd(short int i);
 
 
 ### __short2half_rn
-```cpp 
+```cpp
 __device__  __half __short2half_rn(short int i);
 
 ```
@@ -3725,7 +3725,7 @@ __device__  __half __short2half_rn(short int i);
 
 
 ### __short2half_ru
-```cpp 
+```cpp
 __device__  __half __short2half_ru(short int i);
 
 ```
@@ -3733,7 +3733,7 @@ __device__  __half __short2half_ru(short int i);
 
 
 ### __short2half_rz
-```cpp 
+```cpp
 __device__  __half __short2half_rz(short int i);
 
 ```
@@ -3741,7 +3741,7 @@ __device__  __half __short2half_rz(short int i);
 
 
 ### __uint2half_rd
-```cpp 
+```cpp
 __device__  __half __uint2half_rd(unsigned int i);
 
 ```
@@ -3749,7 +3749,7 @@ __device__  __half __uint2half_rd(unsigned int i);
 
 
 ### __uint2half_rn
-```cpp 
+```cpp
 __device__  __half __uint2half_rn(unsigned int i);
 
 ```
@@ -3757,7 +3757,7 @@ __device__  __half __uint2half_rn(unsigned int i);
 
 
 ### __uint2half_ru
-```cpp 
+```cpp
 __device__  __half __uint2half_ru(unsigned int i);
 
 ```
@@ -3765,7 +3765,7 @@ __device__  __half __uint2half_ru(unsigned int i);
 
 
 ### __uint2half_rz
-```cpp 
+```cpp
 __device__  __half __uint2half_rz(unsigned int i);
 
 ```
@@ -3773,7 +3773,7 @@ __device__  __half __uint2half_rz(unsigned int i);
 
 
 ### __ull2half_rd
-```cpp 
+```cpp
 __device__  __half __ull2half_rd(unsigned long long int i);
 
 ```
@@ -3781,7 +3781,7 @@ __device__  __half __ull2half_rd(unsigned long long int i);
 
 
 ### __ull2half_rn
-```cpp 
+```cpp
 __device__  __half __ull2half_rn(unsigned long long int i);
 
 ```
@@ -3789,7 +3789,7 @@ __device__  __half __ull2half_rn(unsigned long long int i);
 
 
 ### __ull2half_ru
-```cpp 
+```cpp
 __device__  __half __ull2half_ru(unsigned long long int i);
 
 ```
@@ -3797,7 +3797,7 @@ __device__  __half __ull2half_ru(unsigned long long int i);
 
 
 ### __ull2half_rz
-```cpp 
+```cpp
 __device__  __half __ull2half_rz(unsigned long long int i);
 
 ```
@@ -3805,7 +3805,7 @@ __device__  __half __ull2half_rz(unsigned long long int i);
 
 
 ### __ushort2half_rd
-```cpp 
+```cpp
 __device__  __half __ushort2half_rd(unsigned short int i);
 
 ```
@@ -3813,7 +3813,7 @@ __device__  __half __ushort2half_rd(unsigned short int i);
 
 
 ### __ushort2half_rn
-```cpp 
+```cpp
 __device__  __half __ushort2half_rn(unsigned short int i);
 
 ```
@@ -3821,7 +3821,7 @@ __device__  __half __ushort2half_rn(unsigned short int i);
 
 
 ### __ushort2half_ru
-```cpp 
+```cpp
 __device__  __half __ushort2half_ru(unsigned short int i);
 
 ```
@@ -3829,7 +3829,7 @@ __device__  __half __ushort2half_ru(unsigned short int i);
 
 
 ### __ushort2half_rz
-```cpp 
+```cpp
 __device__  __half __ushort2half_rz(unsigned short int i);
 
 ```
@@ -3837,7 +3837,7 @@ __device__  __half __ushort2half_rz(unsigned short int i);
 
 
 ### __ushort_as_half
-```cpp 
+```cpp
 __device__  __half __ushort_as_half(const unsigned short int i);
 
 ```
