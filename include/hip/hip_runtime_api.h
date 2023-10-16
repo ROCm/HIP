@@ -334,7 +334,7 @@ typedef enum __HIP_NODISCARD hipError_t {
 
 /**
  * hipDeviceAttribute_t
- *
+ * hipDeviceAttributeUnused number: 5
  */
 typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeCudaCompatibleBegin = 0,
@@ -407,7 +407,7 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeComputeCapabilityMinor,           ///< Minor compute capability version number.
     hipDeviceAttributeMultiGpuBoardGroupID,             ///< Cuda only. Unique ID of device group on the same multi-GPU board
     hipDeviceAttributeMultiprocessorCount,              ///< Number of multiprocessors on the device.
-    hipDeviceAttributeName,                             ///< Device name.
+    hipDeviceAttributeUnused1,                          ///< Previously hipDeviceAttributeName
     hipDeviceAttributePageableMemoryAccess,             ///< Device supports coherently accessing pageable memory
                                                         ///< without calling hipHostRegister on it
     hipDeviceAttributePageableMemoryAccessUsesHostPageTables, ///< Device accesses pageable memory via the host's page tables
@@ -430,8 +430,8 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeTexturePitchAlignment,            ///< Pitch alignment requirement for 2D texture references bound to pitched memory;
     hipDeviceAttributeTotalConstantMemory,              ///< Constant memory size in bytes.
     hipDeviceAttributeTotalGlobalMem,                   ///< Global memory available on devicice.
-    hipDeviceAttributeUnifiedAddressing,                ///< An unified address space shared with the host.
-    hipDeviceAttributeUuid,                             ///< Cuda only. Unique ID in 16 byte.
+    hipDeviceAttributeUnifiedAddressing,                ///< Cuda only. An unified address space shared with the host.
+    hipDeviceAttributeUnused2,                          ///< Previously hipDeviceAttributeUuid
     hipDeviceAttributeWarpSize,                         ///< Warp size in threads.
     hipDeviceAttributeMemoryPoolsSupported,             ///< Device supports HIP Stream Ordered Memory Allocator
     hipDeviceAttributeVirtualMemoryManagementSupported, ///< Device supports HIP virtual memory management
@@ -441,10 +441,10 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeAmdSpecificBegin = 10000,
 
     hipDeviceAttributeClockInstructionRate = hipDeviceAttributeAmdSpecificBegin,  ///< Frequency in khz of the timer used by the device-side "clock*"
-    hipDeviceAttributeArch,                                     ///< Device architecture
+    hipDeviceAttributeUnused3,                                  ///< Previously hipDeviceAttributeArch
     hipDeviceAttributeMaxSharedMemoryPerMultiprocessor,         ///< Maximum Shared Memory PerMultiprocessor.
-    hipDeviceAttributeGcnArch,                                  ///< Device gcn architecture
-    hipDeviceAttributeGcnArchName,                              ///< Device gcnArch name in 256 bytes
+    hipDeviceAttributeUnused4,                                  ///< Previously hipDeviceAttributeGcnArch
+    hipDeviceAttributeUnused5,                                  ///< Previously hipDeviceAttributeGcnArchName
     hipDeviceAttributeHdpMemFlushCntl,                          ///< Address of the HDP_MEM_COHERENCY_FLUSH_CNTL register
     hipDeviceAttributeHdpRegFlushCntl,                          ///< Address of the HDP_REG_COHERENCY_FLUSH_CNTL register
     hipDeviceAttributeCooperativeMultiDeviceUnmatchedFunc,      ///< Supports cooperative launch on multiple
@@ -527,7 +527,7 @@ typedef enum hipDeviceP2PAttr {
   hipDevP2PAttrHipArrayAccessSupported
 } hipDeviceP2PAttr;
 typedef struct ihipStream_t* hipStream_t;
-#define hipIpcMemLazyEnablePeerAccess 0
+#define hipIpcMemLazyEnablePeerAccess 0x01
 #define HIP_IPC_HANDLE_SIZE 64
 typedef struct hipIpcMemHandle_st {
     char reserved[HIP_IPC_HANDLE_SIZE];
@@ -987,6 +987,7 @@ typedef enum hipExternalMemoryHandleType_enum {
   hipExternalMemoryHandleTypeD3D12Resource = 5,
   hipExternalMemoryHandleTypeD3D11Resource = 6,
   hipExternalMemoryHandleTypeD3D11ResourceKmt = 7,
+  hipExternalMemoryHandleTypeNvSciBuf         = 8
 } hipExternalMemoryHandleType;
 typedef struct hipExternalMemoryHandleDesc_st {
   hipExternalMemoryHandleType type;
@@ -996,21 +997,37 @@ typedef struct hipExternalMemoryHandleDesc_st {
       void *handle;
       const void *name;
     } win32;
+    const void *nvSciBufObject;
   } handle;
   unsigned long long size;
   unsigned int flags;
+  unsigned int reserved[16];
 } hipExternalMemoryHandleDesc;
 typedef struct hipExternalMemoryBufferDesc_st {
   unsigned long long offset;
   unsigned long long size;
   unsigned int flags;
+  unsigned int reserved[16];
 } hipExternalMemoryBufferDesc;
+typedef struct hipExternalMemoryMipmappedArrayDesc_st {
+  unsigned long long offset;
+  hipChannelFormatDesc formatDesc;
+  hipExtent extent;
+  unsigned int flags;
+  unsigned int numLevels;
+} hipExternalMemoryMipmappedArrayDesc;
 typedef void* hipExternalMemory_t;
 typedef enum hipExternalSemaphoreHandleType_enum {
   hipExternalSemaphoreHandleTypeOpaqueFd = 1,
   hipExternalSemaphoreHandleTypeOpaqueWin32 = 2,
   hipExternalSemaphoreHandleTypeOpaqueWin32Kmt = 3,
-  hipExternalSemaphoreHandleTypeD3D12Fence = 4
+  hipExternalSemaphoreHandleTypeD3D12Fence = 4,
+  hipExternalSemaphoreHandleTypeD3D11Fence = 5,
+  hipExternalSemaphoreHandleTypeNvSciSync = 6,
+  hipExternalSemaphoreHandleTypeKeyedMutex = 7,
+  hipExternalSemaphoreHandleTypeKeyedMutexKmt = 8,
+  hipExternalSemaphoreHandleTypeTimelineSemaphoreFd = 9,
+  hipExternalSemaphoreHandleTypeTimelineSemaphoreWin32 = 10
 } hipExternalSemaphoreHandleType;
 typedef struct hipExternalSemaphoreHandleDesc_st {
   hipExternalSemaphoreHandleType type;
@@ -1020,8 +1037,10 @@ typedef struct hipExternalSemaphoreHandleDesc_st {
       void* handle;
       const void* name;
     } win32;
+    const void* NvSciSyncObj;
   } handle;
   unsigned int flags;
+  unsigned int reserved[16];
 } hipExternalSemaphoreHandleDesc;
 typedef void* hipExternalSemaphore_t;
 typedef struct hipExternalSemaphoreSignalParams_st {
@@ -1029,6 +1048,10 @@ typedef struct hipExternalSemaphoreSignalParams_st {
     struct {
       unsigned long long value;
     } fence;
+    union {
+      void *fence;
+      unsigned long long reserved;
+    } nvSciSync;
     struct {
       unsigned long long key;
     } keyedMutex;
@@ -1045,6 +1068,10 @@ typedef struct hipExternalSemaphoreWaitParams_st {
     struct {
       unsigned long long value;
     } fence;
+    union {
+      void *fence;
+      unsigned long long reserved;
+    } nvSciSync;
     struct {
       unsigned long long key;
       unsigned int timeoutMs;
@@ -1062,17 +1089,6 @@ typedef struct hipExternalSemaphoreWaitParams_st {
  */
     void __hipGetPCH(const char** pch, unsigned int*size);
 #endif
-
-/**
- * HIP Devices used by current OpenGL Context.
- */
-typedef enum hipGLDeviceList {
-    hipGLDeviceListAll = 1,           ///< All hip devices used by current OpenGL context.
-    hipGLDeviceListCurrentFrame = 2,  ///< Hip devices used by current OpenGL context in current
-                                    ///< frame
-    hipGLDeviceListNextFrame = 3      ///< Hip devices used by current OpenGL context in next
-                                    ///< frame.
-} hipGLDeviceList;
 
 /**
  * HIP Access falgs for Interop resources.
@@ -1708,24 +1724,32 @@ hipError_t hipDeviceSetCacheConfig(hipFuncCache_t cacheConfig);
 hipError_t hipDeviceGetCacheConfig(hipFuncCache_t* cacheConfig);
 /**
  * @brief Gets resource limits of current device
- * The funtion querys the size of limit value, as required input enum hipLimit_t, can be either
- * hipLimitStackSize, or hipLimitMallocHeapSize.
  *
- * @param [out] pValue returns the size of the limit in bytes
- * @param [in]  limit the limit to query
+ * The funtion querys the size of limit value, as required input enum hipLimit_t, it can be either
+ * #hipLimitStackSize, or #hipLimitMallocHeapSize. Any other input as default, the funtion will
+ * return #hipErrorUnsupportedLimit.
+ *
+ * @param [out] pValue Returns the size of the limit in bytes
+ * @param [in]  limit The limit to query
  *
  * @returns #hipSuccess, #hipErrorUnsupportedLimit, #hipErrorInvalidValue
  *
  */
 hipError_t hipDeviceGetLimit(size_t* pValue, enum hipLimit_t limit);
 /**
- * @brief Sets resource limits of current device
- * As the input enum limit, hipLimitStackSize sets the limit value of the stack size on current
- * GPU devie, hipLimitMallocHeapSize sets the limit value of the heap used by the malloc()/free()
- * calls. 
+ * @brief Sets resource limits of current device.
  * 
- * @param [in] limit enum of hipLimit_t to set
- * @param [in] value the size of limit value in bytes
+ * As the input enum limit,
+ * #hipLimitStackSize sets the limit value of the stack size on the current GPU device, per thread.
+ * The limit size can get via hipDeviceSetLimit.
+ *
+ * #hipLimitMallocHeapSize sets the limit value of the heap used by the malloc()/free()
+ * calls.
+ *
+ * Any other input as default, the funtion will return hipErrorUnsupportedLimit.
+ *
+ * @param [in] limit Enum of hipLimit_t to set
+ * @param [in] value The size of limit value in bytes
  *
  * @returns #hipSuccess, #hipErrorUnsupportedLimit, #hipErrorInvalidValue
  *
@@ -1734,7 +1758,7 @@ hipError_t hipDeviceSetLimit ( enum hipLimit_t limit, size_t value );
 /**
  * @brief Returns bank width of shared memory for current device
  *
- * @param [out] pConfig The pointer of the bank width for shared memory 
+ * @param [out] pConfig The pointer of the bank width for shared memory
  *
  * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized
  *
@@ -2771,6 +2795,25 @@ hipError_t hipExternalMemoryGetMappedBuffer(void **devPtr, hipExternalMemory_t e
 */
 hipError_t hipDestroyExternalMemory(hipExternalMemory_t extMem);
 /**
+ *  @brief Maps a mipmapped array onto an external memory object.
+ *
+ *  @param[out] mipmap mipmapped array to return
+ *  @param[in]  extMem external memory object handle
+ *  @param[in]  mipmapDesc external mipmapped array descriptor
+ *
+ *  Returned mipmapped array must be freed using hipFreeMipmappedArray.
+ *
+ *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidResourceHandle
+ *
+ *  @see hipImportExternalMemory, hipDestroyExternalMemory, hipExternalMemoryGetMappedBuffer, hipFreeMipmappedArray
+ */
+hipError_t hipExternalMemoryGetMappedMipmappedArray(hipMipmappedArray_t* mipmap, hipExternalMemory_t extMem,
+    const hipExternalMemoryMipmappedArrayDesc* mipmapDesc);
+ // end of external resource
+ /**
+ * @}
+ */
+/**
  *  @brief Allocate memory on the default accelerator
  *
  *  @param[out] ptr Pointer to the allocated memory
@@ -2782,10 +2825,6 @@ hipError_t hipDestroyExternalMemory(hipExternalMemory_t extMem);
  *
  *  @see hipMallocPitch, hipFree, hipMallocArray, hipFreeArray, hipMalloc3D, hipMalloc3DArray,
  * hipHostFree, hipHostMalloc
- */
- // end of external resource
- /**
- * @}
  */
 hipError_t hipMalloc(void** ptr, size_t size);
 /**
@@ -2924,13 +2963,13 @@ hipError_t hipMemPrefetchAsync(const void* dev_ptr,
  *
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
- * This HIP advises about the usage to be applied on unified memory allocation in the
+ * This HIP API advises about the usage to be applied on unified memory allocation in the
  * range starting from the pointer address devPtr, with the size of count bytes.
  * The memory range must refer to managed memory allocated via the API hipMallocManaged, and the
  * range will be handled with proper round down and round up respectively in the driver to
  * be aligned to CPU page size.
  *
- * @note  This API is implemented on Linux, under development on Windows.
+ * @note  This API is implemented on Linux and is under development on Windows.
  */
 hipError_t hipMemAdvise(const void* dev_ptr,
                         size_t count,
@@ -4316,7 +4355,7 @@ hipError_t hipMemcpyToArray(hipArray* dst, size_t wOffset, size_t hOffset, const
  *
  *  @param[in]   dst       Destination memory address
  *  @param[in]   srcArray  Source memory address
- *  @param[in]   woffset   Source starting X offset
+ *  @param[in]   wOffset   Source starting X offset
  *  @param[in]   hOffset   Source starting Y offset
  *  @param[in]   count     Size in bytes to copy
  *  @param[in]   kind      Type of transfer
@@ -7552,6 +7591,28 @@ hipError_t hipGraphExecExternalSemaphoresSignalNodeSetParams(hipGraphExec_t hGra
  */
 hipError_t hipGraphExecExternalSemaphoresWaitNodeSetParams(hipGraphExec_t hGraphExec, hipGraphNode_t hNode,
                                                            const hipExternalSemaphoreWaitNodeParams* nodeParams);
+
+/**
+ * @brief Gets a memcpy node's parameters.
+ *
+ * @param [in] hNode - instance of the node to get parameters from.
+ * @param [out] nodeParams - pointer to the parameters.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipDrvGraphMemcpyNodeGetParams(hipGraphNode_t hNode, HIP_MEMCPY3D* nodeParams);
+
+/**
+ * @brief Sets a memcpy node's parameters.
+ *
+ * @param [in] hNode - instance of the node to Set parameters for.
+ * @param [out] nodeParams - pointer to the parameters.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipDrvGraphMemcpyNodeSetParams(hipGraphNode_t hNode, const HIP_MEMCPY3D* nodeParams);
 // doxygen end graph API
 /**
  * @}
@@ -7771,66 +7832,21 @@ hipError_t hipMemUnmap(void* ptr, size_t size);
 /**
  * @}
  */
-
 /**
  *-------------------------------------------------------------------------------------------------
  *-------------------------------------------------------------------------------------------------
- *  @defgroup GL OpenGL Interop
- *  @{
- *  This section describes the OpenGL and graphics interoperability functions of HIP runtime API.
+ * @defgroup GL OpenGL Interop
+ * @{
+ * This section describes the OpenGL and graphics interoperability functions of HIP runtime API.
  */
-/** GLuint as uint.*/
-typedef unsigned int GLuint;
-/** GLenum as uint.*/
-typedef unsigned int GLenum;
 
-/**
- * @brief Queries devices associated with the current OpenGL context.
- *
- * @param [out] pHipDeviceCount - Pointer of number of devices on the current GL context.
- * @param [out] pHipDevices - Pointer of devices on the current OpenGL context.
- * @param [in] hipDeviceCount - Size of device.
- * @param [in] deviceList - The setting of devices. It could be either hipGLDeviceListCurrentFrame
- * for the devices used to render the current frame, or hipGLDeviceListAll for all devices. 
- * The default setting is Invalid deviceList value.
- * 
- * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
- *
- */
-hipError_t hipGLGetDevices(unsigned int* pHipDeviceCount, int* pHipDevices,
-                           unsigned int hipDeviceCount, hipGLDeviceList deviceList);
-/**
- * @brief Registers a GL Buffer for interop and returns corresponding graphics resource.
- *
- * @param [out] resource - Returns pointer of graphics resource.
- * @param [in] buffer - Buffer to be registered.
- * @param [in] flags - Register flags.
- * 
- * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorUnknown, #hipErrorInvalidResourceHandle
- *
- */
-hipError_t hipGraphicsGLRegisterBuffer(hipGraphicsResource** resource, GLuint buffer,
-                                       unsigned int flags);
-/**
- * @brief Register a GL Image for interop and returns the corresponding graphic resource.
- *
- * @param [out] resource - Returns pointer of graphics resource.
- * @param [in] image - Image to be registered.
- * @param [in] target - Valid target value Id.
- * @param [in] flags - Register flags.
- * 
- * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorUnknown, #hipErrorInvalidResourceHandle
- *
- */
-hipError_t hipGraphicsGLRegisterImage(hipGraphicsResource** resource, GLuint image,
-                                      GLenum target, unsigned int flags);
 /**
  * @brief Maps a graphics resource for access.
  *
  * @param [in] count - Number of resources to map.
  * @param [in] resources - Pointer of resources to map.
  * @param [in] stream - Stream for synchronization.
- * 
+ *
  * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorUnknown, #hipErrorInvalidResourceHandle
  *
  */

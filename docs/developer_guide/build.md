@@ -6,7 +6,7 @@ HIP code can be developed either on AMD ROCm platform using HIP-Clang compiler, 
 Before build and run HIP, make sure drivers and pre-build packages are installed properly on the platform.
 
 ### AMD platform
-Install ROCm packages (see ROCm Installation Guide on AMD public documentation site (https://docs.amd.com/) or install pre-built binary packages using the package manager,
+Install ROCm packages or pre-built binary packages using the package manager. Refer to the ROCm Installation Guide at https://rocm.docs.amd.com for more information on installing ROCm.
 
 ```shell
 sudo apt install mesa-common-dev
@@ -23,14 +23,14 @@ Install Nvidia driver and pre-build packages (see HIP Installation Guide at http
 ### Branch of repository
 
 Before get HIP source code, set the expected branch of repository at the variable `ROCM_BRANCH`.
-For example, for ROCm5.6 release branch, set
+For example, for ROCm6.0 release branch, set
 ```shell
-export ROCM_BRANCH=rocm-5.6.x
+export ROCM_BRANCH=rocm-6.0.x
 ```
 
-ROCm5.6 release branch, set
+ROCm5.7 release branch, set
 ```shell
-export ROCM_BRANCH=rocm-5.6.x
+export ROCM_BRANCH=rocm-5.7.x
 ```
 Similiar format for future branches.
 
@@ -123,47 +123,14 @@ hip_prof_gen.py -v -p -t --priv <hip>/include/hip/hip_runtime_api.h \
 
 ### Build HIP tests
 
-#### Build HIP directed tests
-Developers can build HIP directed tests right after build HIP commands,
-
-```shell
-sudo make install
-make -j$(nproc) build_tests
-```
-By default, all HIP directed tests will be built and generated under the folder `$CLR_DIR/build/hipamd`directed_tests.
-Take HIP directed device APIs tests, as an example, all available test applications will have executable files generated under,
-`$CLR_DIR/build/hipamd/directed_tests/runtimeApi/device`.
-
-Run all HIP directed_tests, use the command,
-
-```shell
-ctest
-```
-Or
-```shell
-make test
-```
-
-Build and run a single directed test, use the follow command as an example,
-
-```shell
-make directed_tests.texture.hipTexObjPitch
-cd $CLR_DIR/build/hipamd/directed_tests/texcture
-./hipTexObjPitch
-```
-Please note, the integrated HIP directed tests, will be deprecated in future release.
-
-
-##### Build HIP catch tests
-
 HIP catch tests, with new architectured Catch2, are official seperated from HIP project, exist in HIP tests repository, can be built via the following instructions.
 
-##### Get HIP tests source code
+#### Get HIP tests source code
 
 ```shell
 git clone -b "$ROCM_BRANCH" https://github.com/ROCm-Developer-Tools/hip-tests.git
 ```
-##### Build HIP tests from source
+#### Build HIP tests from source
 
 ```shell
 export HIPTESTS_DIR="$(readlink -f hip-tests)"
@@ -183,7 +150,7 @@ cd $HIPTESTS_DIR/build/catch_tests/unit/texture
 ./TextureTest
 ```
 
-##### Build HIP Catch2 standalone test
+#### Build HIP Catch2 standalone test
 
 HIP Catch2 supports build a standalone test, for example,
 
