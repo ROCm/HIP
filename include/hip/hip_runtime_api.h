@@ -1496,6 +1496,68 @@ typedef struct hipArrayMapInfo {
      unsigned int flags;                             ///< flags for future use, must be zero now.
      unsigned int reserved[2];                       ///< Reserved for future use, must be zero now.
 } hipArrayMapInfo;
+
+/**
+ * Memcpy node params
+ */
+typedef struct hipMemcpyNodeParams {
+    int flags;                     ///< Must be zero.
+    int reserved[3];               ///< Must be zero.
+    hipMemcpy3DParms copyParams;   ///< Params set for the memory copy.
+} hipMemcpyNodeParams;
+
+/**
+ * Child graph node params
+ */
+typedef struct hipChildGraphNodeParams {
+    hipGraph_t graph; ///< Either the child graph to clone into the node, or
+                      ///< a handle to the graph possesed by the node used during query
+} hipChildGraphNodeParams;
+
+/**
+ * Event record node params
+ */
+typedef struct hipEventWaitNodeParams {
+    hipEvent_t event; ///< Event to wait on
+} hipEventWaitNodeParams;
+
+/**
+ * Event record node params
+ */
+typedef struct hipEventRecordNodeParams {
+    hipEvent_t event; ///< The event to be recorded when node executes
+} hipEventRecordNodeParams;
+
+/**
+ * Memory free node params
+ */
+typedef struct hipMemFreeNodeParams {
+    void *dptr; ///< the pointer to be freed
+} hipMemFreeNodeParams;
+
+/**
+ * Params for different graph nodes
+ */
+typedef struct hipGraphNodeParams {
+    hipGraphNodeType type;
+    int reserved0[3];
+    union {
+        long long                            reserved1[29];
+        hipKernelNodeParams                  kernel;
+        hipMemcpyNodeParams                  memcpy;
+        hipMemsetParams                      memset;
+        hipHostNodeParams                    host;
+        hipChildGraphNodeParams              graph;
+        hipEventWaitNodeParams               eventWait;
+        hipEventRecordNodeParams             eventRecord;
+        hipExternalSemaphoreSignalNodeParams extSemSignal;
+        hipExternalSemaphoreWaitNodeParams   extSemWait;
+        hipMemAllocNodeParams                alloc;
+        hipMemFreeNodeParams                 free;
+    };
+
+    long long reserved2;
+} hipGraphNodeParams;
 // Doxygen end group GlobalDefs
 /**
 * @}
@@ -6791,6 +6853,22 @@ hipError_t hipGraphLaunch(hipGraphExec_t graphExec, hipStream_t stream);
  * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphUpload(hipGraphExec_t graphExec, hipStream_t stream);
+
+/**
+ * @brief Creates a kernel execution node and adds it to a graph.
+ *
+ * @param [out] pGraphNode - pointer to graph node to create.
+ * @param [in] graph - instance of graph to add the created node.
+ * @param [in] pDependencies - pointer to the dependencies on the kernel execution node.
+ * @param [in] numDependencies - the number of the dependencies.
+ * @param [in] nodeParams - pointer to the parameters for the node.
+ * @returns #hipSuccess, #hipErrorInvalidValue.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphAddNode(hipGraphNode_t *pGraphNode, hipGraph_t graph,
+                           const hipGraphNode_t *pDependencies, size_t numDependencies,
+                           hipGraphNodeParams *nodeParams);
 
 /**
  * @brief Destroys an executable graph
