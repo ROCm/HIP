@@ -1,7 +1,11 @@
-# Contributor Guidelines
+# Contributor guidelines
 
-## Make Tips
-`ROCM_PATH` is path where ROCM is installed. BY default `ROCM_PATH` is `/opt/rocm`.
+If you want to contribute to the HIP project, review the following guidelines. If you want to contribute
+to our documentation, refer to {doc}`Contribute to ROCm docs <rocm:conribute/index>`.
+
+## Make tips
+
+`ROCM_PATH` is path where ROCm is installed. BY default `ROCM_PATH` is `/opt/rocm`.
 When building HIP, you will likely want to build and install to a local user-accessible directory (rather than `<ROCM_PATH>`).
 This can be easily be done by setting the `-DCMAKE_INSTALL_PREFIX` variable when running cmake.  Typical use case is to
 set `CMAKE_INSTALL_PREFIX` to your HIP git root, and then ensure `HIP_PATH` points to this directory. For example
@@ -15,9 +19,8 @@ export HIP_PATH=
 
 After making HIP, don't forget the "make install" step !
 
+## Add a new HIP API
 
-
-## Adding a new HIP API
 - Add a translation to the hipify-clang tool ; many examples abound.
     - For stat tracking purposes, place the API into an appropriate stat category ("dev", "mem", "stream", etc).
 - Add a inlined NVIDIA implementation for the function in include/hip/nvidia_detail/hip_runtime_api.h.

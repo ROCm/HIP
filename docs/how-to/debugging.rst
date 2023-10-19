@@ -1,7 +1,18 @@
-# HIP Debugging
-There are some techniques provided in HIP for developers to trace and debug codes during execution, this section describes some details and practical suggestions on debugging.
+*************************************************************************
+Debugging with HIP
+*************************************************************************
 
-## Debugging tools
+You can trace and debug your code using the following tools and techniques.
+
+Debugging tools
+================================================
+
+AMD debugging tools include ``ltrace`` and ``ROCdgb``. External tools are available and can be found
+online. For example, if you're using Windows, you can use *Microsoft Visual Studio* and *Windgb*.
+
+
+There are also other debugging tools available online developers can google and choose the one best suits the debugging requirements. For example, Microsoft Visual Studio and Windgb tools are options on Windows.
+
 
 ### Using ltrace
 ltrace is a standard linux tool which provides a message to stderr on every dynamic library call.

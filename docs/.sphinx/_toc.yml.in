@@ -1,3 +1,52 @@
+# Anywhere {branch} is used, the branch name will be substituted.
+# These comments will also be removed.
+defaults:
+  numbered: False
+  maxdepth: 6
+root: index
+subtrees:
+
+- caption: Installation
+  entries:
+  - file: install/install.rst
+    title: Install HIP
+
+- caption: Reference
+  entries:
+    - file: .doxygen/docBin/html/index
+      title: API library
+
+- caption: How-to
+  entries:
+  - file: how-to/logging.rst
+    title: Logging
+  - file: how-to/debugging.rst
+    title: Debugging
+
+- caption: Conceptual
+  entries:
+  - file: conceptual/gpu-arch.md
+    title: GPU architectures
+
+
+
+- caption: Compatibility & support
+  entries:
+  - file: about/compatibility/linux-support.md
+    title: Linux (GPU & OS)
+  - file: about/compatibility/windows-support.md
+    title: Windows (GPU & OS)
+  - file: about/compatibility/3rd-party-support-matrix.md
+    title: Third-party
+  - file: about/compatibility/user-kernel-space-compat-matrix.md
+    title: User/kernel space support
+  - file: about/compatibility/docker-image-support-matrix.md
+    title: Docker
+  - file: about/compatibility/openmp.md
+    title: OpenMP
+
+
+-----------------------------------------------------
 root: index
 subtrees:
 - caption: User Guide
