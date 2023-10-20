@@ -268,7 +268,7 @@ Here are the main compiler options supported on AMD platforms by HIP-Clang.
 | -ggdb                             | Equivalent to `-g` plus tuning for GDB.  This is recommended when using ROCm's GDB to debug GPU code. |
 | --gpu-max-threads-per-block=<num> | Generate code to support up to the specified number of threads per block.  |
 | -O<n>                             | Specify the optimization level. |
-| -offload-arch=<target>            | Specify the AMD GPU [target ID](https://clang.llvm.org/docs/ClangOffloadBundlerFileFormat.html#target-id). |
+| -offload-arch=<target>            | Specify the AMD GPU [target ID](https://clang.llvm.org/docs/ClangOffloadBundler.html#target-id). |
 | -save-temps                       | Save the compiler generated intermediate files. |
 | -v                                | Show the compilation steps. |
 
@@ -354,7 +354,7 @@ run hipcc when appropriate.
 ## Workarounds
 
 ### warpSize
-Code should not assume a warp size of 32 or 64.  See [Warp Cross-Lane Functions](hip_kernel_language.md#warp-cross-lane-functions) for information on how to write portable wave-aware code.
+Code should not assume a warp size of 32 or 64.  See [Warp Cross-Lane Functions](https://rocm.docs.amd.com/projects/HIP/en/latest/reference/kernel_language.html#warp-cross-lane-functions) for information on how to write portable wave-aware code.
 
 ### Kernel launch with group size > 256
 Kernel code should use ``` __attribute__((amdgpu_flat_work_group_size(<min>,<max>)))```.
@@ -461,8 +461,7 @@ In this case, memory type translation for hipPointerGetAttributes needs to be ha
 
 So in any HIP applications which use HIP APIs involving memory types, developers should use #ifdef in order to assign the correct enum values depending on Nvidia or AMD platform.
 
-As an example, please see the code from the link,
-github.com/ROCm-Developer-Tools/HIP/blob/develop/tests/catch/unit/memory/hipMemcpyParam2D.cc#L77-L96.
+As an example, please see the code from the [link](https://github.com/ROCm-Developer-Tools/hip-tests/tree/develop/catch/unit/memory/hipMemcpyParam2D.cc).
 
 With the #ifdef condition, HIP APIs work as expected on both AMD and NVIDIA platforms.
 
