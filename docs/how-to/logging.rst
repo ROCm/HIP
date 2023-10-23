@@ -1,3 +1,8 @@
+.. meta::
+   :description: HIP provides a logging mechanism that allows you to trace HIP API and runtime codes
+   when running a HIP application.
+   :keywords: AMD, ROCm, HIP, logging
+
 **********************************************************
 Generate logs
 **********************************************************
