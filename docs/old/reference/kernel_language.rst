@@ -1618,147 +1618,277 @@ HIP supports the following atomic operations.
 Unsafe floating-point atomic RMW operations
 ----------------------------------------------------------------------------------------------------------------
 Some HIP devices support fast atomic RMW operations on floating-point values. For example,
-`atomicAdd` on single- or double-precision floating-point values may generate a hardware RMW
+``atomicAdd`` on single- or double-precision floating-point values may generate a hardware RMW
 instruction that is faster than emulating the atomic operation using an atomic compare-and-swap
 (CAS) loop.
 
-On some devices, these fast atomic RMW instructions can produce different results when compared with the same functions implemented with atomic CAS loops.
-For example, some devices will produce incorrect answers if a fast atomic floating-point RMW instruction targets fine-grained memory allocations.
-As another example, some devices will use different rounding or denormal modes when using fast atomic floating-point RMW instructions.
+On some devices, fast atomic RMW instructions can produce results that differ from the same
+functions implemented with atomic CAS loops. For example, some devices will use different rounding
+or denormal modes, and some devices produce incorrect answers if fast floating-point atomic RMW
+instructions target fine-grained memory allocations.
 
-As such, the HIP-Clang compiler offers a compile-time option for users to choose whether their code will use the fast, potentially unsafe, atomic instructions.
-On devices that support these fast, but unsafe, floating-point atomic RMW instructions, the compiler option `-munsafe-fp-atomics` will allow the compiler to generate them when it sees appropriate atomic RMW function calls.
-By passing the `-munsafe-fp-atomics` flag to the compiler, the user is indicating that all floating-point atomic function calls are allowed to use an unsafe version if one exists.
-For instance, on some devices, this flag indicates to the compiler that that no floating-point `atomicAdd` function targets fine-grained memory.
+The HIP-Clang compiler offers a compile-time option, so you can choose fast--but potentially
+unsafe--atomic instructions for your code. On devices that support these instructions, you can include
+the ``-munsafe-fp-atomics`` option. This flag indicates to the compiler that all floating-point atomic
+function calls are allowed to use an unsafe version, if one exists. For example, on some devices, this
+flag indicates to the compiler that no floating-point ``atomicAdd`` function can target fine-grained
+memory.
 
-If the user instead compiles with `-mno-unsafe-fp-atomics`, the user is telling the compiler to never use a floating-point atomic RMW that may not be safe.
-The compiler will default to not producing unsafe floating-point atomic RMW instructions, so the `-mno-unsafe-fp-atomics` compilation option is not strictly necessary.
-Explicitly passing this flag to the compiler is good practice, however.
+If you want to avoid using unsafe use a floating-point atomic RMW operations, you can use the
+``-mno-unsafe-fp-atomics`` option. Note that the compiler default is to not produce unsafe
+floating-point atomic RMW instructions, so the ``-mno-unsafe-fp-atomics`` option is not necessarily
+required. However, passing this option to the compiler is good practice.
 
-Whenever either of the two options described above, `-munsafe-fp-atomics` and `-mno-unsafe-fp-atomics` are passed to the compiler's command line, they are applied globally for that entire compilation.
-If only a subset of the atomic RMW function calls could safely use the faster floating-point atomic RMW instructions, the developer would instead need to compile with `-mno-unsafe-fp-atomics` in order to ensure the remaining atomic RMW function calls produce correct results.
-Towards this end, HIP has four extra functions to help developers more precisely control which floating-point atomic RMW functions produce unsafe atomic RMW instructions:
+When you pass ``-munsafe-fp-atomics`` or ``-mno-unsafe-fp-atomics`` to the compiler's command line,
+the option is applied globally for the entire compilation. Note that if some of the atomic RMW function
+calls cannot safely use the faster floating-point atomic RMW instructions, you must use
+``-mno-unsafe-fp-atomics`` in order to ensure that your atomic RMW function calls produce correct
+results.
 
-- `float unsafeAtomicAdd(float* address, float val)`
-- `double unsafeAtomicAdd(double* address, double val)`
-   - These functions will always produce fast atomic RMW instructions on devices that have them, even when `-mno-unsafe-fp-atomics` is set
+HIP has four extra functions that you can use to more precisely control which floating-point atomic
+RMW functions produce unsafe atomic RMW instructions:
 
-- `float safeAtomicAdd(float* address, float val)`
-- `double safeAtomicAdd(double* address, double val)`
-   - These functions will always produce safe atomic RMW operations, even when `-munsafe-fp-atomics` is set
+* ``float unsafeAtomicAdd(float* address, float val)``
+* ``double unsafeAtomicAdd(double* address, double val)`` (Always produces fast atomic RMW
+  instructions on devices that have them, even when ``-mno-unsafe-fp-atomics`` is used)
+* `float safeAtomicAdd(float* address, float val)`
+* ``double safeAtomicAdd(double* address, double val)`` (Always produces safe atomic RMW
+  operations, even when ``-munsafe-fp-atomics`` is used)
 
-(warp_cross_lane_functions)=
-## Warp Cross-Lane Functions
+.. _warp-cross-lane:
 
-Warp cross-lane functions operate across all lanes in a warp. The hardware guarantees that all warp lanes will execute in lockstep, so additional synchronization is unnecessary, and the instructions use no shared memory.
+Warp cross-lane functions
+========================================================
 
-Note that NVIDIA and AMD devices have different warp sizes, so portable code should use the warpSize built-ins to query the warp size. Hipified code from the CUDA path requires careful review to ensure it doesn’t assume a waveSize of 32. "Wave-aware" code that assumes a waveSize of 32 will run on a wave-64 machine, but it will utilize only half of the machine resources. WarpSize built-ins should only be used in device functions and its value depends on GPU arch. Users should not assume warpSize to be a compile-time constant. Host functions should use hipGetDeviceProperties to get the default warp size of a GPU device:
+Warp cross-lane functions operate across all lanes in a warp. The hardware guarantees that all warp
+lanes are run in lockstep, meaning that additional synchronization is unnecessary. The instructions
+don't use shared memory.
 
-```
+Note that NVIDIA and AMD devices have different warp sizes. You can use ``warpSize`` built-ins in you
+portable code to query the warp size.
+
+.. tip::
+  Be sure to review HIP code generated from the CUDA path to ensure that it doesn't assume a
+  ``waveSize`` of 32. "Wave-aware" code that assumes a ``waveSize`` of 32 can run on a wave-64
+  machine, but it only utilizes half of the machine's resources.
+
+To get the default warp size of a GPU device, use ``hipGetDeviceProperties`` in you host functions.
+
+.. code:: cpp
+
 	cudaDeviceProp props;
 	cudaGetDeviceProperties(&props, deviceID);
     int w = props.warpSize;
     // implement portable algorithm based on w (rather than assume 32 or 64)
-```
 
-Note that assembly kernels may be built for a warp size which is different than the default warp size.
+Only use ``warpSize`` built-ins in device functions, and don't assume ``warpSize`` to be a compile-time
+constant.
 
-### Warp Vote and Ballot Functions
+Note that assembly kernels may be built for a warp size that is different from the default.
 
-```
-int __all(int predicate)
-int __any(int predicate)
-uint64_t __ballot(int predicate)
-```
+Warp vote and ballot functions
+-------------------------------------------------------------------------------------------------------------
 
-Threads in a warp are referred to as *lanes* and are numbered from 0 to warpSize -- 1. For these functions, each warp lane contributes 1 -- the bit value (the predicate), which is efficiently broadcast to all lanes in the warp. The 32-bit int predicate from each lane reduces to a 1-bit value: 0 (predicate = 0) or 1 (predicate != 0). `__any` and `__all` provide a summary view of the predicates that the other warp lanes contribute:
+.. code:: cpp
 
-- `__any()` returns 1 if any warp lane contributes a nonzero predicate, or 0 otherwise
-- `__all()` returns 1 if all other warp lanes contribute nonzero predicates, or 0 otherwise
+  int __all(int predicate)
+  int __any(int predicate)
+  uint64_t __ballot(int predicate)
 
-Applications can test whether the target platform supports the any/all instruction using the `hasWarpVote` device property or the HIP_ARCH_HAS_WARP_VOTE compiler define.
+Threads in a warp are referred to as *lanes* and are numbered from 0 to :math:` warpSize - 1`. Each
+warp lane contributes 1 minus the bit value (the predicate), which is efficiently broadcast to all lanes in
+the warp.
 
-`__ballot` provides a bit mask containing the 1-bit predicate value from each lane. The nth bit of the result contains the 1 bit contributed by the nth warp lane. Note that HIP's `__ballot` function supports a 64-bit return value (compared with CUDA's 32 bits). Code ported from CUDA should support the larger warp sizes that the HIP version of this instruction supports. Applications can test whether the target platform supports the ballot instruction using the `hasWarpBallot` device property or the HIP_ARCH_HAS_WARP_BALLOT compiler define.
+The 32-bit int predicate from each lane reduces to a 1-bit value of 0 (predicate = 0) or 1
+(predicate != 0). To get a summary view of the predicates that are contributed by other warp lanes, you
+can use:
 
+* ``__any()``: Returns 1 if any warp lane contributes a nonzero predicate, otherwise it returns 0
+* ``__all()``: Returns 1 if all other warp lanes contribute nonzero predicates, otherwise it returns 0
 
-### Warp Shuffle Functions
+To determine if the target platform supports the any/all instruction, you can use the ``hasWarpVote``
+device property or the ``HIP_ARCH_HAS_WARP_VOTE`` compiler definition.
 
-Half-float shuffles are not supported. The default width is warpSize---see [Warp Cross-Lane Functions](#warp-cross-lane-functions). Applications should not assume the warpSize is 32 or 64.
+HIP's ``__ballot`` function provides a bit mask that contains the 1-bit predicate value from each lane.
+The nth bit of this result contains the 1 bit contributed by the nth warp lane. Note that ``__ballot``
+supports a 64-bit return value (versus CUDA's 32 bits). Code ported from CUDA should support these
+larger warp sizes.
 
-```
-int   __shfl      (int var,   int srcLane, int width=warpSize);
-float __shfl      (float var, int srcLane, int width=warpSize);
-int   __shfl_up   (int var,   unsigned int delta, int width=warpSize);
-float __shfl_up   (float var, unsigned int delta, int width=warpSize);
-int   __shfl_down (int var,   unsigned int delta, int width=warpSize);
-float __shfl_down (float var, unsigned int delta, int width=warpSize);
-int   __shfl_xor  (int var,   int laneMask, int width=warpSize);
-float __shfl_xor  (float var, int laneMask, int width=warpSize);
+To determine if the target platform supports the ballot instruction, you ca use the ``hasWarpBallot``
+device property or the ``HIP_ARCH_HAS_WARP_BALLOT`` compiler definition.
 
-```
+Warp shuffle functions
+-------------------------------------------------------------------------------------------------------------
 
-## Cooperative Groups Functions
+The default width is ``warpSize`` (see :ref:`warp-cross-lane`). Half-float shuffles are not supported.
 
-Cooperative groups is a mechanism for forming and communicating between groups of threads at
-a granularity different than the block.  This feature was introduced in CUDA 9.
+.. code:: cpp
 
-HIP supports the following kernel language cooperative groups types or functions.
+  int   __shfl      (int var,   int srcLane, int width=warpSize);
+  float __shfl      (float var, int srcLane, int width=warpSize);
+  int   __shfl_up   (int var,   unsigned int delta, int width=warpSize);
+  float __shfl_up   (float var, unsigned int delta, int width=warpSize);
+  int   __shfl_down (int var,   unsigned int delta, int width=warpSize);
+  float __shfl_down (float var, unsigned int delta, int width=warpSize);
+  int   __shfl_xor  (int var,   int laneMask, int width=warpSize);
+  float __shfl_xor  (float var, int laneMask, int width=warpSize);
 
+Cooperative groups functions
+==============================================================
 
-| **Function** | **Supported in HIP** | **Supported in CUDA** |
-| --- | --- | --- |
-| `void thread_group.sync();` | ✓ | ✓ |
-| `unsigned thread_group.size();` | ✓ | ✓ |
-| `unsigned thread_group.thread_rank()` | ✓ | ✓ |
-| `bool thread_group.is_valid();` | ✓ | ✓ |
-| `grid_group this_grid()` | ✓ | ✓ |
-| `void grid_group.sync()` | ✓ | ✓ |
-| `unsigned grid_group.size()` | ✓ | ✓ |
-| `unsigned grid_group.thread_rank()` | ✓ | ✓ |
-| `bool grid_group.is_valid()` | ✓ | ✓ |
-| `multi_grid_group this_multi_grid()` | ✓ | ✓ |
-| `void multi_grid_group.sync()` | ✓ | ✓ |
-| `unsigned multi_grid_group.size()` | ✓ | ✓ |
-| `unsigned multi_grid_group.thread_rank()` | ✓ | ✓ |
-| `bool multi_grid_group.is_valid()` | ✓ | ✓ |
-| `unsigned multi_grid_group.num_grids()` | ✓ | ✓ |
-| `unsigned multi_grid_group.grid_rank()` | ✓ | ✓ |
-| `thread_block this_thread_block()` | ✓ | ✓ |
-| `multi_grid_group this_multi_grid()` | ✓ | ✓ |
-| `void multi_grid_group.sync()` | ✓ | ✓ |
-| `void thread_block.sync()` | ✓ | ✓ |
-| `unsigned thread_block.size()` | ✓ | ✓ |
-| `unsigned thread_block.thread_rank()` | ✓ | ✓ |
-| `bool thread_block.is_valid()` | ✓ | ✓ |
-| `dim3 thread_block.group_index()` | ✓ | ✓ |
-| `dim3 thread_block.thread_index()` | ✓ | ✓ |
+You can use cooperative groups to synchronize groups of threads. Cooperative groups also provide a
+way of communicating between groups of threads at a granularity that is different from the block.
 
-## Warp Matrix Functions
+HIP supports the following kernel language cooperative groups types and functions:
 
-Warp matrix functions allow a warp to cooperatively operate on small matrices
-whose elements are spread over the lanes in an unspecified manner.  This feature
-was introduced in CUDA 9.
+.. list-table::
+    * - **Function**
+    - **Supported in HIP**
+    - **Supported in CUDA**
 
-HIP does not support any of the kernel language warp matrix
-types or functions.
+    * - void thread_group.sync();
+      - &#10003;
+      - &#10003;
 
-| **Function** | **Supported in HIP** | **Supported in CUDA** |
-| --- | --- | --- |
-| `void load_matrix_sync(fragment<...> &a, const T* mptr, unsigned lda)` | | ✓ |
-| `void load_matrix_sync(fragment<...> &a, const T* mptr, unsigned lda, layout_t layout)` | | ✓ |
-| `void store_matrix_sync(T* mptr, fragment<...> &a,  unsigned lda, layout_t layout)` | | ✓ |
-| `void fill_fragment(fragment<...> &a, const T &value)` | | ✓ |
-| `void mma_sync(fragment<...> &d, const fragment<...> &a, const fragment<...> &b, const fragment<...> &c , bool sat)` | | ✓ |
+    * - unsigned thread_group.size();
+      - &#10003;
+      - &#10003;
 
-## Independent Thread Scheduling
+    * - unsigned thread_group.thread_rank()
+      - &#10003;
+      - &#10003;
 
-The hardware support for independent thread scheduling introduced in certain architectures
-supporting CUDA allows threads to progress independently of each other and enables
-intra-warp synchronizations that were previously not allowed.
+    * - bool thread_group.is_valid();
+      - &#10003;
+      - &#10003;
+
+    * - grid_group this_grid()
+      - &#10003;
+      - &#10003;
+
+    * - void grid_group.sync()
+      - &#10003;
+      - &#10003;
+
+    * - unsigned grid_group.size()
+      - &#10003;
+      - &#10003;
+
+    * - unsigned grid_group.thread_rank()
+      - &#10003;
+      - &#10003;
+
+    * - bool grid_group.is_valid()
+      - &#10003;
+      - &#10003;
+
+    * - multi_grid_group this_multi_grid()
+      - &#10003;
+      - &#10003;
+
+    * - void multi_grid_group.sync()
+      - &#10003;
+      - &#10003;
+
+    * - unsigned multi_grid_group.size()
+      - &#10003;
+      - &#10003;
+
+    * - unsigned multi_grid_group.thread_rank()
+      - &#10003;
+      - &#10003;
+
+    * - bool multi_grid_group.is_valid()
+      - &#10003;
+      - &#10003;
+
+    * - unsigned multi_grid_group.num_grids()
+      - &#10003;
+      - &#10003;
+
+    * - unsigned multi_grid_group.grid_rank()
+      - &#10003;
+      - &#10003;
+
+    * - thread_block this_thread_block()
+      - &#10003;
+      - &#10003;
+
+    * - multi_grid_group this_multi_grid()
+      - &#10003;
+      - &#10003;
+
+    * - void multi_grid_group.sync()
+      - &#10003;
+      - &#10003;
+
+    * - void thread_block.sync()
+      - &#10003;
+      - &#10003;
+
+    * - unsigned thread_block.size()
+      - &#10003;
+      - &#10003;
+
+    * - unsigned thread_block.thread_rank()
+      - &#10003;
+      - &#10003;
+
+    * - bool thread_block.is_valid()
+      - &#10003;
+      - &#10003;
+
+    * - dim3 thread_block.group_index()
+      - &#10003;
+      - &#10003;
+
+    * - dim3 thread_block.thread_index()
+      - &#10003;
+      - &#10003;
+
+Warp matrix functions
+============================================================
+
+Warp matrix functions allow a warp to cooperatively operate on small matrices that have elements
+spread over lanes in an unspecified manner.
+
+HIP does not support kernel language warp matrix types or functions.
+
+.. list-table::
+    * - **Function**
+    - **Supported in HIP**
+    - **Supported in CUDA**
+
+    * - void load_matrix_sync(fragment<...> &a, const T* mptr, unsigned lda)
+      - &#10007;
+      - &#10003;
+
+    * - void load_matrix_sync(fragment<...> &a, const T* mptr, unsigned lda, layout_t layout)
+      - &#10007;
+      - &#10003;
+
+    * - void store_matrix_sync(T* mptr, fragment<...> &a,  unsigned lda, layout_t layout)
+      - &#10007;
+      - &#10003;
+
+    * - void fill_fragment(fragment<...> &a, const T &value)
+      - &#10007;
+      - &#10003;
+
+    * - void mma_sync(fragment<...> &d, const fragment<...> &a, const fragment<...> &b, const fragment<...> &c , bool sat)
+      - &#10007;
+      - &#10003;
+
+Independent thread scheduling
+============================================================
+
+Certain architectures that support CUDA allow threads to progress independently of each other. This
+independent thread scheduling makes intra-warp synchronization possible.
 
 HIP does not support this type of scheduling.
 
-## Profiler Counter Function
+Profiler Counter Function
+============================================================
 
 The CUDA `__prof_trigger()` instruction is not supported.
 
