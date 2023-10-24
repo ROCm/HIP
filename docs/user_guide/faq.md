@@ -303,6 +303,15 @@ Note: These complex operations are equivalent to corresponding types/functions o
 Yes, HIP APIs are available to use on both Linux and Windows.
 Due to different working mechanisms on operating systems like Windows vs Linux, HIP APIs call corresponding lower level backend runtime libraries and kernel drivers for the OS, in order to control the executions on GPU hardware accordingly. There might be a few differences on the related backend software and driver support, which might affect usage of HIP APIs. See OS support details in HIP API document.
 
+## Does HIP support LUID?
+
+Starting ROCm 6.0, HIP runtime supports Locally Unique Identifier (LUID).
+This feature enables the local physical device(s) to interoperate with other devices. For example, DX12.
+
+HIP runtime sets device LUID properties so the driver can query LUID to identify each device for interoperability.
+
+Note: HIP supports LUID only on Windows OS.
+
 ## How can I know the version of HIP?
 
 HIP version definition has been updated since ROCm 4.2 release as the following:
