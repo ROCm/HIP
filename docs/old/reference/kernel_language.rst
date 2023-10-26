@@ -2,10 +2,10 @@
    :description: This chapter describes the built-in variables and functions that are accessible from the
    HIP kernel. It's intended for users who are familiar with CUDA kernel syntax and want to learn how
    HIP differs from CUDA.
-   :keywords: AMD, ROCm, HIP, CUDA, kernel language syntax, HIP functions
+   :keywords: AMD, ROCm, HIP, CUDA, c++ language extensions, HIP functions
 
 ********************************************************************************
-Kernel language syntax
+C++ Language Extensions
 ********************************************************************************
 
 HIP provides a C++ syntax that is suitable for compiling most code that commonly appears in
@@ -92,7 +92,7 @@ configuration to the kernel. However, you can also use the CUDA ``<<< >>>`` synt
 When using ``hipLaunchKernelGGL``, your first five parameters must be:
 
   * **symbol kernelName**: The name of the kernel you want to launch. To support template kernels
-    that contain ``","``, use the ``HIP_KERNEL_NAM`` macro (HIPIFY tools insert this automatically).
+    that contain ``","``, use the ``HIP_KERNEL_NAME`` macro (HIPIFY tools insert this automatically).
   * **dim3 gridDim**: 3D-grid dimensions that specify the number of blocks to launch.
   * **dim3 blockDim**: 3D-block dimensions that specify the number of threads in each block.
   * **size_t dynamicShared**: The amount of additional shared memory that you want to allocate
@@ -121,7 +121,7 @@ parameters.
 
 .. note::
 
-  HIP doesn't support dimension sizes of *gridDim x blockDim >= 2^32* when launching a kernel.
+  HIP doesn't support dimension sizes of :math:`gridDim * blockDim >= 2^32` when launching a kernel.
 
 .. kernel-launch-example:
 
@@ -247,31 +247,31 @@ HIP supports the following short vector formats:
 
 * Signed Integers:
 
-  * char1, char2, char3, char4
-  * short1, short2, short3, short4
-  * int1, int2, int3, int4
-  * long1, long2, long3, long4
-  * longlong1, longlong2, longlong3, longlong4
+  * ``char1``, ``char2``, ``char3``, ``char4``
+  * ``short1``, ``short2``, ``short3``, ``short4``
+  * ``int1``, ``int2``, ``int3``, ``int4``
+  * ``long1``, ``long2``, ``long3``, ``long4``
+  * ``longlong1``, ``longlong2``, ``longlong3``, ``longlong4``
 
 * Unsigned Integers:
 
-  * uchar1, uchar2, uchar3, uchar4
-  * ushort1, ushort2, ushort3, ushort4
-  * uint1, uint2, uint3, uint4
-  * ulong1, ulong2, ulong3, ulong4
-  * ulonglong1, ulonglong2, ulonglong3, ulonglong4
+  * ``uchar1``, ``uchar2``, ``uchar3``, ``uchar4``
+  * ``ushort1``, ``ushort2``, ``ushort3``, ``ushort4``
+  * ``uint1``, ``uint2``, ``uint3``, ``uint4``
+  * ``ulong1``, ``ulong2``, ``ulong3``, ``ulong4``
+  * ``ulonglong1``, ``ulonglong2``, ``ulonglong3``, ``ulonglong4``
 
 * Floating Points:
 
-  * float1, float2, float3, float4
-  * double1, double2, double3, double4
+  * ``float1``, ``float2``, ``float3``, ``float4``
+  * ``double1``, ``double2``, ``double3``, ``double4``
 
 .. _dim3:
 
 dim3
 --------------------------------------------------------------------------------------------
 
-dim3 is a three-dimensional integer vector type that is commonly used to specify grid and group
+``dim3`` is a three-dimensional integer vector type that is commonly used to specify grid and group
 dimensions.
 
 The dim3 constructor accepts between zero and three arguments. By default, it initializes unspecified
@@ -1699,8 +1699,8 @@ Threads in a warp are referred to as *lanes* and are numbered from 0 to :math:` 
 warp lane contributes 1 minus the bit value (the predicate), which is efficiently broadcast to all lanes in
 the warp.
 
-The 32-bit int predicate from each lane reduces to a 1-bit value of 0 (predicate = 0) or 1
-(predicate != 0). To get a summary view of the predicates that are contributed by other warp lanes, you
+The 32-bit int predicate from each lane reduces to a 1-bit value of 0 ``(predicate = 0)`` or 1
+``(predicate != 0)``. To get a summary view of the predicates that are contributed by other warp lanes, you
 can use:
 
 * ``__any()``: Returns 1 if any warp lane contributes a nonzero predicate, otherwise it returns 0
@@ -1892,7 +1892,8 @@ Profiler Counter Function
 
 The CUDA `__prof_trigger()` instruction is not supported.
 
-## Assert
+Assert
+============================================================
 
 The assert function is supported in HIP.
 Assert function is used for debugging purpose, when the input expression equals to zero, the execution will be stopped.
@@ -1905,7 +1906,8 @@ There are two kinds of implementations for assert functions depending on the use
 - Another is the device version of assert, which is implemented in hip/hip_runtime.h.
 Users need to include assert.h to use assert. For assert to work in both device and host functions, users need to include "hip/hip_runtime.h".
 
-## Printf
+Printf
+============================================================
 
 Printf function is supported in HIP.
 The following is a simple example to print information in the kernel.
@@ -1920,13 +1922,14 @@ int main() {
 }
 ```
 
-## Device-Side Dynamic Global Memory Allocation
+Device-Side Dynamic Global Memory Allocation
+============================================================
 
 Device-side dynamic global memory allocation is under development.  HIP now includes a preliminary
 implementation of malloc and free that can be called from device functions.
 
-## `__launch_bounds__`
-
+`__launch_bounds__`
+============================================================
 
 GPU multiprocessors have a fixed pool of resources (primarily registers and shared memory) which are shared by the actively running warps. Using more resources can increase IPC of the kernel but reduces the resources available for other warps and limits the number of warps that can be simulaneously running. Thus GPUs have a complex relationship between resource usage and performance.
 
@@ -1947,7 +1950,9 @@ When launch kernel with HIP APIs, for example, hipModuleLaunchKernel(), HIP will
 In case exceeded, HIP would return launch failure, if AMD_LOG_LEVEL is set with proper value (for details, please refer to docs/markdown/hip_logging.md), detail information will be shown in the error log message, including
 launch parameters of kernel dim size, launch bounds, and the name of the faulting kernel. It's helpful to figure out which is the faulting kernel, besides, the kernel dim size and launch bounds values will also assist in debugging such failures.
 
-### Compiler Impact
+Compiler Impact
+--------------------------------------------------------------------------------------------
+
 The compiler uses these parameters as follows:
 - The compiler uses the hints only to manage register usage, and does not automatically reduce shared memory or other resources.
 - Compilation fails if compiler cannot generate a kernel which meets the requirements of the specified launch bounds.
@@ -1958,11 +1963,14 @@ If MIN_WARPS_PER_EXECUTION_UNIT is 1, then the kernel can use all registers supp
 - The compiler ensures that the registers used in the kernel is less than both allowed maximums, typically by spilling registers (to shared or global memory), or by using more instructions.
 - The compiler may use hueristics to increase register usage, or may simply be able to avoid spilling. The MAX_THREADS_PER_BLOCK is particularly useful in this cases, since it allows the compiler to use more registers and avoid situations where the compiler constrains the register usage (potentially spilling) to meet the requirements of a large block size that is never used at launch time.
 
+CU and EU Definitions
+--------------------------------------------------------------------------------------------
 
-### CU and EU Definitions
 A compute unit (CU) is responsible for executing the waves of a work-group. It is composed of one or more execution units (EU) which are responsible for executing waves. An EU can have enough resources to maintain the state of more than one executing wave. This allows an EU to hide latency by switching between waves in a similar way to symmetric multithreading on a CPU. In order to allow the state for multiple waves to fit on an EU, the resources used by a single wave have to be limited. Limiting such resources can allow greater latency hiding, but can result in having to spill some register state to memory. This attribute allows an advanced developer to tune the number of waves that are capable of fitting within the resources of an EU. It can be used to ensure at least a certain number will fit to help hide latency, and can also be used to ensure no more than a certain number will fit to limit cache thrashing.
 
-### Porting from CUDA __launch_bounds
+Porting from CUDA `__launch_bounds`
+--------------------------------------------------------------------------------------------
+
 CUDA defines a __launch_bounds which is also designed to control occupancy:
 ```
 __launch_bounds(MAX_THREADS_PER_BLOCK, MIN_BLOCKS_PER_MULTIPROCESSOR)
@@ -1980,16 +1988,18 @@ The developer is trying to tell the compiler to control resource utilization to 
 The use of execution units rather than multiprocessors provides support for architectures with multiple execution units/multi-processor. For example, the AMD GCN architecture has 4 execution units per multiProcessor.  The hipDeviceProps has a field executionUnitsPerMultiprocessor.
 Platform-specific coding techniques such as #ifdef can be used to specify different launch_bounds for NVCC and HIP-Clang platforms, if desired.
 
+maxregcount
+--------------------------------------------------------------------------------------------
 
-### maxregcount
 Unlike nvcc, HIP-Clang does not support the "--maxregcount" option.  Instead, users are encouraged to use the hip_launch_bounds directive since the parameters are more intuitive and portable than
 micro-architecture details like registers, and also the directive allows per-kernel control rather than an entire file.  hip_launch_bounds works on both HIP-Clang and nvcc targets.
 
-
-## Register Keyword
+Register Keyword
+============================================================
 The register keyword is deprecated in C++, and is silently ignored by both nvcc and HIP-Clang.  You can pass the option `-Wdeprecated-register` the compiler warning message.
 
-## Pragma Unroll
+Pragma Unroll
+============================================================
 
 Unroll with a bounds that is known at compile-time is supported.  For example:
 
@@ -2009,8 +2019,8 @@ for (int i=0; i<16; i++) ...
 for (int i=0; i<16; i++) ...
 ```
 
-
-## In-Line Assembly
+In-Line Assembly
+============================================================
 
 GCN ISA In-line assembly, is supported. For example:
 
@@ -2032,7 +2042,8 @@ The following C++ features are not supported:
 - Virtual functions
 Virtual functions are not supported if objects containing virtual function tables are passed between GPU's of different offload arch's, e.g. between gfx906 and gfx1030. Otherwise virtual functions are supported.
 
-## Kernel Compilation
+Kernel Compilation
+============================================================
 hipcc now supports compiling C++/HIP kernels to binary code objects.
 The file format for binary is `.co` which means Code Object. The following command builds the code object using `hipcc`.
 
@@ -2044,7 +2055,9 @@ The file format for binary is `.co` which means Code Object. The following comma
 [OUTPUT FILE] = Name of the generated code object file
 ```
 
-Note: When using binary code objects is that the number of arguments to the kernel is different on HIP-Clang and NVCC path. Refer to the sample in samples/0_Intro/module_api for differences in the arguments to be passed to the kernel.
+.. note::
+  When using binary code objects is that the number of arguments to the kernel is different on HIP-Clang and NVCC path. Refer to the sample in samples/0_Intro/module_api for differences in the arguments to be passed to the kernel.
 
-## gfx-arch-specific-kernel
-Clang defined '__gfx*__' macros can be used to execute gfx arch specific codes inside the kernel. Refer to the sample 14_gpu_arch in samples/2_Cookbook.
+gfx-arch-specific-kernel
+============================================================
+Clang defined '__gfx*__' macros can be used to execute gfx arch specific codes inside the kernel. Refer to the sample ``14_gpu_arch`` in ``samples/2_Cookbook``.
