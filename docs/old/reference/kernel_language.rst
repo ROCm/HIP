@@ -1994,8 +1994,39 @@ maxregcount
 Unlike nvcc, HIP-Clang does not support the "--maxregcount" option.  Instead, users are encouraged to use the hip_launch_bounds directive since the parameters are more intuitive and portable than
 micro-architecture details like registers, and also the directive allows per-kernel control rather than an entire file.  hip_launch_bounds works on both HIP-Clang and nvcc targets.
 
+Asynchronous Functions
+============================================================
+
+Memory stream
+--------------------------------------------------------------------------------------------
+
+.. doxygengroup:: Stream
+   :content-only:
+
+.. doxygengroup:: StreamO
+   :content-only:
+
+Peer to peer
+--------------------------------------------------------------------------------------------
+
+.. doxygengroup:: PeerToPeer
+   :content-only:
+
+Memory management
+--------------------------------------------------------------------------------------------
+
+.. doxygengroup:: Memory
+   :content-only:
+
+External Resource Interoperability
+--------------------------------------------------------------------------------------------
+
+.. doxygengroup:: External
+   :content-only:
+
 Register Keyword
 ============================================================
+
 The register keyword is deprecated in C++, and is silently ignored by both nvcc and HIP-Clang.  You can pass the option `-Wdeprecated-register` the compiler warning message.
 
 Pragma Unroll
