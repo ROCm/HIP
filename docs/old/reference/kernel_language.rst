@@ -1223,13 +1223,13 @@ The following integer intrinsics are supported (on device only).
         | <sub>Return the number of consecutive high-order zero bits in 64 bit signed integer.</sub>
 
     * - unsigned int __ffs(unsigned int x)
-        | <sub>Find the position of least signigicant bit set to 1 in a 32 bit unsigned integer<sup>1</sup>.</sub>
+        | <sub>Find the position of least signigicant bit set to 1 in a 32 bit unsigned integer.[^f2]</sub>
 
     * - unsigned int __ffs(int x)
         | <sub>Find the position of least signigicant bit set to 1 in a 32 bit signed integer.</sub>
 
     * - unsigned int __ffsll(unsigned long long int x)
-        | <sub>Find the position of least signigicant bit set to 1 in a 64 bit unsigned integer<sup>1</sup>.</sub>
+        | <sub>Find the position of least signigicant bit set to 1 in a 64 bit unsigned integer.[^f2]</sub>
 
     * - unsigned int __ffsll(long long int x)
         | <sub>Find the position of least signigicant bit set to 1 in a 64 bit signed integer.</sub>
@@ -1247,7 +1247,7 @@ The following integer intrinsics are supported (on device only).
         | <sub>Multiply two 24bit unsigned integers.</sub>
 
 
-<sup>1</sup> The HIP-Clang implementation of ``__ffs() and __ffsll()`` contains code to add a constant
+[^f2] The HIP-Clang implementation of ``__ffs() and __ffsll()`` contains code to add a constant
 +1 to produce the ffs result format. For the cases where this overhead is not acceptable and you want
 to specialize for the platform, HIP-Clang provides ``__lastbit_u32_u32(unsigned int input)`` and
 ``__lastbit_u32_u64(unsigned long long int input)``. The index returned by ``__lastbit_`` instructions starts
