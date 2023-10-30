@@ -93,75 +93,81 @@ Below is an example to enable HIP logging and get logging information during exe
 user@user-test:~/hip/bin$ export AMD_LOG_LEVEL=4
 user@user-test:~/hip/bin$ ./hipinfo
 
-:3:rocdevice.cpp            :453 : 23647210092: Initializing HSA stack.
-:3:comgrctx.cpp             :33  : 23647639336: Loading COMGR library.
-:3:rocdevice.cpp            :203 : 23647687108: Numa select cpu agent[0]=0x13407c0(fine=0x13409a0,coarse=0x1340ad0) for gpu agent=0x1346150
-:4:runtime.cpp              :82  : 23647698669: init
-:3:hip_device_runtime.cpp   :473 : 23647698869: 5617 : [7fad295dd840] hipGetDeviceCount: Returned hipSuccess
-:3:hip_device_runtime.cpp   :502 : 23647698990: 5617 : [7fad295dd840] hipSetDevice ( 0 )
-:3:hip_device_runtime.cpp   :507 : 23647699042: 5617 : [7fad295dd840] hipSetDevice: Returned hipSuccess
+:3:rocdevice.cpp            :444 : 115921848303 us: [pid:177158 tid:0x7f941a0d5a80] Initializing HSA stack.
+:3:comgrctx.cpp             :33  : 115921854454 us: [pid:177158 tid:0x7f941a0d5a80] Loading COMGR library.
+:3:rocdevice.cpp            :210 : 115921854490 us: [pid:177158 tid:0x7f941a0d5a80] Numa selects cpu agent[0]=0xcc4ef0(fine=0xbbffe0,coarse=0xcc53d0) for gpu agent=0xcc59c0 CPU<->GPU XGMI=0
+:3:rocdevice.cpp            :1680: 115921854758 us: [pid:177158 tid:0x7f941a0d5a80] Gfx Major/Minor/Stepping: 10/3/1
+:3:rocdevice.cpp            :1682: 115921854764 us: [pid:177158 tid:0x7f941a0d5a80] HMM support: 1, XNACK: 0, Direct host access: 0
+:3:rocdevice.cpp            :1684: 115921854766 us: [pid:177158 tid:0x7f941a0d5a80] Max SDMA Read Mask: 0x3, Max SDMA Write Mask: 0x3
+:4:rocdevice.cpp            :2063: 115921854812 us: [pid:177158 tid:0x7f941a0d5a80] Allocate hsa host memory 0x7f941a179000, size 0x38
+:4:rocdevice.cpp            :2063: 115921855244 us: [pid:177158 tid:0x7f941a0d5a80] Allocate hsa host memory 0x7f930c400000, size 0x101000
+:4:rocdevice.cpp            :2063: 115921856057 us: [pid:177158 tid:0x7f941a0d5a80] Allocate hsa host memory 0x7f930c200000, size 0x101000
+:4:runtime.cpp              :83  : 115921856451 us: [pid:177158 tid:0x7f941a0d5a80] init
+:3:hip_context.cpp          :48  : 115921856457 us: [pid:177158 tid:0x7f941a0d5a80] Direct Dispatch: 1
+:3:hip_device_runtime.cpp   :546 : 115921856476 us: [pid:177158 tid:0x7f941a0d5a80]  hipGetDeviceCount ( 0x7ffc69af52e4 ) 
+:3:hip_device_runtime.cpp   :548 : 115921856479 us: [pid:177158 tid:0x7f941a0d5a80] hipGetDeviceCount: Returned hipSuccess : 
+:3:hip_device_runtime.cpp   :561 : 115921856484 us: [pid:177158 tid:0x7f941a0d5a80]  hipSetDevice ( 0 ) 
+:3:hip_device_runtime.cpp   :565 : 115921856488 us: [pid:177158 tid:0x7f941a0d5a80] hipSetDevice: Returned hipSuccess : 
 --------------------------------------------------------------------------------
 device#                           0
-:3:hip_device.cpp           :150 : 23647699276: 5617 : [7fad295dd840] hipGetDeviceProperties ( 0x7ffdbe7db730, 0 )
-:3:hip_device.cpp           :237 : 23647699335: 5617 : [7fad295dd840] hipGetDeviceProperties: Returned hipSuccess
-Name:                             Device 7341
+:3:hip_device.cpp           :381 : 115921856498 us: [pid:177158 tid:0x7f941a0d5a80]  hipGetDeviceProperties ( 0x7ffc69af4fa0, 0 ) 
+:3:hip_device.cpp           :383 : 115921856502 us: [pid:177158 tid:0x7f941a0d5a80] hipGetDeviceProperties: Returned hipSuccess : 
+Name:                             AMD Radeon RX 6700 XT
 pciBusID:                         3
 pciDeviceID:                      0
 pciDomainID:                      0
-multiProcessorCount:              11
-maxThreadsPerMultiProcessor:      2560
+multiProcessorCount:              20
+maxThreadsPerMultiProcessor:      2048
 isMultiGpuBoard:                  0
-clockRate:                        1900 Mhz
-memoryClockRate:                  875 Mhz
-memoryBusWidth:                   0
-clockInstructionRate:             1000 Mhz
-totalGlobalMem:                   7.98 GB
-maxSharedMemoryPerMultiProcessor: 64.00 KB
-totalConstMem:                    8573157376
+clockRate:                        2855 Mhz
+memoryClockRate:                  1000 Mhz
+memoryBusWidth:                   192
+totalGlobalMem:                   11.98 GB
+totalConstMem:                    2147483647
 sharedMemPerBlock:                64.00 KB
 canMapHostMemory:                 1
-regsPerBlock:                     0
+regsPerBlock:                     65536
 warpSize:                         32
-l2CacheSize:                      0
+l2CacheSize:                      3145728
 computeMode:                      0
 maxThreadsPerBlock:               1024
 maxThreadsDim.x:                  1024
 maxThreadsDim.y:                  1024
 maxThreadsDim.z:                  1024
 maxGridSize.x:                    2147483647
-maxGridSize.y:                    2147483647
-maxGridSize.z:                    2147483647
+maxGridSize.y:                    65536
+maxGridSize.z:                    65536
 major:                            10
-minor:                            12
+minor:                            3
 concurrentKernels:                1
-cooperativeLaunch:                0
-cooperativeMultiDeviceLaunch:     0
-arch.hasGlobalInt32Atomics:       1
-...
-gcnArch:                          1012
+cooperativeLaunch:                1
+cooperativeMultiDeviceLaunch:     1
 isIntegrated:                     0
-maxTexture1D:                     65536
+maxTexture1D:                     16384
 maxTexture2D.width:               16384
 maxTexture2D.height:              16384
-maxTexture3D.width:               2048
-maxTexture3D.height:              2048
-maxTexture3D.depth:               2048
+maxTexture3D.width:               16384
+maxTexture3D.height:              16384
+maxTexture3D.depth:               8192
 isLargeBar:                       0
-:3:hip_device_runtime.cpp   :471 : 23647701557: 5617 : [7fad295dd840] hipGetDeviceCount ( 0x7ffdbe7db714 )
-:3:hip_device_runtime.cpp   :473 : 23647701608: 5617 : [7fad295dd840] hipGetDeviceCount: Returned hipSuccess
-:3:hip_peer.cpp             :76  : 23647701731: 5617 : [7fad295dd840] hipDeviceCanAccessPeer ( 0x7ffdbe7db728, 0, 0 )
-:3:hip_peer.cpp             :60  : 23647701784: 5617 : [7fad295dd840] canAccessPeer: Returned hipSuccess
-:3:hip_peer.cpp             :77  : 23647701831: 5617 : [7fad295dd840] hipDeviceCanAccessPeer: Returned hipSuccess
+asicRevision:                     0
+maxSharedMemoryPerMultiProcessor: 64.00 KB
+clockInstructionRate:             1000.00 Mhz
+...
+gcnArchName:                      gfx1031
+:3:hip_device_runtime.cpp   :546 : 115921856613 us: [pid:177158 tid:0x7f941a0d5a80]  hipGetDeviceCount ( 0x7ffc69af4f8c ) 
+:3:hip_device_runtime.cpp   :548 : 115921856616 us: [pid:177158 tid:0x7f941a0d5a80] hipGetDeviceCount: Returned hipSuccess : 
+:3:hip_peer.cpp             :176 : 115921856625 us: [pid:177158 tid:0x7f941a0d5a80]  hipDeviceCanAccessPeer ( 0x7ffc69af4f90, 0, 0 ) 
+:3:hip_peer.cpp             :177 : 115921856628 us: [pid:177158 tid:0x7f941a0d5a80] hipDeviceCanAccessPeer: Returned hipSuccess : 
 peers:
-:3:hip_peer.cpp             :76  : 23647701921: 5617 : [7fad295dd840] hipDeviceCanAccessPeer ( 0x7ffdbe7db728, 0, 0 )
-:3:hip_peer.cpp             :60  : 23647701965: 5617 : [7fad295dd840] canAccessPeer: Returned hipSuccess
-:3:hip_peer.cpp             :77  : 23647701998: 5617 : [7fad295dd840] hipDeviceCanAccessPeer: Returned hipSuccess
-non-peers:                        device#0
+:3:hip_peer.cpp             :176 : 115921856633 us: [pid:177158 tid:0x7f941a0d5a80]  hipDeviceCanAccessPeer ( 0x7ffc69af4f90, 0, 0 ) 
+:3:hip_peer.cpp             :177 : 115921856636 us: [pid:177158 tid:0x7f941a0d5a80] hipDeviceCanAccessPeer: Returned hipSuccess : 
+non-peers:                        device#0 
 
-:3:hip_memory.cpp           :345 : 23647702191: 5617 : [7fad295dd840] hipMemGetInfo ( 0x7ffdbe7db718, 0x7ffdbe7db720 )
-:3:hip_memory.cpp           :360 : 23647702243: 5617 : [7fad295dd840] hipMemGetInfo: Returned hipSuccess
-memInfo.total:                    7.98 GB
-memInfo.free:                     7.98 GB (100%)
+:3:hip_memory.cpp           :764 : 115921856649 us: [pid:177158 tid:0x7f941a0d5a80]  hipMemGetInfo ( 0x7ffc69af4f90, 0x7ffc69af4f98 ) 
+:3:hip_memory.cpp           :788 : 115921856654 us: [pid:177158 tid:0x7f941a0d5a80] hipMemGetInfo: Returned hipSuccess : 
+memInfo.total:                    11.98 GB
+memInfo.free:                     11.86 GB (99%)
 ```
 
 On Windows, AMD_LOG_LEVEL can be set via environment variable from advanced system setting, or from Command prompt run as administrator, as shown below as an example, which shows some debug log information calling backend runtime on Windows.
