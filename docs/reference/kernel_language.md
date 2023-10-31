@@ -6,7 +6,7 @@ HIP provides a C++ syntax that is suitable for compiling most code that commonly
 - Math functions resembling those in the "math.h" header included with standard C++ compilers
 - Built-in functions for accessing specific GPU hardware capabilities
 
-This section describes the built-in variables and functions accessible from the HIP kernel. It’s intended for readers who are familiar with Cuda kernel syntax and want to understand how HIP is different.
+This section describes the built-in variables and functions accessible from the HIP kernel. It is intended for readers familiar with CUDA kernel syntax and wanting to understand how HIP is different from CUDA.
 
 Features are marked with one of the following keywords:
 - **Supported**---HIP supports the feature with a Cuda-equivalent function
@@ -26,11 +26,10 @@ Supported `__global__` functions are
   - Executed on the device
   - Called ("launched") from the host
 
-HIP `__global__` functions must have a `void` return type, and the first parameter to a HIP `__global__` function must have the type `hipLaunchParm`. See [Kernel-Launch Example](#kernel-launch-example). 
+HIP `__global__` functions must have a `void` return type, and the first parameter to a HIP `__global__` function must have the type `hipLaunchParm`. See [Kernel-Launch Example](#kernel-launch-example).
 
 HIP lacks dynamic-parallelism support, so `__global__ ` functions cannot be called from the device.
 
-(host_attr)=
 ### `__host__`
 Supported `__host__` functions are
   - Executed on the host
@@ -68,7 +67,7 @@ MyKernel<<<dim3(gridDim), dim3(groupDim), 0, 0>>> (a,b,c,n);
 
 ```
 
-The hipLaunchKernelGGL macro always starts with the five parameters specified above, followed by the kernel arguments. HIPIFY tools optionally convert Cuda launch syntax to hipLaunchKernelGGL, including conversion of optional arguments in <<< >>> to the five required hipLaunchKernelGGL parameters. The dim3 constructor accepts zero to three arguments and will by default initialize unspecified dimensions to 1. See [dim3](#dim3). The kernel uses the coordinate built-ins (thread*, block*, grid*) to determine coordinate index and coordinate bounds of the work item that’s currently executing. See {ref}`coordinate_builtins`.
+The hipLaunchKernelGGL macro always starts with the five parameters specified above, followed by the kernel arguments. HIPIFY tools optionally convert Cuda launch syntax to hipLaunchKernelGGL, including conversion of optional arguments in <<< >>> to the five required hipLaunchKernelGGL parameters. The dim3 constructor accepts zero to three arguments and will by default initialize unspecified dimensions to 1. See [dim3](#dim3). The kernel uses the coordinate built-ins (thread*, block*, grid*) to determine coordinate index and coordinate bounds of the work item that's currently executing. See [Coordinate Built-Ins](#Coordinate-Built-Ins).
 
 Please note, HIP does not support kernel launch with total work items defined in dimension with size gridDim x blockDim >= 2^32.
 
@@ -140,7 +139,6 @@ The warpSize variable is of type int and contains the warp size (in threads) for
 ## Vector Types
 
 Note that these types are defined in hip_runtime.h and are not automatically provided by the compiler.
-
 
 ### Short Vector Types
 Short vector types derive from the basic integer and floating-point types. They are structures defined in hip_vector_types.h. The first, second, third and fourth components of the vector are accessible through the ```x```, ```y```, ```z``` and ```w``` fields, respectively. All the short vector types support a constructor function of the form ```make_<type_name>()```. For example, ```float4 make_float4(float x, float y, float z, float w)``` creates a vector of type ```float4``` and value ```(x,y,z,w)```.
@@ -420,7 +418,7 @@ Following is the list of supported floating-point intrinsics. Note that intrinsi
 | double __dsqrt_rn ( double  x ) <br><sub>Compute `√x` in round-to-nearest-even mode.</sub> |
 
 ## Texture Functions
-The supported Texture functions are listed in header files "texture_fetch_functions.h"(https://github.com/ROCm-Developer-Tools/HIP/blob/main/include/hip/hcc_detail/texture_fetch_functions.h) and"texture_indirect_functions.h" (https://github.com/ROCm-Developer-Tools/HIP/blob/main/include/hip/hcc_detail/texture_indirect_functions.h).
+The supported Texture functions are listed in header files "texture_fetch_functions.h"(https://github.com/ROCm-Developer-Tools/HIP/blob/main/include/hip/amd_detail/texture_fetch_functions.h) and"texture_indirect_functions.h" (https://github.com/ROCm-Developer-Tools/HIP/blob/main/include/hip/amd_detail/texture_indirect_functions.h).
 
 Texture functions are not supported on some devices.
 Macro __HIP_NO_IMAGE_SUPPORT == 1 can be used to check whether texture functions are not supported in device code.
@@ -558,7 +556,7 @@ Towards this end, HIP has four extra functions to help developers more precisely
 
 Warp cross-lane functions operate across all lanes in a warp. The hardware guarantees that all warp lanes will execute in lockstep, so additional synchronization is unnecessary, and the instructions use no shared memory.
 
-Note that Nvidia and AMD devices have different warp sizes, so portable code should use the warpSize built-ins to query the warp size. Hipified code from the Cuda path requires careful review to ensure it doesn’t assume a waveSize of 32. "Wave-aware" code that assumes a waveSize of 32 will run on a wave-64 machine, but it will utilize only half of the machine resources. WarpSize built-ins should only be used in device functions and its value depends on GPU arch. Users should not assume warpSize to be a compile-time constant. Host functions should use hipGetDeviceProperties to get the default warp size of a GPU device:
+Note that Nvidia and AMD devices have different warp sizes, so portable code should use the warpSize built-ins to query the warp size. Hipified code from the Cuda path requires careful review to ensure it doesn't assume a waveSize of 32. "Wave-aware" code that assumes a waveSize of 32 will run on a wave-64 machine, but it will utilize only half of the machine resources. WarpSize built-ins should only be used in device functions and its value depends on GPU arch. Users should not assume warpSize to be a compile-time constant. Host functions should use hipGetDeviceProperties to get the default warp size of a GPU device:
 
 ```
 	cudaDeviceProp props;
@@ -584,7 +582,7 @@ Threads in a warp are referred to as *lanes* and are numbered from 0 to warpSize
 
 Applications can test whether the target platform supports the any/all instruction using the `hasWarpVote` device property or the HIP_ARCH_HAS_WARP_VOTE compiler define.
 
-`__ballot` provides a bit mask containing the 1-bit predicate value from each lane. The nth bit of the result contains the 1 bit contributed by the nth warp lane. Note that HIP's `__ballot` function supports a 64-bit return value (compared with Cuda’s 32 bits). Code ported from Cuda should support the larger warp sizes that the HIP version of this instruction supports. Applications can test whether the target platform supports the ballot instruction using the `hasWarpBallot` device property or the HIP_ARCH_HAS_WARP_BALLOT compiler define.
+`__ballot` provides a bit mask containing the 1-bit predicate value from each lane. The nth bit of the result contains the 1 bit contributed by the nth warp lane. Note that HIP's `__ballot` function supports a 64-bit return value (compared with Cuda's 32 bits). Code ported from Cuda should support the larger warp sizes that the HIP version of this instruction supports. Applications can test whether the target platform supports the ballot instruction using the `hasWarpBallot` device property or the HIP_ARCH_HAS_WARP_BALLOT compiler define.
 
 
 ### Warp Shuffle Functions

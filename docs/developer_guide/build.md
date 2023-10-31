@@ -6,7 +6,7 @@ HIP code can be developed either on AMD ROCm platform using HIP-Clang compiler, 
 Before build and run HIP, make sure drivers and pre-build packages are installed properly on the platform.
 
 ### AMD platform
-Install ROCm packages (see ROCm Installation Guide on AMD public documentation site (https://docs.amd.com/) or install pre-built binary packages using the package manager,
+Install ROCm packages or pre-built binary packages using the package manager. Refer to the ROCm Installation Guide at https://rocm.docs.amd.com for more information on installing ROCm.
 
 ```shell
 sudo apt install mesa-common-dev
@@ -23,14 +23,14 @@ Install Nvidia driver and pre-build packages (see HIP Installation Guide at http
 ### Branch of repository
 
 Before get HIP source code, set the expected branch of repository at the variable `ROCM_BRANCH`.
-For example, for ROCm5.6 release branch, set
+For example, for ROCm6.0 release branch, set
 ```shell
-export ROCM_BRANCH=rocm-5.6.x
+export ROCM_BRANCH=rocm-6.0.x
 ```
 
-ROCm5.6 release branch, set
+ROCm5.7 release branch, set
 ```shell
-export ROCM_BRANCH=rocm-5.6.x
+export ROCM_BRANCH=rocm-5.7.x
 ```
 Similiar format for future branches.
 
@@ -88,17 +88,15 @@ By default, release version of HIP is built.
 ### Default paths and environment variables
 
    * By default HIP looks for HSA in `<ROCM_PATH>/hsa` (can be overridden by setting `HSA_PATH` environment variable).
-   * By default HIP is installed into `<ROCM_PATH>/hip` (can be overridden by setting HIP_PATH environment variable).
+   * By default HIP is installed into `<ROCM_PATH>/hip`.
    * By default HIP looks for clang in `<ROCM_PATH>/llvm/bin` (can be overridden by setting `HIP_CLANG_PATH` environment variable)
    * By default HIP looks for device library in `<ROCM_PATH>/lib` (can be overridden by setting `DEVICE_LIB_PATH` environment variable).
    * Optionally, consider adding `<ROCM_PATH>/bin` to your `PATH` to make it easier to use the tools.
    * Optionally, set `HIPCC_VERBOSE=7` to output the command line for compilation.
 
-After make install command, make sure `HIP_PATH` is pointed to `$PWD/install/hip`.
-
 ### Generating profiling header after adding/changing a HIP API
 
-When you add or change a HIP API, you might need to generate a new `hip_prof_str.h` header. This header is used by rocm tools to track HIP APIs like rocprofiler/roctracer etc.
+When you add or change a HIP API, you must generate a new `hip_prof_str.h` header. ROCm tools like ROCProfiler and ROCTracer use this header to track HIP APIs.
 To generate the header after your change, use the tool `hip_prof_gen.py` present in `hipamd/src`.
 
 Usage:
@@ -123,58 +121,33 @@ hip_prof_gen.py -v -p -t --priv <hip>/include/hip/hip_runtime_api.h \
 
 ### Build HIP tests
 
-#### Build HIP directed tests
-Developers can build HIP directed tests right after build HIP commands,
-
-```shell
-sudo make install
-make -j$(nproc) build_tests
-```
-By default, all HIP directed tests will be built and generated under the folder `$CLR_DIR/build/hipamd`directed_tests.
-Take HIP directed device APIs tests, as an example, all available test applications will have executable files generated under,
-`$CLR_DIR/build/hipamd/directed_tests/runtimeApi/device`.
-
-Run all HIP directed_tests, use the command,
-
-```shell
-ctest
-```
-Or
-```shell
-make test
-```
-
-Build and run a single directed test, use the follow command as an example,
-
-```shell
-make directed_tests.texture.hipTexObjPitch
-cd $CLR_DIR/build/hipamd/directed_tests/texcture
-./hipTexObjPitch
-```
-Please note, the integrated HIP directed tests, will be deprecated in future release.
-
-
-##### Build HIP catch tests
-
 HIP catch tests, with new architectured Catch2, are official seperated from HIP project, exist in HIP tests repository, can be built via the following instructions.
 
-##### Get HIP tests source code
+#### Get HIP tests source code
 
 ```shell
 git clone -b "$ROCM_BRANCH" https://github.com/ROCm-Developer-Tools/hip-tests.git
 ```
-##### Build HIP tests from source
+#### Build HIP tests from source
 
 ```shell
 export HIPTESTS_DIR="$(readlink -f hip-tests)"
 cd "$HIPTESTS_DIR"
 mkdir -p build; cd build
-export HIP_PATH=$CLR_DIR/build/install (or any path where HIP is installed, for example, /opt/rocm)
-cmake ../catch/ -DHIP_PLATFORM=amd
-make -j$(nproc) build_tests
-ctest # run tests
+cmake ../catch -DHIP_PLATFORM=amd -DHIP_PATH=$CLR_DIR/build/install # or any path where HIP is installed, for example, /opt/rocm.
+make -j$(nproc) build_tests # build tests
+cd build/catch_tests && ctest # to run all tests.
 ```
 HIP catch tests are built under the folder $HIPTESTS_DIR/build.
+Note that when using ctest, you can use different ctest options, for example, to run all tests with the keyword hipMemset,
+```
+ctest -R hipMemset
+```
+Use the below option will print test failures for failed tests,
+```
+ctest --output-on-failure
+```
+For more information, refer to https://cmake.org/cmake/help/v3.5/manual/ctest.1.html.
 
 To run any single catch test, the following is an example,
 
@@ -183,7 +156,7 @@ cd $HIPTESTS_DIR/build/catch_tests/unit/texture
 ./TextureTest
 ```
 
-##### Build HIP Catch2 standalone test
+#### Build HIP Catch2 standalone test
 
 HIP Catch2 supports build a standalone test, for example,
 
