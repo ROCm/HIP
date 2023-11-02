@@ -2925,7 +2925,12 @@ hipError_t hipMalloc(void** ptr, size_t size);
  *  @param[in]  size Requested memory size
  *  @param[in]  flags Type of memory allocation
  *
- *  If size is 0, no memory is allocated, *ptr returns nullptr, and hipSuccess is returned.
+ *  If requested memory size is 0, no memory is allocated, *ptr returns nullptr, and #hipSuccess
+ *  is returned.
+ *
+ *  The memory allocation flag should be either #hipDeviceMallocDefault,
+ *  #hipDeviceMallocFinegrained, #hipDeviceMallocUncached, or #hipMallocSignalMemory.
+ *  If the flag is any other value, the API returns #hipErrorInvalidValue.
  *
  *  @return #hipSuccess, #hipErrorOutOfMemory, #hipErrorInvalidValue (bad context, null *ptr)
  *
@@ -3058,7 +3063,8 @@ hipError_t hipMemPrefetchAsync(const void* dev_ptr,
  * range starting from the pointer address devPtr, with the size of count bytes.
  * The memory range must refer to managed memory allocated via the API hipMallocManaged, and the
  * range will be handled with proper round down and round up respectively in the driver to
- * be aligned to CPU page size.
+ * be aligned to CPU page size, the same way as corresponding CUDA API behaves in CUDA version 8.0
+ * and afterwards.
  *
  * @note  This API is implemented on Linux and is under development on Windows.
  */
