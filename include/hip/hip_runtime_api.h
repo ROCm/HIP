@@ -634,8 +634,14 @@ typedef struct hipFuncAttributes {
     size_t sharedSizeBytes;
 } hipFuncAttributes;
 typedef struct ihipEvent_t* hipEvent_t;
+
+/**
+ * HIP limit
+ *
+ * @note Any other limit value will be default, as "UnsupportedLimit".
+ */
 enum hipLimit_t {
-    hipLimitStackSize = 0x0,        ///< limit of stack size in bytes on the current device
+    hipLimitStackSize = 0x0,        ///< limit of thread stack size in bytes on the current device
     hipLimitPrintfFifoSize = 0x01,  ///< size limit in bytes of fifo used by printf call on the device
     hipLimitMallocHeapSize = 0x02,  ///< limit of heap size in bytes on the current device
     hipLimitRange                   ///< supported limit range
