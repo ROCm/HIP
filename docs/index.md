@@ -51,7 +51,6 @@ split into ref and conceptual docs:
 :::{grid-item-card} Reference
 
 
-- {doc}`/reference/math_api`
 - {doc}`/reference/terms`
 - {doc}`/reference/deprecated_api_list`
 :::
