@@ -636,9 +636,10 @@ typedef struct hipFuncAttributes {
 typedef struct ihipEvent_t* hipEvent_t;
 
 /**
- * HIP limit
+ * hipLimit
  *
- * @note Any other limit value will be default, as "UnsupportedLimit".
+ * @note In HIP device limit-related APIs, any input limit value other than those defined in the
+ * enum is treated as "UnsupportedLimit" by default.
  */
 enum hipLimit_t {
     hipLimitStackSize = 0x0,        ///< limit of thread stack size in bytes on the current device
