@@ -642,10 +642,14 @@ typedef struct ihipEvent_t* hipEvent_t;
  * enum is treated as "UnsupportedLimit" by default.
  */
 enum hipLimit_t {
-    hipLimitStackSize = 0x0,        ///< limit of thread stack size in bytes on the current device
-    hipLimitPrintfFifoSize = 0x01,  ///< size limit in bytes of fifo used by printf call on the device
-    hipLimitMallocHeapSize = 0x02,  ///< limit of heap size in bytes on the current device
-    hipLimitRange                   ///< supported limit range
+    hipLimitStackSize = 0x0,        ///< Limit of stack size in bytes on the current device, per
+                                    ///< thread. The size is in units of 256 dwords, up to the
+                                    ///< limit of (128K - 16)
+    hipLimitPrintfFifoSize = 0x01,  ///< Size limit in bytes of fifo used by printf call on the
+                                    ///< device. Currently not supported
+    hipLimitMallocHeapSize = 0x02,  ///< Limit of heap size in bytes on the current device, should
+                                    ///< be less than the global memory size on the device
+    hipLimitRange                   ///< Supported limit range
 };
 /**
  * Flags that can be used with hipStreamCreateWithFlags.
@@ -1839,10 +1843,11 @@ hipError_t hipDeviceGetLimit(size_t* pValue, enum hipLimit_t limit);
  *
  * As the input enum limit,
  * #hipLimitStackSize sets the limit value of the stack size on the current GPU device, per thread.
- * The limit size can get via hipDeviceSetLimit.
+ * The limit size can get via hipDeviceGetLimit. The size is in units of 256 dwords, up to the limit
+ * (128K - 16).
  *
  * #hipLimitMallocHeapSize sets the limit value of the heap used by the malloc()/free()
- * calls.
+ * calls. The limit size can get via hipDeviceGetLimit.
  *
  * Any other input as default, the funtion will return hipErrorUnsupportedLimit.
  *
