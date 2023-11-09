@@ -2034,6 +2034,20 @@ hipError_t hipFuncSetSharedMemConfig(const void* func, hipSharedMemConfig config
  * @see hipGetErrorString, hipGetLastError, hipPeakAtLastError, hipError_t
  */
 hipError_t hipGetLastError(void);
+
+/**
+ * @brief Return last error returned by any HIP runtime API call and resets the stored error code to
+ * #hipSuccess
+ *
+ * @returns return code from last HIP called from the active host thread
+ *
+ * Returns the last error that has been returned by any of the runtime calls in the same host
+ * thread, and then resets the saved error to #hipSuccess.
+ *
+ * @see hipGetErrorString, hipGetLastError, hipPeakAtLastError, hipError_t
+ */
+hipError_t hipExtGetLastError(void);
+
 /**
  * @brief Return last error returned by any HIP runtime API call.
  *
