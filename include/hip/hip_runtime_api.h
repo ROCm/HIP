@@ -1847,7 +1847,7 @@ hipError_t hipDeviceGetLimit(size_t* pValue, enum hipLimit_t limit);
  * (128K - 16).
  *
  * #hipLimitMallocHeapSize sets the limit value of the heap used by the malloc()/free()
- * calls. The limit size can get via hipDeviceGetLimit.
+ * calls. For limit size, use the #hipDeviceGetLimit API.
  *
  * Any other input as default, the funtion will return hipErrorUnsupportedLimit.
  *
