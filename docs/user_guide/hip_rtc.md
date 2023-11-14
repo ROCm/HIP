@@ -314,9 +314,11 @@ HIPRTC follows the below versioning.
     - HIPRTC follows the same versioning as HIP runtime library.
     - The soname field for the shared library is set to MAJOR version. eg: For HIP 5.3 the soname is set to 5 (hiprtc.so.5).
  - Windows
-    - Currently, the HIPRTC dll doesn't have any version attached. It is just named as hiprtc.dll.
-    - In the upcoming releases, HIPRTC dll will be named as hiprtc_XXYY.dll where XX is MAJOR version and YY is MINOR version. eg: For HIP 5.3 the name is hiprtc_0503.dll.
+    - HIPRTC dll is named as hiprtcXXYY.dll where XX is MAJOR version and YY is MINOR version. eg: For HIP 5.3 the name is hiprtc0503.dll.
+
+## HIP header support
+ - Added HIPRTC support for all the hip common header files such as library_types.h, hip_math_constants.h, hip_complex.h, math_functions.h, surface_types.h etc. from 6.1. HIPRTC users need not include any HIP macros or constants explicitly in their header files. All of these should get included via hiprtc builtins when the app links to HIPRTC library.
 
 ## Deprecation notice
  - Currently HIPRTC APIs are separated from HIP APIs and HIPRTC is available as a separate library libhiprtc.so/libhiprtc.dll. But on Linux, HIPRTC symbols are also present in libhipamd64.so in order to support the existing applications. Gradually, these symbols will be removed from HIP library and applications using HIPRTC will be required to explictly link to HIPRTC library. However, on Windows hiprtc.dll must be used as the hipamd64.dll doesn't contain the HIPRTC symbols.
- - Datatypes such as uint32_t, uint64_t, int32_t, int64_t defined in std namespace in HIPRTC are deprecated and will be removed in the upcoming releases since these can conflict with the standard C++ datatypes. These datatypes are now prefixed with __hip__, e.g. __hip_uint32_t. type_traits templates previously defined in std namespace are moved to __hip_internal namespace as implementation details. Apps previously using std::uint32_t or similar types should use __hip_ prefixed types to avoid conflicts with standard std namespace.
+ - Datatypes such as uint32_t, uint64_t, int32_t, int64_t defined in std namespace in HIPRTC are deprecated earlier and are being removed from ROCm release 6.1 since these can conflict with the standard C++ datatypes. These datatypes are now prefixed with __hip__, e.g. __hip_uint32_t. Apps previously using std::uint32_t or similar types can use __hip_ prefixed types to avoid conflicts with standard std namespace or apps can have their own definitions for these types. Also, type_traits templates previously defined in std namespace are moved to __hip_internal namespace as implementation details.
