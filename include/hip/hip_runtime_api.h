@@ -553,11 +553,22 @@ typedef struct hipFuncAttributes {
     size_t sharedSizeBytes;
 } hipFuncAttributes;
 typedef struct ihipEvent_t* hipEvent_t;
+
+/**
+ * hipLimit
+ *
+ * @note In HIP device limit-related APIs, any input limit value other than those defined in the
+ * enum is treated as "UnsupportedLimit" by default.
+ */
 enum hipLimit_t {
-    hipLimitStackSize = 0x0,        ///< limit of stack size in bytes on the current device
-    hipLimitPrintfFifoSize = 0x01,  ///< size limit in bytes of fifo used by printf call on the device
-    hipLimitMallocHeapSize = 0x02,  ///< limit of heap size in bytes on the current device
-    hipLimitRange                   ///< supported limit range
+    hipLimitStackSize = 0x0,        ///< Limit of stack size in bytes on the current device, per
+                                    ///< thread. The size is in units of 256 dwords, up to the
+                                    ///< limit of (128K - 16)
+    hipLimitPrintfFifoSize = 0x01,  ///< Size limit in bytes of fifo used by printf call on the
+                                    ///< device. Currently not supported
+    hipLimitMallocHeapSize = 0x02,  ///< Limit of heap size in bytes on the current device, should
+                                    ///< be less than the global memory size on the device
+    hipLimitRange                   ///< Supported limit range
 };
 /**
  * Flags that can be used with hipStreamCreateWithFlags.
@@ -1723,9 +1734,9 @@ hipError_t hipDeviceGetCacheConfig(hipFuncCache_t* cacheConfig);
 /**
  * @brief Gets resource limits of current device
  *
- * The funtion querys the size of limit value, as required input enum hipLimit_t, it can be either
- * #hipLimitStackSize, or #hipLimitMallocHeapSize. Any other input as default, the funtion will
- * return #hipErrorUnsupportedLimit.
+ * The function queries the size of limit value, as required by the input enum value hipLimit_t,
+ * which can be either #hipLimitStackSize, or #hipLimitMallocHeapSize. Any other input as
+ * default, the function will return #hipErrorUnsupportedLimit.
  *
  * @param [out] pValue Returns the size of the limit in bytes
  * @param [in]  limit The limit to query
@@ -1736,13 +1747,14 @@ hipError_t hipDeviceGetCacheConfig(hipFuncCache_t* cacheConfig);
 hipError_t hipDeviceGetLimit(size_t* pValue, enum hipLimit_t limit);
 /**
  * @brief Sets resource limits of current device.
- * 
+ *
  * As the input enum limit,
  * #hipLimitStackSize sets the limit value of the stack size on the current GPU device, per thread.
- * The limit size can get via hipDeviceSetLimit.
+ * The limit size can get via hipDeviceGetLimit. The size is in units of 256 dwords, up to the limit
+ * (128K - 16).
  *
  * #hipLimitMallocHeapSize sets the limit value of the heap used by the malloc()/free()
- * calls.
+ * calls. For limit size, use the #hipDeviceGetLimit API.
  *
  * Any other input as default, the funtion will return hipErrorUnsupportedLimit.
  *
@@ -2846,7 +2858,12 @@ hipError_t hipMalloc(void** ptr, size_t size);
  *  @param[in]  size Requested memory size
  *  @param[in]  flags Type of memory allocation
  *
- *  If size is 0, no memory is allocated, *ptr returns nullptr, and hipSuccess is returned.
+ *  If requested memory size is 0, no memory is allocated, *ptr returns nullptr, and #hipSuccess
+ *  is returned.
+ *
+ *  The memory allocation flag should be either #hipDeviceMallocDefault,
+ *  #hipDeviceMallocFinegrained, #hipDeviceMallocUncached, or #hipMallocSignalMemory.
+ *  If the flag is any other value, the API returns #hipErrorInvalidValue.
  *
  *  @return #hipSuccess, #hipErrorOutOfMemory, #hipErrorInvalidValue (bad context, null *ptr)
  *
@@ -2979,7 +2996,8 @@ hipError_t hipMemPrefetchAsync(const void* dev_ptr,
  * range starting from the pointer address devPtr, with the size of count bytes.
  * The memory range must refer to managed memory allocated via the API hipMallocManaged, and the
  * range will be handled with proper round down and round up respectively in the driver to
- * be aligned to CPU page size.
+ * be aligned to CPU page size, the same way as corresponding CUDA API behaves in CUDA version 8.0
+ * and afterwards.
  *
  * @note  This API is implemented on Linux and is under development on Windows.
  */
