@@ -314,8 +314,10 @@ HIPRTC follows the below versioning.
     - HIPRTC follows the same versioning as HIP runtime library.
     - The soname field for the shared library is set to MAJOR version. eg: For HIP 5.3 the soname is set to 5 (hiprtc.so.5).
  - Windows
-    - Currently, the HIPRTC dll doesn't have any version attached. It is just named as hiprtc.dll.
-    - In the upcoming releases, HIPRTC dll will be named as hiprtc_XXYY.dll where XX is MAJOR version and YY is MINOR version. eg: For HIP 5.3 the name is hiprtc_0503.dll.
+    - HIPRTC dll is named as hiprtcXXYY.dll where XX is MAJOR version and YY is MINOR version. eg: For HIP 5.3 the name is hiprtc0503.dll.
+
+## HIP header support
+ - Added HIPRTC support for all the hip common header files such as library_types.h, hip_math_constants.h, hip_complex.h, math_functions.h, surface_types.h etc. from 6.0. HIPRTC users need not include any HIP macros or constants explicitly in their header files. All of these should get included via hiprtc builtins when the app links to HIPRTC library.
 
 ## Deprecation notice
  - Currently HIPRTC APIs are separated from HIP APIs and HIPRTC is available as a separate library libhiprtc.so/libhiprtc.dll. But on Linux, HIPRTC symbols are also present in libhipamd64.so in order to support the existing applications. Gradually, these symbols will be removed from HIP library and applications using HIPRTC will be required to explictly link to HIPRTC library. However, on Windows hiprtc.dll must be used as the hipamd64.dll doesn't contain the HIPRTC symbols.
