@@ -421,7 +421,6 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeConcurrentManagedAccess,          ///< Device can coherently access managed memory concurrently with the CPU
     hipDeviceAttributeCooperativeLaunch,                ///< Support cooperative launch
     hipDeviceAttributeCooperativeMultiDeviceLaunch,     ///< Support cooperative launch on multiple devices
-    hipDeviceAttributeHostRegisterSupported,            ///< Can device support host memory registration via hipHostRegister
     hipDeviceAttributeDeviceOverlap,                    ///< Device can concurrently copy memory and execute a kernel.
                                                         ///< Deprecated. Use instead asyncEngineCount.
     hipDeviceAttributeDirectManagedMemAccessFromHost,   ///< Host can directly access managed memory on
@@ -505,7 +504,7 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeWarpSize,                         ///< Warp size in threads.
     hipDeviceAttributeMemoryPoolsSupported,             ///< Device supports HIP Stream Ordered Memory Allocator
     hipDeviceAttributeVirtualMemoryManagementSupported, ///< Device supports HIP virtual memory management
-
+    hipDeviceAttributeHostRegisterSupported,            ///< Can device support host memory registration via hipHostRegister
     hipDeviceAttributeCudaCompatibleEnd = 9999,
     hipDeviceAttributeAmdSpecificBegin = 10000,
 
