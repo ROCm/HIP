@@ -505,6 +505,8 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeMemoryPoolsSupported,             ///< Device supports HIP Stream Ordered Memory Allocator
     hipDeviceAttributeVirtualMemoryManagementSupported, ///< Device supports HIP virtual memory management
     hipDeviceAttributeHostRegisterSupported,            ///< Can device support host memory registration via hipHostRegister
+    hipDeviceAttributeMemoryPoolSupportedHandleTypes,   ///< Supported handle mask for HIP Stream Ordered Memory Allocator
+
     hipDeviceAttributeCudaCompatibleEnd = 9999,
     hipDeviceAttributeAmdSpecificBegin = 10000,
 
