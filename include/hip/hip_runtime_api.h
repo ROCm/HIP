@@ -90,6 +90,7 @@ typedef struct hipUUID_t {
 
 #define hipGetDeviceProperties hipGetDevicePropertiesR0600
 #define hipDeviceProp_t hipDeviceProp_tR0600
+#define hipChooseDevice hipChooseDeviceR0600
 
 /**
  * hipDeviceProp
