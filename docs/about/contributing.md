@@ -1,7 +1,7 @@
 # Contributor guidelines
 
 If you want to contribute to the HIP project, review the following guidelines. If you want to contribute
-to our documentation, refer to {doc}`Contribute to ROCm docs <rocm:conribute/index>`.
+to our documentation, refer to {doc}`Contribute to ROCm docs <rocm:contribute/index>`.
 
 ## Make tips
 

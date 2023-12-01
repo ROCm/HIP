@@ -2,7 +2,7 @@
 Install HIP
 *******************************************
 
-HIP can be installed on AMD (ROCm with HIP-Clang) and NVIDIA (CUDA with nvcc) platforms.
+HIP can be installed on AMD (ROCm with HIP-Clang) and NVIDIA (CUDA with NVCC) platforms.
 
 Note: The version definition for the HIP runtime is different from CUDA. On an AMD platform, the
 ``hipRuntimeGerVersion`` function returns the HIP runtime version; on an NVIDIA platform, this function

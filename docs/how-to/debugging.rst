@@ -95,7 +95,7 @@ You can use ROCgdb for debugging and profiling.
 
 ROCgdb is the ROCm source-level debugger for Linux and is based on GNU Project debugger (GDB).
 the GNU source-level debugger, equivalent of cuda-gdb, can be used with debugger frontends, such as eclipse, vscode, or gdb-dashboard.
-For details, see (https://github.com/ROCm-Developer-Tools/ROCgdb).
+For details, refer to the [ROCgdb documentation](https://rocm.docs.amd.com/projects/ROCgdb/en/latest/).
 
 Below is a sample how to use ROCgdb run and debug HIP application, rocgdb is installed with ROCM package in the folder /opt/rocm/bin.
 

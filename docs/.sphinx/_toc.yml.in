@@ -13,63 +13,30 @@ subtrees:
 
 - caption: Reference
   entries:
-    - file: .doxygen/docBin/html/index
-      title: API library
+  - file: .doxygen/docBin/html/index
+    title: API library
+    subtrees:
+    - entries:
+      - file: reference/deprecated-api-list.rst
+        title: Deprecated API list
+      - file: reference/kernel-language.rst
+        title: C++ language extensions
 
 - caption: How-to
   entries:
+  - file: how-to/porting.rst
+    title: Port to HIP
   - file: how-to/logging.rst
-    title: Logging
+    title: Generate logs
   - file: how-to/debugging.rst
-    title: Debugging
+    title: Debug
 
 - caption: Conceptual
   entries:
-  - file: conceptual/gpu-arch.md
-    title: GPU architectures
+  - file: conceptual/hip-overview.rst
+    title: HIP overview
 
-
-
-- caption: Compatibility & support
+- caption: Contribute
   entries:
-  - file: about/compatibility/linux-support.md
-    title: Linux (GPU & OS)
-  - file: about/compatibility/windows-support.md
-    title: Windows (GPU & OS)
-  - file: about/compatibility/3rd-party-support-matrix.md
-    title: Third-party
-  - file: about/compatibility/user-kernel-space-compat-matrix.md
-    title: User/kernel space support
-  - file: about/compatibility/docker-image-support-matrix.md
-    title: Docker
-  - file: about/compatibility/openmp.md
-    title: OpenMP
-
-
------------------------------------------------------
-root: index
-subtrees:
-- caption: User Guide
-  entries:
-    - file: user_guide/programming_manual
-    - file: user_guide/hip_rtc
-    - file: user_guide/faq
-    - file: user_guide/hip_porting_guide
-    - file: user_guide/hip_porting_driver_api
-- caption: How to Guides
-  entries:
-  - file: how_to_guides/install.md
-  - file: how_to_guides/debugging.md
-- caption: Reference
-  entries:
-  - file: .doxygen/docBin/html/index
-  - file: reference/kernel_language
-  - file: reference/math_api
-  - file: reference/terms
-  - file: reference/glossary
-  - file: reference/deprecated_api_list
-- caption: Developer Guide
-  entries:
-  - file: developer_guide/build
-  - file: developer_guide/logging
-  - file: developer_guide/contributing.md
+  - file: about/contributing.md
+    title: Contribute to HIP

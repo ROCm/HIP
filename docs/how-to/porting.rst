@@ -1,45 +1,57 @@
-# HIP Porting Guide
+***************************************************************
+Porting HIP from CUDA
+***************************************************************
+
 In addition to providing a portable C++ programming environment for GPUs, HIP is designed to ease
 the porting of existing CUDA code into the HIP environment.  This section describes the available tools
 and provides practical suggestions on how to port CUDA code and work through common issues.
 
-## Porting a New CUDA Project
+Porting a new CUDA project
+============================================================
 
-### General Tips
-- Starting the port on a CUDA machine is often the easiest approach, since you can incrementally port pieces of the code to HIP while leaving the rest in CUDA. (Recall that on CUDA machines HIP is just a thin layer over CUDA, so the two code types can interoperate on nvcc platforms.) Also, the HIP port can be compared with the original CUDA code for function and performance.
-- Once the CUDA code is ported to HIP and is running on the CUDA machine, compile the HIP code using the HIP compiler on an AMD machine.
-- HIP ports can replace CUDA versions: HIP can deliver the same performance as a native CUDA implementation, with the benefit of portability to both Nvidia and AMD architectures as well as a path to future C++ standard support. You can handle platform-specific features through conditional compilation or by adding them to the open-source HIP infrastructure.
-- Use **[hipconvertinplace-perl.sh](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/master/bin/hipconvertinplace-perl.sh)** to hipify all code files in the CUDA source directory.
+General tips
+-------------------------------------------------------------------------------------------
 
-### Scanning existing CUDA code to scope the porting effort
+* Starting the port on a CUDA machine is often the easiest approach, since you can incrementally port pieces of the code to HIP while leaving the rest in CUDA. (Recall that on CUDA machines HIP is just a thin layer over CUDA, so the two code types can interoperate on nvcc platforms.) Also, the HIP port can be compared with the original CUDA code for function and performance.
+* Once the CUDA code is ported to HIP and is running on the CUDA machine, compile the HIP code using the HIP compiler on an AMD machine.
+* HIP ports can replace CUDA versions: HIP can deliver the same performance as a native CUDA implementation, with the benefit of portability to both Nvidia and AMD architectures as well as a path to future C++ standard support. You can handle platform-specific features through conditional compilation or by adding them to the open-source HIP infrastructure.
+* Use **[hipconvertinplace-perl.sh](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/master/bin/hipconvertinplace-perl.sh)** to hipify all code files in the CUDA source directory.
+
+Scanning existing CUDA code to scope the porting effort
+-------------------------------------------------------------------------------------------
+
 The **[hipexamine-perl.sh](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/master/bin/hipexamine-perl.sh)** tool will scan a source directory to determine which files contain CUDA code and how much of that code can be automatically hipified.
-```
-> cd examples/rodinia_3.0/cuda/kmeans
-> $HIP_DIR/bin/hipexamine-perl.sh.
-info: hipify ./kmeans.h =====>
-info: hipify ./unistd.h =====>
-info: hipify ./kmeans.c =====>
-info: hipify ./kmeans_cuda_kernel.cu =====>
-  info: converted 40 CUDA->HIP refs( dev:0 mem:0 kern:0 builtin:37 math:0 stream:0 event:0 err:0 def:0 tex:3 other:0 ) warn:0 LOC:185
-info: hipify ./getopt.h =====>
-info: hipify ./kmeans_cuda.cu =====>
-  info: converted 49 CUDA->HIP refs( dev:3 mem:32 kern:2 builtin:0 math:0 stream:0 event:0 err:0 def:0 tex:12 other:0 ) warn:0 LOC:311
-info: hipify ./rmse.c =====>
-info: hipify ./cluster.c =====>
-info: hipify ./getopt.c =====>
-info: hipify ./kmeans_clustering.c =====>
-info: TOTAL-converted 89 CUDA->HIP refs( dev:3 mem:32 kern:2 builtin:37 math:0 stream:0 event:0 err:0 def:0 tex:15 other:0 ) warn:0 LOC:3607
-  kernels (1 total) :   kmeansPoint(1)
-```
+
+..  code-block:: bash
+
+  > cd examples/rodinia_3.0/cuda/kmeans
+  > $HIP_DIR/bin/hipexamine-perl.sh.
+  info: hipify ./kmeans.h =====>
+  info: hipify ./unistd.h =====>
+  info: hipify ./kmeans.c =====>
+  info: hipify ./kmeans_cuda_kernel.cu =====>
+    info: converted 40 CUDA->HIP refs( dev:0 mem:0 kern:0 builtin:37 math:0 stream:0 event:0 err:0 def:0 tex:3 other:0 ) warn:0 LOC:185
+  info: hipify ./getopt.h =====>
+  info: hipify ./kmeans_cuda.cu =====>
+    info: converted 49 CUDA->HIP refs( dev:3 mem:32 kern:2 builtin:0 math:0 stream:0 event:0 err:0 def:0 tex:12 other:0 ) warn:0 LOC:311
+  info: hipify ./rmse.c =====>
+  info: hipify ./cluster.c =====>
+  info: hipify ./getopt.c =====>
+  info: hipify ./kmeans_clustering.c =====>
+  info: TOTAL-converted 89 CUDA->HIP refs( dev:3 mem:32 kern:2 builtin:37 math:0 stream:0 event:0 err:0 def:0 tex:15 other:0 ) warn:0 LOC:3607
+    kernels (1 total) :   kmeansPoint(1)
+
 
 hipexamine-perl scans each code file (cpp, c, h, hpp, etc.) found in the specified directory:
 
    * Files with no CUDA code (ie kmeans.h) print one line summary just listing the source file name.
    * Files with CUDA code print a summary of what was found - for example the kmeans_cuda_kernel.cu file:
-```
-info: hipify ./kmeans_cuda_kernel.cu =====>
-  info: converted 40 CUDA->HIP refs( dev:0 mem:0 kern:0 builtin:37 math:0 stream:0 event:0
-```
+
+..  code-block:: bash
+
+  info: hipify ./kmeans_cuda_kernel.cu =====>
+    info: converted 40 CUDA->HIP refs( dev:0 mem:0 kern:0 builtin:37 math:0 stream:0 event:0
+
 * Interesting information in kmeans_cuda_kernel.cu :
   * How many CUDA calls were converted to HIP (40)
   * Breakdown of the CUDA functionality used (dev:0 mem:0 etc). This file uses many CUDA builtins (37) and texture functions (3).
@@ -48,20 +60,22 @@ info: hipify ./kmeans_cuda_kernel.cu =====>
 
 * hipexamine-perl also presents a summary at the end of the process for the statistics collected across all files. This has similar format to the per-file reporting, and also includes a list of all kernels which have been called.  An example from above:
 
-```shell
-info: TOTAL-converted 89 CUDA->HIP refs( dev:3 mem:32 kern:2 builtin:37 math:0 stream:0 event:0 err:0 def:0 tex:15 other:0 ) warn:0 LOC:3607
-  kernels (1 total) :   kmeansPoint(1)
-```
+..  code-block:: bash
 
-### Converting a project "in-place"
+  info: TOTAL-converted 89 CUDA->HIP refs( dev:3 mem:32 kern:2 builtin:37 math:0 stream:0 event:0 err:0 def:0 tex:15 other:0 ) warn:0 LOC:3607
+    kernels (1 total) :   kmeansPoint(1)
 
-```shell
-> hipify-perl --inplace
-```
+Converting a project in-place
+-------------------------------------------------------------------------------------------
+
+..  code-block:: bash
+
+  > hipify-perl --inplace
 
 For each input file FILE, this script will:
-  - If "FILE.prehip file does not exist, copy the original code to a new file with extension ".prehip". Then hipify the code file.
-  - If "FILE.prehip" file exists, hipify FILE.prehip and save to FILE.
+
+  * If "FILE.prehip file does not exist, copy the original code to a new file with extension ".prehip". Then hipify the code file.
+  * If "FILE.prehip" file exists, hipify FILE.prehip and save to FILE.
 
 This is useful for testing improvements to the hipify toolset.
 
@@ -72,11 +86,13 @@ and filenames - and includes work.  After converting in-place, you can review th
 directory names.
 
 
-```shell
-> hipconvertinplace-perl.sh MY_SRC_DIR
-```
+..  code-block:: bash
 
-### Library Equivalents
+  > hipconvertinplace-perl.sh MY_SRC_DIR
+
+
+Library equivalents
+-------------------------------------------------------------------------------------------
 
 Most CUDA libraries have a corresponding ROCm library with similar functionality and APIs. However, ROCm also provides HIP marshalling libraries that greatly simplify the porting process because they more precisely reflect their CUDA counterparts and can be used with either the AMD or NVIDIA platforms (see "Identifying HIP Target Platform" below). There are a few notable exceptions:
   - MIOpen does not have a marshalling library interface to ease porting from cuDNN.
@@ -101,57 +117,63 @@ Most CUDA libraries have a corresponding ROCm library with similar functionality
 
 
 
-## Distinguishing Compiler Modes
+Distinguishing compiler modes
+============================================================
 
+Identifying HIP target platform
+-------------------------------------------------------------------------------------------
 
-### Identifying HIP Target Platform
 All HIP projects target either AMD or NVIDIA platform. The platform affects which headers are included and which libraries are used for linking.
 
-- `HIP_PLATFORM_AMD` is defined if the HIP platform targets AMD.
+* `HIP_PLATFORM_AMD` is defined if the HIP platform targets AMD.
 Note, `HIP_PLATFORM_HCC` was previously defined if the HIP platform targeted AMD, it is deprecated.
 
-- `HIP_PLATFORM_NVDIA` is defined if the HIP platform targets NVIDIA.
+* `HIP_PLATFORM_NVDIA` is defined if the HIP platform targets NVIDIA.
 Note, `HIP_PLATFORM_NVCC` was previously defined if the HIP platform targeted NVIDIA, it is deprecated.
 
-### Identifying the Compiler: hip-clang or nvcc
+Identifying the Compiler: hip-clang or nvcc
+-------------------------------------------------------------------------------------------
+
 Often, it's useful to know whether the underlying compiler is HIP-Clang or nvcc. This knowledge can guard platform-specific code or aid in platform-specific performance tuning.
 
-```
-#ifdef __HIP_PLATFORM_AMD__
-// Compiled with HIP-Clang
-#endif
-```
+..  code-block:: cpp
 
-```
-#ifdef __HIP_PLATFORM_NVIDIA__
-// Compiled with nvcc
-//  Could be compiling with CUDA language extensions enabled (for example, a ".cu file)
-//  Could be in pass-through mode to an underlying host compile OR (for example, a .cpp file)
+  #ifdef __HIP_PLATFORM_AMD__
+  // Compiled with HIP-Clang
+  #endif
 
-```
+..  code-block:: cpp
 
-```
-#ifdef __CUDACC__
-// Compiled with nvcc (CUDA language extensions enabled)
-```
+  #ifdef __HIP_PLATFORM_NVIDIA__
+  // Compiled with nvcc
+  //  Could be compiling with CUDA language extensions enabled (for example, a ".cu file)
+  //  Could be in pass-through mode to an underlying host compile OR (for example, a .cpp file)
+
+..  code-block:: cpp
+
+  #ifdef __CUDACC__
+  // Compiled with nvcc (CUDA language extensions enabled)
 
 Compiler directly generates the host code (using the Clang x86 target) and passes the code to another host compiler. Thus, they have no equivalent of the \__CUDA_ACC define.
 
 
-### Identifying Current Compilation Pass: Host or Device
+Identifying current compilation pass: host or device
+-------------------------------------------------------------------------------------------
 
 nvcc makes two passes over the code: one for host code and one for device code.
 HIP-Clang will have multiple passes over the code: one for the host code, and one for each architecture on the device code.
 `__HIP_DEVICE_COMPILE__` is set to a nonzero value when the compiler (HIP-Clang or nvcc) is compiling code for a device inside a `__global__` kernel or for a device function. `__HIP_DEVICE_COMPILE__` can replace #ifdef checks on the `__CUDA_ARCH__` define.
 
-```
-// #ifdef __CUDA_ARCH__
-#if __HIP_DEVICE_COMPILE__
-```
+..  code-block:: cpp
+
+  // #ifdef __CUDA_ARCH__
+  #if __HIP_DEVICE_COMPILE__
 
 Unlike `__CUDA_ARCH__`, the `__HIP_DEVICE_COMPILE__` value is 1 or undefined, and it doesn't represent the feature capability of the target device.
 
-### Compiler Defines: Summary
+Compiler defines: summary
+-------------------------------------------------------------------------------------------
+
 |Define  		|   HIP-Clang  | nvcc 		|  Other (GCC, ICC, Clang, etc.)
 |--- | --- | --- |---|
 |HIP-related defines:|
@@ -169,41 +191,49 @@ Unlike `__CUDA_ARCH__`, the `__HIP_DEVICE_COMPILE__` value is 1 or undefined, an
 |HIP-Clang common defines:|
 |`__clang__`		| Defined   | Defined | Undefined 	|  Defined if using Clang; otherwise undefined
 
-## Identifying Architecture Features
+Identifying Architecture Features
+============================================================
 
-### HIP_ARCH Defines
+HIP_ARCH defines
+-------------------------------------------------------------------------------------------
 
 Some CUDA code tests `__CUDA_ARCH__` for a specific value to determine whether the machine supports a certain architectural feature. For instance,
 
-```
-#if (__CUDA_ARCH__ >= 130)
-// doubles are supported
-```
+..  code-block:: cpp
+
+  #if (__CUDA_ARCH__ >= 130)
+  // doubles are supported
+
 This type of code requires special attention, since AMD and CUDA devices have different architectural capabilities. Moreover, you can't determine the presence of a feature using a simple comparison against an architecture's version number. HIP provides a set of defines and device properties to query whether a specific architectural feature is supported.
 
 The `__HIP_ARCH_*` defines can replace comparisons of `__CUDA_ARCH__` values:
-```
-//#if (__CUDA_ARCH__ >= 130)   // non-portable
-if __HIP_ARCH_HAS_DOUBLES__ {  // portable HIP feature query
-   // doubles are supported
-}
-```
+
+..  code-block:: cpp
+
+  //#if (__CUDA_ARCH__ >= 130)   // non-portable
+  if __HIP_ARCH_HAS_DOUBLES__ {  // portable HIP feature query
+    // doubles are supported
+  }
 
 For host code, the `__HIP_ARCH__*` defines are set to 0. You should only use the __HIP_ARCH__ fields in device code.
 
-### Device-Architecture Properties
+Device-architecture properties
+-------------------------------------------------------------------------------------------
 
 Host code should query the architecture feature flags in the device properties that hipGetDeviceProperties returns, rather than testing the "major" and "minor" fields directly:
 
-```
-hipGetDeviceProperties(&deviceProp, device);
-//if ((deviceProp.major == 1 && deviceProp.minor < 2))  // non-portable
-if (deviceProp.arch.hasSharedInt32Atomics) {            // portable HIP feature query
-    // has shared int32 atomic operations ...
-}
-```
+..  code-block:: cpp
 
-### Table of Architecture Properties
+  hipGetDeviceProperties(&deviceProp, device);
+  //if ((deviceProp.major == 1 && deviceProp.minor < 2))  // non-portable
+  if (deviceProp.arch.hasSharedInt32Atomics) {            // portable HIP feature query
+      // has shared int32 atomic operations ...
+  }
+
+
+Table of architecture properties
+-------------------------------------------------------------------------------------------
+
 The table below shows the full set of architectural properties that HIP supports.
 
 |Define (use only in device code) | Device Property (run-time query) | Comment |
@@ -233,38 +263,43 @@ The table below shows the full set of architectural properties that HIP supports
 |`__HIP_ARCH_HAS_DYNAMIC_PARALLEL__`           |   hasDynamicParallelism        |
 
 
-## Finding HIP
+Finding HIP
+============================================================
 
 Makefiles can use the following syntax to conditionally provide a default HIP_PATH if one does not exist:
 
-```
-HIP_PATH ?= $(shell hipconfig --path)
-```
+..  code-block:: cpp
 
-## Identifying HIP Runtime
+  HIP_PATH ?= $(shell hipconfig --path)
+
+Identifying HIP Runtime
+============================================================
 
 HIP can depend on rocclr, or cuda as runtime
 
-- AMD platform
+* AMD platform
 On AMD platform, HIP uses Radeon Open Compute Common Language Runtime, called ROCclr.
 ROCclr is a virtual device interface that HIP runtimes interact with different backends which allows runtimes to work on Linux , as well as Windows without much efforts.
 
-- NVIDIA platform
+* NVIDIA platform
 On Nvidia platform, HIP is just a thin layer on top of CUDA.
 On non-AMD platform, HIP runtime determines if cuda is available and can be used. If available, HIP_PLATFORM is set to nvidia and underneath CUDA path is used.
 
 
-## hipLaunchKernelGGL
+hipLaunchKernelGGL
+============================================================
 
 hipLaunchKernelGGL is a macro that can serve as an alternative way to launch kernel, which accepts parameters of launch configurations (grid dims, group dims, stream, dynamic shared size) followed by a variable number of kernel arguments.
 It can replace <<< >>>, if the user so desires.
 
-## Compiler Options
+Compiler options
+============================================================
 
 hipcc is a portable compiler driver that will call nvcc or HIP-Clang (depending on the target system) and attach all required include and library options. It passes options through to the target compiler. Tools that call hipcc must ensure the compiler options are appropriate for the target compiler.
 The `hipconfig` script may helpful in identifying the target platform, compiler and runtime. It can also help set options appropriately.
 
-### Compiler options supported on AMD platforms
+Compiler options supported on AMD platforms
+-------------------------------------------------------------------------------------------
 
 Here are the main compiler options supported on AMD platforms by HIP-Clang.
 
@@ -279,18 +314,22 @@ Here are the main compiler options supported on AMD platforms by HIP-Clang.
 | -save-temps                       | Save the compiler generated intermediate files. |
 | -v                                | Show the compilation steps. |
 
-## Linking Issues
+Linking issues
+============================================================
 
-### Linking With hipcc
+Linking With hipcc
+-------------------------------------------------------------------------------------------
 
 hipcc adds the necessary libraries for HIP as well as for the accelerator compiler (nvcc or AMD compiler). We recommend linking with hipcc since it automatically links the binary to the necessary HIP runtime libraries.  It also has knowledge on how to link and to manage the GPU objects.
 
-### -lm Option
+-lm Option
+-------------------------------------------------------------------------------------------
 
 hipcc adds -lm by default to the link command.
 
 
-## Linking Code With Other Compilers
+Linking code with other compilers
+============================================================
 
 CUDA code often uses nvcc for accelerator code (defining and launching kernels, typically defined in .cu or .cuh files).
 It also uses a standard compiler (g++) for the rest of the application. nvcc is a preprocessor that employs a standard host compiler (gcc) to generate the host code.
@@ -300,7 +339,8 @@ In some cases, you must take care to ensure the data types and alignment of the 
 HIP-Clang generates both device and host code using the same Clang-based compiler. The code uses the same API as gcc, which allows code generated by different gcc-compatible compilers to be linked together. For example, code compiled using HIP-Clang can link with code compiled using "standard" compilers (such as gcc, ICC and Clang). Take care to ensure all compilers use the same standard C++ header and library formats.
 
 
-### libc++ and libstdc++
+libc++ and libstdc++
+-------------------------------------------------------------------------------------------
 
 hipcc links to libstdc++ by default. This provides better compatibility between g++ and HIP.
 
@@ -308,35 +348,39 @@ If you pass "--stdlib=libc++" to hipcc, hipcc will use the libc++ library.  Gene
 
 When cross-linking C++ code, any C++ functions that use types from the C++ standard library (including std::string, std::vector and other containers) must use the same standard-library implementation. They include the following:
 
-- Functions or kernels defined in HIP-Clang that are called from a standard compiler
-- Functions defined in a standard compiler that are called from HIP-Clanng.
+* Functions or kernels defined in HIP-Clang that are called from a standard compiler
+* Functions defined in a standard compiler that are called from HIP-Clang.
 
 Applications with these interfaces should use the default libstdc++ linking.
 
 Applications which are compiled entirely with hipcc, and which benefit from advanced C++ features not supported in libstdc++, and which do not require portability to nvcc, may choose to use libc++.
 
 
-### HIP Headers (hip_runtime.h, hip_runtime_api.h)
+HIP Headers (hip_runtime.h, hip_runtime_api.h)
+-------------------------------------------------------------------------------------------
 
 The hip_runtime.h and hip_runtime_api.h files define the types, functions and enumerations needed to compile a HIP program:
 
-- hip_runtime_api.h: defines all the HIP runtime APIs (e.g., hipMalloc) and the types required to call them. A source file that is only calling HIP APIs but neither defines nor launches any kernels can include hip_runtime_api.h. hip_runtime_api.h uses no custom hc language features and can be compiled using a standard C++ compiler.
-- hip_runtime.h: included in hip_runtime_api.h. It additionally provides the types and defines required to create and launch kernels. hip_runtime.h can be compiled using a standard C++ compiler but will expose a subset of the available functions.
+* hip_runtime_api.h: defines all the HIP runtime APIs (e.g., hipMalloc) and the types required to call them. A source file that is only calling HIP APIs but neither defines nor launches any kernels can include hip_runtime_api.h. hip_runtime_api.h uses no custom hc language features and can be compiled using a standard C++ compiler.
+* hip_runtime.h: included in hip_runtime_api.h. It additionally provides the types and defines required to create and launch kernels. hip_runtime.h can be compiled using a standard C++ compiler but will expose a subset of the available functions.
 
 CUDA has slightly different contents for these two files. In some cases you may need to convert hipified code to include the richer hip_runtime.h instead of hip_runtime_api.h.
 
-### Using a Standard C++ Compiler
+Using a Standard C++ Compiler
+-------------------------------------------------------------------------------------------
+
 You can compile hip\_runtime\_api.h using a standard C or C++ compiler (e.g., gcc or ICC). The HIP include paths and defines (`__HIP_PLATFORM_AMD__` or `__HIP_PLATFORM_NVIDIA__`) must pass to the standard compiler; hipconfig then returns the necessary options:
-```
-> hipconfig --cxx_config
- -D__HIP_PLATFORM_AMD__ -I/home/user1/hip/include
-```
+
+..  code-block:: cpp
+
+  > hipconfig --cxx_config
+  -D__HIP_PLATFORM_AMD__ -I/home/user1/hip/include
 
 You can capture the hipconfig output and passed it to the standard compiler; below is a sample makefile syntax:
 
-```
-CPPFLAGS += $(shell $(HIP_PATH)/bin/hipconfig --cpp_config)
-```
+..  code-block:: cpp
+
+  CPPFLAGS += $(shell $(HIP_PATH)/bin/hipconfig --cpp_config)
 
 nvcc includes some headers by default.  However, HIP does not include default headers, and instead all required files must be explicitly included.
 Specifically, files that call HIP run-time APIs or define HIP kernels must explicitly include the appropriate HIP headers.
@@ -344,11 +388,13 @@ If the compilation process reports that it cannot find necessary APIs (for examp
 ensure that the file includes hip_runtime.h (or hip_runtime_api.h, if appropriate).
 The hipify-perl script automatically converts "cuda_runtime.h" to "hip_runtime.h," and it converts "cuda_runtime_api.h" to "hip_runtime_api.h", but it may miss nested headers or macros.
 
-#### cuda.h
+cuda.h
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The HIP-Clang path provides an empty cuda.h file. Some existing CUDA programs include this file but don't require any of the functions.
 
-### Choosing HIP File Extensions
+Choosing HIP file extensions
+-------------------------------------------------------------------------------------------
 
 Many existing CUDA projects use the ".cu" and ".cuh" file extensions to indicate code that should be run through the nvcc compiler.
 For quick HIP ports, leaving these file extensions unchanged is often easier, as it minimizes the work required to change file names in the directory and #include statements in the files.
@@ -358,20 +404,27 @@ For new projects or ports which can be re-factored, we recommend the use of the 
 This indicates that the code is standard C++ code, but also provides a unique indication for make tools to
 run hipcc when appropriate.
 
-## Workarounds
+Workarounds
+============================================================
 
-### warpSize
+warpSize
+-------------------------------------------------------------------------------------------
+
 Code should not assume a warp size of 32 or 64.  See [Warp Cross-Lane Functions](https://rocm.docs.amd.com/projects/HIP/en/latest/reference/kernel_language.html#warp-cross-lane-functions) for information on how to write portable wave-aware code.
 
-### Kernel launch with group size > 256
+Kernel launch with group size > 256
+-------------------------------------------------------------------------------------------
+
 Kernel code should use ``` __attribute__((amdgpu_flat_work_group_size(<min>,<max>)))```.
 
 For example:
-```
-__global__ void dot(double *a,double *b,const int n) __attribute__((amdgpu_flat_work_group_size(1, 512)))
-```
 
-## memcpyToSymbol
+..  code-block:: cpp
+
+  __global__ void dot(double *a,double *b,const int n) __attribute__((amdgpu_flat_work_group_size(1, 512)))
+
+memcpyToSymbol
+============================================================
 
 HIP support for hipMemcpyToSymbol is complete.  This feature allows a kernel
 to define a device-side data symbol which can be accessed on the host side.  The symbol
@@ -382,88 +435,96 @@ Note that the symbol name needs to be encased in the HIP_SYMBOL macro, as shown 
 For example:
 
 Device Code:
-```
-#include<hip/hip_runtime.h>
-#include<hip/hip_runtime_api.h>
-#include<iostream>
 
-#define HIP_ASSERT(status) \
-    assert(status == hipSuccess)
+..  code-block:: cpp
 
-#define LEN 512
-#define SIZE 2048
+  #include<hip/hip_runtime.h>
+  #include<hip/hip_runtime_api.h>
+  #include<iostream>
 
-__constant__ int Value[LEN];
+  #define HIP_ASSERT(status) \
+      assert(status == hipSuccess)
 
-__global__ void Get(hipLaunchParm lp, int *Ad)
-{
-    int tid = threadIdx.x + blockIdx.x * blockDim.x;
-    Ad[tid] = Value[tid];
-}
+  #define LEN 512
+  #define SIZE 2048
 
-int main()
-{
-    int *A, *B, *Ad;
-    A = new int[LEN];
-    B = new int[LEN];
-    for(unsigned i=0;i<LEN;i++)
-    {
-        A[i] = -1*i;
-        B[i] = 0;
-    }
+  __constant__ int Value[LEN];
 
-    HIP_ASSERT(hipMalloc((void**)&Ad, SIZE));
+  __global__ void Get(hipLaunchParm lp, int *Ad)
+  {
+      int tid = threadIdx.x + blockIdx.x * blockDim.x;
+      Ad[tid] = Value[tid];
+  }
 
-    HIP_ASSERT(hipMemcpyToSymbol(HIP_SYMBOL(Value), A, SIZE, 0, hipMemcpyHostToDevice));
-    hipLaunchKernelGGL(Get, dim3(1,1,1), dim3(LEN,1,1), 0, 0, Ad);
-    HIP_ASSERT(hipMemcpy(B, Ad, SIZE, hipMemcpyDeviceToHost));
+  int main()
+  {
+      int *A, *B, *Ad;
+      A = new int[LEN];
+      B = new int[LEN];
+      for(unsigned i=0;i<LEN;i++)
+      {
+          A[i] = -1*i;
+          B[i] = 0;
+      }
 
-    for(unsigned i=0;i<LEN;i++)
-    {
-        assert(A[i] == B[i]);
-    }
-    std::cout<<"Passed"<<std::endl;
-}
-```
+      HIP_ASSERT(hipMalloc((void**)&Ad, SIZE));
 
-## CU_POINTER_ATTRIBUTE_MEMORY_TYPE
+      HIP_ASSERT(hipMemcpyToSymbol(HIP_SYMBOL(Value), A, SIZE, 0, hipMemcpyHostToDevice));
+      hipLaunchKernelGGL(Get, dim3(1,1,1), dim3(LEN,1,1), 0, 0, Ad);
+      HIP_ASSERT(hipMemcpy(B, Ad, SIZE, hipMemcpyDeviceToHost));
+
+      for(unsigned i=0;i<LEN;i++)
+      {
+          assert(A[i] == B[i]);
+      }
+      std::cout<<"Passed"<<std::endl;
+  }
+
+CU_POINTER_ATTRIBUTE_MEMORY_TYPE
+============================================================
 
 To get pointer's memory type in HIP/HIP-Clang, developers should use hipPointerGetAttributes API. First parameter of the API is hipPointerAttribute_t which has 'type' as member variable. 'type' indicates input pointer is allocated on device or host.
 
 For example:
-```
-double * ptr;
-hipMalloc(reinterpret_cast<void**>(&ptr), sizeof(double));
-hipPointerAttribute_t attr;
-hipPointerGetAttributes(&attr, ptr); /*attr.type will have value as hipMemoryTypeDevice*/
 
-double* ptrHost;
-hipHostMalloc(&ptrHost, sizeof(double));
-hipPointerAttribute_t attr;
-hipPointerGetAttributes(&attr, ptrHost); /*attr.type will have value as hipMemoryTypeHost*/
-```
+..  code-block:: cpp
+
+  double * ptr;
+  hipMalloc(reinterpret_cast<void**>(&ptr), sizeof(double));
+  hipPointerAttribute_t attr;
+  hipPointerGetAttributes(&attr, ptr); /*attr.type will have value as hipMemoryTypeDevice*/
+
+  double* ptrHost;
+  hipHostMalloc(&ptrHost, sizeof(double));
+  hipPointerAttribute_t attr;
+  hipPointerGetAttributes(&attr, ptrHost); /*attr.type will have value as hipMemoryTypeHost*/
+
 Please note, hipMemoryType enum values are different from cudaMemoryType enum values.
 
 For example, on AMD platform, hipMemoryType is defined in hip_runtime_api.h,
-```
-typedef enum hipMemoryType {
-    hipMemoryTypeHost = 0,    ///< Memory is physically located on host
-    hipMemoryTypeDevice = 1,  ///< Memory is physically located on device. (see deviceId for specific device)
-    hipMemoryTypeArray = 2,   ///< Array memory, physically located on device. (see deviceId for specific device)
-    hipMemoryTypeUnified = 3, ///< Not used currently
-    hipMemoryTypeManaged = 4  ///< Managed memory, automaticallly managed by the unified memory system
-} hipMemoryType;
-```
+
+..  code-block:: cpp
+
+  typedef enum hipMemoryType {
+      hipMemoryTypeHost = 0,    ///< Memory is physically located on host
+      hipMemoryTypeDevice = 1,  ///< Memory is physically located on device. (see deviceId for specific device)
+      hipMemoryTypeArray = 2,   ///< Array memory, physically located on device. (see deviceId for specific device)
+      hipMemoryTypeUnified = 3, ///< Not used currently
+      hipMemoryTypeManaged = 4  ///< Managed memory, automaticallly managed by the unified memory system
+  } hipMemoryType;
+
 Looking into CUDA toolkit, it defines cudaMemoryType as following,
-```
-enum cudaMemoryType
-{
-  cudaMemoryTypeUnregistered = 0, // Unregistered memory.
-  cudaMemoryTypeHost = 1, // Host memory.
-  cudaMemoryTypeDevice = 2, // Device memory.
-  cudaMemoryTypeManaged = 3, // Managed memory
-}
-```
+
+..  code-block:: cpp
+
+  enum cudaMemoryType
+  {
+    cudaMemoryTypeUnregistered = 0, // Unregistered memory.
+    cudaMemoryTypeHost = 1, // Host memory.
+    cudaMemoryTypeDevice = 2, // Device memory.
+    cudaMemoryTypeManaged = 3, // Managed memory
+  }
+
 In this case, memory type translation for hipPointerGetAttributes needs to be handled properly on nvidia platform to get the correct memory type in CUDA, which is done in the file nvidia_hip_runtime_api.h.
 
 So in any HIP applications which use HIP APIs involving memory types, developers should use #ifdef in order to assign the correct enum values depending on Nvidia or AMD platform.
@@ -472,12 +533,15 @@ As an example, please see the code from the [link](https://github.com/ROCm-Devel
 
 With the #ifdef condition, HIP APIs work as expected on both AMD and NVIDIA platforms.
 
-## threadfence_system
+threadfence_system
+============================================================
+
 Threadfence_system makes all device memory writes, all writes to mapped host memory, and all writes to peer memory visible to CPU and other GPU devices.
 Some implementations can provide this behavior by flushing the GPU L2 cache.
 HIP/HIP-Clang does not provide this functionality.  As a workaround, users can set the environment variable `HSA_DISABLE_CACHE=1` to disable the GPU L2 cache. This will affect all accesses and for all kernels and so may have a performance impact.
 
-### Textures and Cache Control
+Textures and cache control
+-------------------------------------------------------------------------------------------
 
 Compute programs sometimes use textures either to access dedicated texture caches or to use the texture-sampling hardware for interpolation and clamping. The former approach uses simple point samplers with linear interpolation, essentially only reading a single point. The latter approach uses the sampler hardware to interpolate and combine multiple samples. AMD hardware, as well as recent competing hardware, has a unified texture/L1 cache, so it no longer has a dedicated texture cache. But the nvcc path often caches global loads in the L2 cache, and some programs may benefit from explicit control of the L1 cache contents.  We recommend the __ldg instruction for this purpose.
 
@@ -489,68 +553,73 @@ We recommend the following for functional portability:
 - Programs that use texture object and reference APIs, work well on HIP
 
 
-## More Tips
+Tips
+============================================================
 
-### HIP Logging
+HIP logging
+-------------------------------------------------------------------------------------------
 
 On an AMD platform, set the AMD_LOG_LEVEL environment variable to log HIP application execution information.
 
 The value of the setting controls different logging level,
 
-```
-enum LogLevel {
-LOG_NONE = 0,
-LOG_ERROR = 1,
-LOG_WARNING = 2,
-LOG_INFO = 3,
-LOG_DEBUG = 4
-};
-```
+..  code-block:: cpp
+
+  enum LogLevel {
+  LOG_NONE = 0,
+  LOG_ERROR = 1,
+  LOG_WARNING = 2,
+  LOG_INFO = 3,
+  LOG_DEBUG = 4
+  };
+
 
 Logging mask is used to print types of functionalities during the execution of HIP application.
 It can be set as one of the following values,
 
-```
-enum LogMask {
-  LOG_API       = 0x00000001, //!< API call
-  LOG_CMD       = 0x00000002, //!< Kernel and Copy Commands and Barriers
-  LOG_WAIT      = 0x00000004, //!< Synchronization and waiting for commands to finish
-  LOG_AQL       = 0x00000008, //!< Decode and display AQL packets
-  LOG_QUEUE     = 0x00000010, //!< Queue commands and queue contents
-  LOG_SIG       = 0x00000020, //!< Signal creation, allocation, pool
-  LOG_LOCK      = 0x00000040, //!< Locks and thread-safety code.
-  LOG_KERN      = 0x00000080, //!< kernel creations and arguments, etc.
-  LOG_COPY      = 0x00000100, //!< Copy debug
-  LOG_COPY2     = 0x00000200, //!< Detailed copy debug
-  LOG_RESOURCE  = 0x00000400, //!< Resource allocation, performance-impacting events.
-  LOG_INIT      = 0x00000800, //!< Initialization and shutdown
-  LOG_MISC      = 0x00001000, //!< misc debug, not yet classified
-  LOG_AQL2      = 0x00002000, //!< Show raw bytes of AQL packet
-  LOG_CODE      = 0x00004000, //!< Show code creation debug
-  LOG_CMD2      = 0x00008000, //!< More detailed command info, including barrier commands
-  LOG_LOCATION  = 0x00010000, //!< Log message location
-  LOG_ALWAYS    = 0xFFFFFFFF, //!< Log always even mask flag is zero
-};
-```
+..  code-block:: cpp
 
-### Debugging hipcc
+  enum LogMask {
+    LOG_API       = 0x00000001, //!< API call
+    LOG_CMD       = 0x00000002, //!< Kernel and Copy Commands and Barriers
+    LOG_WAIT      = 0x00000004, //!< Synchronization and waiting for commands to finish
+    LOG_AQL       = 0x00000008, //!< Decode and display AQL packets
+    LOG_QUEUE     = 0x00000010, //!< Queue commands and queue contents
+    LOG_SIG       = 0x00000020, //!< Signal creation, allocation, pool
+    LOG_LOCK      = 0x00000040, //!< Locks and thread-safety code.
+    LOG_KERN      = 0x00000080, //!< kernel creations and arguments, etc.
+    LOG_COPY      = 0x00000100, //!< Copy debug
+    LOG_COPY2     = 0x00000200, //!< Detailed copy debug
+    LOG_RESOURCE  = 0x00000400, //!< Resource allocation, performance-impacting events.
+    LOG_INIT      = 0x00000800, //!< Initialization and shutdown
+    LOG_MISC      = 0x00001000, //!< misc debug, not yet classified
+    LOG_AQL2      = 0x00002000, //!< Show raw bytes of AQL packet
+    LOG_CODE      = 0x00004000, //!< Show code creation debug
+    LOG_CMD2      = 0x00008000, //!< More detailed command info, including barrier commands
+    LOG_LOCATION  = 0x00010000, //!< Log message location
+    LOG_ALWAYS    = 0xFFFFFFFF, //!< Log always even mask flag is zero
+  };
+
+Debugging hipcc
+-------------------------------------------------------------------------------------------
 To see the detailed commands that hipcc issues, set the environment variable HIPCC_VERBOSE to 1. Doing so will print to stderr the HIP-clang (or nvcc) commands that hipcc generates.
 
-```
-export HIPCC_VERBOSE=1
-make
-...
-hipcc-cmd: /opt/hcc/bin/hcc  -hc -I/opt/hcc/include -stdlib=libc++ -I../../../../hc/include -I../../../../include/amd_detail/cuda -I../../../../include -x c++ -I../../common -O3 -c backprop_cuda.cu
-```
+..  code-block:: cpp
 
-### What Does This Error Mean?
+  export HIPCC_VERBOSE=1
+  make
+  ...
+  hipcc-cmd: /opt/hcc/bin/hcc  -hc -I/opt/hcc/include -stdlib=libc++ -I../../../../hc/include -I../../../../include/amd_detail/cuda -I../../../../include -x c++ -I../../common -O3 -c backprop_cuda.cu
 
-#### /usr/include/c++/v1/memory:5172:15: error: call to implicitly deleted default constructor of 'std::__1::bad_weak_ptr' throw bad_weak_ptr();
+What does this error mean?
+-------------------------------------------------------------------------------------------
+
+**/usr/include/c++/v1/memory:5172:15: error: call to implicitly deleted default constructor of 'std::__1::bad_weak_ptr' throw bad_weak_ptr();**
 
 If you pass a ".cu" file, hcc will attempt to compile it as a CUDA language file. You must tell hcc that it's in fact a C++ file: use the "-x c++" option.
 
 
-### Editor Highlighting
+Editor highlighting
+-------------------------------------------------------------------------------------------
+
 See the utils/vim or utils/gedit directories to add handy highlighting to hip files.
-
-
