@@ -8,7 +8,7 @@ Our documentation is organized into the following categories:
 ::::{grid} 1 1 2 2
 :gutter: 1
 
-:::{grid-item-card} Install
+:::{grid-item-card} Installation
 
 * [Install HIP](./install/install.rst)
 

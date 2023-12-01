@@ -5,9 +5,7 @@ defaults:
   maxdepth: 6
 root: index
 subtrees:
-
-- caption: Installation
-  entries:
+- entries:
   - file: install/install.rst
     title: Install HIP
 
