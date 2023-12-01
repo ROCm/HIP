@@ -26,7 +26,7 @@ At a high-level, the following features are not supported:
 - CUDA array, mipmappedArray and pitched memory
 - Queue priority controls
 
-See the [API Support Table](CUDA_Runtime_API_functions_supported_by_HIP.md) for more detailed information.
+See the [API Support Table](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/amd-staging/docs/tables/CUDA_Runtime_API_functions_supported_by_HIP.md) for more detailed information.
 
 ### Kernel language features
 - C++-style device-side dynamic memory allocations (free, new, delete) (CUDA 4.0)
@@ -51,8 +51,6 @@ However, we can provide a rough summary of the features included in each CUDA SD
 - CUDA 5.0 :
     - Dynamic Parallelism (not supported)
     - cuIpc functions (under development).
-- CUDA 5.5 :
-    - CUPTI (not directly supported, [AMD GPUPerfAPI](http://developer.amd.com/tools-and-sdks/graphics-development/gpuperfapi/) can be used as an alternative in some cases)
 - CUDA 6.0 :
     - Managed memory (under development)
 - CUDA 6.5 :
@@ -159,6 +157,51 @@ Yes.  HIP generates the object code which conforms to the GCC ABI, and also link
 with GPU code compiled with HIP.  Larger projects often contain a mixture of accelerator code (initially written in CUDA with nvcc) and host code (compiled with gcc, icc, or clang).   These projects
 can convert the accelerator code to HIP, compile that code with hipcc, and link with object code from their preferred compiler.
 
+## Can HIP API support C style application? What is the differentce between C and C++ ?
+HIP is C++ runtime API that supports C style applications as well.
+
+Some C style applications (and interfaces to other languages (Fortran, Python)) would call certain HIP APIs but not use kernel programming.
+They can be compiled with a C compiler and run correctly, however, small details must be considered in the code. For example, initializtion, as shown in the simple application below, uses HIP structs dim3 with the file name "test.hip.cpp"
+```
+#include "hip/hip_runtime_api.h"
+#include "stdio.h"
+
+int main(int argc, char** argv) {
+  dim3 grid1;
+  printf("dim3 grid1; x=%d, y=%d, z=%d\n",grid1.x,grid1.y,grid1.z);
+  dim3 grid2 = {1,1,1};
+  printf("dim3 grid2 = {1,1,1}; x=%d, y=%d, z=%d\n",grid2.x,grid2.y,grid2.z);
+  return 0;
+}
+```
+
+When using a C++ compiler,
+```
+$ gcc -x c++  $(hipconfig --cpp_config) test3.hip.cpp -o test
+$ ./test
+dim3 grid1; x=1, y=1, z=1
+dim3 grid2 = {1,1,1}; x=1, y=1, z=1
+```
+In which "dim3 grid1;" will yield a dim3 grid with all dimentional members x,y,z initalized to 1, as the default constructor behaves that way.
+Further, if write,
+```
+dim3 grid(2); // yields {2,1,1}
+dim3 grid(2,3); yields {2,3,1}
+```
+
+In comparison, when using the C compiler,
+```
+$ gcc -x c $(hipconfig --cpp_config) test.hip.cpp -o test
+$ ./test
+dim3 grid1; x=646881376, y=21975, z=1517277280
+dim3 grid2 = {1,1,1}; x=1, y=1, z=1
+```
+In which "dim3 grid;" does not imply any initialization, no constructor is called, and dimentional values x,y,z of grid are undefined.
+NOTE: To get the C++ default behavior, C programmers must additionally specify the right-hand side as shown below,
+```
+dim3 grid = {1,1,1}; // initialized as in C++
+```
+
 
 ## Can I install both CUDA SDK and HIP-Clang on the same machine?
 Yes. You can use HIP_PLATFORM to choose which path hipcc targets.  This configuration can be useful when using HIP to develop an application which is portable to both AMD and NVIDIA.
@@ -217,7 +260,7 @@ Previously, it was essential to declare dynamic shared memory using the HIP_DYNA
 Now, the HIP-Clang compiler provides support for extern shared declarations, and the HIP_DYNAMIC_SHARED option is no longer required. You may use the standard extern definition:
 extern __shared__ type var[];
 
-## I have multiple HIP enabled devices and I am getting an error message hipErrorNoBinaryForGpu Unable to find code object for all current devices?
+## I have multiple HIP enabled devices and I am getting an error code hipErrorSharedObjectInitFailed with the message "Error: shared object initialization failed"?
 
 This error message is seen due to the fact that you do not have valid code object for all of your devices.
 
@@ -228,6 +271,9 @@ If you have a precompiled application/library (like rocblas, tensorflow etc) whi
  - The application/library does not ship code object bundles for *all* of your device(s): in this case you need to recompile the application/library yourself with correct `--offload-arch`.
  - The application/library does not ship code object bundles for *some* of your device(s), for example you have a system with an APU + GPU and the library does not ship code objects for your APU. For this you can set the environment variable `HIP_VISIBLE_DEVICES` or `CUDA_VISIBLE_DEVICES` on NVdia platform, to only enable GPUs for which code object is available. This will limit the GPUs visible to your application and allow it to run.
 
+Note: In previous releases, the error code is hipErrorNoBinaryForGpu with message "Unable to find code object for all current devices".
+The error code handling behavior is changed. HIP runtime shows the error code hipErrorSharedObjectInitFailed with message "Error: shared object initialization failed" on unsupported GPU.
+
 ## How to use per-thread default stream in HIP?
 
 The per-thread default stream is an implicit stream local to both the thread and the current device. It does not do any implicit synchronization with other streams (like explicitly created streams), or default per-thread stream on other threads.
@@ -235,15 +281,36 @@ The per-thread default stream is an implicit stream local to both the thread and
 The per-thread default stream is a blocking stream and will synchronize with the default null stream if both are used in a program.
 
 In ROCm, a compilation option should be added in order to compile the translation unit with per-thread default stream enabled.
-“-fgpu-default-stream=per-thread”.
+"-fgpu-default-stream=per-thread".
 Once source is compiled with per-thread default stream enabled, all APIs will be executed on per thread default stream, hence there will not be any implicit synchronization with other streams.
 
 Besides, per-thread default stream be enabled per translation unit, users can compile some files with feature enabled and some with feature disabled. Feature enabled translation unit will have default stream as per thread and there will not be any implicit synchronization done but other modules will have legacy default stream which will do implicit synchronization.
+
+## How to use complex muliplication and division operations?
+
+In HIP, hipFloatComplex and hipDoubleComplex are defined as complex data types,
+typedef float2 hipFloatComplex;
+typedef double2 hipDoubleComplex;
+
+Any application uses complex multiplication and division operations, need to replace '*' and '/' operators with the following,
+- hipCmulf() and hipCdivf() for hipFloatComplex
+- hipCmul() and hipCdiv() for hipDoubleComplex
+
+Note: These complex operations are equivalent to corresponding types/functions on the NVIDIA platform.
 
 ## Can I develop applications with HIP APIs on Windows the same on Linux?
 
 Yes, HIP APIs are available to use on both Linux and Windows.
 Due to different working mechanisms on operating systems like Windows vs Linux, HIP APIs call corresponding lower level backend runtime libraries and kernel drivers for the OS, in order to control the executions on GPU hardware accordingly. There might be a few differences on the related backend software and driver support, which might affect usage of HIP APIs. See OS support details in HIP API document.
+
+## Does HIP support LUID?
+
+Starting ROCm 6.0, HIP runtime supports Locally Unique Identifier (LUID).
+This feature enables the local physical device(s) to interoperate with other devices. For example, DX12.
+
+HIP runtime sets device LUID properties so the driver can query LUID to identify each device for interoperability.
+
+Note: HIP supports LUID only on Windows OS.
 
 ## How can I know the version of HIP?
 

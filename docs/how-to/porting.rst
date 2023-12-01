@@ -90,6 +90,7 @@ directory names.
 
   > hipconvertinplace-perl.sh MY_SRC_DIR
 
+<<<<<<< HEAD:docs/how-to/porting.rst
 
 Library equivalents
 -------------------------------------------------------------------------------------------
@@ -114,6 +115,21 @@ Most CUDA libraries have a corresponding ROCm library with similar functionality
 | cuRAND       | hipRAND     | rocRAND      | Random Number Generator Library
 | EIGEN        | EIGEN       | N/A          | C++ template library for linear algebra: matrices, vectors, numerical solvers,
 | NCCL         | N/A         | RCCL         | Communications Primitives Library based on the MPI equivalents
+=======
+| CUDA Library | ROCm Library | Comment |
+|------- | ---------   | -----   |
+| cuBLAS        |    rocBLAS     | Basic Linear Algebra Subroutines
+| cuFFT        |    rocFFT     | Fast Fourier Transfer Library
+| cuSPARSE     |    rocSPARSE   | Sparse BLAS  + SPMV
+| cuSolver     |    rocSOLVER   | Lapack library
+| AMG-X    |    rocALUTION   | Sparse iterative solvers and preconditioners with Geometric and Algebraic MultiGrid
+| Thrust    |    rocThrust | C++ parallel algorithms library
+| CUB     |    rocPRIM | Low Level Optimized Parallel Primitives
+| cuDNN    |    MIOpen | Deep learning Solver Library
+| cuRAND    |    rocRAND | Random Number Generator Library
+| EIGEN    |    EIGEN - HIP port | C++ template library for linear algebra: matrices, vectors, numerical solvers,
+| NCCL    |    RCCL  | Communications Primitives Library based on the MPI equivalents
+>>>>>>> develop:docs/user_guide/hip_porting_guide.md
 
 
 
@@ -384,7 +400,7 @@ You can capture the hipconfig output and passed it to the standard compiler; bel
 
 nvcc includes some headers by default.  However, HIP does not include default headers, and instead all required files must be explicitly included.
 Specifically, files that call HIP run-time APIs or define HIP kernels must explicitly include the appropriate HIP headers.
-If the compilation process reports that it cannot find necessary APIs (for example, "error: identifier hipSetDevice is undefined"),
+If the compilation process reports that it cannot find necessary APIs (for example, "error: identifier hipSetDevice is undefined"),
 ensure that the file includes hip_runtime.h (or hip_runtime_api.h, if appropriate).
 The hipify-perl script automatically converts "cuda_runtime.h" to "hip_runtime.h," and it converts "cuda_runtime_api.h" to "hip_runtime_api.h", but it may miss nested headers or macros.
 
@@ -407,6 +423,7 @@ run hipcc when appropriate.
 Workarounds
 ============================================================
 
+<<<<<<< HEAD:docs/how-to/porting.rst
 warpSize
 -------------------------------------------------------------------------------------------
 
@@ -414,6 +431,10 @@ Code should not assume a warp size of 32 or 64.  See [Warp Cross-Lane Functions]
 
 Kernel launch with group size > 256
 -------------------------------------------------------------------------------------------
+=======
+### warpSize
+Code should not assume a warp size of 32 or 64.  See [Warp Cross-Lane Functions](https://rocm.docs.amd.com/projects/HIP/en/latest/reference/kernel_language.html#warp-cross-lane-functions) for information on how to write portable wave-aware code.
+>>>>>>> develop:docs/user_guide/hip_porting_guide.md
 
 Kernel code should use ``` __attribute__((amdgpu_flat_work_group_size(<min>,<max>)))```.
 
@@ -533,9 +554,15 @@ As an example, please see the code from the [link](https://github.com/ROCm-Devel
 
 With the #ifdef condition, HIP APIs work as expected on both AMD and NVIDIA platforms.
 
+<<<<<<< HEAD:docs/how-to/porting.rst
 threadfence_system
 ============================================================
 
+=======
+Note, cudaMemoryTypeUnregstered is currently not supported in hipMemoryType enum, due to HIP functionality backward compatibility.
+
+## threadfence_system
+>>>>>>> develop:docs/user_guide/hip_porting_guide.md
 Threadfence_system makes all device memory writes, all writes to mapped host memory, and all writes to peer memory visible to CPU and other GPU devices.
 Some implementations can provide this behavior by flushing the GPU L2 cache.
 HIP/HIP-Clang does not provide this functionality.  As a workaround, users can set the environment variable `HSA_DISABLE_CACHE=1` to disable the GPU L2 cache. This will affect all accesses and for all kernels and so may have a performance impact.
@@ -577,7 +604,34 @@ The value of the setting controls different logging level,
 Logging mask is used to print types of functionalities during the execution of HIP application.
 It can be set as one of the following values,
 
+<<<<<<< HEAD:docs/how-to/porting.rst
 ..  code-block:: cpp
+=======
+```
+enum LogMask {
+  LOG_API       = 1,      //!< (0x1)     API call
+  LOG_CMD       = 2,      //!< (0x2)     Kernel and Copy Commands and Barriers
+  LOG_WAIT      = 4,      //!< (0x4)     Synchronization and waiting for commands to finish
+  LOG_AQL       = 8,      //!< (0x8)     Decode and display AQL packets
+  LOG_QUEUE     = 16,     //!< (0x10)    Queue commands and queue contents
+  LOG_SIG       = 32,     //!< (0x20)    Signal creation, allocation, pool
+  LOG_LOCK      = 64,     //!< (0x40)    Locks and thread-safety code.
+  LOG_KERN      = 128,    //!< (0x80)    Kernel creations and arguments, etc.
+  LOG_COPY      = 256,    //!< (0x100)   Copy debug
+  LOG_COPY2     = 512,    //!< (0x200)   Detailed copy debug
+  LOG_RESOURCE  = 1024,   //!< (0x400)   Resource allocation, performance-impacting events.
+  LOG_INIT      = 2048,   //!< (0x800)   Initialization and shutdown
+  LOG_MISC      = 4096,   //!< (0x1000)  Misc debug, not yet classified
+  LOG_AQL2      = 8192,   //!< (0x2000)  Show raw bytes of AQL packet
+  LOG_CODE      = 16384,  //!< (0x4000)  Show code creation debug
+  LOG_CMD2      = 32768,  //!< (0x8000)  More detailed command info, including barrier commands
+  LOG_LOCATION  = 65536,  //!< (0x10000) Log message location
+  LOG_MEM       = 131072, //!< (0x20000) Memory allocation
+  LOG_MEM_POOL  = 262144, //!< (0x40000) Memory pool allocation, including memory in graphs
+  LOG_ALWAYS    = -1      //!< (0xFFFFFFFF) Log always even mask flag is zero
+};
+```
+>>>>>>> develop:docs/user_guide/hip_porting_guide.md
 
   enum LogMask {
     LOG_API       = 0x00000001, //!< API call
