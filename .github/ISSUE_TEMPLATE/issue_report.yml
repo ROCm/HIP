@@ -1,0 +1,216 @@
+name: Issue Report
+description: File a report for ROCm related issues on Linux and Windows. For issues pertaining to documentation or non-bug related, please open a blank issue located below.
+title: "[Issue]: "
+
+body:
+- type: markdown
+  attributes:
+    value: |
+      Thank you for taking the time to fill out this report!
+
+      You can acquire your OS, CPU, GPU (for filling out this report) with the following commands:
+
+      Linux:
+        echo "OS:" && cat /etc/os-release | grep -E "^(NAME=|VERSION=)";
+        echo "CPU: " && cat /proc/cpuinfo | grep "model name" | sort --unique;
+        echo "GPU:" && /opt/rocm/bin/rocminfo | grep -E "^\s*(Name|Marketing Name)";
+        
+      Windows:
+         (Get-WmiObject Win32_OperatingSystem).Version
+         (Get-WmiObject win32_Processor).Name
+         (Get-WmiObject win32_VideoController).Name
+- type: textarea
+  attributes:
+    label: Problem Description
+    description: Describe the issue you encountered.
+  validations:
+    required: true
+- type: input
+  attributes:
+    label: Operating System
+    description: What is the name and version number of the OS?
+    placeholder: "e.g. Ubuntu 22.04.3 LTS (Jammy Jellyfish)"
+  validations:
+    required: true
+- type: input
+  attributes:
+    label: CPU
+    description: What CPU did you encounter the issue on?
+    placeholder: "e.g. AMD Ryzen 9 5900HX with Radeon Graphics"
+  validations:
+    required: true
+- type: dropdown
+  attributes:
+    label: GPU
+    description: What GPU(s) did you encounter the issue on (you can select multiple GPUs from the list)
+    multiple: true
+    options:
+        - AMD Instinct MI250X
+        - AMD Instinct MI250
+        - AMD Instinct MI210
+        - AMD Instinct MI100
+        - AMD Instinct MI50
+        - AMD Instinct MI25
+        - AMD Radeon Pro V620
+        - AMD Radeon Pro VII
+        - AMD Radeon RX 7900 XTX
+        - AMD Radeon VII
+        - AMD Radeon Pro W7900
+        - AMD Radeon Pro W7800
+        - AMD Radeon Pro W6800
+        - AMD Radeon Pro W6600
+        - AMD Radeon Pro W5500
+        - AMD Radeon RX 7900 XT
+        - AMD Radeon RX 7600
+        - AMD Radeon RX 6950 XT
+        - AMD Radeon RX 6900 XT
+        - AMD Radeon RX 6800 XT
+        - AMD Radeon RX 6800
+        - AMD Radeon RX 6750
+        - AMD Radeon RX 6700 XT
+        - AMD Radeon RX 6700
+        - AMD Radeon RX 6650 XT
+        - AMD Radeon RX 6600 XT
+        - AMD Radeon RX 6600
+        - Other
+  validations:
+    required: true
+- type: input
+  attributes:
+    label: Other
+    description: If you selected Other, please specify
+- type: dropdown
+  attributes:
+    label: ROCm Version
+    description: What version(s) of ROCm did you encounter the issue on?
+    multiple: true
+    options:
+        - ROCm 5.7.1
+        - ROCm 5.7.0
+        - ROCm 5.6.0
+        - ROCm 5.5.1
+        - ROCm 5.5.0
+  validations:
+    required: true
+- type: dropdown
+  attributes:
+    label: ROCm Component
+    description: (Optional) If this issue relates to a specific ROCm component, it can be mentioned here.
+    multiple: true
+    options:
+        - Other
+        - AMD Common Language Runtime
+        - AMD MIGraphX
+        - AMD System Management Interface
+        - amdgpu KCL/autoconf
+        - amdgpu Kernel-mode GPU Driver
+        - amdgpu-install
+        - AOMP
+        - AOMP Extras
+        - AqlProfile
+        - build-infra
+        - chelsio
+        - clang-ocl
+        - Composable Kernel
+        - dkms
+        - docker / ROCm-docker
+        - flang
+        - gpuburn
+        - half
+        - HIP
+        - HIP Examples
+        - hipBLAS
+        - hipBLASLt
+        - HIPCC
+        - hipCUB
+        - hip-examples-private
+        - hipFFT
+        - hipfort
+        - HIPIFY
+        - hipRAND
+        - hipSOLVER
+        - hipSPARSE
+        - hipSPARSELt
+        - hipTensor
+        - hip-tests
+        - HSA Runtime
+        - infrastructure
+        - jenkins-utils
+        - libdrm
+        - Linux BPI packaging framework
+        - llvm-project
+        - Mesa
+        - meta
+        - MIOpen
+        - MIVisionX
+        - ml-framework-ci
+        - MLSEQA_TestRepo
+        - OpenCL API C++ Bindings
+        - OpenCL API Headers
+        - OpenCL Conformance Test Suite
+        - OpenCL ICD Loader
+        - perftest-p2p
+        - prototype
+        - RCCL
+        - rccl-rdma-sharp-plugins
+        - rocALUTION
+        - rocBLAS
+        - ROCdbgapi
+        - ROCdebug-agent
+        - rocFFT
+        - ROCgdb
+        - ROCK
+        - ROCm Documentation/Website
+        - ROCm Data Center Tool
+        - ROCm Examples
+        - ROCm for Windows
+        - ROCm Performance Primitives
+        - ROCm System Management Interface Library
+        - ROCm Thrust
+        - ROCm Validation Suite
+        - rocm_bandwidth_test
+        - rocm-cmake
+        - rocm-core
+        - rocm-docs-core
+        - rocminfo
+        - rocMLIR
+        - rocmtools
+        - rocPRIM
+        - rocprofiler
+        - rocRAND
+        - ROCR-Runtime
+        - rocSOLVER
+        - rocSPARSE
+        - roctracer
+        - ROCT-Thunk-Interface
+        - rocWMMA
+        - Tensile
+        - umr
+        - ibv_rc_pingpong-amd
+        - mellanox
+        - mpitest
+        - Pytorch
+        - Tensorflow
+        - APEX
+        - torchvision
+        - Magma
+- type: textarea
+  attributes:
+    label: Steps to Reproduce
+    description: (Optional) Detailed steps to reproduce the issue.
+  validations:
+    required: false
+    
+- type: textarea
+  attributes:
+    label: (Optional for Linux users) Output of /opt/rocm/bin/rocminfo --support
+    description: The output of rocminfo --support could help to better address the problem.
+  validations:
+    required: false
+
+- type: textarea
+  attributes:
+    label: Additional Information
+    description: (Optional) Any additional information that is relevant, e.g. relevant environment variables, dockerfiles, log files, dmesg output (on Linux), etc.
+  validations:
+    required: false
