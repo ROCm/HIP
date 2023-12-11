@@ -296,6 +296,7 @@ the HIP-Clang path, you can use the following workaround:
 
 #. Build HIP with the ``HIP_COHERENT_HOST_ALLOC`` environment variable enabled.
 #. Modify kernels that use ``__threadfence_system()`` as follows:
+
   * Ensure the kernel operates only on fine-grained system memory, which should be allocated with
     ``hipHostMalloc()``.
   * Remove ``memcpy`` for all allocated fine-grained system memory regions.
@@ -375,7 +376,7 @@ To support system scope atomic operations, you can use the HIP APIs that contain
 For example:
 * ``atomicAnd``: This function is atomic and coherent within the GPU device running the function
 * ``atomicAnd_system``: This function extends the atomic operation from the GPU device to other CPUs
-  and GPU devices in the system
+and GPU devices in the system
 
 HIP supports the following atomic operations.
 
