@@ -16,8 +16,7 @@ portable applications for AMD and NVIDIA GPUs from single source code.
 
 :::{grid-item-card} Reference
 
-* {doc}`/.doxygen/docBin/html/index`
-  * {doc}`/.doxygen/docBin/html/modules`
+* {doc}`/doxygen/html/index`
 * [Deprecated APIs](./reference/deprecated_api_list.rst)
 
 :::
@@ -29,36 +28,31 @@ portable applications for AMD and NVIDIA GPUs from single source code.
 
 :::
 
+:::{grid-item-card} Conceptual
 
----------
-
-
-split into ref and conceptual docs: 
-* [Kernel language syntax](./reference/kernel_language.rst)
-
-
----------
-
-
-:::{grid-item-card} User Guide
-- {doc}`/user_guide/programming_manual`
-- {doc}`/user_guide/hip_rtc`
-- {doc}`/user_guide/faq`
 :::
 
+::::
 
+## Legacy documentation
+
+These documents have not yet been ported over to the Diátaxis framework.
+
+::::{grid} 1 1 2 2
+:gutter: 1
 
 :::{grid-item-card} Reference
 
+* [C++ kernel language](./old/reference/kernel_language.rst)
+* [Table Comparing Syntax for Different Compute APIs](./old/reference/terms.md)
 
-- {doc}`/reference/terms`
-- {doc}`/reference/deprecated_api_list`
 :::
 
-:::{grid-item-card} Developer Guide
-- {doc}`/developer_guide/build`
-- {doc}`/developer_guide/logging`
-- {doc}`/developer_guide/contributing`
+:::{grid-item-card} User Guide
+
+* [HIP Porting Guide](./old/user_guide/hip_porting_guide.md)
+* [HIP Porting Driver API Guide](./old/user_guide/hip_porting_driver_api.md)
+
 :::
 
 ::::
