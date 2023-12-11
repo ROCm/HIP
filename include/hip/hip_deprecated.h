@@ -90,8 +90,6 @@ extern "C" {
 
 hipError_t hipGetDevicePropertiesR0000(hipDeviceProp_tR0000* prop, int device);
 hipError_t hipChooseDeviceR0000(int* device, const hipDeviceProp_tR0000* prop);
-hipError_t hipGetLastErrorR0000();
-hipError_t hipPeekAtLastErrorR0000();
 
 #ifdef __cplusplus
 }
