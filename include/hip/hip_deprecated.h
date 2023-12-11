@@ -84,7 +84,6 @@ typedef struct hipDeviceProp_tR0000 {
 
 
 #ifdef __cplusplus
-namespace hip {
 extern "C" {
 #endif
 
@@ -93,5 +92,4 @@ hipError_t hipChooseDeviceR0000(int* device, const hipDeviceProp_tR0000* prop);
 
 #ifdef __cplusplus
 }
-} // namespace hip
 #endif
