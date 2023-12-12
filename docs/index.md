@@ -18,6 +18,7 @@ portable applications for AMD and NVIDIA GPUs from single source code.
 
 * {doc}`/.doxygen/docBin/html/index`
   * {doc}`/.doxygen/docBin/html/modules`
+* [Kernel language syntax](./reference/kernel_language.rst)
 * [Deprecated APIs](./reference/deprecated_api_list.rst)
 
 :::
@@ -45,7 +46,8 @@ portable applications for AMD and NVIDIA GPUs from single source code.
 
 
 :::{grid-item-card} Reference
-- {doc}`/reference/kernel_language`
+
+
 - {doc}`/reference/math_api`
 - {doc}`/reference/terms`
 - {doc}`/reference/deprecated_api_list`

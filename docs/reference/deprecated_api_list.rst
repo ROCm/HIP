@@ -1,3 +1,7 @@
+.. meta::
+   :description: HIP deprecated runtime API functions.
+   :keywords: AMD, ROCm, HIP, deprecated, API
+
 **********************************************************************************************
 HIP deprecated runtime API functions
 **********************************************************************************************

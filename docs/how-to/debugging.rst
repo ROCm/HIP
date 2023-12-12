@@ -1,3 +1,7 @@
+.. meta::
+   :description: How to debug using HIP.
+   :keywords: AMD, ROCm, HIP, debugging, ltrace, ROCdgb, Windgb
+
 *************************************************************************
 Debugging with HIP
 *************************************************************************
