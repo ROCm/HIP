@@ -84,7 +84,7 @@ set_target_properties(hip-lang::device PROPERTIES
 )
 
 set_property(TARGET hip-lang::device APPEND PROPERTY
-  INTERFACE_COMPILE_OPTIONS "$<$<COMPILE_LANGUAGE:HIP>:SHELL:-mllvm;-amdgpu-early-inline-all=true;-mllvm;-amdgpu-function-calls=false>"
+  INTERFACE_COMPILE_OPTIONS "$<$<COMPILE_LANGUAGE:HIP>:SHELL:-mllvm=-amdgpu-early-inline-all=true;-mllvm=-amdgpu-function-calls=false>"
 )
 
 set_property(TARGET hip-lang::device APPEND PROPERTY
