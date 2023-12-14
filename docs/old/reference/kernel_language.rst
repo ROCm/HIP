@@ -934,15 +934,16 @@ Printf
 Printf function is supported in HIP.
 The following is a simple example to print information in the kernel.
 
-```
-#include <hip/hip_runtime.h>
+.. code:: cpp
 
-__global__ void run_printf() { printf("Hello World\n"); }
+  #include <hip/hip_runtime.h>
+  
+  __global__ void run_printf() { printf("Hello World\n"); }
+  
+  int main() {
+    run_printf<<<dim3(1), dim3(1), 0, 0>>>();
+  }
 
-int main() {
-  run_printf<<<dim3(1), dim3(1), 0, 0>>>();
-}
-```
 
 Device-Side Dynamic Global Memory Allocation
 ============================================================
