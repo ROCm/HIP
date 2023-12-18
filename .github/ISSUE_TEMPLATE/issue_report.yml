@@ -45,6 +45,9 @@ body:
     description: What GPU(s) did you encounter the issue on (you can select multiple GPUs from the list)
     multiple: true
     options:
+        - AMD Instinct MI300
+        - AMD Instinct MI300A
+        - AMD Instinct MI300X
         - AMD Instinct MI250X
         - AMD Instinct MI250
         - AMD Instinct MI210
@@ -85,6 +88,7 @@ body:
     description: What version(s) of ROCm did you encounter the issue on?
     multiple: true
     options:
+        - ROCm 6.0.0
         - ROCm 5.7.1
         - ROCm 5.7.0
         - ROCm 5.6.0
@@ -96,104 +100,63 @@ body:
   attributes:
     label: ROCm Component
     description: (Optional) If this issue relates to a specific ROCm component, it can be mentioned here.
-    multiple: true
     options:
-        - Other
-        - AMD Common Language Runtime
-        - AMD MIGraphX
-        - AMD System Management Interface
-        - amdgpu KCL/autoconf
-        - amdgpu Kernel-mode GPU Driver
-        - amdgpu-install
-        - AOMP
-        - AOMP Extras
-        - AqlProfile
-        - build-infra
-        - chelsio
-        - clang-ocl
-        - Composable Kernel
-        - dkms
-        - docker / ROCm-docker
-        - flang
-        - gpuburn
-        - half
-        - HIP
-        - HIP Examples
-        - hipBLAS
-        - hipBLASLt
-        - HIPCC
-        - hipCUB
-        - hip-examples-private
-        - hipFFT
-        - hipfort
-        - HIPIFY
-        - hipRAND
-        - hipSOLVER
-        - hipSPARSE
-        - hipSPARSELt
-        - hipTensor
-        - hip-tests
-        - HSA Runtime
-        - infrastructure
-        - jenkins-utils
-        - libdrm
-        - Linux BPI packaging framework
-        - llvm-project
-        - Mesa
-        - meta
-        - MIOpen
-        - MIVisionX
-        - ml-framework-ci
-        - MLSEQA_TestRepo
-        - OpenCL API C++ Bindings
-        - OpenCL API Headers
-        - OpenCL Conformance Test Suite
-        - OpenCL ICD Loader
-        - perftest-p2p
-        - prototype
-        - RCCL
-        - rccl-rdma-sharp-plugins
-        - rocALUTION
-        - rocBLAS
-        - ROCdbgapi
-        - ROCdebug-agent
-        - rocFFT
-        - ROCgdb
-        - ROCK
-        - ROCm Documentation/Website
-        - ROCm Data Center Tool
-        - ROCm Examples
-        - ROCm for Windows
-        - ROCm Performance Primitives
-        - ROCm System Management Interface Library
-        - ROCm Thrust
-        - ROCm Validation Suite
-        - rocm_bandwidth_test
-        - rocm-cmake
-        - rocm-core
-        - rocm-docs-core
-        - rocminfo
-        - rocMLIR
-        - rocmtools
-        - rocPRIM
-        - rocprofiler
-        - rocRAND
-        - ROCR-Runtime
-        - rocSOLVER
-        - rocSPARSE
-        - roctracer
-        - ROCT-Thunk-Interface
-        - rocWMMA
-        - Tensile
-        - umr
-        - ibv_rc_pingpong-amd
-        - mellanox
-        - mpitest
-        - Pytorch
-        - Tensorflow
-        - APEX
-        - torchvision
-        - Magma
+      - Other
+      - AMDMIGraphX
+      - amdsmi
+      - aomp
+      - aomp-extras
+      - clang-ocl
+      - clr
+      - composable_kernel
+      - flang
+      - half
+      - HIP
+      - hipBLAS
+      - HIPCC
+      - hipCUB
+      - HIP-Examples
+      - hipFFT
+      - hipfort
+      - HIPIFY
+      - hipSOLVER
+      - hipSPARSE
+      - hipTensor
+      - llvm-project
+      - MIOpen
+      - MIVisionX
+      - rccl
+      - rdc
+      - rocALUTION
+      - rocBLAS
+      - ROCdbgapi
+      - rocFFT
+      - ROCgdb
+      - ROCK-Kernel-Driver
+      - ROCm
+      - rocm_bandwidth_test
+      - rocm_smi_lib
+      - rocm-cmake
+      - ROCm-CompilerSupport
+      - rocm-core
+      - ROCm-Device-Libs
+      - rocminfo
+      - rocMLIR
+      - ROCmValidationSuite
+      - rocPRIM
+      - rocprofiler
+      - rocr_debug_agent
+      - rocRAND
+      - ROCR-Runtime
+      - rocSOLVER
+      - rocSPARSE
+      - rocThrust
+      - roctracer
+      - ROCT-Thunk-Interface
+      - rocWMMA
+      - rpp
+      - Tensile
+    default: 10
 - type: textarea
   attributes:
     label: Steps to Reproduce
