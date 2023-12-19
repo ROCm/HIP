@@ -540,6 +540,12 @@ typedef enum hipDeviceAttribute_t {
     // Extended attributes for vendors
 } hipDeviceAttribute_t;
 
+typedef enum hipDriverProcAddressQueryResult {
+    HIP_GET_PROC_ADDRESS_SUCCESS = 0,
+    HIP_GET_PROC_ADDRESS_SYMBOL_NOT_FOUND = 1,
+    HIP_GET_PROC_ADDRESS_LIBRARY_NOT_FOUND = 2
+} hipDriverProcAddressQueryResult;
+
 enum hipComputeMode {
     hipComputeModeDefault = 0,
     hipComputeModeExclusive = 1,
@@ -1589,6 +1595,7 @@ typedef struct hipGraphNodeParams {
  */
 // TODO-ctx - more description on error codes.
 hipError_t hipInit(unsigned int flags);
+
 /**
  * @brief Returns the approximate HIP driver version.
  *
@@ -4004,6 +4011,8 @@ hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes,
  */
 hipError_t hipGetSymbolAddress(void** devPtr, const void* symbol);
 
+
+
 /**
  *  @brief Gets the size of the given symbol on the device.
  *
@@ -4014,6 +4023,19 @@ hipError_t hipGetSymbolAddress(void** devPtr, const void* symbol);
  *
  */
 hipError_t hipGetSymbolSize(size_t* size, const void* symbol);
+
+/**
+ * @brief Gets the symbol's function address
+ *
+ * @param[in] symbol symbol name in char*
+ * @param[out] pfn output pointer to symbol
+ * @param[in] hipVersion version of the function requested. Rocm 6.0.1 = 601
+ * @param[in] flags currently there is no flags other than default
+ * @param[out] symbolStatus optional enum returned to indicate what part failed
+ * @return #hipSuccess, #hipErrorInvalidValue
+ */
+hipError_t hipGetProcAddress(const char* symbol, void** pfn, int  hipVersion, uint64_t flags,
+                             hipDriverProcAddressQueryResult* symbolStatus);
 
 /**
  *  @brief Copies data to the given symbol on the device.
@@ -8843,6 +8865,8 @@ static inline hipError_t hipMallocFromPoolAsync(
 /**
 * @}
 */
+
+
 #endif // __cplusplus
 
 #ifdef __GNUC__
@@ -8909,6 +8933,7 @@ static inline hipError_t hipMallocManaged(T** devPtr, size_t size,
                                        unsigned int flags = hipMemAttachGlobal) {
     return hipMallocManaged((void**)devPtr, size, flags);
 }
+
 
 #endif
 #endif
