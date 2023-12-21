@@ -26,7 +26,7 @@ At a high-level, the following features are not supported:
 - CUDA array, mipmappedArray and pitched memory
 - Queue priority controls
 
-See the [API Support Table](CUDA_Runtime_API_functions_supported_by_HIP.md) for more detailed information.
+See the [API Support Table](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/amd-staging/docs/tables/CUDA_Runtime_API_functions_supported_by_HIP.md) for more detailed information.
 
 ### Kernel language features
 - C++-style device-side dynamic memory allocations (free, new, delete) (CUDA 4.0)
@@ -51,8 +51,6 @@ However, we can provide a rough summary of the features included in each CUDA SD
 - CUDA 5.0 :
     - Dynamic Parallelism (not supported)
     - cuIpc functions (under development).
-- CUDA 5.5 :
-    - CUPTI (not directly supported, [AMD GPUPerfAPI](http://developer.amd.com/tools-and-sdks/graphics-development/gpuperfapi/) can be used as an alternative in some cases)
 - CUDA 6.0 :
     - Managed memory (under development)
 - CUDA 6.5 :
@@ -262,7 +260,7 @@ Previously, it was essential to declare dynamic shared memory using the HIP_DYNA
 Now, the HIP-Clang compiler provides support for extern shared declarations, and the HIP_DYNAMIC_SHARED option is no longer required. You may use the standard extern definition:
 extern __shared__ type var[];
 
-## I have multiple HIP enabled devices and I am getting an error message hipErrorNoBinaryForGpu Unable to find code object for all current devices?
+## I have multiple HIP enabled devices and I am getting an error code hipErrorSharedObjectInitFailed with the message "Error: shared object initialization failed"?
 
 This error message is seen due to the fact that you do not have valid code object for all of your devices.
 
@@ -272,6 +270,9 @@ If you have a precompiled application/library (like rocblas, tensorflow etc) whi
 
  - The application/library does not ship code object bundles for *all* of your device(s): in this case you need to recompile the application/library yourself with correct `--offload-arch`.
  - The application/library does not ship code object bundles for *some* of your device(s), for example you have a system with an APU + GPU and the library does not ship code objects for your APU. For this you can set the environment variable `HIP_VISIBLE_DEVICES` or `CUDA_VISIBLE_DEVICES` on NVdia platform, to only enable GPUs for which code object is available. This will limit the GPUs visible to your application and allow it to run.
+
+Note: In previous releases, the error code is hipErrorNoBinaryForGpu with message "Unable to find code object for all current devices".
+The error code handling behavior is changed. HIP runtime shows the error code hipErrorSharedObjectInitFailed with message "Error: shared object initialization failed" on unsupported GPU.
 
 ## How to use per-thread default stream in HIP?
 
@@ -285,10 +286,31 @@ Once source is compiled with per-thread default stream enabled, all APIs will be
 
 Besides, per-thread default stream be enabled per translation unit, users can compile some files with feature enabled and some with feature disabled. Feature enabled translation unit will have default stream as per thread and there will not be any implicit synchronization done but other modules will have legacy default stream which will do implicit synchronization.
 
+## How to use complex muliplication and division operations?
+
+In HIP, hipFloatComplex and hipDoubleComplex are defined as complex data types,
+typedef float2 hipFloatComplex;
+typedef double2 hipDoubleComplex;
+
+Any application uses complex multiplication and division operations, need to replace '*' and '/' operators with the following,
+- hipCmulf() and hipCdivf() for hipFloatComplex
+- hipCmul() and hipCdiv() for hipDoubleComplex
+
+Note: These complex operations are equivalent to corresponding types/functions on the NVIDIA platform.
+
 ## Can I develop applications with HIP APIs on Windows the same on Linux?
 
 Yes, HIP APIs are available to use on both Linux and Windows.
 Due to different working mechanisms on operating systems like Windows vs Linux, HIP APIs call corresponding lower level backend runtime libraries and kernel drivers for the OS, in order to control the executions on GPU hardware accordingly. There might be a few differences on the related backend software and driver support, which might affect usage of HIP APIs. See OS support details in HIP API document.
+
+## Does HIP support LUID?
+
+Starting ROCm 6.0, HIP runtime supports Locally Unique Identifier (LUID).
+This feature enables the local physical device(s) to interoperate with other devices. For example, DX12.
+
+HIP runtime sets device LUID properties so the driver can query LUID to identify each device for interoperability.
+
+Note: HIP supports LUID only on Windows OS.
 
 ## How can I know the version of HIP?
 
