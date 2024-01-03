@@ -6053,6 +6053,34 @@ DEPRECATED(DEPRECATED_MSG)
 hipError_t hipGetTextureReference(
     const textureReference** texref,
     const void* symbol);
+
+/**
+ * @brief Gets the border color used by a texture reference.
+ *
+ * @param [out] pBorderColor  Returned Type and Value of RGBA color.
+ * @param [in] texRef  Texture reference.
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning This API is deprecated.
+ *
+ */
+DEPRECATED(DEPRECATED_MSG)
+hipError_t hipTexRefGetBorderColor(float* pBorderColor, const textureReference* texRef);
+
+/**
+ * @brief Gets the array bound to a texture reference.
+
+ *
+ * @param [in] pArray  Returned array.
+ * @param [in] texRef  texture reference.
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning This API is deprecated.
+ *
+ */
+DEPRECATED(DEPRECATED_MSG)
+hipError_t hipTexRefGetArray(hipArray_t* pArray, const textureReference* texRef);
+
 /**
  * @brief Sets address mode for a texture reference.
  *
