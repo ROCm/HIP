@@ -2349,8 +2349,8 @@ hipError_t hipDeviceGetStreamPriorityRange(int* leastPriority, int* greatestPrio
  * The queue may be destroyed while some commands are still inflight, or may wait for all commands
  * queued to the stream before destroying it.
  *
- * @see hipStreamCreate, hipStreamCreateWithFlags, hipStreamCreateWithPriority, hipStreamQuery, hipStreamWaitEvent,
- * hipStreamSynchronize
+ * @see hipStreamCreate, hipStreamCreateWithFlags, hipStreamCreateWithPriority, hipStreamQuery,
+ * hipStreamWaitEvent, hipStreamSynchronize
  */
 hipError_t hipStreamDestroy(hipStream_t stream);
 /**
@@ -2365,8 +2365,8 @@ hipError_t hipStreamDestroy(hipStream_t stream);
  * host threads are sending work to the stream, the status may change immediately after the function
  * is called.  It is typically used for debug.
  *
- * @see hipStreamCreate, hipStreamCreateWithFlags, hipStreamCreateWithPriority, hipStreamWaitEvent, hipStreamSynchronize,
- * hipStreamDestroy
+ * @see hipStreamCreate, hipStreamCreateWithFlags, hipStreamCreateWithPriority, hipStreamWaitEvent,
+ * hipStreamSynchronize, hipStreamDestroy
  */
 hipError_t hipStreamQuery(hipStream_t stream);
 /**
@@ -2385,7 +2385,8 @@ hipError_t hipStreamQuery(hipStream_t stream);
  * This command honors the hipDeviceLaunchBlocking flag, which controls whether the wait is active
  * or blocking.
  *
- * @see hipStreamCreate, hipStreamCreateWithFlags, hipStreamCreateWithPriority, hipStreamWaitEvent, hipStreamDestroy
+ * @see hipStreamCreate, hipStreamCreateWithFlags, hipStreamCreateWithPriority, hipStreamWaitEvent,
+ * hipStreamDestroy
  *
  */
 hipError_t hipStreamSynchronize(hipStream_t stream);
@@ -2689,9 +2690,12 @@ hipError_t hipEventCreate(hipEvent_t* event);
  *
  * If hipEventRecord() has been previously called on this event, then this call will overwrite any
  * existing state in event.
- *
+ * 
  * If this function is called on an event that is currently being recorded, results are undefined
  * - either outstanding recording may save state into the event, and the order is not guaranteed.
+ *
+ * @note: If this function is not called before use hipEventQuery() or hipEventSynchronize(),
+ * #hipSuccess is returned, meaning no pending event in the stream.
  *
  * @see hipEventCreate, hipEventCreateWithFlags, hipEventQuery, hipEventSynchronize,
  * hipEventDestroy, hipEventElapsedTime
@@ -2725,11 +2729,13 @@ hipError_t hipEventDestroy(hipEvent_t event);
  *  This function will block until the event is ready, waiting for all previous work in the stream
  * specified when event was recorded with hipEventRecord().
  *
- *  If hipEventRecord() has not been called on @p event, this function returns immediately.
+ *  If hipEventRecord() has not been called on @p event, this function returns #hipSuccess when no
+ *  event is captured.
  *
- *  TODO-hip- This function needs to support hipEventBlockingSync parameter.
+ *  This function needs to support hipEventBlockingSync parameter.
  *
  *  @param[in] event Event on which to wait.
+ *
  *  @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized,
  * #hipErrorInvalidHandle, #hipErrorLaunchFailure
  *
@@ -2774,9 +2780,10 @@ hipError_t hipEventElapsedTime(float* ms, hipEvent_t start, hipEvent_t stop);
  * #hipErrorNotInitialized, #hipErrorLaunchFailure
  *
  * Query the status of the specified event.  This function will return #hipSuccess if all
- * commands in the appropriate stream (specified to hipEventRecord()) have completed.  If that work
- * has not completed, or if hipEventRecord() was not called on the event, then #hipErrorNotReady is
- * returned.
+ * commands in the appropriate stream (specified to hipEventRecord()) have completed.  If any execution
+ * has not completed, then #hipErrorNotReady is returned.
+ *
+ * @note: This API returns #hipSuccess, if hipEventRecord() is not called before this API.
  *
  * @see hipEventCreate, hipEventCreateWithFlags, hipEventRecord, hipEventDestroy,
  * hipEventSynchronize, hipEventElapsedTime
