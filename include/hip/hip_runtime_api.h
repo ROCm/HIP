@@ -3754,7 +3754,7 @@ hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height
  *  @param[out] pitch  Pitch for allocation (in bytes)
  *  @param[in]  widthInBytes  Requested pitched allocation width (in bytes)
  *  @param[in]  height  Requested pitched allocation height
- *  @param[in]  elementSizeBytes  The size of element bytes, should be 4, 8 or 16 
+ *  @param[in]  elementSizeBytes  The size of element bytes, should be 4, 8 or 16
  *
  *  If size is 0, no memory is allocated, *ptr returns nullptr, and hipSuccess is returned.
  *  The intended usage of pitch is as a separate parameter of the allocation, used to compute addresses within the 2D array.
@@ -6866,6 +6866,40 @@ hipError_t hipGraphUpload(hipGraphExec_t graphExec, hipStream_t stream);
 hipError_t hipGraphAddNode(hipGraphNode_t *pGraphNode, hipGraph_t graph,
                            const hipGraphNode_t *pDependencies, size_t numDependencies,
                            hipGraphNodeParams *nodeParams);
+
+/**
+ * @brief Return the flags on executable graph.
+ *
+ * @param [in] graphExec - Executable graph to get the flags.
+ * @param [out] flags - Flags used to instantiate this executable graph.
+ * @returns #hipSuccess, #hipErrorInvalidValue.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphExecGetFlags(hipGraphExec_t graphExec, unsigned long long* flags);
+
+/**
+ * @brief Updates parameters of a created node.
+ *
+ * @param [in] node - instance of the node to set parameters to.
+ * @param [in] nodeParams - pointer to the parameters.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidDeviceFunction, #hipErrorNotSupported.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphNodeSetParams(hipGraphNode_t node, hipGraphNodeParams *nodeParams);
+
+/**
+ * @brief Updates parameters of a created node on executable graph.
+ *
+ * @param [in] graphExec - instance of executable graph.
+ * @param [in] node - instance of the node to set parameters to.
+ * @param [in] nodeParams - pointer to the parameters.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidDeviceFunction, #hipErrorNotSupported.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphExecNodeSetParams(hipGraphExec_t graphExec, hipGraphNode_t node, hipGraphNodeParams* nodeParams);
 
 /**
  * @brief Destroys an executable graph
