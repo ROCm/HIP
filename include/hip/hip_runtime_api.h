@@ -1277,6 +1277,7 @@ typedef struct hipMemAllocNodeParams {
 typedef enum hipKernelNodeAttrID {
     hipKernelNodeAttributeAccessPolicyWindow = 1,
     hipKernelNodeAttributeCooperative = 2,
+    hipLaunchAttributePriority = 8,
 } hipKernelNodeAttrID;
 typedef enum hipAccessProperty {
     hipAccessPropertyNormal = 0,
@@ -1293,6 +1294,7 @@ typedef struct hipAccessPolicyWindow {
 typedef union hipKernelNodeAttrValue {
     hipAccessPolicyWindow accessPolicyWindow;
     int cooperative;
+    int priority;
 } hipKernelNodeAttrValue;
 
 /**
