@@ -804,6 +804,8 @@ enum hipLimit_t {
 /** Implicit stream per application thread.*/
 #define hipStreamPerThread ((hipStream_t)2)
 
+#define hipStreamLegacy ((hipStream_t)1)
+
 // Indicates that the external memory object is a dedicated resource
 #define hipExternalMemoryDedicated 0x1
 /**
