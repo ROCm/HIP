@@ -1393,6 +1393,34 @@ enum hipGraphDebugDotFlags {
   hipGraphDebugDotFlagsHandles = 1
       << 10 /**< Adds node handles and every kernel function handle to output */
 };
+
+/**
+* hipGraphInstantiateWithParams results
+*/
+typedef enum hipGraphInstantiateResult {
+    hipGraphInstantiateSuccess = 0, /**< Instantiation Success */
+    hipGraphInstantiateError = 1, /**< Instantiation failed for an
+    unexpected reason which is described in the return value of the function */
+    hipGraphInstantiateInvalidStructure = 2, /**< Instantiation failed due
+    to invalid structure, such as cycles */
+    hipGraphInstantiateNodeOperationNotSupported = 3, /**< Instantiation for device launch failed
+    because the graph contained an unsupported operation */
+    hipGraphInstantiateMultipleDevicesNotSupported = 4, /**< Instantiation for device launch failed
+    due to the nodes belonging to different contexts */
+}hipGraphInstantiateResult;
+
+/**
+ * Graph Instantiation parameters
+*/
+typedef struct hipGraphInstantiateParams {
+    hipGraphNode_t errNode_out; /**< The node which caused instantiation to fail, if any*/
+    unsigned long long flags; /**< Instantiation flags */
+    hipGraphInstantiateResult result_out; /**< Whether instantiation was successful.
+    If it failed, the reason why */
+    hipStream_t uploadStream; /**< Upload stream */
+} hipGraphInstantiateParams;
+
+
 /**
  * Memory allocation properties
  */
@@ -2699,7 +2727,7 @@ hipError_t hipEventCreate(hipEvent_t* event);
  *
  * If hipEventRecord() has been previously called on this event, then this call will overwrite any
  * existing state in event.
- * 
+ *
  * If this function is called on an event that is currently being recorded, results are undefined
  * - either outstanding recording may save state into the event, and the order is not guaranteed.
  *
@@ -6858,6 +6886,19 @@ hipError_t hipGraphInstantiate(hipGraphExec_t* pGraphExec, hipGraph_t graph,
 hipError_t hipGraphInstantiateWithFlags(hipGraphExec_t* pGraphExec, hipGraph_t graph,
                                         unsigned long long flags);
 
+/**
+ * @brief Creates an executable graph from a graph.
+ *
+ * @param [out] pGraphExec - pointer to instantiated executable graph that is created.
+ * @param [in] graph - instance of graph to instantiate.
+ * @param [in] instantiateParams - Graph Instantiate Params
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphInstantiateWithParams(hipGraphExec_t* pGraphExec, hipGraph_t graph,
+                                        hipGraphInstantiateParams *instantiateParams);
 /**
  * @brief launches an executable graph in a stream
  *
