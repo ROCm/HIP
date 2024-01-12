@@ -810,6 +810,120 @@ enum hipLimit_t {
 #define hipStreamWaitValueEq 0x1
 #define hipStreamWaitValueAnd 0x2
 #define hipStreamWaitValueNor 0x3
+
+/** Operations for hipStreamBatchMemOp*/
+typedef enum hipStreamBatchMemOpType {
+  hipStreamMemOpWaitValue32 = 0x1,
+  hipStreamMemOpWriteValue32 = 0x2,
+  hipStreamMemOpWaitValue64 = 0x4,
+  hipStreamMemOpWriteValue64 = 0x5,
+  hipStreamMemOpBarrier = 0x6,            ///< Currently not supported
+  hipStreamMemOpFlushRemoteWrites = 0x3   ///< Currently not supported
+} hipStreamBatchMemOpType;
+
+/**
+ * @brief Union representing batch memory operation parameters for HIP streams.
+ *
+ * hipStreamBatchMemOpParams is used to specify the parameters for batch memory
+ * operations in a HIP stream. This union supports various operations including
+ * waiting for a specific value, writing a value, and different flags for wait conditions.
+ *
+ * @details
+ * The union includes fields for different types of operations defined in the
+ * enum hipStreamBatchMemOpType:
+ * - hipStreamMemOpWaitValue32:  Wait for a 32-bit value.
+ * - hipStreamMemOpWriteValue32: Write a 32-bit value.
+ * - hipStreamMemOpWaitValue64:  Wait for a 64-bit value.
+ * - hipStreamMemOpWriteValue64: Write a 64-bit value.
+ *
+ * Each operation type includes an address, the value to wait for or write, flags, and an
+ * optional alias that is not relevant on AMD GPUs. Flags can be used to specify different
+ * wait conditions such as equality, bitwise AND, greater than or equal, and bitwise NOR.
+ *
+ * Example usage:
+ * @code
+ * hipStreamBatchMemOpParams myArray[2];
+ * myArray[0].operation = hipStreamMemOpWaitValue32;
+ * myArray[0].waitValue.address = waitAddr1;
+ * myArray[0].waitValue.value = 0x1;
+ * myArray[0].waitValue.flags = CU_STREAM_WAIT_VALUE_EQ;
+ *
+ * myArray[1].operation = hipStreamMemOpWriteValue32;
+ * myArray[1].writeValue.address = writeAddr1;
+ * myArray[1].writeValue.value = 0x1;
+ * myArray[1].writeValue.flags = 0x0;
+ *
+ * result = hipStreamBatchMemOp(stream, 2, myArray, 0);
+ * @endcode
+ */
+
+typedef union hipStreamBatchMemOpParams_union {
+  hipStreamBatchMemOpType operation;
+  struct hipStreamMemOpWaitValueParams_t{
+    hipStreamBatchMemOpType operation;
+    hipDeviceptr_t address;
+    union {
+      uint32_t value;
+      uint64_t value64;
+    };
+    unsigned int flags;
+    hipDeviceptr_t alias;   ///< Not valid for AMD backend. Initial value is unimportant
+  } waitValue;
+  struct hipStreamMemOpWriteValueParams_t{
+    hipStreamBatchMemOpType operation;
+    hipDeviceptr_t address;
+    union {
+      uint32_t value;
+      uint64_t value64;
+    };
+    unsigned int flags;
+    hipDeviceptr_t alias;   ///< Not valid for AMD backend. Initial value is unimportant
+    } writeValue;
+    struct hipStreamMemOpFlushRemoteWritesParams_t{
+      hipStreamBatchMemOpType operation;
+      unsigned int flags;
+    } flushRemoteWrites;    ///< Currently not supported on AMD
+    struct hipStreamMemOpMemoryBarrierParams_t{
+      hipStreamBatchMemOpType operation;
+      unsigned int flags;
+    } memoryBarrier;        ///< Currently not supported on AMD
+    uint64_t pad[6];
+} hipStreamBatchMemOpParams;
+
+/**
+ * @brief Structure representing node parameters for batch memory operations in HIP graphs.
+ *
+ * hipBatchMemOpNodeParams is used to specify the parameters for batch memory
+ * operations in HIP graphs. This struct includes the context to use for the operations, the
+ * number of operations, and an array of hipStreamBatchMemOpParams that describe the operations.
+ *
+ * @details
+ * The structure includes the following fields:
+ * - ctx: The HIP context to use for the operations.
+ * - count: The number of operations in the paramArray.
+ * - paramArray: A pointer to an array of hipStreamBatchMemOpParams.
+ * - flags: Flags to control the node.
+ *
+ * Example usage:
+ * @code
+ * hipBatchMemOpNodeParams nodeParams;
+ * nodeParams.ctx = context;
+ * nodeParams.count = ARRAY_SIZE;
+ * nodeParams.paramArray = myArray;
+ * nodeParams.flags = 0;
+ *
+ * Pass nodeParams to a HIP graph APIs hipGraphAddBatchMemOpNode, hipGraphBatchMemOpNodeGetParams,
+ * hipGraphBatchMemOpNodeSetParams, hipGraphExecBatchMemOpNodeSetParams
+ * @endcode
+ */
+
+typedef struct hipBatchMemOpNodeParams {
+    hipCtx_t ctx;
+    unsigned int count;
+    hipStreamBatchMemOpParams *paramArray;
+    unsigned int flags;
+} hipBatchMemOpNodeParams;
+
 // Stream per thread
 /** Implicit stream per application thread.*/
 #define hipStreamPerThread ((hipStream_t)2)
@@ -2633,6 +2747,7 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
  *  @{
  *  This section describes Stream Memory Wait and Write functions of HIP runtime API.
  */
+
 /**
  * @brief Enqueues a wait command to the stream.[BETA]
  *
@@ -2665,8 +2780,10 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
  * @see hipExtMallocWithFlags, hipFree, hipStreamWaitValue64, hipStreamWriteValue64,
  * hipStreamWriteValue32, hipDeviceGetAttribute
  */
+
 hipError_t hipStreamWaitValue32(hipStream_t stream, void* ptr, uint32_t value, unsigned int flags,
                                 uint32_t mask __dparm(0xFFFFFFFF));
+
 /**
  * @brief Enqueues a wait command to the stream.[BETA]
  *
@@ -2699,8 +2816,10 @@ hipError_t hipStreamWaitValue32(hipStream_t stream, void* ptr, uint32_t value, u
  * @see hipExtMallocWithFlags, hipFree, hipStreamWaitValue32, hipStreamWriteValue64,
  * hipStreamWriteValue32, hipDeviceGetAttribute
  */
+
 hipError_t hipStreamWaitValue64(hipStream_t stream, void* ptr, uint64_t value, unsigned int flags,
                                 uint64_t mask __dparm(0xFFFFFFFFFFFFFFFF));
+
 /**
  * @brief Enqueues a write command to the stream.[BETA]
  *
@@ -2720,6 +2839,7 @@ hipError_t hipStreamWaitValue64(hipStream_t stream, void* ptr, uint64_t value, u
  * @see hipExtMallocWithFlags, hipFree, hipStreamWriteValue32, hipStreamWaitValue32,
  * hipStreamWaitValue64
  */
+
 hipError_t hipStreamWriteValue32(hipStream_t stream, void* ptr, uint32_t value, unsigned int flags);
 /**
  * @brief Enqueues a write command to the stream.[BETA]
@@ -2740,7 +2860,117 @@ hipError_t hipStreamWriteValue32(hipStream_t stream, void* ptr, uint32_t value, 
  * @see hipExtMallocWithFlags, hipFree, hipStreamWriteValue32, hipStreamWaitValue32,
  * hipStreamWaitValue64
  */
+
 hipError_t hipStreamWriteValue64(hipStream_t stream, void* ptr, uint64_t value, unsigned int flags);
+
+/**
+ * @brief Enqueues an array of stream memory operations in the stream.[BETA]
+ *
+ * @param [in] stream      - Stream identifier
+ * @param [in] count       - The number of operations in the array. Must be less than 256
+ * @param [in] paramArray  - The types and parameters of the individual operations.
+ * @param [in] flags       - Reserved for future expansion; must be 0.
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * Batch operations to synchronize the stream via memory operations.
+ *
+ * @warning This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ *
+ * @see hipStreamWriteValue32, hipStreamWaitValue32,
+ * hipStreamWaitValue64. hipStreamWriteValue64
+ */
+
+hipError_t hipStreamBatchMemOp(hipStream_t stream, unsigned int count,
+                               hipStreamBatchMemOpParams* paramArray, unsigned int flags);
+
+/**
+ * @brief Creates a batch memory operation node and adds it to a graph.[BETA]
+ *
+ * @param [in] phGraphNode      - Returns the newly created node
+ * @param [in] hGraph           - Graph to which to add the node
+ * @param [in] dependencies     -  Dependencies of the node
+ * @param [in] numDependencies  - Number of dependencies
+ * @param [in] nodeParams       - Parameters for the node
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * @warning This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ *
+ * @see hipStreamWriteValue32, hipStreamWaitValue32,
+ * hipStreamWaitValue64. hipStreamWriteValue64, hipStreamBatchMemOp
+ */
+hipError_t hipGraphAddBatchMemOpNode(hipGraphNode_t *phGraphNode, hipGraph_t hGraph,
+                                     const hipGraphNode_t *dependencies, size_t numDependencies,
+                                     const hipBatchMemOpNodeParams* nodeParams);
+
+/**
+ * @brief Returns a batch mem op node's parameters.[BETA]
+ *
+ * @param [in] hNode           - Node to get the parameters for
+ * @param [in] nodeParams_out  - Pointer to return the parameters
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * Returns the parameters of batch mem op node hNode in nodeParams_out.
+ * The paramArray returned in nodeParams_out is owned by the node.
+ * This memory remains valid until the node is destroyed or its parameters are modified,
+ * and should not be modified directly.
+ *
+ * @warning This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ *
+ * @see hipStreamWriteValue32, hipStreamWaitValue32,
+ * hipStreamWaitValue64. hipStreamWriteValue64. hipGraphBatchMemOpNodeSetParams
+ */
+
+hipError_t hipGraphBatchMemOpNodeGetParams(hipGraphNode_t hNode,
+                                           hipBatchMemOpNodeParams* nodeParams_out);
+
+/**
+ * @brief Sets the batch mem op node's parameters.[BETA]
+ *
+ * @param [in] hNode       - Node to set the parameters for
+ * @param [in] nodeParams  - Parameters to copy
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * Sets the parameters of batch mem op node hNode to nodeParams.
+ *
+ * @warning This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ *
+ * @see hipStreamWriteValue32, hipStreamWaitValue32,
+ * hipStreamWaitValue64. hipStreamWriteValue64, hipGraphBatchMemOpNodeGetParams
+ */
+
+hipError_t hipGraphBatchMemOpNodeSetParams(hipGraphNode_t hNode,
+                                           hipBatchMemOpNodeParams* nodeParams);
+
+/**
+ * @brief Sets the parameters for a batch mem op node in the given graphExec.[BETA]
+ *
+ * @param [in] hGraphExec  - The executable graph in which to set the specified node
+ * @param [in] hNode       - Batch mem op node from the graph from which graphExec was instantiated
+ * @param [in] nodeParams  - Updated Parameters to set
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * Sets the parameters of a batch mem op node in an executable graph hGraphExec.
+ * The node is identified by the corresponding node hNode in the non-executable graph,
+ * from which the executable graph was instantiated.
+ *
+ * @warning This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ *
+ * @see hipStreamWriteValue32, hipStreamWaitValue32,
+ * hipStreamWaitValue64. hipStreamWriteValue64, hipStreamBatchMemOp
+ */
+hipError_t hipGraphExecBatchMemOpNodeSetParams(hipGraphExec_t hGraphExec, hipGraphNode_t hNode,
+                                               const hipBatchMemOpNodeParams* nodeParams);
+
 // end doxygen Stream Memory Operations
 /**
  * @}
@@ -4286,10 +4516,10 @@ hipError_t hipGetProcAddress(const char* symbol, void** pfn, int  hipVersion, ui
  * the host side. The symbol can be in __constant or device space.
  * Note that the symbol name needs to be encased in the HIP_SYMBOL macro.
  * This also applies to hipMemcpyFromSymbol, hipGetSymbolAddress, and hipGetSymbolSize.
- * For detailed usage, see the 
+ * For detailed usage, see the
  * <a href="https://rocm.docs.amd.com/projects/HIP/en/latest/how-to/hip_porting_guide.html#memcpytosymbol">memcpyToSymbol example</a>
  * in the HIP Porting Guide.
- * 
+ *
  *
  *  @param[out]  symbol  pointer to the device symbole
  *  @param[in]   src  pointer to the source address
@@ -5088,7 +5318,7 @@ hipError_t hipMemcpyPeerAsync(void* dst, int dstDeviceId, const void* src, int s
  *  existing driver codes.
  *
  *  These APIs are only for equivalent driver APIs on the NVIDIA platform.
- * 
+ *
  */
 
 /**
