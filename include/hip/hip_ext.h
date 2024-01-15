@@ -78,6 +78,7 @@ HIP_PUBLIC_API
  * @brief This HIP API is deprecated, please use hipExtModuleLaunchKernel() instead.
  *
  */
+DEPRECATED("use hipExtModuleLaunchKernel instead")
 HIP_PUBLIC_API
 extern "C" hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
                                     uint32_t globalWorkSizeY, uint32_t globalWorkSizeZ,
@@ -85,8 +86,7 @@ extern "C" hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t globalW
                                     uint32_t localWorkSizeZ, size_t sharedMemBytes,
                                     hipStream_t hStream, void** kernelParams, void** extra,
                                     hipEvent_t startEvent __dparm(NULL),
-                                    hipEvent_t stopEvent __dparm(NULL))
-                                    __attribute__((deprecated("use hipExtModuleLaunchKernel instead")));
+                                    hipEvent_t stopEvent __dparm(NULL));
 
 #if defined(__cplusplus)
 
