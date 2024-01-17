@@ -47,7 +47,7 @@ fastjsonschema==2.16.2
     # via rocm-docs-core
 gitdb==4.0.10
     # via gitpython
-gitpython==3.1.31
+gitpython==3.1.41
     # via rocm-docs-core
 idna==3.3
     # via requests
@@ -100,7 +100,9 @@ pygments==2.12.0
 pyjson5==1.6.4
     # via doxysphinx
 pyjwt[crypto]==2.6.0
-    # via pygithub
+    # via
+    #   pygithub
+    #   pyjwt
 pynacl==1.5.0
     # via pygithub
 pyparsing==3.0.9
@@ -118,8 +120,10 @@ requests==2.28.1
     # via
     #   pygithub
     #   sphinx
-rocm-docs-core[api_reference]==0.30.3
-    # via -r requirements.in
+rocm-docs-core[api-reference]==0.30.3
+    # via
+    #   -r requirements.in
+    #   rocm-docs-core
 smmap==5.0.0
     # via gitdb
 snowballstemmer==2.2.0
