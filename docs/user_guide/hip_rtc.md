@@ -116,6 +116,18 @@ vector<char> kernel_bitcode(bitCodeSize);
 hiprtcGetBitcode(prog, kernel_bitcode.data());
 ```
 
+#### CU Mode vs WGP mode
+
+AMD GPUs consist of array of workgroup processors, which are built with 2 compute units(CUs) each capeable of executing SIMD32. Local data share(LDS) is shared by all the CUs inside a workgroup processor.
+
+gfx10+ support execution of wavefront in CU mode and WGP mode. Please refer to section 2.3 of [RDNA3 ISA reference](https://www.amd.com/content/dam/amd/en/documents/radeon-tech-docs/instruction-set-architectures/rdna3-shader-instruction-set-architecture-feb-2023_0.pdf).
+
+gfx9 and below only supports CU mode.
+
+In WGP mode, 4 warps of a block can simultaneously be executed on the workgroup processor, where as in CU mode only 2 warps of a block can simultaneously execute on a CU. In theory, WGP mode might help with occupancy and increase the performance of certain HIP programs (if not bound to inter warp communication), but might incur performance penalty on other HIP programs which rely on atomics and inter warp communication. This also has effect of how the LDS is split between warps, please refer to [RDNA3 ISA reference](https://www.amd.com/content/dam/amd/en/documents/radeon-tech-docs/instruction-set-architectures/rdna3-shader-instruction-set-architecture-feb-2023_0.pdf) for more information.
+
+HIPRTC assumes **WGP mode by default** for gfx10+. This can be overridden by passing `-mcumode` to HIPRTC compile options in `hiprtcCompileProgram`.
+
 ## Linker APIs
 
 #### Introduction
