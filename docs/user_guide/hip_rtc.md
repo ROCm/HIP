@@ -184,6 +184,8 @@ hiprtcLinkDestroy(rtc_link_state);
 #### Input Types
 HIPRTC provides hiprtcJITInputType enumeration type which defines the input types accepted by the Linker APIs. Here are the enum values of hiprtcJITInputType. However only the input types  HIPRTC_JIT_INPUT_LLVM_BITCODE, HIPRTC_JIT_INPUT_LLVM_BUNDLED_BITCODE and HIPRTC_JIT_INPUT_LLVM_ARCHIVES_OF_BUNDLED_BITCODE are supported currently.
 
+HIPRTC_JIT_INPUT_LLVM_BITCODE can be used to load both LLVM bitcode or LLVM IR assembly code. However, HIPRTC_JIT_INPUT_LLVM_BUNDLED_BITCODE and HIPRTC_JIT_INPUT_LLVM_ARCHIVES_OF_BUNDLED_BITCODE are only for bundled bitcode and archive of bundled bitcode.
+
 ```cpp
 HIPRTC_JIT_INPUT_CUBIN = 0,
 HIPRTC_JIT_INPUT_PTX,
@@ -197,6 +199,14 @@ HIPRTC_JIT_INPUT_LLVM_BUNDLED_BITCODE = 101,
 HIPRTC_JIT_INPUT_LLVM_ARCHIVES_OF_BUNDLED_BITCODE = 102,
 HIPRTC_JIT_NUM_INPUT_TYPES = (HIPRTC_JIT_NUM_LEGACY_INPUT_TYPES + 3)
 ```
+
+#### Backward Compatibility of LLVM Bitcode/IR
+
+For HIP applications utilizing hiprtc to compile LLVM bitcode/IR, compatibility is assured only when the ROCm or HIP SDK version used for generating the LLVM bitcode/IR matches the version used during the runtime compilation. When an application requires the ingestion of bitcode/IR not derived from the currently installed AMD compiler, it must run with hipRTC and COMgr dynamic libraries that are compatible with the version of the bitcode/IR.
+
+COMgr, a shared library, incorporates the LLVM/Clang compiler that hipRTC relies on. To identify the bitcode/IR version that COMgr is compatible with, one can execute "clang -v" using the clang binary from the same ROCm or HIP SDK package. For instance, if compiling bitcode/IR version 14, the hipRTC and COMgr libraries released by AMD around mid 2022 would be the best choice, assuming the LLVM/Clang version included in the package is also version 14.
+
+To ensure smooth operation and compatibility, an application may choose to ship the specific versions of hipRTC and COMgr dynamic libraries, or it may opt to clearly specify the version requirements and dependencies. This approach guarantees that the application can correctly compile the specified version of bitcode/IR.
 
 #### Link Options
 - `HIPRTC_JIT_IR_TO_ISA_OPT_EXT` - AMD Only. Options to be passed on to link step of compiler by `hiprtcLinkCreate`.
