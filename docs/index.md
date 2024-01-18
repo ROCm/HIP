@@ -14,6 +14,7 @@ These documents are targeted at authors of HIP libraries and applications.
 
 - {doc}`/.doxygen/docBin/html/index`
   - {doc}`/.doxygen/docBin/html/modules`
+- {doc}`/reference/programming_model`
 - {doc}`/reference/kernel_language`
 - {doc}`/reference/math_api`
 - {doc}`/reference/deprecated_api_list`
@@ -21,6 +22,9 @@ These documents are targeted at authors of HIP libraries and applications.
 :::
 
 :::{grid-item-card} Understand HIP
+
+- {doc}`/understand/programming_model`
+
 :::
 
 :::{grid-item-card} How-to Guides

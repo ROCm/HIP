@@ -8,6 +8,9 @@ subtrees:
     - file: reference/math_api
     - file: reference/glossary
     - file: reference/deprecated_api_list
+- caption: User Understand
+  entries:
+    - file: understand/programming_model
 - caption: User How to Guides
   entries:
     - file: how_to_guides/install.md

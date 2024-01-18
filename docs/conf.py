@@ -15,6 +15,9 @@ docs_core.setup()
 for sphinx_var in ROCmDocs.SPHINX_VARS:
     globals()[sphinx_var] = getattr(docs_core, sphinx_var)
 
+extensions += ["sphinxcontrib.doxylink"]
+doxygen_html = ".doxygen/docBin/html"
+
 # rocm-docs-core might or might not have changed these yet (depending on version),
 # and we don't want to wipe their settings if they did
 if not "html_theme_options" in globals():
