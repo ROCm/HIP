@@ -20,4 +20,5 @@
 # THE SOFTWARE.
 
 echo "install.sh has moved to HIP-AMD backend repo"
+echo "Modify this and see what happens"
 exit 1
