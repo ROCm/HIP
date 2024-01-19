@@ -543,7 +543,7 @@ typedef enum hipDeviceAttribute_t {
 typedef enum hipDriverProcAddressQueryResult {
     HIP_GET_PROC_ADDRESS_SUCCESS = 0,
     HIP_GET_PROC_ADDRESS_SYMBOL_NOT_FOUND = 1,
-    HIP_GET_PROC_ADDRESS_LIBRARY_NOT_FOUND = 2
+    HIP_GET_PROC_ADDRESS_VERSION_NOT_SUFFICIENT = 2
 } hipDriverProcAddressQueryResult;
 
 enum hipComputeMode {
