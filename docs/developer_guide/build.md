@@ -53,7 +53,7 @@ git clone -b "$ROCM_BRANCH" https://github.com/ROCm-Developer-Tools/HIPCC.git
 ```shell
 export CLR_DIR="$(readlink -f clr)"
 export HIP_DIR="$(readlink -f hip)"
-export HIPCC_DIR="$(readlink -f hipcc)"
+export HIPCC_DIR="$(readlink -f HIPCC)"
 ```
 
 Note, starting from ROCM 5.6 release, clr is a new repository including the previous ROCclr, HIPAMD and OpenCl repositories.
