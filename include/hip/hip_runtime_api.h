@@ -1277,14 +1277,7 @@ typedef struct hipMemAllocNodeParams {
     void*   dptr;                       ///< Returned device address of the allocation
 } hipMemAllocNodeParams;
 
-/**
- * Kernel node attributeID
- */
-typedef enum hipKernelNodeAttrID {
-    hipKernelNodeAttributeAccessPolicyWindow = 1,
-    hipKernelNodeAttributeCooperative = 2,
-    hipLaunchAttributePriority = 8,
-} hipKernelNodeAttrID;
+
 typedef enum hipAccessProperty {
     hipAccessPropertyNormal = 0,
     hipAccessPropertyStreaming  = 1,
@@ -1297,11 +1290,39 @@ typedef struct hipAccessPolicyWindow {
     hipAccessProperty missProp;
     size_t num_bytes;
 } hipAccessPolicyWindow;
-typedef union hipKernelNodeAttrValue {
-    hipAccessPolicyWindow accessPolicyWindow;
-    int cooperative;
-    int priority;
-} hipKernelNodeAttrValue;
+
+/**
+ *  Launch Attribute ID
+ */
+typedef enum hipLaunchAttributeID {
+    hipLaunchAttributeAccessPolicyWindow = 1, /**< Valid for Streams, graph nodes, launches*/
+    hipLaunchAttributeCooperative = 2, /**< Valid for graph nodes, launches */
+    hipLaunchAttributePriority = 8, /**< Valid for graph node, streams, launches */
+} hipLaunchAttributeID;
+
+/**
+ *  Launch Attribute Value
+ */
+typedef union hipLaunchAttributeValue {
+    hipAccessPolicyWindow accessPolicyWindow; /**< Value of launch attribute::
+                          hipLaunchAttributePolicyWindow. */
+    int cooperative; /**< Value of launch attribute ::hipLaunchAttributeCooperative */
+    int priority; /**< Value of launch attribute :: hipLaunchAttributePriority. Execution
+                      priority of kernel. */
+} hipLaunchAttributeValue;
+
+/**
+ * Kernel node attributeID
+ */
+#define hipKernelNodeAttrID hipLaunchAttributeID
+#define hipKernelNodeAttributeAccessPolicyWindow hipLaunchAttributeAccessPolicyWindow
+#define hipKernelNodeAttributeCooperative hipLaunchAttributeCooperative
+#define hipKernelNodeAttributePriority hipLaunchAttributePriority
+
+/**
+ * Kernel node attribute value
+ */
+#define hipKernelNodeAttrValue hipLaunchAttributeValue
 
 /**
  * Memset node params
