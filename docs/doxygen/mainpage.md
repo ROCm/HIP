@@ -18,7 +18,6 @@ This is the full HIP Runtime API reference. The API is organized into
   - @ref StreamO
 - @ref PeerToPeer
 - @ref Context
-  - @ref ContextD
 - @ref Module
 - @ref Occupancy
 - @ref Profiler
