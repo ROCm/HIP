@@ -20,6 +20,11 @@ CUDA supports cuCtx API, the Driver API that defines "Context" and "Devices" as 
 ### hipCtxGetFlags
 ### hipCtxEnablePeerAccess
 ### hipCtxDisablePeerAccess
+### hipDevicePrimaryCtxGetState
+### hipDevicePrimaryCtxRelease
+### hipDevicePrimaryCtxRetain
+### hipDevicePrimaryCtxReset
+### hipDevicePrimaryCtxSetFlags
 
 
 ## HIP Memory Management APIs
