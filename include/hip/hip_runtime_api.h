@@ -134,7 +134,7 @@ typedef struct hipDeviceProp_t {
     int maxTexture2DLinear[3];  ///< Maximum 2D tex dimensions if tex are bound to pitched memory
     int maxTexture2DGather[2];  ///< Maximum 2D tex dimensions if gather has to be performed
     int maxTexture3D[3];  ///< Maximum dimensions (width, height, depth) of 3D images, in image
-    ///< elements
+                          ///< elements
     int maxTexture3DAlt[3];           ///< Maximum alternate 3D texture dims
     int maxTextureCubemap;            ///< Maximum cubemap texture dims
     int maxTexture1DLayered[2];       ///< Maximum number of elements in 1D array images
