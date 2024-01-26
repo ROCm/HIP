@@ -146,6 +146,10 @@ ROCclr (Radeon Open Compute Common Language Runtime) is a virtual device interfa
 ## What is HIPAMD?
 HIPAMD is a repository branched out from HIP, mainly the implementation for AMD GPU.
 
+## What is hipother?
+A new repository 'hipother' is added in the ROCm 6.1 release, which is branched out from HIP.
+hipother supports the HIP back-end implementation on some non-AMD platforms, like NVIDIA.
+
 ## Can I get HIP open source repository for Windows?
 No, there is no HIP repository open publicly on Windows.
 
@@ -324,3 +328,4 @@ hipRuntimeGetVersion(&runtimeVersion);
 The version returned will always be greater than the versions in previous ROCm releases.
 
 Note: The version definition of HIP runtime is different from CUDA. On AMD platform, the function returns HIP runtime version, while on NVIDIA platform, it returns CUDA runtime version. And there is no mapping/correlation between HIP version and CUDA version.
+
