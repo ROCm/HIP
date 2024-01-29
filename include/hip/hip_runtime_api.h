@@ -346,23 +346,21 @@ typedef enum __HIP_NODISCARD hipError_t {
     hipErrorIllegalAddress = 700,
     hipErrorLaunchOutOfResources = 701,  ///< Out of resources error.
     hipErrorLaunchTimeOut = 702,   ///< Timeout for the launch.
-    hipErrorPeerAccessAlreadyEnabled =
-        704,  ///< Peer access was already enabled from the current device.
-    hipErrorPeerAccessNotEnabled =
-        705,  ///< Peer access was never enabled from the current device.
+    hipErrorPeerAccessAlreadyEnabled = 704,  ///< Peer access was already enabled from the current
+                                             ///< device.
+    hipErrorPeerAccessNotEnabled = 705,  ///< Peer access was never enabled from the current device.
     hipErrorSetOnActiveProcess = 708,   ///< The process is active.
     hipErrorContextIsDestroyed = 709,   ///< The context is already destroyed
     hipErrorAssert = 710,  ///< Produced when the kernel calls assert.
-    hipErrorHostMemoryAlreadyRegistered =
-        712,  ///< Produced when trying to lock a page-locked memory.
-    hipErrorHostMemoryNotRegistered =
-        713,  ///< Produced when trying to unlock a non-page-locked memory.
-    hipErrorLaunchFailure =
-        719,  ///< An exception occurred on the device while executing a kernel.
-    hipErrorCooperativeLaunchTooLarge =
-        720,  ///< This error indicates that the number of blocks launched per grid for a kernel
-              ///< that was launched via cooperative launch APIs exceeds the maximum number of
-              ///< allowed blocks for the current device
+    hipErrorHostMemoryAlreadyRegistered = 712,  ///< Produced when trying to lock a page-locked
+                                                ///< memory.
+    hipErrorHostMemoryNotRegistered = 713,  ///< Produced when trying to unlock a non-page-locked
+                                            ///< memory.
+    hipErrorLaunchFailure = 719,  ///< An exception occurred on the device while executing a kernel.
+    hipErrorCooperativeLaunchTooLarge = 720,  ///< This error indicates that the number of blocks
+                                              ///< launched per grid for a kernel that was launched
+                                              ///< via cooperative launch APIs exceeds the maximum
+                                              ///< number of allowed blocks for the current device.
     hipErrorNotSupported = 801,  ///< Produced when the hip API is not supported/implemented
     hipErrorStreamCaptureUnsupported = 900,  ///< The operation is not permitted when the stream
                                              ///< is capturing.
