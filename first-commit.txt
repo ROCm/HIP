@@ -1,6 +1,1 @@
-Change from github.
-Second change from github.
-Fifth change from github.
-Jan 24 change from github.
-Change made during demo from github.
-Demo to remove MIRROR label after script is done running.
+
