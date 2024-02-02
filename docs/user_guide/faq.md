@@ -26,7 +26,7 @@ At a high-level, the following features are not supported:
 - CUDA array, mipmappedArray and pitched memory
 - Queue priority controls
 
-See the [API Support Table](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/amd-staging/docs/tables/CUDA_Runtime_API_functions_supported_by_HIP.md) for more detailed information.
+See the [API Support Table](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/tables/CUDA_Runtime_API_functions_supported_by_HIP.md) for more detailed information.
 
 ### Kernel language features
 - C++-style device-side dynamic memory allocations (free, new, delete) (CUDA 4.0)
@@ -70,11 +70,11 @@ HIP includes growing support for the four key math libraries using hipBlas, hipF
 These offer pointer-based memory interfaces (as opposed to opaque buffers) and can be easily interfaced with other HIP applications.
 The hip interfaces support both ROCm and CUDA paths, with familiar library interfaces.
 
-- [hipBlas](https://github.com/ROCmSoftwarePlatform/hipBLAS), which utilizes [rocBlas](https://github.com/ROCmSoftwarePlatform/rocBLAS).
-- [hipFFt](https://github.com/ROCmSoftwarePlatform/hipfft)
-- [hipsSPARSE](https://github.com/ROCmSoftwarePlatform/hipsparse)
-- [hipRAND](https://github.com/ROCmSoftwarePlatform/hipRAND)
-- [MIOpen](https://github.com/ROCmSoftwarePlatform/MIOpen)
+- [hipBlas](https://github.com/ROCm/hipBLAS), which utilizes [rocBlas](https://github.com/ROCm/rocBLAS).
+- [hipFFt](https://github.com/ROCm/hipfft)
+- [hipsSPARSE](https://github.com/ROCm/hipsparse)
+- [hipRAND](https://github.com/ROCm/hipRAND)
+- [MIOpen](https://github.com/ROCm/MIOpen)
 
 Additionally, some of the cublas routines are automatically converted to hipblas equivalents by the HIPIFY tools. These APIs use cublas or hcblas depending on the platform and replace the need to use conditional compilation.
 
@@ -101,7 +101,9 @@ As a result, the OpenCL syntax is different from CUDA, and the porting tools hav
 The tools also struggle with more complex CUDA applications, in particular, those that use templates, classes, or other C++ features inside the kernel.
 
 ## What hardware does HIP support?
-- For AMD platforms, see the [ROCm documentation](https://github.com/RadeonOpenCompute/ROCm#supported-gpus) for the list of supported platforms.
+- For AMD platforms, see the [ROCm documentation](https://rocm.docs.amd.com/en/latest) for the list of supported platforms on
+[Linux](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html)
+and [Windows](https://rocm.docs.amd.com/projects/install-on-windows/en/latest/reference/system-requirements.html).
 - For Nvidia platforms, HIP requires Unified Memory and should run on any device supporting CUDA SDK 6.0 or newer. We have tested the Nvidia Titan and Tesla K40.
 
 ## Do HIPIFY tools automatically convert all source code?
