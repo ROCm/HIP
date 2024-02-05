@@ -111,7 +111,7 @@ typedef enum hiprtcJITInputType {
   HIPRTC_JIT_INPUT_LIBRARY,  ///< Input library
   HIPRTC_JIT_INPUT_NVVM,  ///< Input NVVM
   HIPRTC_JIT_NUM_LEGACY_INPUT_TYPES,  ///< Number of legacy input type
-  HIPRTC_JIT_INPUT_LLVM_BITCODE = 100,  ///< LLVM bitcode
+  HIPRTC_JIT_INPUT_LLVM_BITCODE = 100,  ///< LLVM bitcode or IR assembly
   HIPRTC_JIT_INPUT_LLVM_BUNDLED_BITCODE = 101,  ///< LLVM bundled bitcode
   HIPRTC_JIT_INPUT_LLVM_ARCHIVES_OF_BUNDLED_BITCODE = 102,  ///< LLVM archives of boundled bitcode
   HIPRTC_JIT_NUM_INPUT_TYPES = (HIPRTC_JIT_NUM_LEGACY_INPUT_TYPES + 3)
