@@ -1614,6 +1614,44 @@ typedef struct hipGraphNodeParams {
 
     long long reserved2;
 } hipGraphNodeParams;
+
+/**
+ * This port activates when the kernel has finished executing.
+ */
+#define hipGraphKernelNodePortDefault 0
+
+/**
+ * This port activates when all blocks of the kernel have begun execution.
+ */
+#define hipGraphKernelNodePortLaunchCompletion 2
+
+/**
+ * This port activates when all blocks of the kernel have performed
+ * hipTriggerProgrammaticLaunchCompletion() or have terminated.
+ * It must be used with edge type hipGraphDependencyTypeProgrammatic.
+ */
+#define hipGraphKernelNodePortProgrammatic 1
+
+typedef enum hipGraphDependencyType {
+  hipGraphDependencyTypeDefault = 0,
+  hipGraphDependencyTypeProgrammatic = 1
+}hipGraphDependencyType;
+
+typedef struct hipGraphEdgeData {
+  unsigned char
+      from_port;  ///< This indicates when the dependency is triggered from the upstream node on the
+                  ///< edge. The meaning is specfic to the node type. A value of 0 in all cases
+                  ///< means full completion of the upstream node, with memory visibility to the
+                  ///< downstream node or portion thereof (indicated by to_port). Only kernel nodes
+                  ///< define non-zero ports. A kernel node can use the following output port types:
+                  ///< hipGraphKernelNodePortDefault, hipGraphKernelNodePortProgrammatic, or
+                  ///< hipGraphKernelNodePortLaunchCompletion.
+  unsigned char reserved[5];  ///< These bytes are unused and must be zeroed
+  unsigned char
+      to_port;  ///< Currently no node types define non-zero ports. This field must be set to zero.
+  unsigned char type;  ///< This should be populated with a value from hipGraphDependencyType
+} hipGraphEdgeData;
+
 // Doxygen end group GlobalDefs
 /**
 * @}
@@ -6636,6 +6674,30 @@ int hipGetStreamDeviceId(hipStream_t stream);
  *
  */
 hipError_t hipStreamBeginCapture(hipStream_t stream, hipStreamCaptureMode mode);
+
+/**
+* @brief Begins graph capture on a stream to an existing graph.
+*
+* @param [in] stream - Stream to initiate capture.
+* @param [in] stream - Graph to capture into.
+* @param [in] dependencies - Dependencies of the first node captured in the stream. Can be NULL if
+numDependencies is 0.
+* @param [in] dependencyData - Optional array of data associated with each dependency.
+* @param [in] numDependencies - Number of dependencies.
+* @param [in] mode - Controls the interaction of this capture sequence with other API calls that
+are not safe.
+*
+* @returns #hipSuccess, #hipErrorInvalidValue
+*
+* @warning : param "const hipGraphEdgeData* dependencyData" is currently not supported and has to
+passed as nullptr. This API is marked as beta, meaning, while this is feature complete, it is still
+open to changes and may have outstanding issues.
+*
+*/
+hipError_t hipStreamBeginCaptureToGraph(hipStream_t stream, hipGraph_t graph,
+                                        const hipGraphNode_t* dependencies,
+                                        const hipGraphEdgeData* dependencyData,
+                                        size_t numDependencies, hipStreamCaptureMode mode);
 
 /**
  * @brief Ends capture on a stream, returning the captured graph.
