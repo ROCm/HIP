@@ -2881,19 +2881,21 @@ hipError_t hipPointerSetAttribute(const void* value, hipPointer_attribute attrib
 
 
 /**
- *  @brief Return attributes for the specified pointer
+ *  @brief Returns attributes for the specified pointer
  *
  *  @param [out]  attributes  attributes for the specified pointer
  *  @param [in]   ptr         pointer to get attributes for
  *
- *  @note: To get pointer's memory type, the parameter attributes has 'type' as member variable.
- *  The 'type' indicates input pointer is allocated on device or host. That means the input pointer
- *  must be returned or passed through an HIP API such as hipHostMalloc, hipMallocManaged,
- *  hipHostRegister, etc. Otherwise, the pointer can't be handled by this API and attributes
- *  returned hipErrorInvalidValue, due to the hipMemoryType enums values, unrecognized memory type
- *  is currently not supported due to HIP functionality backward compatibility.
+ *  The output parameter 'attributes' has a member named 'type' that describes what memory the
+ *  pointer is associated with, such as device memory, host memory, managed memory, and others.
+ *  Otherwise, the API cannot handle the pointer and returns #hipErrorInvalidValue.
+ *
+ *  @note  The unrecognized memory type is unsupported to keep the HIP functionality backward
+ *  compatibility due to #hipMemoryType enum values.
  *
  *  @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
+ *
+ *  @note  The current behavior of this HIP API corresponds to the CUDA API before version 11.0.
  *
  *  @see hipPointerGetAttribute
  */
