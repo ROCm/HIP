@@ -5339,6 +5339,16 @@ hipError_t hipFuncGetAttributes(struct hipFuncAttributes* attr, const void* func
  */
 hipError_t hipFuncGetAttribute(int* value, hipFunction_attribute attrib, hipFunction_t hfunc);
 /**
+ * @brief Gets pointer to device entry function that matches entry function symbolPtr.
+ *
+ * @param [out] functionPtr  Device entry function
+ * @param [in]  symbolPtr  Pointer to device entry function to search for
+ *
+ * @returns #hipSuccess, #hipErrorInvalidDeviceFunction
+ *
+ */
+hipError_t hipGetFuncBySymbol(hipFunction_t* functionPtr, const void* symbolPtr);
+/**
  * @brief returns the handle of the texture reference with the name from the module.
  *
  * @param [in] hmod  Module
