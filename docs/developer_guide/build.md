@@ -2,8 +2,8 @@
 
 ## Prerequisites
 
-HIP code can be developed either on AMD ROCm platform using HIP-Clang compiler, or a CUDA platform with nvcc installed.
-Before build and run HIP, make sure drivers and pre-build packages are installed properly on the platform.
+HIP code can be developed on Linux, either on AMD ROCm platform using HIP-Clang compiler, or a CUDA platform with nvcc installed.
+Before building and running HIP, make sure drivers and pre-built packages are installed properly on the platform.
 
 ### AMD platform
 Install ROCm packages or pre-built binary packages using the package manager. Refer to the ROCm Installation Guide at https://rocm.docs.amd.com for more information on installing ROCm.
@@ -18,11 +18,11 @@ sudo apt-get install -y libelf-dev
 
 ### NVIDIA platform
 
-Install Nvidia driver and pre-build packages (see HIP Installation Guide at https://docs.amd.com/ for the release)
+Install Nvidia driver and pre-built packages (see HIP Installation Guide at https://docs.amd.com/ for the release)
 
 ### Branch of repository
 
-Before get HIP source code, set the expected branch of repository at the variable `ROCM_BRANCH`.
+Before getting HIP source code, set the expected branch of repository at the variable `ROCM_BRANCH`.
 For example, for ROCm 6.1 release branch, set
 ```shell
 export ROCM_BRANCH=rocm-6.1.x
@@ -129,7 +129,7 @@ hip_prof_gen.py -v -p -t --priv <hip>/include/hip/hip_runtime_api.h \
 
 #### Build HIP tests
 
-HIP catch tests, with the newly architectured Catch2, are officially separated from the HIP project. The HIP catch tests are moved to the HIP tests repository and can be built using the  instructions in the following sections.
+HIP catch tests, with the newly architectured Catch2, are officially separated from the HIP project. The HIP catch tests are moved to the HIP tests repository and can be built using the instructions in the following sections.
 
 ##### Get HIP tests source code
 
@@ -151,7 +151,7 @@ Note that when using ctest, you can use different ctest options, for example, to
 ```
 ctest -R hipMemset
 ```
-Use the below option will print test failures for failed tests,
+Using the below option will print test failures for failed tests,
 ```
 ctest --output-on-failure
 ```
