@@ -5,6 +5,8 @@
 HIP code can be developed on Linux, either on AMD ROCm platform using HIP-Clang compiler, or a CUDA platform with nvcc installed.
 Before building and running HIP, make sure drivers and pre-built packages are installed properly on the platform.
 
+Building on Windows is not supported, since not all source code required to build for Windows from source is available under a permissive open source license. AMD only provides Windows build instructions for projects that can be built from source on Windows using a toolchain that has closed source build prerequisites. The ROCm manifest file is not valid for Windows. AMD does not release a manifest or tag our components in Windows. Corresponding Linux tags can be used to build on Windows. See https://rocm.docs.amd.com/projects/install-on-windows/en/develop/conceptual/release-versioning.html#windows-builds-from-source
+
 ### AMD platform
 Install ROCm packages or pre-built binary packages using the package manager. Refer to the ROCm Installation Guide at https://rocm.docs.amd.com for more information on installing ROCm.
 
