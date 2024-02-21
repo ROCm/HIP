@@ -418,7 +418,7 @@ Following is the list of supported floating-point intrinsics. Note that intrinsi
 | double __dsqrt_rn ( double  x ) <br><sub>Compute `√x` in round-to-nearest-even mode.</sub> |
 
 ## Texture Functions
-The supported Texture functions are listed in header files "texture_fetch_functions.h"(https://github.com/ROCm-Developer-Tools/HIP/blob/main/include/hip/amd_detail/texture_fetch_functions.h) and"texture_indirect_functions.h" (https://github.com/ROCm-Developer-Tools/HIP/blob/main/include/hip/amd_detail/texture_indirect_functions.h).
+The supported Texture functions are listed in header files "texture_fetch_functions.h" and "texture_indirect_functions.h" in [HIP-AMD backend repository](https://github.com/ROCm/clr/blob/develop/hipamd/include/hip/amd_detail).
 
 Texture functions are not supported on some devices.
 Macro __HIP_NO_IMAGE_SUPPORT == 1 can be used to check whether texture functions are not supported in device code.
@@ -678,6 +678,12 @@ There are two kinds of implementations for assert functions depending on the use
 - One is for the host version of assert, which is defined in assert.h,
 - Another is the device version of assert, which is implemented in hip/hip_runtime.h.
 Users need to include assert.h to use assert. For assert to work in both device and host functions, users need to include "hip/hip_runtime.h".
+
+HIP provides the function abort() which can be used to terminate the application when terminal failures are detected.  It is implemented using the `__builtin_trap()` function.
+
+This function produces a similar effect of using `asm("trap")` in the CUDA code.
+
+Note, in HIP, the function terminates the entire application, while in CUDA, `asm("trap")`only terminates the dispatch and the application continues to run.
 
 ## Printf
 

@@ -59,7 +59,7 @@ Selected multilib: .;@m64
 
 ## Unit Testing Environment
 
-Tests for HIP are hosted at [ROCm-Developer-Tools/hip-tests](https://github.com/ROCm-Developer-Tools/hip-tests).
+Tests for HIP are hosted at [ROCm/hip-tests](https://github.com/ROCm/hip-tests).
 
 To run `hip-tests` please go to the repo and follow the steps.
 
@@ -124,7 +124,7 @@ Differences or limitations of HIP APIs as compared to CUDA APIs should be clearl
 
 
 ### Presubmit Testing:
-Before checking in or submitting a pull request, run all hip-tests (see [ROCm-Developer-Tools/hip-tests](https://github.com/ROCm-Developer-Tools/hip-tests)).
+Before checking in or submitting a pull request, run all hip-tests (see [ROCm/hip-tests](https://github.com/ROCm/hip-tests)).
 
 
 ### Checkin messages

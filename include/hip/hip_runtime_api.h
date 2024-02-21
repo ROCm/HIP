@@ -134,7 +134,7 @@ typedef struct hipDeviceProp_t {
     int maxTexture2DLinear[3];  ///< Maximum 2D tex dimensions if tex are bound to pitched memory
     int maxTexture2DGather[2];  ///< Maximum 2D tex dimensions if gather has to be performed
     int maxTexture3D[3];  ///< Maximum dimensions (width, height, depth) of 3D images, in image
-    ///< elements
+                          ///< elements
     int maxTexture3DAlt[3];           ///< Maximum alternate 3D texture dims
     int maxTextureCubemap;            ///< Maximum cubemap texture dims
     int maxTexture1DLayered[2];       ///< Maximum number of elements in 1D array images
@@ -346,23 +346,21 @@ typedef enum __HIP_NODISCARD hipError_t {
     hipErrorIllegalAddress = 700,
     hipErrorLaunchOutOfResources = 701,  ///< Out of resources error.
     hipErrorLaunchTimeOut = 702,   ///< Timeout for the launch.
-    hipErrorPeerAccessAlreadyEnabled =
-        704,  ///< Peer access was already enabled from the current device.
-    hipErrorPeerAccessNotEnabled =
-        705,  ///< Peer access was never enabled from the current device.
+    hipErrorPeerAccessAlreadyEnabled = 704,  ///< Peer access was already enabled from the current
+                                             ///< device.
+    hipErrorPeerAccessNotEnabled = 705,  ///< Peer access was never enabled from the current device.
     hipErrorSetOnActiveProcess = 708,   ///< The process is active.
     hipErrorContextIsDestroyed = 709,   ///< The context is already destroyed
     hipErrorAssert = 710,  ///< Produced when the kernel calls assert.
-    hipErrorHostMemoryAlreadyRegistered =
-        712,  ///< Produced when trying to lock a page-locked memory.
-    hipErrorHostMemoryNotRegistered =
-        713,  ///< Produced when trying to unlock a non-page-locked memory.
-    hipErrorLaunchFailure =
-        719,  ///< An exception occurred on the device while executing a kernel.
-    hipErrorCooperativeLaunchTooLarge =
-        720,  ///< This error indicates that the number of blocks launched per grid for a kernel
-              ///< that was launched via cooperative launch APIs exceeds the maximum number of
-              ///< allowed blocks for the current device
+    hipErrorHostMemoryAlreadyRegistered = 712,  ///< Produced when trying to lock a page-locked
+                                                ///< memory.
+    hipErrorHostMemoryNotRegistered = 713,  ///< Produced when trying to unlock a non-page-locked
+                                            ///< memory.
+    hipErrorLaunchFailure = 719,  ///< An exception occurred on the device while executing a kernel.
+    hipErrorCooperativeLaunchTooLarge = 720,  ///< This error indicates that the number of blocks
+                                              ///< launched per grid for a kernel that was launched
+                                              ///< via cooperative launch APIs exceeds the maximum
+                                              ///< number of allowed blocks for the current device.
     hipErrorNotSupported = 801,  ///< Produced when the hip API is not supported/implemented
     hipErrorStreamCaptureUnsupported = 900,  ///< The operation is not permitted when the stream
                                              ///< is capturing.
@@ -574,7 +572,7 @@ enum hipGPUDirectRDMAWritesOrdering {
 #else // !defined(_MSC_VER)
 #define DEPRECATED(msg) __attribute__ ((deprecated(msg)))
 #endif // !defined(_MSC_VER)
-#define DEPRECATED_MSG "This API is marked as deprecated and may not be supported in future releases. For more details please refer https://github.com/ROCm-Developer-Tools/HIP/blob/master/docs/markdown/hip_deprecated_api_list.md"
+#define DEPRECATED_MSG "This API is marked as deprecated and may not be supported in future releases. For more details please refer https://github.com/ROCm/HIP/blob/develop/docs/reference/deprecated_api_list.md"
 #define HIP_LAUNCH_PARAM_BUFFER_POINTER ((void*)0x01)
 #define HIP_LAUNCH_PARAM_BUFFER_SIZE ((void*)0x02)
 #define HIP_LAUNCH_PARAM_END ((void*)0x03)
@@ -2825,19 +2823,21 @@ hipError_t hipPointerSetAttribute(const void* value, hipPointer_attribute attrib
 
 
 /**
- *  @brief Return attributes for the specified pointer
+ *  @brief Returns attributes for the specified pointer
  *
  *  @param [out]  attributes  attributes for the specified pointer
  *  @param [in]   ptr         pointer to get attributes for
  *
- *  @note: To get pointer's memory type, the parameter attributes has 'type' as member variable.
- *  The 'type' indicates input pointer is allocated on device or host. That means the input pointer
- *  must be returned or passed through an HIP API such as hipHostMalloc, hipMallocManaged,
- *  hipHostRegister, etc. Otherwise, the pointer can't be handled by this API and attributes
- *  returned hipErrorInvalidValue, due to the hipMemoryType enums values, unrecognized memory type
- *  is currently not supported due to HIP functionality backward compatibility.
+ *  The output parameter 'attributes' has a member named 'type' that describes what memory the
+ *  pointer is associated with, such as device memory, host memory, managed memory, and others.
+ *  Otherwise, the API cannot handle the pointer and returns #hipErrorInvalidValue.
+ *
+ *  @note  The unrecognized memory type is unsupported to keep the HIP functionality backward
+ *  compatibility due to #hipMemoryType enum values.
  *
  *  @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
+ *
+ *  @note  The current behavior of this HIP API corresponds to the CUDA API before version 11.0.
  *
  *  @see hipPointerGetAttribute
  */
@@ -4020,7 +4020,7 @@ hipError_t hipGetSymbolSize(size_t* size, const void* symbol);
  * Note that the symbol name needs to be encased in the HIP_SYMBOL macro.
  * This also applies to hipMemcpyFromSymbol, hipGetSymbolAddress, and hipGetSymbolSize.
  * For detail usage, see the example at
- * https://github.com/ROCm-Developer-Tools/HIP/blob/rocm-5.0.x/docs/markdown/hip_porting_guide.md
+ * https://github.com/ROCm/HIP/blob/develop/docs/user_guide/hip_porting_guide.md
  *
  *  @param[out]  symbol  pointer to the device symbole
  *  @param[in]   src  pointer to the source address
@@ -4779,17 +4779,24 @@ hipError_t hipMemcpyPeerAsync(void* dst, int dstDeviceId, const void* src, int s
 /**
  *-------------------------------------------------------------------------------------------------
  *-------------------------------------------------------------------------------------------------
- *  @defgroup Context Context Management
+ *  @defgroup Context Context Management [Deprecated]
  *  @{
  *  This section describes the context management functions of HIP runtime API.
- */
-/**
  *
- *  @addtogroup ContextD Context Management [Deprecated]
- *  @{
- *  @ingroup Context
- *  This section describes the deprecated context management functions of HIP runtime API.
+ *  @warning
+ *
+ *  On the AMD platform, context management APIs are deprecated as there are better alternate
+ *  interfaces, such as using hipSetDevice and stream APIs to achieve the required functionality.
+ *
+ *  On the NVIDIA platform, CUDA supports the driver API that defines "Context" and "Devices" as
+ *  separate entities. Each context contains a single device, which can theoretically have multiple
+ *  contexts. HIP initially added limited support for these APIs to facilitate easy porting from
+ *  existing driver codes.
+ *
+ *  These APIs are only for equivalent driver APIs on the NVIDIA platform.
+ * 
  */
+
 /**
  * @brief Create a context and set it as current/default context
  *
@@ -4802,7 +4809,9 @@ hipError_t hipMemcpyPeerAsync(void* dst, int dstDeviceId, const void* src, int s
  * @see hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxPushCurrent,
  * hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  *
- * @warning : This HIP API is deprecated.
+ * @warning  This API is deprecated on the AMD platform, only for equivalent cuCtx driver API on the
+ * NVIDIA platform.
+ *
  */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxCreate(hipCtx_t* ctx, unsigned int flags, hipDevice_t device);
@@ -4816,7 +4825,8 @@ hipError_t hipCtxCreate(hipCtx_t* ctx, unsigned int flags, hipDevice_t device);
  * @see hipCtxCreate, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,hipCtxSetCurrent,
  * hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize , hipCtxGetDevice
  *
- * @warning : This HIP API is deprecated.
+ * @warning  This API is deprecated on the AMD platform, only for equivalent cuCtx driver API on the
+ * NVIDIA platform.
  */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxDestroy(hipCtx_t ctx);
@@ -4830,7 +4840,8 @@ hipError_t hipCtxDestroy(hipCtx_t ctx);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxSetCurrent, hipCtxGetCurrent,
  * hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  *
- * @warning : This HIP API is deprecated.
+ * @warning  This API is deprecated on the AMD platform, only for equivalent cuCtx driver API on the
+ * NVIDIA platform.
  */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxPopCurrent(hipCtx_t* ctx);
@@ -4844,7 +4855,8 @@ hipError_t hipCtxPopCurrent(hipCtx_t* ctx);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize , hipCtxGetDevice
  *
- * @warning : This HIP API is deprecated.
+ * @warning  This API is deprecated on the AMD platform, only for equivalent cuCtx driver API on the
+ * NVIDIA platform.
  */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxPushCurrent(hipCtx_t ctx);
@@ -4858,7 +4870,8 @@ hipError_t hipCtxPushCurrent(hipCtx_t ctx);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize , hipCtxGetDevice
  *
- * @warning : This HIP API is deprecated.
+ * @warning  This API is deprecated on the AMD platform, only for equivalent cuCtx driver API on the
+ * NVIDIA platform.
  */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxSetCurrent(hipCtx_t ctx);
@@ -4872,7 +4885,8 @@ hipError_t hipCtxSetCurrent(hipCtx_t ctx);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetDevice, hipCtxGetFlags, hipCtxPopCurrent,
  * hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  *
- * @warning : This HIP API is deprecated.
+ * @warning  This API is deprecated on the AMD platform, only for equivalent cuCtx driver API on the
+ * NVIDIA platform.
  */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxGetCurrent(hipCtx_t* ctx);
@@ -4886,7 +4900,8 @@ hipError_t hipCtxGetCurrent(hipCtx_t* ctx);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize
  *
- * @warning : This HIP API is deprecated.
+ * @warning  This API is deprecated on the AMD platform, only for equivalent cuCtx driver API on the
+ * NVIDIA platform.
  */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxGetDevice(hipDevice_t* device);
@@ -4907,7 +4922,8 @@ hipError_t hipCtxGetDevice(hipDevice_t* device);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetDevice, hipCtxGetFlags, hipCtxPopCurrent,
  * hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  *
- * @warning : This HIP API is deprecated.
+ * @warning  This API is deprecated on the AMD platform, only for equivalent cuCtx driver API on the
+ * NVIDIA platform.
  */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxGetApiVersion(hipCtx_t ctx, int* apiVersion);
@@ -4924,7 +4940,8 @@ hipError_t hipCtxGetApiVersion(hipCtx_t ctx, int* apiVersion);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  *
- * @warning : This HIP API is deprecated.
+ * @warning  This API is deprecated on the AMD platform, only for equivalent cuCtx driver API on the
+ * NVIDIA platform.
  */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxGetCacheConfig(hipFuncCache_t* cacheConfig);
@@ -4941,7 +4958,8 @@ hipError_t hipCtxGetCacheConfig(hipFuncCache_t* cacheConfig);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  *
- * @warning : This HIP API is deprecated.
+ * @warning  This API is deprecated on the AMD platform, only for equivalent cuCtx driver API on the
+ * NVIDIA platform.
  */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxSetCacheConfig(hipFuncCache_t cacheConfig);
@@ -4958,7 +4976,8 @@ hipError_t hipCtxSetCacheConfig(hipFuncCache_t cacheConfig);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  *
- * @warning : This HIP API is deprecated.
+ * @warning  This API is deprecated on the AMD platform, only for equivalent cuCtx driver API on the
+ * NVIDIA platform.
  */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxSetSharedMemConfig(hipSharedMemConfig config);
@@ -4975,7 +4994,8 @@ hipError_t hipCtxSetSharedMemConfig(hipSharedMemConfig config);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  *
- * @warning : This HIP API is deprecated.
+ * @warning  This API is deprecated on the AMD platform, only for equivalent cuCtx driver API on the
+ * NVIDIA platform.
  */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxGetSharedMemConfig(hipSharedMemConfig* pConfig);
@@ -4990,7 +5010,8 @@ hipError_t hipCtxGetSharedMemConfig(hipSharedMemConfig* pConfig);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxGetDevice
  *
- * @warning : This HIP API is deprecated.
+ * @warning  This API is deprecated on the AMD platform, only for equivalent cuCtx driver API on the
+ * NVIDIA platform.
  */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxSynchronize(void);
@@ -5004,7 +5025,8 @@ hipError_t hipCtxSynchronize(void);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxGetCurrent,
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  *
- * @warning : This HIP API is deprecated.
+ * @warning  This API is deprecated on the AMD platform, only for equivalent cuCtx driver API on the
+ * NVIDIA platform.
  */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxGetFlags(unsigned int* flags);
@@ -5027,7 +5049,8 @@ hipError_t hipCtxGetFlags(unsigned int* flags);
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  * @warning PeerToPeer support is experimental.
  *
- * @warning : This HIP API is deprecated.
+ * @warning  This API is deprecated on the AMD platform, only for equivalent cuCtx driver API on the
+ * NVIDIA platform.
  */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxEnablePeerAccess(hipCtx_t peerCtx, unsigned int flags);
@@ -5047,14 +5070,12 @@ hipError_t hipCtxEnablePeerAccess(hipCtx_t peerCtx, unsigned int flags);
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  * @warning PeerToPeer support is experimental.
  *
- * @warning : This HIP API is deprecated.
+ * @warning  This API is deprecated on the AMD platform, only for equivalent cuCtx driver API on the
+ * NVIDIA platform.
  */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxDisablePeerAccess(hipCtx_t peerCtx);
-// doxygen end Context deprecated
-/**
- * @}
- */
+
 /**
  * @brief Get the state of the primary context.
  *
@@ -5066,7 +5087,11 @@ hipError_t hipCtxDisablePeerAccess(hipCtx_t peerCtx);
  *
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
+ *
+ * @warning  This API is deprecated on the AMD platform, only for equivalent driver API on the
+ * NVIDIA platform.
  */
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipDevicePrimaryCtxGetState(hipDevice_t dev, unsigned int* flags, int* active);
 /**
  * @brief Release the primary context on the GPU.
@@ -5079,12 +5104,15 @@ hipError_t hipDevicePrimaryCtxGetState(hipDevice_t dev, unsigned int* flags, int
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  * @warning This function return #hipSuccess though doesn't release the primaryCtx by design on
  * HIP/HCC path.
+ *
+ * @warning  This API is deprecated on the AMD platform, only for equivalent driver API on the NVIDIA
+ * platform.
  */
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipDevicePrimaryCtxRelease(hipDevice_t dev);
 /**
  * @brief Retain the primary context on the GPU.
  *
-hipError_t hipDevicePrimaryCtxRetain(hipCtx_t* pctx, hipDevice_t dev);
  * @param [out] pctx  Returned context handle of the new context
  * @param [in] dev  Device which primary context is released
  *
@@ -5092,7 +5120,11 @@ hipError_t hipDevicePrimaryCtxRetain(hipCtx_t* pctx, hipDevice_t dev);
  *
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
+ *
+ * @warning  This API is deprecated on the AMD platform, only for equivalent driver API on the NVIDIA
+ * platform.
  */
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipDevicePrimaryCtxRetain(hipCtx_t* pctx, hipDevice_t dev);
 /**
  * @brief Resets the primary context on the GPU.
@@ -5103,7 +5135,11 @@ hipError_t hipDevicePrimaryCtxRetain(hipCtx_t* pctx, hipDevice_t dev);
  *
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
+ *
+ * @warning  This API is deprecated on the AMD platform, only for equivalent driver API on the NVIDIA
+ * platform.
  */
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipDevicePrimaryCtxReset(hipDevice_t dev);
 /**
  * @brief Set flags for the primary context.
@@ -5115,7 +5151,11 @@ hipError_t hipDevicePrimaryCtxReset(hipDevice_t dev);
  *
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
+ *
+ * @warning  This API is deprecated on the AMD platform, only for equivalent driver API on the NVIDIA
+ * platform.
  */
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipDevicePrimaryCtxSetFlags(hipDevice_t dev, unsigned int flags);
 // doxygen end Context Management
 /**
@@ -5942,6 +5982,34 @@ DEPRECATED(DEPRECATED_MSG)
 hipError_t hipGetTextureReference(
     const textureReference** texref,
     const void* symbol);
+
+/**
+ * @brief Gets the border color used by a texture reference.
+ *
+ * @param [out] pBorderColor  Returned Type and Value of RGBA color.
+ * @param [in] texRef  Texture reference.
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning This API is deprecated.
+ *
+ */
+DEPRECATED(DEPRECATED_MSG)
+hipError_t hipTexRefGetBorderColor(float* pBorderColor, const textureReference* texRef);
+
+/**
+ * @brief Gets the array bound to a texture reference.
+
+ *
+ * @param [in] pArray  Returned array.
+ * @param [in] texRef  texture reference.
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning This API is deprecated.
+ *
+ */
+DEPRECATED(DEPRECATED_MSG)
+hipError_t hipTexRefGetArray(hipArray_t* pArray, const textureReference* texRef);
+
 /**
  * @brief Sets address mode for a texture reference.
  *
@@ -8841,6 +8909,8 @@ static inline hipError_t hipMallocFromPoolAsync(
 /**
 * @}
 */
+
+
 #endif // __cplusplus
 
 #ifdef __GNUC__

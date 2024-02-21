@@ -9,10 +9,10 @@ and provides practical suggestions on how to port CUDA code and work through com
 - Starting the port on a CUDA machine is often the easiest approach, since you can incrementally port pieces of the code to HIP while leaving the rest in CUDA. (Recall that on CUDA machines HIP is just a thin layer over CUDA, so the two code types can interoperate on nvcc platforms.) Also, the HIP port can be compared with the original CUDA code for function and performance.
 - Once the CUDA code is ported to HIP and is running on the CUDA machine, compile the HIP code using the HIP compiler on an AMD machine.
 - HIP ports can replace CUDA versions: HIP can deliver the same performance as a native CUDA implementation, with the benefit of portability to both Nvidia and AMD architectures as well as a path to future C++ standard support. You can handle platform-specific features through conditional compilation or by adding them to the open-source HIP infrastructure.
-- Use **[hipconvertinplace-perl.sh](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/master/bin/hipconvertinplace-perl.sh)** to hipify all code files in the CUDA source directory.
+- Use **[hipconvertinplace-perl.sh](https://github.com/ROCm/HIPIFY/blob/amd-staging/bin/hipconvertinplace-perl.sh)** to hipify all code files in the CUDA source directory.
 
 ### Scanning existing CUDA code to scope the porting effort
-The **[hipexamine-perl.sh](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/master/bin/hipexamine-perl.sh)** tool will scan a source directory to determine which files contain CUDA code and how much of that code can be automatically hipified.
+The **[hipexamine-perl.sh](https://github.com/ROCm/HIPIFY/blob/amd-staging/bin/hipexamine-perl.sh)** tool will scan a source directory to determine which files contain CUDA code and how much of that code can be automatically hipified.
 ```
 > cd examples/rodinia_3.0/cuda/kmeans
 > $HIP_DIR/bin/hipexamine-perl.sh.
@@ -66,7 +66,7 @@ For each input file FILE, this script will:
 This is useful for testing improvements to the hipify toolset.
 
 
-The [hipconvertinplace-perl.sh](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/master/bin/hipconvertinplace-perl.sh) script will perform inplace conversion for all code files in the specified directory.
+The [hipconvertinplace-perl.sh](https://github.com/ROCm/HIPIFY/blob/amd-staging/bin/hipconvertinplace-perl.sh) script will perform inplace conversion for all code files in the specified directory.
 This can be quite handy when dealing with an existing CUDA code base since the script preserves the existing directory structure
 and filenames - and includes work.  After converting in-place, you can review the code to add additional parameters to
 directory names.
@@ -461,7 +461,7 @@ In this case, memory type translation for hipPointerGetAttributes needs to be ha
 
 So in any HIP applications which use HIP APIs involving memory types, developers should use #ifdef in order to assign the correct enum values depending on Nvidia or AMD platform.
 
-As an example, please see the code from the [link](https://github.com/ROCm-Developer-Tools/hip-tests/tree/develop/catch/unit/memory/hipMemcpyParam2D.cc).
+As an example, please see the code from the [link](https://github.com/ROCm/hip-tests/tree/develop/catch/unit/memory/hipMemcpyParam2D.cc).
 
 With the #ifdef condition, HIP APIs work as expected on both AMD and NVIDIA platforms.
 
@@ -537,15 +537,8 @@ To see the detailed commands that hipcc issues, set the environment variable HIP
 export HIPCC_VERBOSE=1
 make
 ...
-hipcc-cmd: /opt/hcc/bin/hcc  -hc -I/opt/hcc/include -stdlib=libc++ -I../../../../hc/include -I../../../../include/amd_detail/cuda -I../../../../include -x c++ -I../../common -O3 -c backprop_cuda.cu
+hipcc-cmd: /opt/rocm/bin/hipcc --offload-arch=native -x hip backprop_cuda.cu
 ```
-
-### What Does This Error Mean?
-
-#### /usr/include/c++/v1/memory:5172:15: error: call to implicitly deleted default constructor of 'std::__1::bad_weak_ptr' throw bad_weak_ptr();
-
-If you pass a ".cu" file, hcc will attempt to compile it as a CUDA language file. You must tell hcc that it's in fact a C++ file: use the "-x c++" option.
-
 
 ### Editor Highlighting
 See the utils/vim or utils/gedit directories to add handy highlighting to hip files.

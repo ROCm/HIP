@@ -20,6 +20,11 @@ CUDA supports cuCtx API, the Driver API that defines "Context" and "Devices" as 
 ### hipCtxGetFlags
 ### hipCtxEnablePeerAccess
 ### hipCtxDisablePeerAccess
+### hipDevicePrimaryCtxGetState
+### hipDevicePrimaryCtxRelease
+### hipDevicePrimaryCtxRetain
+### hipDevicePrimaryCtxReset
+### hipDevicePrimaryCtxSetFlags
 
 
 ## HIP Memory Management APIs
@@ -52,16 +57,12 @@ Should use roctracer/rocTX instead
 ## HIP Texture Management APIs
 
 ### hipGetTextureReference
+### hipGetTextureAlignmentOffset
 ### hipTexRefSetAddressMode
 ### hipTexRefSetArray
 ### hipTexRefSetFilterMode
 ### hipTexRefSetFlags
 ### hipTexRefSetFormat
-### hipBindTexture
-### hipBindTexture2D
-### hipBindTextureToArray
-### hipGetTextureAlignmentOffset
-### hipUnbindTexture
 ### hipTexRefGetAddress
 ### hipTexRefGetAddressMode
 ### hipTexRefGetFilterMode
@@ -80,4 +81,10 @@ Should use roctracer/rocTX instead
 ### hipTexRefSetMipmapLevelBias
 ### hipTexRefSetMipmapLevelClamp
 ### hipTexRefSetMipmappedArray
+### hipTexRefGetBorderColor
+### hipTexRefGetArray
+### hipBindTexture
+### hipBindTexture2D
+### hipBindTextureToArray
+### hipUnbindTexture
 ### hipBindTextureToMipmappedArray
