@@ -86,3 +86,5 @@ Should use roctracer/rocTX instead
 ### hipTexRefSetMipmapLevelClamp
 ### hipTexRefSetMipmappedArray
 ### hipBindTextureToMipmappedArray
+### hipTexRefGetBorderColor
+### hipTexRefGetArray
