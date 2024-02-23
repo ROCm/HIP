@@ -1,6 +1,6 @@
 # Release notes
 
-We have attempted to document known bugs and limitations - in particular the [HIP Kernel Language](docs/markdown/hip_kernel_language.md) document uses the phrase "Under Development", and the [HIP Runtime API bug list](http://rocm-developer-tools.github.io/HIP/bug.html) lists known bugs. 
+We have attempted to document known bugs and limitations - in particular the [HIP Kernel Language](docs/markdown/hip_kernel_language.md) document uses the phrase "Under Development", and the [HIP Runtime API issue list](https://github.com/ROCm/HIP/issues) lists known bugs. 
 
 
 ===================================================================================================
@@ -155,7 +155,7 @@ Date: 2016.06.06
 - Add cross-linking support between G++ and HCC, in particular for interfaces that use
   standard C++ libraries (ie std::vectors, std::strings).  HIPCC now uses libstdc++ by default on the HCC
   compilation path.
-- More samples including gpu-burn, SHOC, nbody, rtm.  See [HIP-Examples](https://github.com/ROCm-Developer-Tools/HIP-Examples)
+- More samples including gpu-burn, SHOC, nbody, rtm.  See [HIP-Examples](https://github.com/ROCm/HIP-Examples)
 
 
 ===================================================================================================

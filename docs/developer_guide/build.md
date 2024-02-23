@@ -134,7 +134,7 @@ HIP catch tests, with the newly architectured Catch2, are officially separated f
 ##### Get HIP tests source code
 
 ```shell
-git clone -b "$ROCM_BRANCH" https://github.com/ROCm-Developer-Tools/hip-tests.git
+git clone -b "$ROCM_BRANCH" https://github.com/ROCm/hip-tests.git
 ```
 ##### Build HIP tests from source
 

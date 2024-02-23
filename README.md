@@ -7,7 +7,7 @@ Key features include:
 * HIP is very thin and has little or no performance impact over coding directly in CUDA mode.
 * HIP allows coding in a single-source C++ programming language including features such as templates, C++11 lambdas, classes, namespaces, and more.
 * HIP allows developers to use the "best" development environment and tools on each target platform.
-* The [HIPIFY](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/amd-staging/README.md) tools automatically convert source from CUDA to HIP.
+* The [HIPIFY](https://github.com/ROCm/HIPIFY/blob/amd-staging/README.md) tools automatically convert source from CUDA to HIP.
 * Developers can specialize for the platform (CUDA or AMD) to tune for performance or handle tricky cases.
 
 New projects can be developed directly in the portable HIP C++ language and can run on either NVIDIA or AMD platforms.  Additionally, HIP provides porting tools which make it easy to port existing CUDA codes to the HIP layer, with no loss of performance as compared to the original CUDA application.  HIP is not intended to be a drop-in replacement for CUDA, and developers should expect to do some manual coding and performance tuning work to complete the port.
@@ -45,17 +45,17 @@ HIP releases are typically naming convention for each ROCM release to help diffe
 - [HIP Debugging ](docs/how_to_guides/debugging.md)
 - [HIP RTC](docs/user_guide/hip_rtc.md)
 - [HIP Terminology](docs/reference/terms.md) (including Rosetta Stone of GPU computing terms across CUDA/HIP/OpenCL)
-- [HIPIFY](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/amd-staging/README.md)
+- [HIPIFY](https://github.com/ROCm/HIPIFY/blob/amd-staging/README.md)
 - Supported CUDA APIs:
-  * [Runtime API](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/master/doc/markdown/CUDA_Runtime_API_functions_supported_by_HIP.md)
-  * [Driver API](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/master/doc/markdown/CUDA_Driver_API_functions_supported_by_HIP.md)
-  * [cuComplex API](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/master/doc/markdown/cuComplex_API_supported_by_HIP.md)
-  * [Device API](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/master/doc/markdown/CUDA_Device_API_supported_by_HIP.md)
-  * [cuBLAS](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/master/doc/markdown/CUBLAS_API_supported_by_HIP.md)
-  * [cuRAND](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/master/doc/markdown/CURAND_API_supported_by_HIP.md)
-  * [cuDNN](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/master/doc/markdown/CUDNN_API_supported_by_HIP.md)
-  * [cuFFT](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/master/doc/markdown/CUFFT_API_supported_by_HIP.md)
-  * [cuSPARSE](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/master/doc/markdown/CUSPARSE_API_supported_by_HIP.md)
+  * [Runtime API](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/tables/CUDA_Runtime_API_functions_supported_by_HIP.md)
+  * [Driver API](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/tables/CUDA_Driver_API_functions_supported_by_HIP.md)
+  * [cuComplex API](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/tables/cuComplex_API_supported_by_HIP.md)
+  * [Device API](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/tables/CUDA_Device_API_supported_by_HIP.md)
+  * [cuBLAS](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/tables/CUBLAS_API_supported_by_ROC.md)
+  * [cuRAND](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/tables/CURAND_API_supported_by_HIP.md)
+  * [cuDNN](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/tables/CUDNN_API_supported_by_HIP.md)
+  * [cuFFT](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/tables/CUFFT_API_supported_by_HIP.md)
+  * [cuSPARSE](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/tables/CUSPARSE_API_supported_by_HIP.md)
 - [Developer/CONTRIBUTING Info](docs/developer_guide/contributing.md)
 - [Release Notes](RELEASE.md)
 
@@ -115,7 +115,7 @@ HIP C++ code can be compiled with either,
   profiler and debugger.
 - On the AMD ROCm platform, HIP provides a header and runtime library built on top of HIP-Clang compiler.  The HIP runtime implements HIP streams, events, and memory APIs,
   and is a object library that is linked with the application.  The source code for all headers and the library implementation is available on GitHub.
-  HIP developers on ROCm can use AMD's ROCgdb (https://github.com/ROCm-Developer-Tools/ROCgdb) for debugging and profiling.
+  HIP developers on ROCm can use AMD's ROCgdb (https://github.com/ROCm/ROCgdb) for debugging and profiling.
 
 Thus HIP source code can be compiled to run on either platform.  Platform-specific features can be isolated to a specific platform using conditional compilation.  Thus HIP
 provides source portability to either platform.   HIP provides the _hipcc_ compiler driver which will call the appropriate toolchain depending on the desired platform.
@@ -123,7 +123,7 @@ provides source portability to either platform.   HIP provides the _hipcc_ compi
 
 ## Examples and Getting Started:
 
-* A sample and [blog](https://github.com/ROCm-Developer-Tools/hip-tests/tree/develop/samples/0_Intro/square) that uses any of [HIPIFY](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/amd-staging/README.md) tools to convert a simple app from CUDA to HIP:
+* A sample and [blog](https://github.com/ROCm/hip-tests/tree/develop/samples/0_Intro/square) that uses any of [HIPIFY](https://github.com/ROCm/HIPIFY/blob/amd-staging/README.md) tools to convert a simple app from CUDA to HIP:
 
 
 ```shell
@@ -135,8 +135,8 @@ cd samples/01_Intro/square
 
 
 ## More Examples
-The GitHub repository [HIP-Examples](https://github.com/ROCm-Developer-Tools/HIP-Examples) contains a hipified version of benchmark suite.
-Besides, there are more samples in Github [HIP samples](https://github.com/ROCm-Developer-Tools/hip-tests/tree/develop/samples), showing how to program with different features, build and run.
+The GitHub repository [HIP-Examples](https://github.com/ROCm/HIP-Examples) contains a hipified version of benchmark suite.
+Besides, there are more samples in Github [HIP samples](https://github.com/ROCm/hip-tests/tree/develop/samples), showing how to program with different features, build and run.
 
 ## Tour of the HIP Directories
 * **include**:
@@ -151,6 +151,6 @@ Besides, there are more samples in Github [HIP samples](https://github.com/ROCm-
 * **docs**: Documentation - markdown and doxygen info.
 
 ## Reporting an issue
-Use the [GitHub issue tracker](https://github.com/ROCm-Developer-Tools/HIP/issues).
+Use the [GitHub issue tracker](https://github.com/ROCm/HIP/issues).
 If reporting a bug, include the output of "hipconfig --full" and samples/1_hipInfo/hipInfo (if possible).
 
