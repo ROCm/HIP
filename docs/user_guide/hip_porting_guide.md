@@ -537,15 +537,8 @@ To see the detailed commands that hipcc issues, set the environment variable HIP
 export HIPCC_VERBOSE=1
 make
 ...
-hipcc-cmd: /opt/hcc/bin/hcc  -hc -I/opt/hcc/include -stdlib=libc++ -I../../../../hc/include -I../../../../include/amd_detail/cuda -I../../../../include -x c++ -I../../common -O3 -c backprop_cuda.cu
+hipcc-cmd: /opt/rocm/bin/hipcc --offload-arch=native -x hip backprop_cuda.cu
 ```
-
-### What Does This Error Mean?
-
-#### /usr/include/c++/v1/memory:5172:15: error: call to implicitly deleted default constructor of 'std::__1::bad_weak_ptr' throw bad_weak_ptr();
-
-If you pass a ".cu" file, hcc will attempt to compile it as a CUDA language file. You must tell hcc that it's in fact a C++ file: use the "-x c++" option.
-
 
 ### Editor Highlighting
 See the utils/vim or utils/gedit directories to add handy highlighting to hip files.
