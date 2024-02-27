@@ -981,7 +981,8 @@ typedef struct hipMemPoolProps {
      * Windows-specific LPSECURITYATTRIBUTES required when @p hipMemHandleTypeWin32 is specified
      */
     void*                       win32SecurityAttributes;
-    unsigned char               reserved[64]; ///< Reserved for future use, must be 0
+    size_t                      maxSize;  ///< Maximum pool size. When set to 0, defaults to a system dependent value
+    unsigned char               reserved[56];  ///< Reserved for future use, must be 0
 } hipMemPoolProps;
 /**
  * Opaque data structure for exporting a pool allocation
