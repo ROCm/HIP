@@ -43,7 +43,7 @@ Similiar format for future branches.
 ### Get HIP source code
 
 A new repository 'hipother' is added in the ROCm 6.1 release, which is branched out from HIP.
-The 'hipother'provides files required to support the HIP back-end implementation on some non-AMD platforms, like NVIDIA.
+The 'hipother' provides files required to support the HIP back-end implementation on some non-AMD platforms, like NVIDIA.
 
 ```shell
 git clone -b "$ROCM_BRANCH" https://github.com/ROCm/clr.git

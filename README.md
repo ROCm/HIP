@@ -131,7 +131,7 @@ cd samples/01_Intro/square
 # follow README / blog steps to hipify the application.
 ```
 
-* Guide to [Porting a New Cuda Project](docs/user_guide/hip_porting_guide.md/"Porting a New CUDA Project")
+* Guide to [Porting a New Cuda Project](https://rocm.docs.amd.com/projects/HIP/en/latest/user_guide/hip_porting_guide.html#porting-a-new-cuda-project)
 
 
 ## More Examples
