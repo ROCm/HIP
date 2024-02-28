@@ -681,7 +681,7 @@ Users need to include assert.h to use assert. For assert to work in both device 
 
 HIP provides the function abort() which can be used to terminate the application when terminal failures are detected.  It is implemented using the `__builtin_trap()` function.
 
-This function produces the effects of using `asm("trap")` in the CUDA code.
+This function produces a similar effect of using `asm("trap")` in the CUDA code.
 
 Note, in HIP, the function terminates the entire application, while in CUDA, `asm("trap")`only terminates the dispatch and the application continues to run.
 

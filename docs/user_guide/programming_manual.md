@@ -129,7 +129,7 @@ HIPRTC APIs accept HIP source files in character string format as input paramete
 
 For more details on HIPRTC APIs, refer to [HIP Runtime API Reference](https://rocm.docs.amd.com/projects/HIP/en/latest/doxygen/html/index.html).
 
-For Linux developers, the link here (https://github.com/ROCm/hip-tests/blob/develop/samples/2_Cookbook/23_cmake_hiprtc/saxpy.cpp) shows an example how to program HIP application using runtime compilation mechanism, and detail HIPRTC programming guide is also available in Github (https://github.com/ROCm/HIP/blob/develop/docs/user_guide/hip_rtc.md).
+For Linux developers, the link [here](https://github.com/ROCm/hip-tests/blob/develop/samples/2_Cookbook/23_cmake_hiprtc/saxpy.cpp) shows an example how to program HIP application using runtime compilation mechanism, and detail HIPRTC programming guide is also available in Github (https://github.com/ROCm/HIP/blob/develop/docs/user_guide/hip_rtc.md).
 
 ## HIP Graph
 HIP graph is supported. For more details, refer to the HIP API Guide.
@@ -146,7 +146,7 @@ The per-thread default stream is a blocking stream and will synchronize with the
 The per-thread default stream can be enabled via adding a compilation option,
 "-fgpu-default-stream=per-thread".
 
-And users can explicitly use "hipStreamPerThread" as per-thread default stream handle as input in API commands. There are test codes as examples in the link (https://github.com/ROCm/hip-tests/tree/develop/catch/unit/streamperthread).
+And users can explicitly use "hipStreamPerThread" as per-thread default stream handle as input in API commands. There are test codes as examples in the [link](https://github.com/ROCm/hip-tests/tree/develop/catch/unit/streamperthread).
 
 ## Use of Long Double Type
 
