@@ -70,11 +70,11 @@ HIP includes growing support for the four key math libraries using hipBlas, hipF
 These offer pointer-based memory interfaces (as opposed to opaque buffers) and can be easily interfaced with other HIP applications.
 The hip interfaces support both ROCm and CUDA paths, with familiar library interfaces.
 
-- [hipBlas](https://github.com/ROCmSoftwarePlatform/hipBLAS), which utilizes [rocBlas](https://github.com/ROCmSoftwarePlatform/rocBLAS).
-- [hipFFt](https://github.com/ROCmSoftwarePlatform/hipfft)
-- [hipsSPARSE](https://github.com/ROCmSoftwarePlatform/hipsparse)
-- [hipRAND](https://github.com/ROCmSoftwarePlatform/hipRAND)
-- [MIOpen](https://github.com/ROCmSoftwarePlatform/MIOpen)
+- [hipBlas](https://github.com/ROCm/hipBLAS), which utilizes [rocBlas](https://github.com/ROCm/rocBLAS).
+- [hipFFt](https://github.com/ROCm/hipfft)
+- [hipsSPARSE](https://github.com/ROCm/hipsparse)
+- [hipRAND](https://github.com/ROCm/hipRAND)
+- [MIOpen](https://github.com/ROCm/MIOpen)
 
 Additionally, some of the cublas routines are automatically converted to hipblas equivalents by the HIPIFY tools. These APIs use cublas or hcblas depending on the platform and replace the need to use conditional compilation.
 
@@ -101,7 +101,7 @@ As a result, the OpenCL syntax is different from CUDA, and the porting tools hav
 The tools also struggle with more complex CUDA applications, in particular, those that use templates, classes, or other C++ features inside the kernel.
 
 ## What hardware does HIP support?
-- For AMD platforms, see the [ROCm documentation](https://github.com/RadeonOpenCompute/ROCm#supported-gpus) for the list of supported platforms.
+- For AMD platforms, see the [ROCm documentation](https://github.com/ROCm/ROCm#supported-gpus) for the list of supported platforms.
 - For Nvidia platforms, HIP requires Unified Memory and should run on any device supporting CUDA SDK 6.0 or newer. We have tested the Nvidia Titan and Tesla K40.
 
 ## Do HIPIFY tools automatically convert all source code?
