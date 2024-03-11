@@ -37,3 +37,6 @@ external_projects_current_project = "hip"
 
 for sphinx_var in ROCmDocs.SPHINX_VARS:
     globals()[sphinx_var] = getattr(docs_core, sphinx_var)
+
+cpp_id_attributes = ["__global__", "__device__", "__host__", "__forceinline__", "static"]
+cpp_paren_attributes = ["__declspec"]
