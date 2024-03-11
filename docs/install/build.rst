@@ -2,6 +2,8 @@
 Build HIP from source
 *******************************************
 
+.. _Building the HIP runtime:
+
 Building the HIP runtime
 ==========================================================
 
