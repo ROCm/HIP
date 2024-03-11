@@ -6,7 +6,8 @@ HIP code can be developed either on AMD ROCm platform using HIP-Clang compiler, 
 Before build and run HIP, make sure drivers and pre-build packages are installed properly on the platform.
 
 ### AMD platform
-Install ROCm packages or pre-built binary packages using the package manager. Refer to the ROCm Installation Guide at https://rocm.docs.amd.com for more information on installing ROCm.
+
+Install ROCm packages or pre-built binary packages using the package manager. Refer to the ROCm Installation Guide at <https://rocm.docs.amd.com> for more information on installing ROCm.
 
 ```shell
 sudo apt install mesa-common-dev
@@ -18,27 +19,28 @@ sudo apt-get install -y libelf-dev
 
 ### NVIDIA platform
 
-Install Nvidia driver and pre-build packages (see HIP Installation Guide at https://docs.amd.com/ for the release)
+Install Nvidia driver and pre-build packages (see HIP Installation Guide at <https://docs.amd.com/> for the release)
 
 ### Branch of repository
 
 Before get HIP source code, set the expected branch of repository at the variable `ROCM_BRANCH`.
 For example, for ROCm 6.1 release branch, set
+
 ```shell
 export ROCM_BRANCH=rocm-6.1.x
 ```
 
 ROCm5.7 release branch, set
+
 ```shell
 export ROCM_BRANCH=rocm-5.7.x
 ```
+
 Similiar format for future branches.
 
 `ROCM_PATH` is path where ROCM is installed. BY default `ROCM_PATH` is at `/opt/rocm`.
 
-
 ## Build HIP
-
 
 ### Get HIP source code
 
@@ -79,6 +81,7 @@ make -j4
 ### Build HIP on the AMD platform
 
 #### Build HIP runtime
+
 Commands to build HIP runtime on the AMD platform are as following. The option 'HIP_PLATFORM=amd' should be defined.
 
 ```shell
@@ -92,15 +95,14 @@ sudo make install
 Note, if `CMAKE_INSTALL_PREFIX` is not specified, hip runtime will be installed to `<ROCM_PATH>/hip`.
 By default, release version of HIP is built.
 
-
 #### Default paths and environment variables
 
-   * By default HIP looks for HSA in `<ROCM_PATH>/hsa` (can be overridden by setting `HSA_PATH` environment variable).
-   * By default HIP is installed into `<ROCM_PATH>/hip`.
-   * By default HIP looks for clang in `<ROCM_PATH>/llvm/bin` (can be overridden by setting `HIP_CLANG_PATH` environment variable)
-   * By default HIP looks for device library in `<ROCM_PATH>/lib` (can be overridden by setting `DEVICE_LIB_PATH` environment variable).
-   * Optionally, consider adding `<ROCM_PATH>/bin` to your `PATH` to make it easier to use the tools.
-   * Optionally, set `HIPCC_VERBOSE=7` to output the command line for compilation.
+* By default HIP looks for HSA in `<ROCM_PATH>/hsa` (can be overridden by setting `HSA_PATH` environment variable).
+* By default HIP is installed into `<ROCM_PATH>/hip`.
+* By default HIP looks for clang in `<ROCM_PATH>/llvm/bin` (can be overridden by setting `HIP_CLANG_PATH` environment variable)
+* By default HIP looks for device library in `<ROCM_PATH>/lib` (can be overridden by setting `DEVICE_LIB_PATH` environment variable).
+* Optionally, consider adding `<ROCM_PATH>/bin` to your `PATH` to make it easier to use the tools.
+* Optionally, set `HIPCC_VERBOSE=7` to output the command line for compilation.
 
 #### Generate profiling header after adding/changing a HIP API
 
@@ -113,14 +115,15 @@ Usage:
 
 Flags:
 
-  * -v - verbose messages
-  * -r - process source directory recursively
-  * -t - API types matching check
-  * --priv - private API check
-  * -e - on error exit mode
-  * -p - HIP_INIT_API macro patching mode
+* -v - verbose messages
+* -r - process source directory recursively
+* -t - API types matching check
+* --priv - private API check
+* -e - on error exit mode
+* -p - HIP_INIT_API macro patching mode
 
 Example Usage:
+
 ```shell
 hip_prof_gen.py -v -p -t --priv <hip>/include/hip/hip_runtime_api.h \
 <hipamd>/src <hipamd>/include/hip/amd_detail/hip_prof_str.h         \
@@ -136,6 +139,7 @@ HIP catch tests, with the newly architectured Catch2, are officially separated f
 ```shell
 git clone -b "$ROCM_BRANCH" https://github.com/ROCm/hip-tests.git
 ```
+
 ##### Build HIP tests from source
 
 ```shell
@@ -146,16 +150,21 @@ cmake ../catch -DHIP_PLATFORM=amd -DHIP_PATH=$CLR_DIR/build/install # or any pat
 make -j$(nproc) build_tests # build tests
 cd build/catch_tests && ctest # to run all tests.
 ```
+
 HIP catch tests are built under the folder $HIPTESTS_DIR/build.
 Note that when using ctest, you can use different ctest options, for example, to run all tests with the keyword hipMemset,
+
 ```
 ctest -R hipMemset
 ```
+
 Use the below option will print test failures for failed tests,
+
 ```
 ctest --output-on-failure
 ```
-For more information, refer to https://cmake.org/cmake/help/v3.5/manual/ctest.1.html.
+
+For more information, refer to <https://cmake.org/cmake/help/v3.5/manual/ctest.1.html>.
 
 To run any single catch test, the following is an example,
 
@@ -179,8 +188,8 @@ All tests passed
 
 ### Build HIP on the NVIDIA platform
 
-
 #### Build HIP runtime
+
 Commands to build HIP on the NVIDIA platform are as following. The options 'HIPNV_DIR=$HIP_OTHER/hipnv' and 'HIP_PLATFORM=nvidia' should be defined.
 
 ```shell
@@ -192,9 +201,9 @@ sudo make install
 ```
 
 #### Build HIP tests
+
 Build HIP tests commands on NVIDIA platform are basically the same as AMD, except set `-DHIP_PLATFORM=nvidia`.
 
 ## Run HIP
 
 Compile and run the [square sample](https://github.com/ROCm/hip-tests/tree/rocm-6.0.x/samples/0_Intro/square).
-
