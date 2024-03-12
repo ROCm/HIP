@@ -554,52 +554,133 @@ Towards this end, HIP has four extra functions to help developers more precisely
 (warp_cross_lane_functions)=
 ## Warp Cross-Lane Functions
 
+Threads in a warp are referred to as *lanes* and are numbered from 0 to warpSize -- 1.
 Warp cross-lane functions operate across all lanes in a warp. The hardware guarantees that all warp lanes will execute in lockstep, so additional synchronization is unnecessary, and the instructions use no shared memory.
 
 Note that Nvidia and AMD devices have different warp sizes, so portable code should use the warpSize built-ins to query the warp size. Hipified code from the Cuda path requires careful review to ensure it doesn't assume a waveSize of 32. "Wave-aware" code that assumes a waveSize of 32 will run on a wave-64 machine, but it will utilize only half of the machine resources. WarpSize built-ins should only be used in device functions and its value depends on GPU arch. Users should not assume warpSize to be a compile-time constant. Host functions should use hipGetDeviceProperties to get the default warp size of a GPU device:
 
 ```
-	cudaDeviceProp props;
-	cudaGetDeviceProperties(&props, deviceID);
+    cudaDeviceProp props;
+    cudaGetDeviceProperties(&props, deviceID);
     int w = props.warpSize;
     // implement portable algorithm based on w (rather than assume 32 or 64)
 ```
 
 Note that assembly kernels may be built for a warp size which is different than the default warp size.
 
+All mask values either returned or accepted by these builtins are 64-bit
+unsigned integer values, even when compiled for a wave-32 device, where all the
+higher bits are unused. CUDA code ported to HIP requires changes to ensure that
+the correct type is used.
+
+Note that the `__sync` variants are made available in ROCm 6.2, but disabled by
+default to help with the transition to 64-bit masks. They can be enabled by
+setting the preprocessor macro `HIP_ENABLE_WARP_SYNC_BUILTINS`. These builtins
+will be enabled unconditionally in ROCm 6.3. Wherever possible, the
+implementation includes a static assert to check that the program source uses
+the correct type for the mask.
+
 ### Warp Vote and Ballot Functions
 
 ```
 int __all(int predicate)
 int __any(int predicate)
-uint64_t __ballot(int predicate)
+unsigned long long __ballot(int predicate)
+unsigned long long __activemask()
+
+int __all_sync(unsigned long long mask, int predicate)
+int __any_sync(unsigned long long mask, int predicate)
+int __ballot(unsigned long long mask, int predicate)
 ```
 
-Threads in a warp are referred to as *lanes* and are numbered from 0 to warpSize -- 1. For these functions, each warp lane contributes 1 -- the bit value (the predicate), which is efficiently broadcast to all lanes in the warp. The 32-bit int predicate from each lane reduces to a 1-bit value: 0 (predicate = 0) or 1 (predicate != 0). `__any` and `__all` provide a summary view of the predicates that the other warp lanes contribute:
+`__any` and `__all` provide a summary view of the predicates evaluated by the
+participating lanes.
 
-- `__any()` returns 1 if any warp lane contributes a nonzero predicate, or 0 otherwise
-- `__all()` returns 1 if all other warp lanes contribute nonzero predicates, or 0 otherwise
+- `__any()` returns 1 if the predicate is non-zero for any participating lane,
+  or returns 0 otherwise.
+- `__all()` returns 1 if the predicate is non-zero for all participating lanes,
+  or returns 0 otherwise.
 
 Applications can test whether the target platform supports the any/all instruction using the `hasWarpVote` device property or the HIP_ARCH_HAS_WARP_VOTE compiler define.
 
-`__ballot` provides a bit mask containing the 1-bit predicate value from each lane. The nth bit of the result contains the 1 bit contributed by the nth warp lane. Note that HIP's `__ballot` function supports a 64-bit return value (compared with Cuda's 32 bits). Code ported from Cuda should support the larger warp sizes that the HIP version of this instruction supports. Applications can test whether the target platform supports the ballot instruction using the `hasWarpBallot` device property or the HIP_ARCH_HAS_WARP_BALLOT compiler define.
+`__ballot` returns a bit mask containing the 1-bit predicate value from each
+lane. The nth bit of the result contains the 1 bit contributed by the nth warp
+lane.
 
+`__activemask()` returns a bit mask of currently active warp lanes. The nth bit
+of the result is 1 if the nth warp lane is active.
+
+Note that the `__ballot` and `__activemask` builtins in HIP have a 64-bit return
+value (unlike the 32-bit value returned by the CUDA builtins). Code ported from
+CUDA should be adapted to support the larger warp sizes that the HIP version
+requires.
+
+Applications can test whether the target platform supports the `__ballot` or
+`__activemask` instructions using the `hasWarpBallot` device property in host
+code or the `HIP_ARCH_HAS_WARP_BALLOT` macro defined by the compiler for device
+code.
+
+The `_sync` variants require a 64-bit unsigned integer mask argument that
+specifies the lanes in the warp that will participate in cross-lane
+communication with the calling lane. Each participating thread must have its own
+bit set in its mask argument, and all active threads specified in any mask
+argument must execute the same call with the same mask, otherwise the result is
+undefined.
+
+### Warp Match Functions
+
+```
+unsigned long long __match_any(T value)
+unsigned long long __match_all(T value, int *pred)
+
+unsigned long long __match_any_sync(unsigned long long mask, T value)
+unsigned long long __match_all_sync(unsigned long long mask, T value, int *pred)
+```
+
+`T` can be a 32-bit integer type, 64-bit integer type or a single precision or
+double precision floating point type.
+
+`__match_any` returns a bit mask containing a 1-bit for every participating lane
+if and only if that lane has the same value in `value` as the current lane, and
+a 0-bit for all other lanes.
+
+`__match_all` returns a bit mask containing a 1-bit for every participating lane
+if and only if they all have the same value in `value` as the current lane, and
+a 0-bit for all other lanes. The predicate `pred` is set to true if and only if
+all participating threads have the same value in `value`.
+
+The `_sync` variants require a 64-bit unsigned integer mask argument that
+specifies the lanes in the warp that will participate in cross-lane
+communication with the calling lane. Each participating thread must have its own
+bit set in its mask argument, and all active threads specified in any mask
+argument must execute the same call with the same mask, otherwise the result is
+undefined.
 
 ### Warp Shuffle Functions
 
 Half-float shuffles are not supported. The default width is warpSize---see [Warp Cross-Lane Functions](#warp-cross-lane-functions). Applications should not assume the warpSize is 32 or 64.
 
 ```
-int   __shfl      (int var,   int srcLane, int width=warpSize);
-float __shfl      (float var, int srcLane, int width=warpSize);
-int   __shfl_up   (int var,   unsigned int delta, int width=warpSize);
-float __shfl_up   (float var, unsigned int delta, int width=warpSize);
-int   __shfl_down (int var,   unsigned int delta, int width=warpSize);
-float __shfl_down (float var, unsigned int delta, int width=warpSize);
-int   __shfl_xor  (int var,   int laneMask, int width=warpSize);
-float __shfl_xor  (float var, int laneMask, int width=warpSize);
+int   __shfl      (T var,   int srcLane, int width=warpSize);
+int   __shfl_up   (T var,   unsigned int delta, int width=warpSize);
+int   __shfl_down (T var,   unsigned int delta, int width=warpSize);
+int   __shfl_xor  (T var,   int laneMask, int width=warpSize);
 
+int   __shfl_sync      (unsigned long long mask, T var,   int srcLane, int width=warpSize);
+int   __shfl_up_sync   (unsigned long long mask, T var,   unsigned int delta, int width=warpSize);
+int   __shfl_down_sync (unsigned long long mask, T var,   unsigned int delta, int width=warpSize);
+int   __shfl_xor_sync  (unsigned long long mask, T var,   int laneMask, int width=warpSize);
 ```
+
+`T` can be a 32-bit integer type, 64-bit integer type or a single precision or
+double precision floating point type.
+
+The `_sync` variants require a 64-bit unsigned integer mask argument that
+specifies the lanes in the warp that will participate in cross-lane
+communication with the calling lane. Each participating thread must have its own
+bit set in its mask argument, and all active threads specified in any mask
+argument must execute the same call with the same mask, otherwise the result is
+undefined.
 
 ## Cooperative Groups Functions
 
