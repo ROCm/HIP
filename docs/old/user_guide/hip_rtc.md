@@ -6,7 +6,7 @@ Kernels can be stored as a text string and can be passed on to HIPRTC APIs along
 
 NOTE:
 
-  - This library can be used on systems without HIP install nor AMD GPU driver installed at all (offline compilation). Therefore it does not depend on any HIP runtime library.
+  - This library can be used on systems without HIP install nor AMD GPU driver installed at all (offline compilation). Therefore, it does not depend on any HIP runtime library.
   - But it does depend on COMGr. You may try to statically link COMGr into HIPRTC to avoid any ambiguity.
   - Developers can decide to bundle this library with their application.
 
@@ -251,9 +251,9 @@ hiprtcGetBitcode(prog, kernel_bitcode.data());
 
 #### CU Mode vs WGP mode
 
-AMD GPUs consist of array of workgroup processors, which are built with 2 compute units(CUs) each capeable of executing SIMD32. Local data share(LDS) is shared by all the CUs inside a workgroup processor.
+AMD GPUs consist of an array of workgroup processors, each built with 2 compute units (CUs) capable of executing SIMD32. All the CUs inside a workgroup processor use local data share (LDS).
 
-gfx10+ support execution of wavefront in CU mode and WGP mode. Please refer to section 2.3 of [RDNA3 ISA reference](https://www.amd.com/content/dam/amd/en/documents/radeon-tech-docs/instruction-set-architectures/rdna3-shader-instruction-set-architecture-feb-2023_0.pdf).
+gfx10+ support execution of wavefront in CU mode and work-group processor mode (WGP). Please refer to section 2.3 of [RDNA3 ISA reference](https://www.amd.com/content/dam/amd/en/documents/radeon-tech-docs/instruction-set-architectures/rdna3-shader-instruction-set-architecture-feb-2023_0.pdf).
 
 gfx9 and below only supports CU mode.
 
@@ -295,7 +295,7 @@ hiprtcLinkAddFile(rtc_link_state,        // HIPRTC link state
                   0);                    // Array of option values cast to void*
 ```
 
-Once the bitcodes for multiple archs are added to the link instance, the linking of the device code must be completed using hiprtcLinkComplete which generates the final binary.
+Once the bitcodes for multiple architectures are added to the link instance, the linking of the device code must be completed using hiprtcLinkComplete which generates the final binary.
 ```cpp
 hiprtcLinkComplete(rtc_link_state,       // HIPRTC link state
                    &binary,              // upon success, points to the output binary
@@ -405,7 +405,7 @@ The two APIs hiprtcAddNameExpression and hiprtcGetLoweredName provide this funct
 kernel containing various definitions ```__global__``` functions/function templates and ```__device__/__constant__``` variables can be stored in a string.
 
 ```cpp
-static constexpr const char gpu_program[]{
+static constexpr const char gpu_program[] {
 R"(
 __device__ int V1; // set from host code
 static __global__ void f1(int *result) { *result = V1 + 10; }
@@ -467,13 +467,13 @@ Please have a look at hiprtcGetLoweredName.cpp for the detailed example.
 HIPRTC follows the below versioning.
  - Linux
     - HIPRTC follows the same versioning as HIP runtime library.
-    - The soname field for the shared library is set to MAJOR version. eg: For HIP 5.3 the soname is set to 5 (hiprtc.so.5).
+    - The `so` name field for the shared library is set to MAJOR version. For example, for HIP 5.3 the `so` name is set to 5 (hiprtc.so.5).
  - Windows
-    - HIPRTC dll is named as hiprtcXXYY.dll where XX is MAJOR version and YY is MINOR version. eg: For HIP 5.3 the name is hiprtc0503.dll.
+    - HIPRTC dll is named as hiprtcXXYY.dll where XX is MAJOR version and YY is MINOR version. For example, for HIP 5.3 the name is hiprtc0503.dll.
 
 ## HIP header support
  - Added HIPRTC support for all the hip common header files such as library_types.h, hip_math_constants.h, hip_complex.h, math_functions.h, surface_types.h etc. from 6.1. HIPRTC users need not include any HIP macros or constants explicitly in their header files. All of these should get included via HIPRTC builtins when the app links to HIPRTC library.
 
 ## Deprecation notice
- - Currently HIPRTC APIs are separated from HIP APIs and HIPRTC is available as a separate library libhiprtc.so/libhiprtc.dll. But on Linux, HIPRTC symbols are also present in libhipamd64.so in order to support the existing applications. Gradually, these symbols will be removed from HIP library and applications using HIPRTC will be required to explictly link to HIPRTC library. However, on Windows hiprtc.dll must be used as the hipamd64.dll doesn't contain the HIPRTC symbols.
- - Datatypes such as uint32_t, uint64_t, int32_t, int64_t defined in std namespace in HIPRTC are deprecated earlier and are being removed from ROCm release 6.1 since these can conflict with the standard C++ datatypes. These datatypes are now prefixed with __hip__, e.g. __hip_uint32_t. Apps previously using std::uint32_t or similar types can use __hip_ prefixed types to avoid conflicts with standard std namespace or apps can have their own definitions for these types. Also, type_traits templates previously defined in std namespace are moved to __hip_internal namespace as implementation details.
+ - Currently HIPRTC APIs are separated from HIP APIs and HIPRTC is available as a separate library libhiprtc.so/libhiprtc.dll. But on Linux, HIPRTC symbols are also present in libhipamd64.so in order to support the existing applications. Gradually, these symbols will be removed from HIP library and applications using HIPRTC will be required to explicitly link to HIPRTC library. However, on Windows hiprtc.dll must be used as the hipamd64.dll doesn't contain the HIPRTC symbols.
+ - Data types such as uint32_t, uint64_t, int32_t, int64_t defined in std namespace in HIPRTC are deprecated earlier and are being removed from ROCm release 6.1 since these can conflict with the standard C++ data types. These data types are now prefixed with __hip__, e.g. __hip_uint32_t. Applications previously using std::uint32_t or similar types can use __hip_ prefixed types to avoid conflicts with standard std namespace or application can have their own definitions for these types. Also, type_traits templates previously defined in std namespace are moved to __hip_internal namespace as implementation details.
