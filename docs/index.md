@@ -17,6 +17,7 @@ portable applications for AMD and NVIDIA GPUs from single source code.
 
 :::{grid-item-card} Reference
 
+* {doc}`/reference/programming_model`
 * {doc}`/doxygen/html/index`
 * [Deprecated APIs](./reference/deprecated_api_list)
 
@@ -30,6 +31,8 @@ portable applications for AMD and NVIDIA GPUs from single source code.
 :::
 
 :::{grid-item-card} Conceptual
+
+* {doc}`/understand/programming_model`
 
 :::
 
