@@ -4,6 +4,7 @@ This is the full HIP Runtime API reference. The API is organized into
 [modules](modules.html) based on functionality.
 
 ## List of Modules
+
 - @ref GlobalDefs
 - @ref Driver
 - @ref Device
