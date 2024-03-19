@@ -1,29 +1,57 @@
+# Anywhere {branch} is used, the branch name will be substituted.
+# These comments will also be removed.
+defaults:
+  numbered: False
+  maxdepth: 6
 root: index
 subtrees:
-- caption: User Guide
+
+- caption: Installation
   entries:
-    - file: user_guide/programming_manual
-    - file: user_guide/hip_rtc
-    - file: user_guide/faq
-    - file: user_guide/hip_porting_guide
-    - file: user_guide/hip_porting_driver_api
-- caption: How to Guides
-  entries:
-  - file: how_to_guides/install.md
-  - file: how_to_guides/debugging.md
+  - file: install/install
+    title: Install HIP
+  - file: install/build
+    title: Build HIP
+
 - caption: Reference
   entries:
-  - file: doxygen/html/index
-  - file: reference/kernel_language
-  - file: reference/math_api
-  - file: reference/terms
-  - file: reference/glossary
-  - file: reference/deprecated_api_list
-- caption: Developer Guide
+    - file: reference/programming_model
+    - file: old/reference/kernel_language
+    - file: doxygen/mainpage.md
+      title: API library
+    - file: reference/deprecated_api_list
+      title: Deprecated API list
+
+- caption: How-to
   entries:
-  - file: developer_guide/build
-  - file: developer_guide/logging
-  - file: developer_guide/contributing.md
-- caption: About
+  - file: how-to/logging
+    title: Logging
+  - file: how-to/debugging
+    title: Debugging
+
+- caption: Conceptual
   entries:
-  - file: license
+  - file: understand/programming_model
+
+- caption: Compatibility & support
+  entries:
+  - url: https://rocm.docs.amd.com/projects/install-on-linux/en/${branch}/reference/system-requirements.html
+    title: Linux (GPU & OS)
+  - url: https://rocm.docs.amd.com/projects/install-on-windows/en/${branch}/reference/system-requirements.html
+    title: Windows (GPU & OS)
+  - url: https://rocm.docs.amd.com/projects/install-on-linux/en/${branch}/reference/3rd-partry-support-matrix.html
+    title: Third-party
+  - url: https://rocm.docs.amd.com/projects/install-on-linux/en/${branch}/reference/user-kernel-space-compat-matrix.html
+    title: User/kernel space support
+  - url: https://rocm.docs.amd.com/projects/install-on-linux/en/${branch}/reference/docker-image-support-matrix.html
+    title: Docker
+  - url: https://rocm.docs.amd.com/en/${branch}/about/compatibility/openmp.html
+    title: OpenMP
+
+- caption: Contribute
+  entries:
+  - file: about/contributing
+    title: Contribute to HIP
+  - url: https://rocm.docs.amd.com/en/{branch}/contribute/contributing.html
+    title: Contribute to ROCm docs
+  - file: license.md
