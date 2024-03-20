@@ -20,9 +20,8 @@ The SIMT nature of HIP is captured by the ability to execute user-provided
 device programs, expressed as single-source C/C++ functions or sources compiled
 online/offline to binaries in bulk.
 
-Multiple instances of the device program (aka. kernel) may execute in parallel,
-all uniquely identified by a set of integral values which are referred to as
-thread IDs. The set of integers identifying a thread relate to the hierarchy in
+Multiple instances of the device program (aka. kernel), so called threads, may execute in parallel,
+all uniquely identified by a set of integral values. The set of integers identifying a thread relate to the hierarchy in
 which threads execute.
 
 .. _inherent_thread_model:
@@ -30,16 +29,16 @@ which threads execute.
 Inherent Thread Model
 -------------------------------------------------------------------------------
 
-The thread hiearchy inherent to how AMD GPUs operate manifest as depicted in
+The thread hierarchy inherent to how AMD GPUs operate is depicted in
 :numref:`inherent_thread_hierarchy`.
 
 .. _inherent_thread_hierarchy:
 
 .. figure:: ../data/reference/programming_model/thread_hierarchy.svg
   :alt: Diagram depicting nested rectangles of varying color. The outermost one
-        titled "Grid", inside sets of uniform rectangles layered on oneanother
+        titled "Grid", inside sets of uniform rectangles layered on one another
         titled "Block". Each "Block" containing sets of uniform rectangles
-        layered on oneanother titled "Warp". Each of the "Warp" titled
+        layered on one another titled "Warp". Each of the "Warp" titled
         rectangles filled with downward pointing arrows inside.
 
   Hierarchy of thread groups.
@@ -48,7 +47,7 @@ The thread hiearchy inherent to how AMD GPUs operate manifest as depicted in
   is the most tightly coupled groups of threads, both physically and logically.
 
   When referring to threads inside a warp, they may be called lanes, and the
-  integral value identifying them the lane ID. Lane IDs aren't quieried like
+  integral value identifying them the lane ID. Lane IDs aren't queried like
   other thread IDs, but are user-calculated. As a consequence they are only as
   multi-dimensional as the user interprets the calculated values to be.
 
@@ -58,16 +57,16 @@ The thread hiearchy inherent to how AMD GPUs operate manifest as depicted in
 
 * The middle grouping is called a block or thread block. The defining feature
   of a block is that all threads in a block will share an instance of memory
-  which they may use to share data or synchronize with oneanother.
+  which they may use to share data or synchronize with one another.
 
-  The size of a block is user-configurable but is maxmized by the queryable
-  capabilites of the executing hardware. The unique ID of the thread within a
+  The size of a block is user-configurable but is maximized by the queryable
+  capabilities of the executing hardware. The unique ID of the thread within a
   block is 3-dimensional as provided by the API. When linearizing thread IDs
   within a block, assume the "fast index" being dimension ``x``, followed by
   the ``y`` and ``z`` dimensions.
 
 * The outermost grouping is called a grid. A grid manifests as a single
-  dispatch of kernels for execution. The unique ID of each block within a grid
+  dispatch of a kernel for execution. The unique ID of each block within a grid
   is 3-dimensional, as provided by the API and is queryable by every thread
   within the block.
 
@@ -85,7 +84,7 @@ The rich set of APIs introduced by Cooperative Groups allow the programmer
 to define their own groups based on run-time predicates, but a set of implicit
 groups manifest based on kernel launch parameters.
 
-The thread hiearchy abstraction of Cooperative Groups manifest as depicted in
+The thread hierarchy abstraction of Cooperative Groups manifest as depicted in
 :numref:`coop_thread_hierarchy`.
 
 .. _coop_thread_hierarchy:
@@ -121,7 +120,7 @@ The thread hiearchy abstraction of Cooperative Groups manifest as depicted in
   Explicit warp-level thread handling is absent from the Cooperative Groups API.
   In order to exploit the known hardware SIMD width on which built-in
   functionality translates to simpler logic, one may use the group partitioning
-  part of the API, typically but not necessarily ``tiled_partition``.
+  part of the API, typically, but not necessarily, ``tiled_partition``.
 
 Memory Model
 ===============================================================================
@@ -175,7 +174,7 @@ Execution Model
 
 HIP programs consist of two distinct scopes:
 
-* The host-side API running on the host processor. There are to APIs available:
+* The host-side API running on the host processor. There are two APIs available:
 
   * The HIP runtime API which enables use of the single-source programming
     model.
@@ -185,8 +184,9 @@ HIP programs consist of two distinct scopes:
     importantly around kernel launching and argument setting. It is geared
     towards implementing abstractions atop, such as the runtime API itself.
 
-* The device-side kernels running on GPUs. Both the host and the device-side
-  APIs have synchronous and asynchronous functions in them.
+* The device-side kernels running on GPUs.
+
+Both the host and the device-side APIs have synchronous and asynchronous functions in them.
 
 Host-side execution
 -------------------------------------------------------------------------------
@@ -196,7 +196,7 @@ queries are synchronous. All asynchronous APIs, such as kernel execution, data
 movement and potentially data allocation/freeing all happen in the context of
 device streams.
 
-Streams are FIFO buffers of commands to execute relating to a given device.
+Streams are FIFO buffers of commands to execute on a given device.
 Commands which enqueue tasks on a stream all return promptly and the command is
 executed asynchronously. All side-effects of a command on a stream are visible
 to all subsequent commands on the same stream. Multiple streams may point to
@@ -206,7 +206,7 @@ be.
 
 Asynchronous APIs involving a stream all return a stream event which may be
 used to synchronize the execution of multiple streams. A user may enqueue a
-barrier onto a stream referencing an event. The barrier will will block until
+barrier onto a stream referencing an event. The barrier will block until
 the command related to the event does not complete, at which point all
 side-effects of the command shall be visible to commands following the barrier,
 even if those side-effects manifest on different devices.
@@ -242,7 +242,7 @@ intended use-cases.
 
   .. tip::
 
-    This name by default is a macro expanding to triple-chevron. In cases where
+    ``hipLaunchKernelGGL()`` by default is a macro expanding to triple-chevron. In cases where
     language syntax extensions are undesirable, or where launching templated
     and/or overloaded kernel functions define the
     ``HIP_TEMPLATE_KERNEL_LAUNCH`` preprocessor macro before including the HIP
