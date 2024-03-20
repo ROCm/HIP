@@ -9,7 +9,7 @@ Programming Model
 *******************************************************************************
 
 The HIP programming model makes it as easy as reasonably possible to map
-data-parallel C/C++ algorithms and map them to massively parallel, wide SIMD
+data-parallel C/C++ algorithms to massively parallel, wide SIMD
 architectures, such as GPUs. As a consequence, one needs a basic understanding
 of the underlying device architecture to make efficient use of HIP and GPGPU
 (General Purpose Graphics Processing Unit) programming in general.
@@ -18,11 +18,11 @@ RDNA & CDNA Architecture Summary
 ===============================================================================
 
 Most GPU architectures, much like RDNA and CDNA have a hierarchical structure.
-The inner-most piece is some Single Instruction Multiple Data (SIMD) enabled
+The inner-most piece is a Single Instruction Multiple Data (SIMD) enabled
 vector Arithmetic Logical Unit (ALU). Most recent GPUs beside the vector ALU
 also house some matrix ALU for accelerating algorithms of well defined shapes.
 
-Some number of vector and matrix ALUs comprise a larger block, often referred
+A number of vector and matrix ALUs comprise a larger block, often referred
 to as a Compute Unit (OpenCL, AMD block diagrams) but is referred to as Multi
 Processor in HIP terms.
 
