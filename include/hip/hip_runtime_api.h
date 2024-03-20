@@ -6457,7 +6457,7 @@ hipError_t hipTexRefGetMipmapLevelClamp(
  *
  */
 DEPRECATED(DEPRECATED_MSG)
-hipError_t hipTexRefGetMipMappedArray(
+hipError_t hipTexRefGetMipmappedArray(
     hipMipmappedArray_t* pArray,
     const textureReference* texRef);
 /**

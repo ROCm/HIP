@@ -72,7 +72,7 @@ Should use roctracer/rocTX instead
 ### hipTexRefGetMipmapFilterMode
 ### hipTexRefGetMipmapLevelBias
 ### hipTexRefGetMipmapLevelClamp
-### hipTexRefGetMipMappedArray
+### hipTexRefGetMipmappedArray
 ### hipTexRefSetAddress
 ### hipTexRefSetAddress2D
 ### hipTexRefSetMaxAnisotropy
