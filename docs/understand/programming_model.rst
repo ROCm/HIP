@@ -136,7 +136,7 @@ a few key differences between the two:
   from one means nothing in another. Moreover not all address spaces are
   accessible from all contexts.
 
-  If one were to look at {ref}`cdna2_gcd` and inside the {ref}`cdna3_cu`,
+  If one were to look at :ref:`cdna2_gcd` and inside the :ref:`cdna3_cu`,
   every Compute Unit has an instance of storage backing the namespace
   ``__shared__``. Even if the host were to have access to these regions of
   memory, the performance benefits of the segmented memory subsystem are
