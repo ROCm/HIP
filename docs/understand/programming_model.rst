@@ -49,9 +49,9 @@ Processor in HIP terms.
         "Matrix Core Unit", "Shader Core" and "L1 Cache" along with some
         unnamed blocks.
 
-  Block Diagram of an CDNA3 Compute Unit.
+  Block Diagram of a CDNA3 Compute Unit.
 
-For hardware implementation's sake, some number of Multi Processors are grouped
+For hardware implementation's sake, multiple Compute Units are grouped
 together into a Shader Engine or Compute Engine, typically sharing some fixed
 function units or memory subsystem resources.
 
@@ -64,7 +64,7 @@ function units or memory subsystem resources.
         each having a "Memory Phy" block next to them. To the top and bottom of
         all these are eight blocks of "Infinity Fabric Link" with one of the
         eight reading "Infinity Fabric or PCIe". Two sole "VCN" blocks sit in
-        top corners. At the very bottom spans a colored seaction reading
+        top corners. At the very bottom spans a colored section reading
         "Infinity Fabric" along with its logo.
 
   Block Diagram of a CDNA2 Graphics Compute Die.
@@ -140,7 +140,7 @@ a few key differences between the two:
   every Compute Unit has an instance of storage backing the namespace
   ``__shared__``. Even if the host were to have access to these regions of
   memory, the performance benefits of the segmented memory subsystem are
-  supported by the inability of meaningful asynchronous accesss from the host.
+  supported by the inability of meaningful asynchronous access from the host.
 
 * Not all C++ language features map cleanly to typical device architectures,
   some are very expensive (meaning: slow) to implement on GPU devices, therefor
@@ -151,8 +151,8 @@ a few key differences between the two:
   optimized architectures, such as GPUs or accelerators derived from GPU
   architectures.
 
-* Asynchrony is at the forefront of the HIP API. Computations launched by HIP
-  execute asynchronously on the device and it is the user's responsibility to
+* Asynchrony is at the forefront of the HIP API. Computations launched on the device
+  execute asynchronously with respect to the host and it is the user's responsibility to
   synchronize their data dispatch/fetch with computations on the device. HIP
   does perform implicit synchronization on occasions, but unlike some APIs
-  (OpenCL, SYCL) by and large places the onus of synchronization on the user.
+  (OpenCL, SYCL) by and large places the responsibility of synchronization on the user.
