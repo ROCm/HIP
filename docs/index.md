@@ -40,6 +40,7 @@ portable applications for AMD and NVIDIA GPUs from single source code.
 * [C++ kernel language](./reference/kernel_language)
 * {doc}`./reference/math_api`
 * [Comparing Syntax for different APIs](./reference/terms)
+* [HSA Runtime API for ROCm](./reference/virtual_rocr)
 * [List of deprecated APIs](./reference/deprecated_api_list)
 
 :::
