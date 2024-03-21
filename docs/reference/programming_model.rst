@@ -223,10 +223,10 @@ be.
 
 Asynchronous APIs involving a stream all return a stream event which may be
 used to synchronize the execution of multiple streams. A user may enqueue a
-barrier onto a stream referencing an event. The barrier will block until
-the command related to the event does not complete, at which point all
-side-effects of the command shall be visible to commands following the barrier,
-even if those side-effects manifest on different devices.
+barrier onto a stream referencing an event. The barrier will block until all
+the commands related to the event completes, at which point all side-effects of
+the command shall be visible to commands following the barrier, even if those
+side-effects manifest on different devices.
 
 Streams also support executing user-defined functions as callbacks on the host.
 The stream will not launch subsequent commands until the callback completes.
