@@ -19,6 +19,8 @@ subtrees:
     - file: old/reference/kernel_language
     - file: doxygen/mainpage.md
       title: API library
+    - file: reference/virtual_rocr
+      title: HSA Runtime API for ROCm
     - file: reference/deprecated_api_list
       title: Deprecated API list
 

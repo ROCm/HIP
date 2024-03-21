@@ -19,6 +19,7 @@ portable applications for AMD and NVIDIA GPUs from single source code.
 
 * {doc}`/reference/programming_model`
 * {doc}`/doxygen/html/index`
+* [HSA Runtime API for ROCm](./reference/virtual_rocr)
 * [Deprecated APIs](./reference/deprecated_api_list)
 
 :::
