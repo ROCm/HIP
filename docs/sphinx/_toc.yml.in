@@ -35,6 +35,7 @@ subtrees:
     title: C++ kernel language
   - file: reference/math_api
   - file: reference/terms
+  - file: reference/virtual_rocr
   - file: reference/deprecated_api_list
     title: List of deprecated APIs
 
