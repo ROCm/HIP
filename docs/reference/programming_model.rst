@@ -105,6 +105,9 @@ The thread hierarchy abstraction of Cooperative Groups manifest as depicted in
 
   .. deprecated:: 5.0
 
+    The performance hit of implementing cooperative groups spanning multiple
+    devices proved to outweigh the provided convenience, hence the use of
+    Multi Grid is discouraged.
 * Same as the :ref:`inherent_thread_model` Grid entity. The ability to
   synchronize over a grid requires the kernel to be launched using the
   Cooperative Groups API.
