@@ -84,8 +84,9 @@ imposed by the strict 1:1 mapping of architectural details to the programming
 model.
 
 The rich set of APIs introduced by Cooperative Groups allow the programmer
-to define their own groups based on run-time predicates, but a set of implicit
-groups manifest based on kernel launch parameters.
+to define their own set of thread groups which may fit their user-cases better
+than those defined by the hardware. The set of implicit groups by kernel launch
+parameters are still available.
 
 The thread hierarchy abstraction of Cooperative Groups manifest as depicted in
 :numref:`coop_thread_hierarchy`.
