@@ -43,8 +43,9 @@ The thread hierarchy inherent to how AMD GPUs operate is depicted in
 
   Hierarchy of thread groups.
 
-* The innermost grouping is called a warp, or a wavefront in ISA terms. A warp
-  is the most tightly coupled groups of threads, both physically and logically.
+Warp
+  The most tightly coupled group of threads, both physically and logically.
+  Also known as a wavefront in ISA (Instruction Set Architecture) terms.
 
   When referring to threads inside a warp, they may be called lanes, and the
   integral value identifying them the lane ID. Lane IDs aren't queried like
@@ -55,9 +56,10 @@ The thread hierarchy inherent to how AMD GPUs operate is depicted in
   signified by the set of communication primitives at their disposal, detailed
   under :ref:`warp_cross_lane_functions`.
 
-* The middle grouping is called a block or thread block. The defining feature
-  of a block is that all threads in a block will share an instance of memory
-  which they may use to share data or synchronize with one another.
+Block
+  The defining feature of a block (or thread block) is that all threads in it
+  will share an instance of memory which they may use to share data or
+  synchronize with one another.
 
   The size of a block is user-configurable but is maximized by the queryable
   capabilities of the executing hardware. The unique ID of the thread within a
@@ -65,7 +67,8 @@ The thread hierarchy inherent to how AMD GPUs operate is depicted in
   within a block, assume the "fast index" being dimension ``x``, followed by
   the ``y`` and ``z`` dimensions.
 
-* The outermost grouping is called a grid. A grid manifests as a single
+Grid
+  The outermost grouping is called a grid. A grid manifests as a single
   dispatch of a kernel for execution. The unique ID of each block within a grid
   is 3-dimensional, as provided by the API and is queryable by every thread
   within the block.
@@ -98,25 +101,30 @@ The thread hierarchy abstraction of Cooperative Groups manifest as depicted in
 
   Cooperative group thread hierarchy.
 
-* Multi Grid is an abstraction of potentially multiple simultaneous launches of
-  the same kernel over multiple devices. Grids inside a multi device kernel
-  launch need not be of uniform size, thus allowing taking into account
-  different device capabilities and preferences.
+Multi Grid
+  An abstraction of potentially multiple simultaneous launches of the same
+  kernel over multiple devices. Grids inside a multi device kernel launch need
+  not be of uniform size, thus allowing taking into account different device
+  capabilities and preferences.
 
   .. deprecated:: 5.0
 
     The performance hit of implementing cooperative groups spanning multiple
     devices proved to outweigh the provided convenience, hence the use of
     Multi Grid is discouraged.
-* Same as the :ref:`inherent_thread_model` Grid entity. The ability to
+
+Grid
+  Same as the :ref:`inherent_thread_model` Grid entity. The ability to
   synchronize over a grid requires the kernel to be launched using the
   Cooperative Groups API.
 
-* The defining feature of a cluster or block cluster is that all threads in a
+Cluster block
+  The defining feature of a cluster or block cluster is that all threads in a
   cluster will share a common set of distributed shared memory which they may
   use to share data or synchronize with oneanother.
 
-* Same as the :ref:`inherent_thread_model` Block entity.
+Block
+  Same as the :ref:`inherent_thread_model` Block entity.
 
 .. note::
 
@@ -148,29 +156,34 @@ how they relate to the various levels of the threading model.
 
   Memory hierarchy.
 
-* Local or per-thread memory is read-write storage only visible to the
+Local
+  Also called per-thread memory is read-write storage only visible to the
   threads defining the given variables. The size of a block for a given kernel,
   the number of concurrent warps are limited by local memory usage.
   This relates to an important aspect: occupancy. This is the default memory
   namespace.
 
-* Shared memory is read-write storage visible to all the threads in a given
-  block.
+Shared
+  Read-write storage visible to all the threads in a given block.
 
-* Distributed shared memory is read-write storage visible to all the threads
-  in a given block cluster.
+Distributed shared
+  Read-write storage visible to all the threads in a given block cluster.
 
-* Global memory is read-write storage visible to all threads in a given grid.
-  There are specialized versions of global memory with different usage
-  semantics which are typically backed by the same hardware storing global.
+Global
+  Read-write storage visible to all threads in a given grid. There are
+  specialized versions of global memory with different usage semantics which
+  are typically backed by the same hardware storing global.
 
-  * Constant memory is read-only storage visible to all threads in a given
-    grid. It is a limited segment of global with queryable size.
+Constant
+  Read-only storage visible to all threads in a given grid. It is a limited
+  segment of global with queryable size.
 
-  * Texture memory is read-only storage visible to all threads in a given grid
-    and accessible through additional APIs.
+Texture
+  Read-only storage visible to all threads in a given grid and accessible
+  through additional APIs.
 
-  * Surface is a writable version of texture memory.
+Surface
+  Read-write version of texture memory.
 
 Execution Model
 ===============================================================================
