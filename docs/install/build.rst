@@ -36,8 +36,13 @@ Set the repository branch using the variable: ``ROCM_BRANCH``. For example, for 
             git clone -b "$ROCM_BRANCH" https://github.com/ROCm/hipother.git
             git clone -b "$ROCM_BRANCH" https://github.com/ROCm/HIPCC.git
 
-         CLR (Common Language Runtime) or ROCclr is a virtual device interface that various AMD runtimes interact with.
-         HIPAMD provides implementation specifically for HIP on te AMD platform.
+         CLR (Common Language Runtime) repository includes ROCclr, HIPAMD and OpenCL.
+
+         ROCclr (Radeon Open Compute Common Language Runtime) is a virtual device interface which
+         is defined on the AMD platform. HIP runtime uses ROCclr to interact with different backends.
+
+         HIPAMD provides implementation specifically for HIP on the AMD platform.
+
          OpenCL provides headers that ROCclr runtime currently depends on.
          hipother provides headers and implementation specifically for non-AMD HIP platforms, like NVIDIA.
 
@@ -73,8 +78,10 @@ Set the repository branch using the variable: ``ROCM_BRANCH``. For example, for 
          .. note::
 
             Note, if you don't specify ``CMAKE_INSTALL_PREFIX``, the HIP runtime is installed at
-            ``<ROCM_PATH>/hip``. The default version of HIP is the latest release.
-
+            ``<ROCM_PATH>/hip``.
+            
+            By default, release version of HIP is built. If need debug version, you can put the option ``CMAKE_BUILD_TYPE=Debug`` in the command line.
+         
          Default paths and environment variables:
 
             * HIP is installed into ``<ROCM_PATH>/hip``. This can be overridden by setting the ``HIP_PATH``
@@ -94,7 +101,7 @@ Set the repository branch using the variable: ``ROCM_BRANCH``. For example, for 
          #. Generate a profiling header after adding/changing a HIP API.
 
             When you add or change a HIP API, you may need to generate a new ``hip_prof_str.h`` header.
-            This header is used by ROCm tools to track HIP APIs, such as``rocprofiler`` and ``roctracer``.
+            This header is used by ROCm tools to track HIP APIs, such as ``rocprofiler`` and ``roctracer``.
 
             To generate the header after your change, use the ``hip_prof_gen.py`` tool located in
             ``hipamd/src``.
@@ -158,7 +165,7 @@ Set the repository branch using the variable: ``ROCM_BRANCH``. For example, for 
 
             cd "$CLR_DIR"
             mkdir -p build; cd build
-            cmake -DHIP_COMMON_DIR=$HIP_DIR -DHIP_PLATFORM=nvidia -DCMAKE_INSTALL_PREFIX=$PWD/install -DHIPCC_BIN_DIR=$HIPCC_DIR/build -DHIP_CATCH_TEST=0 -DCLR_BUILD_HIP=ON -DCLR_BUILD_OCL=OFF ..
+            cmake -DHIP_COMMON_DIR=$HIP_DIR -DHIP_PLATFORM=nvidia -DCMAKE_INSTALL_PREFIX=$PWD/install -DHIPCC_BIN_DIR=$HIPCC_DIR/build -DHIP_CATCH_TEST=0 -DCLR_BUILD_HIP=ON -DCLR_BUILD_OCL=OFF -DHIPNV_DIR=$HIP_OTHER/hipnv ..
             make -j$(nproc)
             sudo make install
 
@@ -169,40 +176,6 @@ Build HIP tests
 
    .. tab-item:: AMD
       :sync: amd
-
-      * Build HIP directed tests.
-
-         .. code:: shell
-
-            sudo make install
-            make -j$(nproc) build_tests
-
-         By default, all HIP directed tests are built and generated in
-         ``$CLR_DIR/build/hipamd/directed_tests``.
-
-         * Run all HIP ``directed_tests``.
-
-            .. code:: shell
-
-               ctest
-
-            or
-
-            .. code:: shell
-
-               make test
-
-
-         * Build and run a single directed test.
-
-            .. code:: shell
-
-               make directed_tests.texture.hipTexObjPitch
-               cd $CLR_DIR/build/hipamd/directed_tests/texture
-               ./hipTexObjPitch
-
-         .. note::
-            The integrated HIP directed tests will be deprecated in a future release.
 
       * Build HIP catch tests.
 
@@ -254,5 +227,6 @@ Build HIP tests
       The commands to build HIP tests on an NVIDIA platform are the same as on an AMD platform.
       However, you must first set ``-DHIP_PLATFORM=nvidia``.
 
-      * Run HIP. Compile and run the
+      * Run HIP.
+        Compile and run the
       `square sample <https://github.com/ROCm-Developer-Tools/hip-tests/tree/rocm-5.5.x/samples/0_Intro/square>`_.
