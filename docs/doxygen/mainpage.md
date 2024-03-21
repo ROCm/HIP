@@ -29,5 +29,6 @@ This is the full HIP Runtime API reference. The API is organized into
 - @ref Callback
 - @ref Graph
 - @ref Virtual
+  - [HSA Runtime API and runtime for ROCm](../../reference/virtual_rocr.html)
 - @ref GL
 - @ref Surface
