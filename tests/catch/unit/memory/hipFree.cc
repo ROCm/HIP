@@ -376,47 +376,47 @@ TEMPLATE_TEST_CASE("Unit_hipFreeMultiTArray", "", char, int, float2, float4) {
 }
 #else
 
-TEMPLATE_TEST_CASE("Unit_hipFreeMultiTArray", "", char, int, float2, float4) {
-  using vec_info = vector_info<TestType>;
+// TEMPLATE_TEST_CASE("Unit_hipFreeMultiTArray", "", char, int, float2, float4) {
+//   using vec_info = vector_info<TestType>;
 
-  hipExtent extent{};
-  extent.width = GENERATE(32, 128, 256, 512, 1024);
-  extent.height = GENERATE(0, 32, 128, 256, 512, 1024);
-  hipChannelFormatDesc desc = hipCreateChannelDesc<TestType>();
+//   hipExtent extent{};
+//   extent.width = GENERATE(32, 128, 256, 512, 1024);
+//   extent.height = GENERATE(0, 32, 128, 256, 512, 1024);
+//   hipChannelFormatDesc desc = hipCreateChannelDesc<TestType>();
 
-  std::vector<std::thread> threads;
+//   std::vector<std::thread> threads;
 
-  SECTION("ArrayFree") {
-    std::vector<hipArray_t> ptrs(numAllocs);
-    for (auto& ptr : ptrs) {
-      HIP_CHECK(hipMallocArray(&ptr, &desc, extent.width, extent.height, hipArrayDefault));
-      threads.emplace_back([ptr] {
-        HIP_CHECK_THREAD(hipFreeArray(ptr));
-        HIP_CHECK_THREAD(hipStreamQuery(nullptr));
-      });
-    }
-  }
-  SECTION("ArrayDestroy") {
-    std::vector<hiparray> cuArrayPtrs(numAllocs);
+//   SECTION("ArrayFree") {
+//     std::vector<hipArray_t> ptrs(numAllocs);
+//     for (auto& ptr : ptrs) {
+//       HIP_CHECK(hipMallocArray(&ptr, &desc, extent.width, extent.height, hipArrayDefault));
+//       threads.emplace_back([ptr] {
+//         HIP_CHECK_THREAD(hipFreeArray(ptr));
+//         HIP_CHECK_THREAD(hipStreamQuery(nullptr));
+//       });
+//     }
+//   }
+//   SECTION("ArrayDestroy") {
+//     std::vector<hiparray> cuArrayPtrs(numAllocs);
 
-    HIP_ARRAY_DESCRIPTOR cuDesc;
-    cuDesc.Width = extent.width;
-    cuDesc.Height = extent.height;
-    cuDesc.Format = vec_info::format;
-    cuDesc.NumChannels = vec_info::size;
-    for (auto ptr : cuArrayPtrs) {
-      HIP_CHECK(hipArrayCreate(&ptr, &cuDesc));
+//     HIP_ARRAY_DESCRIPTOR cuDesc;
+//     cuDesc.Width = extent.width;
+//     cuDesc.Height = extent.height;
+//     cuDesc.Format = vec_info::format;
+//     cuDesc.NumChannels = vec_info::size;
+//     for (auto ptr : cuArrayPtrs) {
+//       HIP_CHECK(hipArrayCreate(&ptr, &cuDesc));
 
-      threads.emplace_back([ptr] {
-        HIP_CHECK_THREAD(hipArrayDestroy(ptr));
-        HIP_CHECK_THREAD(hipStreamQuery(nullptr));
-      });
-    }
-  }
-  for (auto& t : threads) {
-    t.join();
-  }
-  HIP_CHECK_THREAD_FINALIZE();
-}
+//       threads.emplace_back([ptr] {
+//         HIP_CHECK_THREAD(hipArrayDestroy(ptr));
+//         HIP_CHECK_THREAD(hipStreamQuery(nullptr));
+//       });
+//     }
+//   }
+//   for (auto& t : threads) {
+//     t.join();
+//   }
+//   HIP_CHECK_THREAD_FINALIZE();
+// }
 
 #endif

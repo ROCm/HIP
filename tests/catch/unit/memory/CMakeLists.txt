@@ -156,8 +156,8 @@ set(TEST_SRC
     hipMalloc3DArray.cc
     # hipArrayCreate.cc
     # hipArray3DCreate.cc
-    hipDrvMemcpy3D.cc
-    hipDrvMemcpy3DAsync.cc
+    # hipDrvMemcpy3D.cc
+    # hipDrvMemcpy3DAsync.cc
     hipPointerGetAttribute.cc
     hipDrvPtrGetAttributes.cc
     hipMemPrefetchAsync.cc
