@@ -1859,6 +1859,18 @@ hipError_t hipDeviceReset(void);
  */
 hipError_t hipSetDevice(int deviceId);
 /**
+ * @brief Set a list of devices that can be used.
+ *
+ * @param[in] device_arr List of devices to try
+ * @param[in] len Number of devices in specified list
+ *
+ * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
+ *
+ * @see #hipGetDevice, #hipGetDeviceCount. #hipSetDevice. #hipGetDeviceProperties. #hipSetDeviceFlags. #hipChooseDevice
+ *
+ * */
+hipError_t hipSetValidDevices(int* device_arr, int len);
+/**
  * @brief Return the default device id for the calling host thread.
  *
  * @param [out] deviceId *device is written with the default device
@@ -4019,6 +4031,68 @@ hipError_t hipMemcpyDtoH(void* dst, hipDeviceptr_t src, size_t sizeBytes);
  */
 hipError_t hipMemcpyDtoD(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeBytes);
 /**
+ *  @brief Copies from one 1D array to device memory.
+ *
+ *  @param[out]  dstDevice Destination device pointer
+ *  @param[in]   srcArray Source array
+ *  @param[in]   srcOffset Offset in bytes of source array
+ *  @param[in]   ByteCount Size of memory copy in bytes
+ *
+ *  @return #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ * #hipErrorInvalidValue
+ *
+ *  @see hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc, hipMemAllocHost,
+ * hipMemAllocPitch, hipMemcpy2D, hipMemcpy2DAsync, hipMemcpy2DUnaligned, hipMemcpyAtoA,
+ * hipMemcpyAtoD, hipMemcpyAtoH, hipMemcpyAtoHAsync, hipMemcpyDtoA, hipMemcpyDtoD,
+ * hipMemcpyDtoDAsync, hipMemcpyDtoH, hipMemcpyDtoHAsync, hipMemcpyHtoA, hipMemcpyHtoAAsync,
+ * hipMemcpyHtoDAsync, hipMemFree, hipMemFreeHost, hipMemGetAddressRange, hipMemGetInfo,
+ * hipMemHostAlloc, hipMemHostGetDevicePointer
+ */
+hipError_t hipMemcpyAtoD(hipDeviceptr_t dstDevice, hipArray_t srcArray, size_t srcOffset,
+                         size_t ByteCount);
+/**
+ *  @brief Copies from device memory to a 1D array.
+ *
+ *  @param[out]  dstArray Destination array
+ *  @param[in]   dstOffset Offset in bytes of destination array
+ *  @param[in]   srcDevice Source device pointer
+ *  @param[in]   ByteCount Size of memory copy in bytes
+ *
+ *  @return #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ * #hipErrorInvalidValue
+ *
+ *  @see hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc, hipMemAllocHost,
+ * hipMemAllocPitch, hipMemcpy2D, hipMemcpy2DAsync, hipMemcpy2DUnaligned, hipMemcpyAtoA,
+ * hipMemcpyAtoD, hipMemcpyAtoH, hipMemcpyAtoHAsync, hipMemcpyDtoA, hipMemcpyDtoD,
+ * hipMemcpyDtoDAsync, hipMemcpyDtoH, hipMemcpyDtoHAsync, hipMemcpyHtoA, hipMemcpyHtoAAsync,
+ * hipMemcpyHtoDAsync, hipMemFree, hipMemFreeHost, hipMemGetAddressRange, hipMemGetInfo,
+ * hipMemHostAlloc, hipMemHostGetDevicePointer
+ */
+hipError_t hipMemcpyDtoA(hipArray_t dstArray, size_t dstOffset, hipDeviceptr_t srcDevice,
+                         size_t ByteCount);
+
+/**
+ *  @brief Copies from one 1D array to another.
+ *
+ *  @param[out]  dstArray Destination array
+ *  @param[in]   dstOffset Offset in bytes of destination array
+ *  @param[in]   srcArray Source array
+ *  @param[in]   srcOffset Offset in bytes of source array
+ *  @param[in]   ByteCount Size of memory copy in bytes
+ *
+ *  @return #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ * #hipErrorInvalidValue
+ *
+ *  @see hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc, hipMemAllocHost,
+ * hipMemAllocPitch, hipMemcpy2D, hipMemcpy2DAsync, hipMemcpy2DUnaligned, hipMemcpyAtoA,
+ * hipMemcpyAtoD, hipMemcpyAtoH, hipMemcpyAtoHAsync, hipMemcpyDtoA, hipMemcpyDtoD,
+ * hipMemcpyDtoDAsync, hipMemcpyDtoH, hipMemcpyDtoHAsync, hipMemcpyHtoA, hipMemcpyHtoAAsync,
+ * hipMemcpyHtoDAsync, hipMemFree, hipMemFreeHost, hipMemGetAddressRange, hipMemGetInfo,
+ * hipMemHostAlloc, hipMemHostGetDevicePointer
+ */
+hipError_t hipMemcpyAtoA(hipArray_t dstArray, size_t dstOffset, hipArray_t srcArray,
+                         size_t srcOffset, size_t ByteCount);
+/**
  *  @brief Copy data from Host to Device asynchronously
  *
  *  @param[out]  dst  Data being copy to
@@ -4076,7 +4150,48 @@ hipError_t hipMemcpyDtoHAsync(void* dst, hipDeviceptr_t src, size_t sizeBytes, h
  */
 hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeBytes,
                               hipStream_t stream);
-
+/**
+ * @brief Copies from one 1D array to host memory.
+ *
+ *  @param[out]  dstHost Destination pointer
+ *  @param[in]   srcArray Source array
+ *  @param[in]   srcOffset Offset in bytes of source array
+ *  @param[in]   ByteCount Size of memory copy in bytes
+ *  @param[in]   stream Stream identifier
+ *
+ *  @return #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ * #hipErrorInvalidValue
+ *
+ *  @see hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc, hipMemAllocHost,
+ * hipMemAllocPitch, hipMemcpy2D, hipMemcpy2DAsync, hipMemcpy2DUnaligned, hipMemcpyAtoA,
+ * hipMemcpyAtoD, hipMemcpyAtoH, hipMemcpyAtoHAsync, hipMemcpyDtoA, hipMemcpyDtoD,
+ * hipMemcpyDtoDAsync, hipMemcpyDtoH, hipMemcpyDtoHAsync, hipMemcpyHtoA, hipMemcpyHtoAAsync,
+ * hipMemcpyHtoDAsync, hipMemFree, hipMemFreeHost, hipMemGetAddressRange, hipMemGetInfo,
+ * hipMemHostAlloc, hipMemHostGetDevicePointer
+ */
+hipError_t hipMemcpyAtoHAsync(void* dstHost, hipArray_t srcArray, size_t srcOffset,
+                              size_t ByteCount, hipStream_t stream);
+/**
+ * @brief Copies from host memory to a 1D array.
+ *
+ *  @param[out]  dstArray Destination array
+ *  @param[in]   dstOffset Offset in bytes of destination array
+ *  @param[in]   srcHost Source host pointer
+ *  @param[in]   ByteCount Size of memory copy in bytes
+ *  @param[in]   stream Stream identifier
+ *
+ *  @return #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ * #hipErrorInvalidValue
+ *
+ *  @see hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc, hipMemAllocHost,
+ * hipMemAllocPitch, hipMemcpy2D, hipMemcpy2DAsync, hipMemcpy2DUnaligned, hipMemcpyAtoA,
+ * hipMemcpyAtoD, hipMemcpyAtoH, hipMemcpyAtoHAsync, hipMemcpyDtoA, hipMemcpyDtoD,
+ * hipMemcpyDtoDAsync, hipMemcpyDtoH, hipMemcpyDtoHAsync, hipMemcpyHtoA, hipMemcpyHtoAAsync,
+ * hipMemcpyHtoDAsync, hipMemFree, hipMemFreeHost, hipMemGetAddressRange, hipMemGetInfo,
+ * hipMemHostAlloc, hipMemHostGetDevicePointer
+ */
+hipError_t hipMemcpyHtoAAsync(hipArray_t dstArray, size_t dstOffset, const void* srcHost,
+                              size_t ByteCount, hipStream_t stream);
 /**
  *  @brief Returns a global pointer from a module.
  *  Returns in *dptr and *bytes the pointer and size of the global of name name located in module hmod.
@@ -4638,6 +4753,27 @@ hipError_t hipMemcpy2DToArray(hipArray_t dst, size_t wOffset, size_t hOffset, co
 hipError_t hipMemcpy2DToArrayAsync(hipArray_t dst, size_t wOffset, size_t hOffset, const void* src,
                                    size_t spitch, size_t width, size_t height, hipMemcpyKind kind,
                                    hipStream_t stream __dparm(0));
+/**
+ *  @brief Copies data between host and device.
+ *
+ *  @param[in]   dst Destination memory address
+ *  @param[in]   wOffsetDst Destination starting X offset
+ *  @param[in]   hOffsetDst Destination starting Y offset
+ *  @param[in]   src  Source memory address
+ *  @param[in]   wOffsetSrc Source starting X offset
+ *  @param[in]   hOffsetSrc Source starting Y offset (columns in bytes)
+ *  @param[in]   width  Width of matrix transfer (columns in bytes)
+ *  @param[in]   height  Height of matrix transfer (rows)
+ *  @param[in]   kind Type of transfer
+ *
+ *  @returns      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidMemcpyDirection
+ *
+ *  @see hipMemcpy, hipMemcpyToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol,
+ * hipMemcpyAsync
+ */
+hipError_t hipMemcpy2DArrayToArray(hipArray_t dst, size_t wOffsetDst, size_t hOffsetDst,
+                                   hipArray_const_t src, size_t wOffsetSrc, size_t hOffsetSrc,
+                                   size_t width, size_t height, hipMemcpyKind kind);
 /**
  *  @brief Copies data between host and device.
  *
