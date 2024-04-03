@@ -63,6 +63,6 @@ These documents have not yet been ported over to the Diátaxis framework.
 
 We welcome collaboration! If you’d like to contribute to our documentation, you can find instructions
 on our {doc}`Contribute to ROCm docs <rocm:contribute/contributing>` page. Known issues are listed on
-[GitHub](https://github.com/RadeonOpenCompute/ROCm/labels/Verified%20Issue).
+[GitHub](https://github.com/ROCm/HIP/issues).
 
-If you want to contribute to the HIP project, refer to our [Contributor guidelines](./about/contributing).
+If you want to contribute to the HIP project, refer to our [Contributor guidelines](https://github.com/ROCm/HIP/CONTRIBUTING.md).

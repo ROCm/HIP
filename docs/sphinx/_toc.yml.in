@@ -50,8 +50,8 @@ subtrees:
 
 - caption: Contribute
   entries:
-  - file: about/contributing
+  - file: CONTRIBUTING
     title: Contribute to HIP
-  - url: https://rocm.docs.amd.com/en/{branch}/contribute/contributing.html
+  - url: https://rocm.docs.amd.com/en/latest/contribute/contributing.html
     title: Contribute to ROCm docs
   - file: license.md
