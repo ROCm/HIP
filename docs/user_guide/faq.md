@@ -26,7 +26,7 @@ At a high-level, the following features are not supported:
 - CUDA array, mipmappedArray and pitched memory
 - Queue priority controls
 
-See the [API Support Table](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/amd-staging/docs/tables/CUDA_Runtime_API_functions_supported_by_HIP.md) for more detailed information.
+See the [API Support Table](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/tables/CUDA_Runtime_API_functions_supported_by_HIP.md) for more detailed information.
 
 ### Kernel language features
 - C++-style device-side dynamic memory allocations (free, new, delete) (CUDA 4.0)
@@ -140,11 +140,16 @@ There is an alternative environment variable to set compiler path:
 - HIP_ROCCLR_HOME: path to root directory of the HIP-ROCclr runtime. When set, this variable let hipcc use hip-clang from the ROCclr distribution.
 NOTE: If HIP_ROCCLR_HOME is set, there is no need to set HIP_CLANG_PATH since hipcc will deduce them from HIP_ROCCLR_HOME.
 
-## What is ROCclr?
-ROCclr (Radeon Open Compute Common Language Runtime) is a virtual device interface that compute runtimes interact with backends such as ROCr on Linux, as well as PAL on Windows.
+## What is AMD clr?
+AMD clr (Common Language Runtime) is a repository for the AMD platform, which contains source codes for AMD's compute languages runtimes as follows,
 
-## What is HIPAMD?
-HIPAMD is a repository branched out from HIP, mainly the implementation for AMD GPU.
+- hipamd - contains implementation of HIP language for AMD GPU.
+- rocclr - contains virtual device interfaces that compute runtimes interact with backends, such as ROCr on Linux and PAL on Windows.
+- opencl - contains implementation of OpenCL™ on the AMD platform.
+
+## What is hipother?
+A new repository 'hipother' is added in the ROCm 6.1 release, which is branched out from HIP.
+hipother supports the HIP back-end implementation on some non-AMD platforms, like NVIDIA.
 
 ## Can I get HIP open source repository for Windows?
 No, there is no HIP repository open publicly on Windows.
@@ -324,3 +329,4 @@ hipRuntimeGetVersion(&runtimeVersion);
 The version returned will always be greater than the versions in previous ROCm releases.
 
 Note: The version definition of HIP runtime is different from CUDA. On AMD platform, the function returns HIP runtime version, while on NVIDIA platform, it returns CUDA runtime version. And there is no mapping/correlation between HIP version and CUDA version.
+

@@ -123,12 +123,13 @@ AMD_DIRECT_DISPATCH=0
 Note, Direct Dispatch is implemented on Linux. It is currently not supported on Windows.
 
 ## HIP Runtime Compilation
-HIP now supports runtime compilation (hipRTC), the usage of which will provide the possibility of optimizations and performance improvement compared with other APIs via regular offline static compilation.
+HIP now supports runtime compilation (HIPRTC), the usage of which will provide the possibility of optimizations and performance improvement compared with other APIs via regular offline static compilation.
 
-hipRTC APIs accept HIP source files in character string format as input parameters and create handles of programs by compiling the HIP source files without spawning separate processes.
+HIPRTC APIs accept HIP source files in character string format as input parameters and create handles of programs by compiling the HIP source files without spawning separate processes.
 
-For more details on hipRTC APIs, refer to HIP-API.pdf in GitHub (https://docs.amd.com/category/api_documentation).
-For Linux developers, the link here(https://github.com/ROCm-Developer-Tools/hip-tests/blob/develop/samples/2_Cookbook/23_cmake_hiprtc/saxpy.cpp) shows an example how to program HIP application using runtime compilation mechanism, and detail hipRTC programming guide is also available in Github (https://github.com/ROCm-Developer-Tools/HIP/blob/develop/docs/user_guide/hip_rtc.md).
+For more details on HIPRTC APIs, refer to [HIP Runtime API Reference](https://rocm.docs.amd.com/projects/HIP/en/latest/doxygen/html/index.html).
+
+For Linux developers, the link [here](https://github.com/ROCm/hip-tests/blob/develop/samples/2_Cookbook/23_cmake_hiprtc/saxpy.cpp) shows an example how to program HIP application using runtime compilation mechanism, and detail HIPRTC programming guide is also available in Github (https://github.com/ROCm/HIP/blob/develop/docs/user_guide/hip_rtc.md).
 
 ## HIP Graph
 HIP graph is supported. For more details, refer to the HIP API Guide.
@@ -145,7 +146,7 @@ The per-thread default stream is a blocking stream and will synchronize with the
 The per-thread default stream can be enabled via adding a compilation option,
 "-fgpu-default-stream=per-thread".
 
-And users can explicitly use "hipStreamPerThread" as per-thread default stream handle as input in API commands. There are test codes as examples in the link (https://github.com/ROCm-Developer-Tools/hip-tests/tree/develop/catch/unit/streamperthread).
+And users can explicitly use "hipStreamPerThread" as per-thread default stream handle as input in API commands. There are test codes as examples in the [link](https://github.com/ROCm/hip-tests/tree/develop/catch/unit/streamperthread).
 
 ## Use of Long Double Type
 
@@ -190,4 +191,4 @@ Here is an example to create and use static libraries:
     hipcc libHipDevice.a test.cpp -fgpu-rdc -o test.out
     ```
 
-For more information, please see [HIP samples](https://github.com/ROCm-Developer-Tools/hip-tests/tree/rocm-5.5.x/samples/2_Cookbook/15_static_library/host_functions) and [samples](https://github.com/ROCm-Developer-Tools/hip-tests/tree/rocm-5.5.x/samples/2_Cookbook/15_static_library/device_functions).
+For more information, please see [HIP samples](https://github.com/ROCm/hip-tests/tree/develop/samples/2_Cookbook/15_static_library/host_functions) and [samples](https://github.com/ROCm/hip-tests/tree/rocm-5.5.x/samples/2_Cookbook/15_static_library/device_functions).

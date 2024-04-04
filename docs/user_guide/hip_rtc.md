@@ -2,18 +2,18 @@
 
 ## HIP RTC lib
 HIP allows you to compile kernels at runtime with its ```hiprtc*``` APIs.
-Kernels can be store as a text string and can be passed on to hiprtc APIs alongside options to guide the compilation.
+Kernels can be stored as a text string and can be passed on to HIPRTC APIs alongside options to guide the compilation.
 
 NOTE:
 
   - This library can be used on systems without HIP install nor AMD GPU driver installed at all (offline compilation). Therefore it does not depend on any HIP runtime library.
-  - But it does depend on COMGr. We may try to statically link COMGr into hipRTC to avoid any ambiguity.
+  - But it does depend on COMGr. You may try to statically link COMGr into HIPRTC to avoid any ambiguity.
   - Developers can decide to bundle this library with their application.
 
 ## Compile APIs
 
 #### Example
-To use hiprtc functionality, hiprtc header needs to be included first.
+To use HIPRTC functionality, HIPRTC header needs to be included first.
 ```#include <hip/hiprtc.h>```
 
 
@@ -31,7 +31,7 @@ R"(
 Now to compile this kernel, it needs to be associated with hiprtcProgram type, which is done via declaring ```hiprtcProgram prog;``` and associating the string of kernel with this program:
 
 ```cpp
-hiprtcCreateProgram(&prog,                 // hiprtc program
+hiprtcCreateProgram(&prog,                 // HIPRTC program
                     kernel,                // kernel string
                     "gpu_kernel.cu",       // Name of the file
                     num_headers,           // Number of headers
@@ -90,10 +90,10 @@ And now this kernel can be launched via hipModule APIs.
 Please have a look at saxpy.cpp and hiprtcGetLoweredName.cpp files for a detailed example.
 
 #### HIPRTC specific options
-HIPRTC provides a few hiprtc specific flags
+HIPRTC provides a few HIPRTC specific flags
  - ```--gpu-architecture``` : This flag can guide the code object generation for a specific gpu arch. Example: ```--gpu-architecture=gfx906:sramecc+:xnack-```, its equivalent to ```--offload-arch```.
     - This option is compulsory if compilation is done on a system without AMD GPUs supported by HIP runtime.
-    - Otherwise, hipRTC will load the hip runtime and gather the current device and its architecture info and use it as option.
+    - Otherwise, HIPRTC will load the hip runtime and gather the current device and its architecture info and use it as option.
  - ```-fgpu-rdc``` : This flag when provided during the hiprtcCompileProgram generates the bitcode (HIPRTC doesn't convert this bitcode into ISA and binary). This bitcode can later be fetched using hiprtcGetBitcode and hiprtcGetBitcodeSize APIs.
 
 #### Bitcode
@@ -134,17 +134,17 @@ HIPRTC assumes **WGP mode by default** for gfx10+. This can be overridden by pas
 The bitcode generated using the HIPRTC Bitcode APIs can be loaded using hipModule APIs and also can be linked with other generated bitcodes with appropriate linker flags using the HIPRTC linker APIs.  This also provides more flexibility and optimizations to the applications who want to generate the binary dynamically according to their needs. The input bitcodes can be generated only for a specific architecture or it can be a bundled bitcode which is generated for multiple architectures.
 
 #### Example
-Firstly, hiprtc link instance or a pending linker invocation must be created using hiprtcLinkCreate, with the appropriate linker options provided.
+Firstly, HIPRTC link instance or a pending linker invocation must be created using hiprtcLinkCreate, with the appropriate linker options provided.
 ```cpp
 hiprtcLinkCreate( num_options,           // number of options
                   options,               // Array of options
                   option_vals,           // Array of option values cast to void*
-                  &rtc_link_state );     // hiprtc link state created upon success
+                  &rtc_link_state );     // HIPRTC link state created upon success
 ```
 
 Following which, the bitcode data can be added to this link instance via hiprtcLinkAddData (if the data is present as a string) or hiprtcLinkAddFile (if the data is present as a file) with the appropriate input type according to the data or the bitcode used.
 ```cpp
-hiprtcLinkAddData(rtc_link_state,        // hiprtc link state
+hiprtcLinkAddData(rtc_link_state,        // HIPRTC link state
                   input_type,            // type of the input data or bitcode
                   bit_code_ptr,          // input data which is null terminated
                   bit_code_size,         // size of the input data
@@ -154,7 +154,7 @@ hiprtcLinkAddData(rtc_link_state,        // hiprtc link state
                   0);                    // Array of option values cast to void*
 ```
 ```cpp
-hiprtcLinkAddFile(rtc_link_state,        // hiprtc link state
+hiprtcLinkAddFile(rtc_link_state,        // HIPRTC link state
                   input_type,            // type of the input data or bitcode
                   bc_file_path.c_str(),  // path to the input file where bitcode is present
                   0,                     // size of the options
@@ -164,7 +164,7 @@ hiprtcLinkAddFile(rtc_link_state,        // hiprtc link state
 
 Once the bitcodes for multiple archs are added to the link instance, the linking of the device code must be completed using hiprtcLinkComplete which generates the final binary.
 ```cpp
-hiprtcLinkComplete(rtc_link_state,       // hiprtc link state
+hiprtcLinkComplete(rtc_link_state,       // HIPRTC link state
                    &binary,              // upon success, points to the output binary
                    &binarySize);         // size of the binary is stored (optional)
 ```
@@ -175,7 +175,7 @@ hipModuleLoadData(&module, binary);
 ```
 
 #### Note
- - The compiled binary must be loaded before hiprtc link instance is destroyed using the hiprtcLinkDestroy API.
+ - The compiled binary must be loaded before HIPRTC link instance is destroyed using the hiprtcLinkDestroy API.
 ```cpp
 hiprtcLinkDestroy(rtc_link_state);
 ```
@@ -183,6 +183,8 @@ hiprtcLinkDestroy(rtc_link_state);
 
 #### Input Types
 HIPRTC provides hiprtcJITInputType enumeration type which defines the input types accepted by the Linker APIs. Here are the enum values of hiprtcJITInputType. However only the input types  HIPRTC_JIT_INPUT_LLVM_BITCODE, HIPRTC_JIT_INPUT_LLVM_BUNDLED_BITCODE and HIPRTC_JIT_INPUT_LLVM_ARCHIVES_OF_BUNDLED_BITCODE are supported currently.
+
+HIPRTC_JIT_INPUT_LLVM_BITCODE can be used to load both LLVM bitcode or LLVM IR assembly code. However, HIPRTC_JIT_INPUT_LLVM_BUNDLED_BITCODE and HIPRTC_JIT_INPUT_LLVM_ARCHIVES_OF_BUNDLED_BITCODE are only for bundled bitcode and archive of bundled bitcode.
 
 ```cpp
 HIPRTC_JIT_INPUT_CUBIN = 0,
@@ -197,6 +199,14 @@ HIPRTC_JIT_INPUT_LLVM_BUNDLED_BITCODE = 101,
 HIPRTC_JIT_INPUT_LLVM_ARCHIVES_OF_BUNDLED_BITCODE = 102,
 HIPRTC_JIT_NUM_INPUT_TYPES = (HIPRTC_JIT_NUM_LEGACY_INPUT_TYPES + 3)
 ```
+
+#### Backward Compatibility of LLVM Bitcode/IR
+
+For HIP applications utilizing HIPRTC to compile LLVM bitcode/IR, compatibility is assured only when the ROCm or HIP SDK version used for generating the LLVM bitcode/IR matches the version used during the runtime compilation. When an application requires the ingestion of bitcode/IR not derived from the currently installed AMD compiler, it must run with HIPRTC and COMgr dynamic libraries that are compatible with the version of the bitcode/IR.
+
+COMgr, a shared library, incorporates the LLVM/Clang compiler that HIPRTC relies on. To identify the bitcode/IR version that COMgr is compatible with, one can execute "clang -v" using the clang binary from the same ROCm or HIP SDK package. For instance, if compiling bitcode/IR version 14, the HIPRTC and COMgr libraries released by AMD around mid 2022 would be the best choice, assuming the LLVM/Clang version included in the package is also version 14.
+
+To ensure smooth operation and compatibility, an application may choose to ship the specific versions of HIPRTC and COMgr dynamic libraries, or it may opt to clearly specify the version requirements and dependencies. This approach guarantees that the application can correctly compile the specified version of bitcode/IR.
 
 #### Link Options
 - `HIPRTC_JIT_IR_TO_ISA_OPT_EXT` - AMD Only. Options to be passed on to link step of compiler by `hiprtcLinkCreate`.
@@ -329,7 +339,7 @@ HIPRTC follows the below versioning.
     - HIPRTC dll is named as hiprtcXXYY.dll where XX is MAJOR version and YY is MINOR version. eg: For HIP 5.3 the name is hiprtc0503.dll.
 
 ## HIP header support
- - Added HIPRTC support for all the hip common header files such as library_types.h, hip_math_constants.h, hip_complex.h, math_functions.h, surface_types.h etc. from 6.1. HIPRTC users need not include any HIP macros or constants explicitly in their header files. All of these should get included via hiprtc builtins when the app links to HIPRTC library.
+ - Added HIPRTC support for all the hip common header files such as library_types.h, hip_math_constants.h, hip_complex.h, math_functions.h, surface_types.h etc. from 6.1. HIPRTC users need not include any HIP macros or constants explicitly in their header files. All of these should get included via HIPRTC builtins when the app links to HIPRTC library.
 
 ## Deprecation notice
  - Currently HIPRTC APIs are separated from HIP APIs and HIPRTC is available as a separate library libhiprtc.so/libhiprtc.dll. But on Linux, HIPRTC symbols are also present in libhipamd64.so in order to support the existing applications. Gradually, these symbols will be removed from HIP library and applications using HIPRTC will be required to explictly link to HIPRTC library. However, on Windows hiprtc.dll must be used as the hipamd64.dll doesn't contain the HIPRTC symbols.
