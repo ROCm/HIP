@@ -29,25 +29,22 @@ Processor in HIP terms.
 .. _rdna3_cu:
 
 .. figure:: ../data/understand/programming_model/rdna3_cu.png
-  :alt: Block diagram showing components mostly duplicated on the upper and
-        lower halves of the image with some spanning over both parts (hinting
-        at them being shared). Both the top and the bottom have two sets of
-        identical hardware blocks. a "Scheduler" having "Vector GPR"s with an
-        associated Vector ALU with the following noted capabilities:
-        Float/INT/Matrix SIMD32, Float/Matrix SIMD32, Transcendental SIMD8, AI
-        MATRIX Accelerator, DPFP (1). Both top and bottom have a single "Ray
-        Accelerator", "Texture Filters" and "LD/ST/Tex Addr" and L0 blocks.
-        Shared among top and bottom are "Scalar Cache", "Shader Instruction
-        Cache" and Shared Memory.
+  :alt: Block diagram showing the structure of an RDNA3 Compute Unit. It
+        consists of four SIMD units, each including a vector and scalar register
+        file, with the corresponding scalar and vector ALUs. All four SIMDs
+        share a scalar and instruction cache, as well as the shared memory. Two
+        of the SIMD units each share an L0 cache.
 
   Block Diagram of an RDNA3 Compute Unit.
 
 .. _cdna3_cu:
 
 .. figure:: ../data/understand/programming_model/cdna3_cu.png
-  :alt: Block diagram showing components: "Scheduler", "Local Data Share",
-        "Matrix Core Unit", "Shader Core" and "L1 Cache" along with some
-        unnamed blocks.
+  :alt: Block diagram showing the structure of a CDNA3 compute unit. It includes
+        Shader Cores, the Matrix Core Unit, a Local Data Share used for sharing
+        memory between threads in a block, an L1 Cache and a Scheduler. The
+        Shader Cores represent the vector ALUs and the Matrix Core Unit the
+        matrix ALUs. The Local Data Share is used as the shared memory.
 
   Block Diagram of a CDNA3 Compute Unit.
 
@@ -58,14 +55,12 @@ function units or memory subsystem resources.
 .. _cdna2_gcd:
 
 .. figure:: ../data/understand/programming_model/cdna2_gcd.png
-  :alt: Block diagram showing four "Compute Engine"s each with 28 "CU"s
-        (Compute Unit) inside. These four Compute Engines share one block of
-        "L2 Cache and Controllers". Around them are four "Memory Controller"s,
-        each having a "Memory Phy" block next to them. To the top and bottom of
-        all these are eight blocks of "Infinity Fabric Link" with one of the
-        eight reading "Infinity Fabric or PCIe". Two sole "VCN" blocks sit in
-        top corners. At the very bottom spans a colored section reading
-        "Infinity Fabric" along with its logo.
+  :alt: Block diagram showing four Compute Engines each with 28 Compute Units
+        inside. These four Compute Engines share one block of L2 Cache. Around
+        them are four Memory Controllers. To the top and bottom of all these are
+        eight blocks of Infinity Fabric Links. Two Video Core Next blocks sit in
+        the top corners. At the very bottom spans a colored section reading
+        Infinity Fabric.
 
   Block Diagram of a CDNA2 Graphics Compute Die.
 
@@ -106,10 +101,10 @@ look the following:
 .. _simt:
 
 .. figure:: ../data/understand/programming_model/simt.svg
-  :alt: Two large arrows pointing downward with blocks inside and ellipses
-        between the arrows. Inside the arrows the same series of blocks with
-        the following texts inside from top to bottom: "ADD", "DIV", "FMA",
-        "FMA", "FMA" and "FMA".
+  :alt: Image representing the instruction flow of a SIMT program. Two identical
+        arrows pointing downward with blocks representing the instructions
+        inside and ellipsis between the arrows. The instructions represented in
+        the arrows are, from top to bottom: ADD, DIV, FMA, FMA, FMA and FMA.
 
   Instruction flow of the sample SIMT program.
 

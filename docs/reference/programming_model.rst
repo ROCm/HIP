@@ -35,13 +35,14 @@ The thread hierarchy inherent to how AMD GPUs operate is depicted in
 .. _inherent_thread_hierarchy:
 
 .. figure:: ../data/reference/programming_model/thread_hierarchy.svg
-  :alt: Diagram depicting nested rectangles of varying color. The outermost one
-        titled "Grid", inside sets of uniform rectangles layered on one another
-        titled "Block". Each "Block" containing sets of uniform rectangles
-        layered on one another titled "Warp". Each of the "Warp" titled
-        rectangles filled with downward pointing arrows inside.
+  :alt: Diagram depicting the thread hierarchy in HIP using nested rectangles.
+        The outermost rectangle is titled Grid, containing uniform rectangles
+        layered on one another titled Block. Each Block contains sets of uniform
+        rectangles layered on one another titled Warp. Each of the Warp titled
+        rectangles is filled with downward pointing arrows, representing single
+        threads.
 
-  Hierarchy of thread groups.
+  Hierarchy of thread groups. The arrows represent the threads.
 
 Warp
   The most tightly coupled group of threads, both physically and logically.
@@ -94,11 +95,13 @@ The thread hierarchy abstraction of Cooperative Groups manifest as depicted in
 .. _coop_thread_hierarchy:
 
 .. figure:: ../data/reference/programming_model/thread_hierarchy_coop.svg
-  :alt: Diagram depicting nested rectangles of varying color. The outermost one
-        titled "Grid", inside sets of different sized rectangles layered on
-        oneanother titled "Block". Each "Block" containing sets of uniform
-        rectangles layered on oneanother titled "Warp". Each of the "Warp"
-        titled rectangles filled with downward pointing arrows inside.
+  :alt: Diagram depicting the structure of Cooperative Groups using nested
+        rectangles. The outermost rectangle is titled Multi Grid, containing
+        sets of different shaped rectangles titled Grid. Each Grid contains sets
+        of uniform rectangles layered on oneanother titled Cluster. The Clusters
+        have different shapes in different Grids. Inside of the Clusters are
+        uniform rectangles layered on each other titled Block, which include
+        arrows that represent threads.
 
   Cooperative group thread hierarchy.
 
@@ -144,16 +147,15 @@ how they relate to the various levels of the threading model.
 .. _memory_hierarchy:
 
 .. figure:: ../data/reference/programming_model/memory_hierarchy.svg
-  :alt: Diagram depicting nested rectangles of varying color. The outermost one
-        titled "Grid", inside on the upper half a rectangle titled "Cluster".
-        Inside it are two identical rectangles titled "Block", inside them are
-        ones titled "Local" with multiple "Warp" titled rectangles. Blocks have
-        not just Local inside, but also rectangles titled "Shared". The Shared
-        rectangles of Blocks in the same Cluster are grouped together with a
-        translucent halo titled "Cluster shared". Outside the Cluster but
-        inside the Grid is a rectangle titled "Global" with three others
-        inside: "Surface", "Texture" (same color) and "Constant" (different
-        color).
+  :alt: Diagram depicting the memory hierarchy using nested rectangles. The
+        outermost is title Grid, containing two rectangles, one titled Cluster
+        and the other titled Global. Cluster contains two identical rectangles
+        titled Block, which are partly overlaid and connected by a rectangle
+        titled Cluster Shared. The Block rectangles each contain a rectangle
+        titled Local, which in turn contain rectangles titled Warp that include
+        arrows representing the threads. Cluster shared contains two rectangles
+        titled Shared, each located within one of the Blocks. Global contains
+        three rectangles, titled Constant, Texture and Surface.
 
   Memory hierarchy.
 
