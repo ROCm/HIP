@@ -171,6 +171,8 @@ sphinxcontrib-bibtex==2.6.2
     # via -r requirements.in
 sphinxcontrib-devhelp==1.0.2
     # via sphinx
+sphinxcontrib-doxylink==1.12.3
+    # via -r requirements.in
 sphinxcontrib-htmlhelp==2.0.1
     # via sphinx
 sphinxcontrib-jsmath==1.0.1
