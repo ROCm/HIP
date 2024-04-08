@@ -58,21 +58,21 @@ Warp
   under :ref:`warp_cross_lane_functions`.
 
 Block
-  The defining feature of a block (or thread block) is that all threads in it
-  will share an instance of memory which they may use to share data or
-  synchronize with one another.
+  The defining feature of a block (or thread block) is that all threads in the
+  same block are executed on the same Compute Unit, share an instance of
+  memory which they may use to share data and can synchronize with one another.
 
   The size of a block is user-configurable but is maximized by the queryable
   capabilities of the executing hardware. The unique ID of the thread within a
-  block is 3-dimensional as provided by the API. When linearizing thread IDs
-  within a block, assume the "fast index" being dimension ``x``, followed by
-  the ``y`` and ``z`` dimensions.
+  block is 3-dimensional as provided by the `threadIdx` built-in. When
+  linearizing thread IDs within a block, assume the "fast index" being
+  dimension ``x``, followed by the ``y`` and ``z`` dimensions.
 
 Grid
   The outermost grouping is called a grid. A grid manifests as a single
   dispatch of a kernel for execution. The unique ID of each block within a grid
-  is 3-dimensional, as provided by the API and is queryable by every thread
-  within the block.
+  is 3-dimensional, as provided by the `blockIdx` built-in and is queryable
+  by every thread within the block.
 
 Cooperative Groups Thread Model
 -------------------------------------------------------------------------------
@@ -140,9 +140,10 @@ Block
 Memory Model
 ===============================================================================
 
-The hierarchy of threads introduced by :ref:`inherent_thread_model` is induced
-by the memory subsystem of GPUs. :numref:`memory_hierarchy` summarizes that memory namespaces and
-how they relate to the various levels of the threading model.
+The hierarchy of threads introduced by the :ref:`inherent_thread_model` is
+induced by the memory subsystem of GPUs. :numref:`memory_hierarchy` summarizes
+the memory namespaces and how they relate to the various levels of the threading
+model.
 
 .. _memory_hierarchy:
 
@@ -169,13 +170,13 @@ Local
 Shared
   Read-write storage visible to all the threads in a given block.
 
-Distributed shared
-  Read-write storage visible to all the threads in a given block cluster.
+Cluster shared
+  Read-write storage visible to all the threads in a given cluster.
 
 Global
   Read-write storage visible to all threads in a given grid. There are
   specialized versions of global memory with different usage semantics which
-  are typically backed by the same hardware storing global.
+  are typically backed by the same hardware.
 
 Constant
   Read-only storage visible to all threads in a given grid. It is a limited
@@ -193,7 +194,7 @@ Execution Model
 
 HIP programs consist of two distinct scopes:
 
-* The host-side API running on the host processor. There are two APIs available:
+* The host-side running on the host processor. There are two APIs available:
 
   * The HIP runtime API which enables use of the single-source programming
     model.
@@ -226,8 +227,8 @@ be.
 Asynchronous APIs involving a stream all return a stream event which may be
 used to synchronize the execution of multiple streams. A user may enqueue a
 barrier onto a stream referencing an event. The barrier will block until all
-the commands related to the event completes, at which point all side-effects of
-the command shall be visible to commands following the barrier, even if those
+commands related to the event complete, at which point all side-effects of
+the commands are visible to commands following the barrier, even if those
 side-effects manifest on different devices.
 
 Streams also support executing user-defined functions as callbacks on the host.
@@ -267,8 +268,7 @@ intended use-cases.
     ``HIP_TEMPLATE_KERNEL_LAUNCH`` preprocessor macro before including the HIP
     headers to turn it into a templated function.
 
-* Using the
-  :doxygen:`launch APIs supporting the triple-chevron syntax <Clang>` directly.
+* Using the launch APIs supporting the triple-chevron syntax directly.
 
   .. caution::
 

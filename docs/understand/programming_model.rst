@@ -17,14 +17,17 @@ of the underlying device architecture to make efficient use of HIP and GPGPU
 RDNA & CDNA Architecture Summary
 ===============================================================================
 
-Most GPU architectures, much like RDNA and CDNA have a hierarchical structure.
+Most GPU architectures, much like RDNA and CDNA, have a hierarchical structure.
 The inner-most piece is a Single Instruction Multiple Data (SIMD) enabled
-vector Arithmetic Logical Unit (ALU). Most recent GPUs beside the vector ALU
-also house some matrix ALU for accelerating algorithms of well defined shapes.
+vector Arithmetic Logical Unit (ALU). Most recent GPUs, beside the vector ALUs,
+also house matrix ALUs for accelerating algorithms involving
+matrix multiply-accumulate operations. AMD GPUs also contain scalar ALUs, that
+can be used to reduce the load on the vector ALU, by performing operations which
+are uniform for all threads of a warp.
 
-A number of vector and matrix ALUs comprise a larger block, often referred
-to as a Compute Unit (OpenCL, AMD block diagrams) but is referred to as Multi
-Processor in HIP terms.
+A set of ALUs, together with register files, caches and shared memory, comprise
+a larger block, often referred to as a Compute Unit (CU), e.g. in OpenCL and
+AMD block diagrams, or as Streaming Multiprocessor (SM).
 
 .. _rdna3_cu:
 
@@ -73,10 +76,10 @@ multi-core CPUs, and SIMD (Single Instruction, Multiple Data) programming
 mostly known from exploiting relevant instruction sets on CPUs (eg.
 SSE/AVX/Neon).
 
-A HIP device compiler maps our SIMT code written in HIP C++ to an inherently
-SIMD architecture (like GPUs) not by exploiting data parallelism within a
-single instance of a kernel and spreading identical instructions over the SIMD
-engines at hand, but by scalarizing the entire kernel and issuing the scalar
+A HIP device compiler maps SIMT code written in HIP C++ to an inherently SIMD
+architecture (like GPUs), not by exploiting data parallelism within a single
+instance of a kernel and spreading identical instructions over the SIMD engines
+at hand, but by scalarizing the entire kernel and issuing the scalar
 instructions of multiple kernel instances to each of the SIMD engine lanes.
 
 Consider the following kernel
@@ -92,11 +95,11 @@ Consider the following kernel
     a[tid] += (tid + bid - dim) * b[tid];
   }
 
-The incoming four-vector of floating-point values ``a`` is multiplied by a
-scalar and then multiplied element-wise by another four-vector. On modern
-SIMD-capable architectures the four-vector ops are expected to compile to a
-single SIMD instruction. GPU execution of this kernel however will typically
-look the following:
+The incoming four-vector of floating-point values ``b`` is multiplied by a
+scalar and then added element-wise to the four-vector floating-point values of
+``a``. On modern SIMD-capable architectures the four-vector ops are expected to
+compile to a single SIMD instruction. GPU execution of this kernel however will
+typically look the following:
 
 .. _simt:
 
@@ -110,9 +113,9 @@ look the following:
 
 In HIP, lanes of a SIMD architecture are fed by mapping threads of a SIMT
 execution, one thread down each lane of a SIMD engine. Execution parallelism
-isn't exploited from the width of the built-in vector types, but via the thread
-id constants ``threadIdx.x``, ``blockIdx.x``, etc. For more details, refer to
-:ref:`inherent_thread_model`.
+usually isn't exploited from the width of the built-in vector types, but via the
+thread id constants ``threadIdx.x``, ``blockIdx.x``, etc. For more details,
+refer to :ref:`inherent_thread_model`.
 
 Heterogenous Programming
 ===============================================================================
