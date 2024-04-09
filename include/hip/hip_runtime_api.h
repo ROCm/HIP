@@ -102,7 +102,7 @@ typedef struct hipDeviceProp_t {
     char luid[8];                     ///< 8-byte unique identifier. Only valid on windows
     unsigned int luidDeviceNodeMask;  ///< LUID node mask
     size_t totalGlobalMem;            ///< Size of global memory region (in bytes).
-    size_t sharedMemPerBlock;         ///< Size of shared memory region (in bytes).
+    size_t sharedMemPerBlock;         ///< Size of shared memory per block (in bytes).
     int regsPerBlock;                 ///< Registers per block.
     int warpSize;                     ///< Warp size.
     size_t memPitch;                  ///< Maximum pitch in bytes allowed by memory copies
@@ -111,7 +111,8 @@ typedef struct hipDeviceProp_t {
     int maxThreadsDim[3];             ///< Max number of threads in each dimension (XYZ) of a block.
     int maxGridSize[3];               ///< Max grid dimensions (XYZ).
     int clockRate;                    ///< Max clock frequency of the multiProcessors in khz.
-    size_t totalConstMem;             ///< Size of shared memory region (in bytes).
+    size_t totalConstMem;             ///< Size of shared constant memory region on the device
+                                      ///< (in bytes).
     int major;  ///< Major compute capability.  On HCC, this is an approximation and features may
                 ///< differ from CUDA CC.  See the arch feature flags for portable ways to query
                 ///< feature caps.
@@ -6692,9 +6693,9 @@ hipError_t hipStreamBeginCapture(hipStream_t stream, hipStreamCaptureMode mode);
 * @brief Begins graph capture on a stream to an existing graph.
 *
 * @param [in] stream - Stream to initiate capture.
-* @param [in] stream - Graph to capture into.
+* @param [in] graph - Graph to capture into.
 * @param [in] dependencies - Dependencies of the first node captured in the stream. Can be NULL if
-numDependencies is 0.
+* numDependencies is 0.
 * @param [in] dependencyData - Optional array of data associated with each dependency.
 * @param [in] numDependencies - Number of dependencies.
 * @param [in] mode - Controls the interaction of this capture sequence with other API calls that
