@@ -151,6 +151,7 @@ function(catch_discover_tests TARGET)
     BYPRODUCTS "${ctest_tests_file}"
     COMMAND "${CMAKE_COMMAND}"
             -D "TEST_TARGET=${TARGET}"
+            -D "ANALYSIS_COMMAND=${SKIP_DOUBLE_TESTS}"
             -D "TEST_EXECUTABLE=$<TARGET_FILE:${TARGET}>"
             -D "TEST_EXECUTOR=${crosscompiling_emulator}"
             -D "TEST_WORKING_DIR=${_WORKING_DIRECTORY}"

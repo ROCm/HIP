@@ -116,7 +116,8 @@ foreach(line ${output})
   add_command(add_test
     "${prefix}${test}${suffix}"
     ${TEST_EXECUTOR}
-    "${exe_path}"
+    ${ANALYSIS_COMMAND}
+    ${TEST_EXECUTABLE}
     "${test_name}"
     ${extra_args}
     "${reporter_arg}"
