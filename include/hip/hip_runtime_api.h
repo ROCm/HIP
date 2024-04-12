@@ -747,6 +747,9 @@ enum hipLimit_t {
 /** Memory allocated will be uncached. */
 #define hipDeviceMallocUncached 0x3
 
+/** Memory allocated will be contiguous. */
+#define hipDeviceMallocContiguous 0x4
+
 //Flags that can be used with hipHostRegister.
 /** Memory is Mapped and Portable.*/
 #define hipHostRegisterDefault 0x0
