@@ -49,7 +49,7 @@ gitdb==4.0.10
     # via gitpython
 gitpython==3.1.41
     # via rocm-docs-core
-idna==3.3
+idna==3.7
     # via requests
 imagesize==1.4.1
     # via sphinx
@@ -118,7 +118,7 @@ requests==2.31.0
     #   pygithub
     #   sphinx
 rocm-docs-core[api-reference]==0.36.0
-    # via -r ./docs/sphinx/requirements.in
+    # via -r requirements.in
 six==1.16.0
     # via python-dateutil
 smmap==5.0.0
@@ -154,7 +154,7 @@ sphinxcontrib-applehelp==1.0.2
 sphinxcontrib-devhelp==1.0.2
     # via sphinx
 sphinxcontrib-doxylink==1.12.3
-    # via -r ./docs/sphinx/requirements.in
+    # via -r requirements.in
 sphinxcontrib-htmlhelp==2.0.0
     # via sphinx
 sphinxcontrib-jsmath==1.0.1
