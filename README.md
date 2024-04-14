@@ -34,17 +34,17 @@ HIP releases are typically naming convention for each ROCM release to help diffe
   This type of release is typically made once a month.*
 
 ## More Info:
-- [Installation](docs/how_to_guides/install.md)
-- [HIP FAQ](docs/user_guide/faq.md)
-- [HIP Kernel Language](docs/reference/kernel_language.md)
-- [HIP Porting Guide](docs/user_guide/hip_porting_guide.md)
-- [HIP Porting Driver Guide](docs/user_guide/hip_porting_driver_api.md)
-- [HIP Programming Guide](docs/user_guide/programming_manual.md)
-- [HIP Logging ](docs/developer_guide/logging.md)
-- [Building HIP From Source](docs/developer_guide/build.md)
-- [HIP Debugging ](docs/how_to_guides/debugging.md)
-- [HIP RTC](docs/user_guide/hip_rtc.md)
-- [HIP Terminology](docs/reference/terms.md) (including Rosetta Stone of GPU computing terms across CUDA/HIP/OpenCL)
+- [Installation](docs/install/install.rst)
+- [HIP FAQ](docs/old/user_guide/faq.md)
+- [HIP Kernel Language](docs/old/reference/kernel_language.rst)
+- [HIP Porting Guide](docs/old/user_guide/hip_porting_guide.md)
+- [HIP Porting Driver Guide](docs/old/user_guide/hip_porting_driver_api.md)
+- [HIP Programming Guide](docs/old/user_guide/programming_manual.md)
+- [HIP Logging ](docs/how-to/logging.rst)
+- [Building HIP From Source](docs/install/build.rst)
+- [HIP Debugging ](docs/how-to/debugging.rst)
+- [HIP RTC](docs/old/user_guide/hip_rtc.md)
+- [HIP Terminology](docs/old/reference/terms.md) (including Rosetta Stone of GPU computing terms across CUDA/HIP/OpenCL)
 - [HIPIFY](https://github.com/ROCm/HIPIFY/blob/amd-staging/README.md)
 - Supported CUDA APIs:
   * [Runtime API](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/tables/CUDA_Runtime_API_functions_supported_by_HIP.md)
@@ -56,12 +56,12 @@ HIP releases are typically naming convention for each ROCM release to help diffe
   * [cuDNN](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/tables/CUDNN_API_supported_by_HIP.md)
   * [cuFFT](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/tables/CUFFT_API_supported_by_HIP.md)
   * [cuSPARSE](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/tables/CUSPARSE_API_supported_by_HIP.md)
-- [Developer/CONTRIBUTING Info](docs/developer_guide/contributing.md)
+- [Developer/CONTRIBUTING Info](CONTRIBUTING.md)
 - [Release Notes](RELEASE.md)
 
 ## How do I get set up?
 
-See the [Installation](docs/how_to_guides/install.md) notes.
+See the [Installation](docs/install/install.rst) notes.
 
 ## Simple Example
 The HIP API includes functions such as hipMalloc, hipMemcpy, and hipFree.
@@ -87,7 +87,7 @@ hipMemcpy(C_h, C_d, Nbytes, hipMemcpyDeviceToHost);
 
 The HIP kernel language defines builtins for determining grid and block coordinates, math functions, short vectors,
 atomics, and timer functions.
-It also specifies additional defines and keywords for function types, address spaces, and optimization controls (See the [HIP Kernel Language](docs/reference/kernel_language.md) for a full description).
+It also specifies additional defines and keywords for function types, address spaces, and optimization controls (See the [HIP Kernel Language](docs/old/reference/kernel_language.rst) for a full description).
 Here's an example of defining a simple 'vector_square' kernel.
 
 
