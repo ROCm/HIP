@@ -23,7 +23,7 @@ Please use the [GitHub Issue](https://github.com/ROCm/HIP/issues) tab to notify 
 
 ## Acceptance Criteria ##
 
-HIP is a C++ Runtime API and Kernel Language that allows developers to create portable applications for AMD and NVIDIA GPUs from single source code. Contributors wishing to submit new HIP Features (ie functions, classes, types) should resemble CUDA APIs.
+HIP is a C++ Runtime API and Kernel Language that allows developers to create portable applications for AMD and NVIDIA GPUs from single source code. Contributors wishing to submit new HIP Features (ie functions, classes, types) should also consider CUDA APIs.
 Differences or limitations of HIP APIs as compared to CUDA APIs should be clearly documented and described.
 Some guidelines are outlined below:
 
@@ -51,7 +51,6 @@ For applications and benchmarks outside the hip-tests environment, developments 
     - Use 4 spaces indentation.
 - Capitalization and Naming
     - Prefer camelCase for HIP interfaces and internal symbols.  Note HCC uses _ for separator.
-      This guideline is not yet consistently followed in HIP code - eventual compliance is aspirational.
     - Member variables should begin with a leading "_".  This allows them to be easily distinguished from other variables or functions.
 
 - `{}` placement
