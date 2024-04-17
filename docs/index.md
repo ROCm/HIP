@@ -33,6 +33,7 @@ portable applications for AMD and NVIDIA GPUs from single source code.
 :::{grid-item-card} Conceptual
 
 * {doc}`/understand/programming_model`
+* {doc}`/understand/hardware_implementation`
 
 :::
 

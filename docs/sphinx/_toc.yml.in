@@ -32,6 +32,7 @@ subtrees:
 - caption: Conceptual
   entries:
   - file: understand/programming_model
+  - file: understand/hardware_implementation
 
 - caption: Compatibility & support
   entries:
