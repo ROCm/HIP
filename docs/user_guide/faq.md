@@ -157,7 +157,7 @@ Yes.  HIP generates the object code which conforms to the GCC ABI, and also link
 with GPU code compiled with HIP.  Larger projects often contain a mixture of accelerator code (initially written in CUDA with nvcc) and host code (compiled with gcc, icc, or clang).   These projects
 can convert the accelerator code to HIP, compile that code with hipcc, and link with object code from their preferred compiler.
 
-## Can HIP API support C style application? What is the differentce between C and C++ ?
+## Can HIP API support C style application? What is the difference between C and C++ ?
 HIP is C++ runtime API that supports C style applications as well.
 
 Some C style applications (and interfaces to other languages (Fortran, Python)) would call certain HIP APIs but not use kernel programming.
