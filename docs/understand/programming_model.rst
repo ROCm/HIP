@@ -8,6 +8,7 @@
 Programming Model
 *******************************************************************************
 
+<<<<<<< HEAD
 The HIP programming model makes it easy to map data-parallel C/C++ algorithms to
 massively parallel, wide SIMD architectures, such as GPUs. As a consequence, one
 needs a basic understanding of the underlying device architecture to make efficient
@@ -65,6 +66,16 @@ memory subsystem resources.
         Infinity Fabric.
 
   Block Diagram of a CDNA2 Graphics Compute Die.
+=======
+The HIP programming model makes it as easy as reasonably possible to map
+data-parallel C/C++ algorithms to massively parallel, wide SIMD
+architectures, such as GPUs. As a consequence, one needs a basic understanding
+of the underlying device architecture to make efficient use of HIP and GPGPU
+(General Purpose Graphics Processing Unit) programming in general. This is
+further covered in :ref:`hardware_implementation`.
+
+.. _programming_model_simt:
+>>>>>>> 7bfe1d18 (Doc: Move hardware architecture summary to understand/hardware_implementation)
 
 Single Instruction Multiple Threads
 ===============================================================================

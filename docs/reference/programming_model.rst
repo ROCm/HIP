@@ -164,7 +164,7 @@ model.
 
 Local
   Read-write storage only visible to the threads defining the given variables,
-  also called per-threas memory. The size of a block for a given kernel,
+  also called per-thread memory. The size of a block for a given kernel,
   the number of concurrent warps are limited by local memory usage.
   This relates to an important aspect: occupancy. This is the default memory
   namespace.
