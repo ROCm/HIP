@@ -12,6 +12,10 @@
 #define TWOBLUECUBES_SINGLE_INCLUDE_CATCH_HPP_INCLUDED
 // start catch.hpp
 
+#ifndef DBL_MAX_10_EXP
+#define DBL_MAX_10_EXP 308
+#endif
+
 
 #define CATCH_VERSION_MAJOR 2
 #define CATCH_VERSION_MINOR 13
