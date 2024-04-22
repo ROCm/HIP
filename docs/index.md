@@ -56,6 +56,9 @@ These documents have not yet been ported over to the Diátaxis framework.
 
 * [HIP Porting Guide](./old/user_guide/hip_porting_guide)
 * [HIP Porting Driver API Guide](./old/user_guide/hip_porting_driver_api)
+* [HIP RTC Programming Guide](./old/user_guide/hip_rtc.md)
+* [HIP Programming Manual](./old/user_guide/programming_manual.md)
+* [Frequently asked questions](./old/user_guide/faq.md)
 
 :::
 

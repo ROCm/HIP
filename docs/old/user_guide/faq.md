@@ -33,7 +33,7 @@ See the [API Support Table](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs
 - Virtual functions, indirect functions and try/catch (CUDA 4.0)
 - `__prof_trigger`
 - PTX assembly (CUDA 4.0).  HIP-Clang supports inline GCN assembly.
-- Several kernel features are under development.  See the {doc}`/reference/kernel_language` for more information.
+- Several kernel features are under development.  See the {doc}`/old/reference/kernel_language` for more information.
 
 
 ## Is HIP a drop-in replacement for CUDA?
@@ -243,7 +243,7 @@ hipCUResultTohipError
 If platform portability is important, use #ifdef __HIP_PLATFORM_NVIDIA__ to guard the CUDA-specific code.
 
 ## How do I trace HIP application flow?
-See {doc}`/developer_guide/logging` for more information.
+See {doc}`/how-to/logging` for more information.
 
 ## What is maximum limit of kernel launching parameter?
 Product of block.x, block.y, and block.z should be less than 1024.
