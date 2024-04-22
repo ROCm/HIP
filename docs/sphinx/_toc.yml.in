@@ -16,6 +16,7 @@ subtrees:
 - caption: Reference
   entries:
     - file: reference/programming_model
+    - file: reference/performance
     - file: old/reference/kernel_language
     - file: doxygen/mainpage.md
       title: API library
