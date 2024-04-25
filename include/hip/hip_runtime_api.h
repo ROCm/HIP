@@ -2788,7 +2788,7 @@ hipError_t hipEventCreate(hipEvent_t* event);
  *
  * If hipEventRecord() has been previously called on this event, then this call will overwrite any
  * existing state in event.
- *
+ * 
  * If this function is called on an event that is currently being recorded, results are undefined
  * - either outstanding recording may save state into the event, and the order is not guaranteed.
  *
@@ -7089,56 +7089,6 @@ hipError_t hipGraphLaunch(hipGraphExec_t graphExec, hipStream_t stream);
 hipError_t hipGraphUpload(hipGraphExec_t graphExec, hipStream_t stream);
 
 /**
- * @brief Creates a kernel execution node and adds it to a graph.
- *
- * @param [out] pGraphNode - pointer to graph node to create.
- * @param [in] graph - instance of graph to add the created node.
- * @param [in] pDependencies - pointer to the dependencies on the kernel execution node.
- * @param [in] numDependencies - the number of the dependencies.
- * @param [in] nodeParams - pointer to the parameters for the node.
- * @returns #hipSuccess, #hipErrorInvalidValue.
- * @warning : This API is marked as beta, meaning, while this is feature complete,
- * it is still open to changes and may have outstanding issues.
- */
-hipError_t hipGraphAddNode(hipGraphNode_t *pGraphNode, hipGraph_t graph,
-                           const hipGraphNode_t *pDependencies, size_t numDependencies,
-                           hipGraphNodeParams *nodeParams);
-
-/**
- * @brief Return the flags on executable graph.
- *
- * @param [in] graphExec - Executable graph to get the flags.
- * @param [out] flags - Flags used to instantiate this executable graph.
- * @returns #hipSuccess, #hipErrorInvalidValue.
- * @warning : This API is marked as beta, meaning, while this is feature complete,
- * it is still open to changes and may have outstanding issues.
- */
-hipError_t hipGraphExecGetFlags(hipGraphExec_t graphExec, unsigned long long* flags);
-
-/**
- * @brief Updates parameters of a created node.
- *
- * @param [in] node - instance of the node to set parameters to.
- * @param [in] nodeParams - pointer to the parameters.
- * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidDeviceFunction, #hipErrorNotSupported.
- * @warning : This API is marked as beta, meaning, while this is feature complete,
- * it is still open to changes and may have outstanding issues.
- */
-hipError_t hipGraphNodeSetParams(hipGraphNode_t node, hipGraphNodeParams *nodeParams);
-
-/**
- * @brief Updates parameters of a created node on executable graph.
- *
- * @param [in] graphExec - instance of executable graph.
- * @param [in] node - instance of the node to set parameters to.
- * @param [in] nodeParams - pointer to the parameters.
- * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidDeviceFunction, #hipErrorNotSupported.
- * @warning : This API is marked as beta, meaning, while this is feature complete,
- * it is still open to changes and may have outstanding issues.
- */
-hipError_t hipGraphExecNodeSetParams(hipGraphExec_t graphExec, hipGraphNode_t node, hipGraphNodeParams* nodeParams);
-
-/**
  * @brief Destroys an executable graph
  *
  * @param [in] graphExec - instance of executable graph to destry.
@@ -8061,28 +8011,6 @@ hipError_t hipGraphExecExternalSemaphoresSignalNodeSetParams(hipGraphExec_t hGra
  */
 hipError_t hipGraphExecExternalSemaphoresWaitNodeSetParams(hipGraphExec_t hGraphExec, hipGraphNode_t hNode,
                                                            const hipExternalSemaphoreWaitNodeParams* nodeParams);
-
-/**
- * @brief Gets a memcpy node's parameters.
- *
- * @param [in] hNode - instance of the node to get parameters from.
- * @param [out] nodeParams - pointer to the parameters.
- * @returns #hipSuccess, #hipErrorInvalidValue
- * @warning : This API is marked as beta, meaning, while this is feature complete,
- * it is still open to changes and may have outstanding issues.
- */
-hipError_t hipDrvGraphMemcpyNodeGetParams(hipGraphNode_t hNode, HIP_MEMCPY3D* nodeParams);
-
-/**
- * @brief Sets a memcpy node's parameters.
- *
- * @param [in] hNode - instance of the node to Set parameters for.
- * @param [out] nodeParams - pointer to the parameters.
- * @returns #hipSuccess, #hipErrorInvalidValue
- * @warning : This API is marked as beta, meaning, while this is feature complete,
- * it is still open to changes and may have outstanding issues.
- */
-hipError_t hipDrvGraphMemcpyNodeSetParams(hipGraphNode_t hNode, const HIP_MEMCPY3D* nodeParams);
 
 /**
  * @brief Creates a memset node and adds it to a graph.

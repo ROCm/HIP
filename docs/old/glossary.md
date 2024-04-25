@@ -10,11 +10,11 @@ The default device can be set with hipSetDevice.
 
 - HIP-Clang - Heterogeneous AMDGPU Compiler, with its capability to compile HIP programs on AMD platform (https://github.com/RadeonOpenCompute/llvm-project).
 
-- clr - a repository for AMD Common Language Runtime, contains source codes for AMD's compute languages runtimes: HIP and OpenCL�.
+- clr - a repository for AMD Common Language Runtime, contains source codes for AMD's compute languages runtimes: HIP and OpenCL™.
 clr (https://github.com/ROCm/clr) contains the following three parts,
 hipamd: contains implementation of HIP language on AMD platform.
-rocclr: contains common runtime used in HIP and OpenCL�, which provides virtual device interfaces that compute runtimes interact with different backends such as ROCr on Linux or PAL on Windows.
-opencl: contains implementation of OpenCL� on AMD platform.
+rocclr: contains common runtime used in HIP and OpenCL™, which provides virtual device interfaces that compute runtimes interact with different backends such as ROCr on Linux or PAL on Windows.
+opencl: contains implementation of OpenCL™ on AMD platform.
 
 - hipify tools - tools to convert CUDA code to portable C++ code (https://github.com/ROCm/HIPIFY).
 

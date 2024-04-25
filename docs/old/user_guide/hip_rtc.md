@@ -6,7 +6,7 @@ Kernels can be stored as a text string and can be passed on to HIPRTC APIs along
 
 NOTE:
 
-  - This library can be used on systems without HIP install nor AMD GPU driver installed at all (offline compilation). Therefore, it does not depend on any HIP runtime library.
+  - This library can be used on systems without HIP install nor AMD GPU driver installed at all (offline compilation). Therefore it does not depend on any HIP runtime library.
   - But it does depend on COMGr. You may try to statically link COMGr into HIPRTC to avoid any ambiguity.
   - Developers can decide to bundle this library with their application.
 
@@ -34,12 +34,12 @@ R"(
 Now to compile this kernel, it needs to be associated with hiprtcProgram type, which is done by declaring ```hiprtcProgram prog;``` and associating the string of kernel with this program:
 
 ```cpp
-hiprtcCreateProgram(&prog,                 // HIPRTC program handle
-                    kernel_source,         // HIP kernel source string
-                    "vector_add.cpp",      // Name of the HIP program, can be null or an empty string
-                    0,                     // Number of headers
-                    NULL,                  // Header sources
-                    NULL);                 // Name of header files
+hiprtcCreateProgram(&prog,                 // HIPRTC program
+                    kernel,                // kernel string
+                    "gpu_kernel.cu",       // Name of the file
+                    num_headers,           // Number of headers
+                    &header_sources[0],    // Header sources
+                    &header_names[0]);     // Name of header files
 ```
 
 hiprtcCreateProgram API also allows you to add headers which can be included in your rtc program.
