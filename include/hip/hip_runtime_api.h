@@ -5774,13 +5774,22 @@ hipError_t hipLaunchKernel(const void* function_address,
 /**
  * @brief Enqueues a host function call in a stream.
  *
- * @param [in] stream - stream to enqueue work to.
- * @param [in] fn - function to call once operations enqueued preceeding are complete.
+ * @param [in] stream - The stream to enqueue work in.
+ * @param [in] fn - The function to call once enqueued preceeding operations are complete.
  * @param [in] userData - User-specified data to be passed to the function.
+ *
  * @returns #hipSuccess, #hipErrorInvalidResourceHandle, #hipErrorInvalidValue,
  * #hipErrorNotSupported
+ *
  * @warning : This API is marked as beta, meaning, while this is feature complete,
  * it is still open to changes and may have outstanding issues.
+ *
+ * @note  The function to call in this API will be executed after the preceding operations in the
+ * stream are complete. The function is a blocking operation that blocks operations in the stream
+ * that follow it, until the function is returned.
+ * Event synchronization and internal callback functions make sure enqueued operations will
+ * execute in order, in the stream.
+ *
  */
 hipError_t hipLaunchHostFunc(hipStream_t stream, hipHostFn_t fn, void* userData);
 
