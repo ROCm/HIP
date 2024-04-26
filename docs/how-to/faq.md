@@ -101,7 +101,7 @@ As a result, the OpenCL syntax is different from CUDA, and the porting tools hav
 The tools also struggle with more complex CUDA applications, in particular, those that use templates, classes, or other C++ features inside the kernel.
 
 ## What hardware does HIP support?
-- For AMD platforms, see the [ROCm documentation](https://github.com/RadeonOpenCompute/ROCm#supported-gpus) for the list of supported platforms.
+- For AMD platforms, see [ROCm documentation](https://github.com/RadeonOpenCompute/ROCm#supported-gpus) for the list of supported platforms.
 - For Nvidia platforms, HIP requires unified memory and should run on any device supporting CUDA SDK 6.0 or newer. We have tested the Nvidia Titan and Tesla K40.
 
 ## Do HIPIFY tools automatically convert all source code?
