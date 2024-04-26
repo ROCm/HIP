@@ -5,7 +5,7 @@
   :keywords: AMD, ROCm, HIP, CUDA, C++ language extensions
 
 *******************************************************************************
-Programming Model
+HIP programming model reference
 *******************************************************************************
 
 HIP defines a model of mapping SIMT programs (Single Instruction, Multiple

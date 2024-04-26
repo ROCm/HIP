@@ -15,54 +15,41 @@ portable applications for AMD and NVIDIA GPUs from single source code.
 
 :::
 
-:::{grid-item-card} Reference
+:::{grid-item-card} Conceptual
 
-* {doc}`/reference/programming_model`
-* {doc}`/doxygen/html/index`
-* [Deprecated APIs](./reference/deprecated_api_list)
+* {doc}`./understand/programming_model`
+* {doc}`./understand/programming_model_reference`
+* [Glossary](./understand/glossary)
 
 :::
 
 :::{grid-item-card} How-to
 
-* [Debug with HIP](./how-to/debugging)
-* [Generate logs](./how-to/logging)
+* [Programming Manual](./how-to/hip-rtc)
+* [HIP Porting Guide](./how-to/hip_porting_guide)
+* [HIP Porting: Driver API Guide](./how-to/hip_porting_driver_api)
+* {doc}`./how-to/hip_rtc`
+* [Debugging with HIP](./how-to/debugging)
+* {doc}`./how-to/logging`
+* {doc}`./how-to/faq`
 
 :::
-
-:::{grid-item-card} Conceptual
-
-* {doc}`/understand/programming_model`
-
-:::
-
-::::
-
-## Legacy documentation
-
-These documents have not yet been ported over to the Diátaxis framework.
-
-::::{grid} 1 1 2 2
-:gutter: 1
 
 :::{grid-item-card} Reference
 
-* [C++ kernel language](./old/reference/kernel_language)
-* [Table Comparing Syntax for Different Compute APIs](./old/reference/terms)
-
-:::
-
-:::{grid-item-card} User Guide
-
-* [HIP Porting Guide](./old/user_guide/hip_porting_guide)
-* [HIP Porting Driver API Guide](./old/user_guide/hip_porting_driver_api)
+* {doc}`/doxygen/html/index`
+* [C++ kernel language](./reference/kernel_language)
+* {doc}`./reference/math_api`
+* [Comparing Syntax for different APIs](./reference/terms)
+* [List of deprecated APIs](./reference/deprecated_api_list)
 
 :::
 
 ::::
 
-We welcome collaboration! If you’d like to contribute to our documentation, you can find instructions
-on our {doc}`Contribute to ROCm docs <rocm:contribute/contributing>` page. Known issues are listed on
-[GitHub](https://github.com/ROCm/HIP/issues).
+Known issues are listed on the [HIP GitHub repository](https://github.com/ROCm/HIP/issues).
 
-If you want to contribute to the HIP project, refer to our [Contributor guidelines](https://github.com/ROCm/HIP/CONTRIBUTING.md).
+To contribute features or functions to the HIP project, refer to the [Contributor guidelines](https://github.com/ROCm/HIP/CONTRIBUTING.md).
+To contribute to the documentation, refer to {doc}`Contributing to ROCm docs <rocm:contribute/contributing>` page. 
+
+You can find licensing information on the [Licensing](https://rocm.docs.amd.com/en/latest/about/license.html) page.
