@@ -9,24 +9,24 @@ Understanding the HIP programming model
 *******************************************************************************
 
 The HIP programming model makes it easy to map data-parallel C/C++ algorithms to
-massively parallel, wide SIMD architectures, such as GPUs. As a consequence, one
-needs a basic understanding of the underlying device architecture to make efficient
-use of HIP and GPGPU (General Purpose Graphics Processing Unit) programming in general.
+massively parallel, wide single instruction, multiple data (SIMD) architectures, 
+such as GPUs. A basic understanding of the underlying device architecture helps you 
+make efficient use of HIP and general purpose graphics processing unit (GPGPU) 
+programming in general.
 
 RDNA & CDNA Architecture Summary
 ===============================================================================
 
 Most GPU architectures, like RDNA and CDNA, have a hierarchical structure.
-The innermost piece is a Single Instruction Multiple Data (SIMD) enabled
-vector Arithmetic Logical Unit (ALU). In addition to the vector ALUs, most
-recent GPUs also house matrix ALUs for accelerating algorithms involving
-matrix multiply-accumulate operations. AMD GPUs also contain scalar ALUs, that
-can be used to reduce the load on the vector ALU by performing operations which
-are uniform for all threads of a warp.
+The innermost piece is a SIMD-enabled vector Arithmetic Logical Unit (ALU). 
+In addition to the vector ALUs, most recent GPUs also house matrix ALUs for 
+accelerating algorithms involving matrix multiply-accumulate operations. 
+AMD GPUs also contain scalar ALUs, that can be used to reduce the load on the 
+vector ALU by performing operations which are uniform for all threads of a warp.
 
 A set of ALUs, together with register files, caches and shared memory, comprise
-a larger block, often referred to as a Compute Unit (CU), e.g. in OpenCL and
-AMD block diagrams, or as Streaming Multiprocessor (SM).
+a larger block, often referred to as a compute unit (CU), e.g. in OpenCL and
+AMD block diagrams, or as streaming multiprocessor (SM).
 
 .. _rdna3_cu:
 
@@ -69,15 +69,14 @@ memory subsystem resources.
 Single Instruction Multiple Threads
 ===============================================================================
 
-The SIMT programming model behind the HIP device-side execution is a
-middle-ground between SMT (Simultaneous Multi-Threading) programming known from
-multicore CPUs, and SIMD (Single Instruction, Multiple Data) programming
+The single instruction, multiple threads (SIMT) programming model behind the 
+HIP device-side execution is a middle-ground between SMT (Simultaneous Multi-Threading) programming known from multicore CPUs, and SIMD (Single Instruction, Multiple Data) programming
 mostly known from exploiting relevant instruction sets on CPUs (for example SSE/AVX/Neon).
 
 A HIP device compiler maps SIMT code written in HIP C++ to an inherently SIMD
-architecture (like GPUs), by scalarizing the entire kernel, and issuing the scalar
+architecture (like GPUs). This is done by scalarizing the entire kernel and issuing the scalar
 instructions of multiple kernel instances to each of the SIMD engine lanes, rather
-than  exploiting data parallelism within a single instance of a kernel and spreading
+than exploiting data parallelism within a single instance of a kernel and spreading
 identical instructions over the available SIMD engines.
 
 Consider the following kernel:
