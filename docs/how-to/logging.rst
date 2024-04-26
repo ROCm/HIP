@@ -4,7 +4,7 @@
    :keywords: AMD, ROCm, HIP, logging
 
 **********************************************************
-Generate logs
+Logging HIP activity
 **********************************************************
 
 HIP provides a logging mechanism that allows you to trace HIP API and runtime codes when running a
