@@ -19,7 +19,6 @@ portable applications for AMD and NVIDIA GPUs from single source code.
 
 * {doc}`./understand/programming_model`
 * {doc}`./understand/programming_model_reference`
-* [Glossary](./understand/glossary)
 
 :::
 
