@@ -39,7 +39,7 @@ subtrees:
     title: Linux (GPU & OS)
   - url: https://rocm.docs.amd.com/projects/install-on-windows/en/${branch}/reference/system-requirements.html
     title: Windows (GPU & OS)
-  - url: https://rocm.docs.amd.com/projects/install-on-linux/en/${branch}/reference/3rd-partry-support-matrix.html
+  - url: https://rocm.docs.amd.com/projects/install-on-linux/en/${branch}/reference/3rd-party-support-matrix.html
     title: Third-party
   - url: https://rocm.docs.amd.com/projects/install-on-linux/en/${branch}/reference/user-kernel-space-compat-matrix.html
     title: User/kernel space support
