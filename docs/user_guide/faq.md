@@ -26,7 +26,7 @@ At a high-level, the following features are not supported:
 - CUDA array, mipmappedArray and pitched memory
 - Queue priority controls
 
-See the [API Support Table](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/amd-staging/docs/tables/CUDA_Runtime_API_functions_supported_by_HIP.md) for more detailed information.
+See the [API Support Table](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/tables/CUDA_Runtime_API_functions_supported_by_HIP.md) for more detailed information.
 
 ### Kernel language features
 - C++-style device-side dynamic memory allocations (free, new, delete) (CUDA 4.0)
@@ -54,7 +54,7 @@ However, we can provide a rough summary of the features included in each CUDA SD
 - CUDA 6.0 :
     - Managed memory (under development)
 - CUDA 6.5 :
-    - __shfl intriniscs (supported)
+    - __shfl intrinsic (supported)
 - CUDA 7.0 :
     - Per-thread default streams (supported)
     - C++11 (Hip-Clang supports all of C++11, all of C++14 and some C++17 features)
@@ -102,7 +102,7 @@ The tools also struggle with more complex CUDA applications, in particular, thos
 
 ## What hardware does HIP support?
 - For AMD platforms, see the [ROCm documentation](https://github.com/RadeonOpenCompute/ROCm#supported-gpus) for the list of supported platforms.
-- For Nvidia platforms, HIP requires Unified Memory and should run on any device supporting CUDA SDK 6.0 or newer. We have tested the Nvidia Titan and Tesla K40.
+- For Nvidia platforms, HIP requires unified memory and should run on any device supporting CUDA SDK 6.0 or newer. We have tested the Nvidia Titan and Tesla K40.
 
 ## Do HIPIFY tools automatically convert all source code?
 Typically, HIPIFY tools can automatically convert almost all run-time code.
@@ -140,11 +140,16 @@ There is an alternative environment variable to set compiler path:
 - HIP_ROCCLR_HOME: path to root directory of the HIP-ROCclr runtime. When set, this variable let hipcc use hip-clang from the ROCclr distribution.
 NOTE: If HIP_ROCCLR_HOME is set, there is no need to set HIP_CLANG_PATH since hipcc will deduce them from HIP_ROCCLR_HOME.
 
-## What is ROCclr?
-ROCclr (Radeon Open Compute Common Language Runtime) is a virtual device interface that compute runtimes interact with backends such as ROCr on Linux, as well as PAL on Windows.
+## What is AMD clr?
+AMD clr (Common Language Runtime) is a repository for the AMD platform, which contains source codes for AMD's compute languages runtimes as follows,
 
-## What is HIPAMD?
-HIPAMD is a repository branched out from HIP, mainly the implementation for AMD GPU.
+- hipamd - contains implementation of HIP language for AMD GPU.
+- rocclr - contains virtual device interfaces that compute runtimes interact with backends, such as ROCr on Linux and PAL on Windows.
+- opencl - contains implementation of OpenCL™ on the AMD platform.
+
+## What is hipother?
+A new repository 'hipother' is added in the ROCm 6.1 release, which is branched out from HIP.
+hipother supports the HIP back-end implementation on some non-AMD platforms, like NVIDIA.
 
 ## Can I get HIP open source repository for Windows?
 No, there is no HIP repository open publicly on Windows.
@@ -154,14 +159,14 @@ HIP is a source-portable language that can be compiled to run on either AMD or N
 
 ## On HIP-Clang, can I link HIP code with host code compiled with another compiler such as gcc, icc, or clang ?
 Yes.  HIP generates the object code which conforms to the GCC ABI, and also links with libstdc++.  This means you can compile host code with the compiler of your choice and link the generated object code
-with GPU code compiled with HIP.  Larger projects often contain a mixture of accelerator code (initially written in CUDA with nvcc) and host code (compiled with gcc, icc, or clang).   These projects
+with GPU code compiled with HIP.  Larger projects often contain a mixture of accelerator code (initially written in CUDA with nvcc) and host code (compiled with gcc, icc, or clang). These projects
 can convert the accelerator code to HIP, compile that code with hipcc, and link with object code from their preferred compiler.
 
 ## Can HIP API support C style application? What is the difference between C and C++ ?
 HIP is C++ runtime API that supports C style applications as well.
 
-Some C style applications (and interfaces to other languages (Fortran, Python)) would call certain HIP APIs but not use kernel programming.
-They can be compiled with a C compiler and run correctly, however, small details must be considered in the code. For example, initializtion, as shown in the simple application below, uses HIP structs dim3 with the file name "test.hip.cpp"
+Some C style applications (and interfaces to other languages (FORTRAN, Python)) would call certain HIP APIs but not use kernel programming.
+They can be compiled with a C compiler and run correctly, however, small details must be considered in the code. For example, initialization, as shown in the simple application below, uses HIP structs dim3 with the file name "test.hip.cpp"
 ```
 #include "hip/hip_runtime_api.h"
 #include "stdio.h"
@@ -182,8 +187,8 @@ $ ./test
 dim3 grid1; x=1, y=1, z=1
 dim3 grid2 = {1,1,1}; x=1, y=1, z=1
 ```
-In which "dim3 grid1;" will yield a dim3 grid with all dimentional members x,y,z initalized to 1, as the default constructor behaves that way.
-Further, if write,
+In which "dim3 grid1;" will yield a dim3 grid with all dimensional members x,y,z initalized to 1, as the default constructor behaves that way.
+Further, if written:
 ```
 dim3 grid(2); // yields {2,1,1}
 dim3 grid(2,3); yields {2,3,1}
@@ -196,7 +201,7 @@ $ ./test
 dim3 grid1; x=646881376, y=21975, z=1517277280
 dim3 grid2 = {1,1,1}; x=1, y=1, z=1
 ```
-In which "dim3 grid;" does not imply any initialization, no constructor is called, and dimentional values x,y,z of grid are undefined.
+In which "dim3 grid;" does not imply any initialization, no constructor is called, and dimensional values x,y,z of grid are undefined.
 NOTE: To get the C++ default behavior, C programmers must additionally specify the right-hand side as shown below,
 ```
 dim3 grid = {1,1,1}; // initialized as in C++
@@ -238,9 +243,9 @@ hipCUResultTohipError
 If platform portability is important, use #ifdef __HIP_PLATFORM_NVIDIA__ to guard the CUDA-specific code.
 
 ## How do I trace HIP application flow?
-See {doc}`/developer_guide/logging` for more information.
+See {doc}`/how-to/logging` for more information.
 
-## What is maximum limit of kernel launching parameter?
+## What are the maximum limits of kernel launch parameters?
 Product of block.x, block.y, and block.z should be less than 1024.
 Please note, HIP does not support kernel launch with total work items defined in dimension with size gridDim x blockDim >= 2^32, so gridDim.x * blockDim.x, gridDim.y * blockDim.y and gridDim.z * blockDim.z are always less than 2^32.
 
@@ -251,7 +256,7 @@ __shfl_*_sync is not supported on HIP but for nvcc path CUDA 9.0 and above all s
 The compiler defines the `__HIP_DEVICE_COMPILE__` macro only when compiling the code for the GPU.  It could be used to guard code that is specific to the host or the GPU.
 
 ## Why _OpenMP is undefined when compiling with -fopenmp?
-When compiling an OpenMP source file with `hipcc -fopenmp`, the compiler may generate error if there is a reference to the `_OPENMP` macro.  This is due to a limitation in hipcc that treats any source file type (e.g., `.cpp`) as an HIP translation unit leading to some conflicts with the OpenMP language switch.  If the OpenMP source file doesn't contain any HIP language construct, you could workaround this issue by adding the `-x c++` switch to force the compiler to treat the file as regular C++.  Another approach would be to guard the OpenMP code with `#ifdef _OPENMP` so that the code block is disabled when compiling for the GPU.  The `__HIP_DEVICE_COMPILE__` macro defined by the HIP compiler when compiling GPU code could also be used for guarding code paths specific to the host or the GPU.
+When compiling an OpenMP source file with `hipcc -fopenmp`, the compiler may generate error if there is a reference to the `_OPENMP` macro.  This is due to a limitation in hipcc that treats any source file type (for example `.cpp`) as an HIP translation unit leading to some conflicts with the OpenMP language switch.  If the OpenMP source file doesn't contain any HIP language constructs you could work around this issue by adding the `-x c++` switch to force the compiler to treat the file as regular C++.  Another approach would be to guard the OpenMP code with `#ifdef _OPENMP` so that the code block is disabled when compiling for the GPU.  The `__HIP_DEVICE_COMPILE__` macro defined by the HIP compiler when compiling GPU code could also be used for guarding code paths specific to the host or the GPU.
 
 ## Does the HIP-Clang compiler support extern shared declarations?
 
@@ -324,3 +329,4 @@ hipRuntimeGetVersion(&runtimeVersion);
 The version returned will always be greater than the versions in previous ROCm releases.
 
 Note: The version definition of HIP runtime is different from CUDA. On AMD platform, the function returns HIP runtime version, while on NVIDIA platform, it returns CUDA runtime version. And there is no mapping/correlation between HIP version and CUDA version.
+
