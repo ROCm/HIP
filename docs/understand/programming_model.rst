@@ -5,7 +5,7 @@
   :keywords: AMD, ROCm, HIP, CUDA, API design
 
 *******************************************************************************
-Programming Model
+Understanding the HIP programming model
 *******************************************************************************
 
 The HIP programming model makes it as easy as reasonably possible to map

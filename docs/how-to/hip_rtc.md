@@ -1,4 +1,4 @@
-# HIP RTC Programming Guide
+# Programming for HIP Runtime Compiler (HIP RTC) 
 
 ## HIP RTC lib
 HIP allows you to compile kernels at runtime with its ```hiprtc*``` APIs.
