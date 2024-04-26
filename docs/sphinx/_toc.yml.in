@@ -17,8 +17,6 @@ subtrees:
   entries:
   - file: understand/programming_model
   - file: understand/programming_model_reference
-  - file: understand/glossary
-    title: Glossary
 
 - caption: How-to
   entries:
