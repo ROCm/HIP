@@ -17,7 +17,7 @@ subtrees:
   entries:
     - file: reference/programming_model
     - file: old/reference/kernel_language
-    - file: doxygen/mainpage.md
+    - file: doxygen/html/index
       title: API library
     - file: reference/deprecated_api_list
       title: Deprecated API list
