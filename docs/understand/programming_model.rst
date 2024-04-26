@@ -5,7 +5,7 @@
   :keywords: AMD, ROCm, HIP, CUDA, API design
 
 *******************************************************************************
-Programming Model
+Understanding the HIP programming model
 *******************************************************************************
 
 The HIP programming model makes it easy to map data-parallel C/C++ algorithms to
@@ -17,9 +17,9 @@ RDNA & CDNA Architecture Summary
 ===============================================================================
 
 Most GPU architectures, like RDNA and CDNA, have a hierarchical structure.
-The inner-most piece is a Single Instruction Multiple Data (SIMD) enabled
+The innermost piece is a Single Instruction Multiple Data (SIMD) enabled
 vector Arithmetic Logical Unit (ALU). In addition to the vector ALUs, most
-recent GPUs also house also house matrix ALUs for accelerating algorithms involving
+recent GPUs also house matrix ALUs for accelerating algorithms involving
 matrix multiply-accumulate operations. AMD GPUs also contain scalar ALUs, that
 can be used to reduce the load on the vector ALU by performing operations which
 are uniform for all threads of a warp.
@@ -50,7 +50,7 @@ AMD block diagrams, or as Streaming Multiprocessor (SM).
 
   Block Diagram of a CDNA3 Compute Unit.
 
-FFor implementation in hardware, multiple Compute Units are grouped together into
+For implementation in hardware, multiple Compute Units are grouped together into
 a Shader Engine or Compute Engine, typically sharing some fixed function units or
 memory subsystem resources.
 
@@ -71,8 +71,8 @@ Single Instruction Multiple Threads
 
 The SIMT programming model behind the HIP device-side execution is a
 middle-ground between SMT (Simultaneous Multi-Threading) programming known from
-multi-core CPUs, and SIMD (Single Instruction, Multiple Data) programming
-mostly known from exploiting relevant instruction sets on CPUs (eg. SSE/AVX/Neon).
+multicore CPUs, and SIMD (Single Instruction, Multiple Data) programming
+mostly known from exploiting relevant instruction sets on CPUs (for example SSE/AVX/Neon).
 
 A HIP device compiler maps SIMT code written in HIP C++ to an inherently SIMD
 architecture (like GPUs), by scalarizing the entire kernel, and issuing the scalar
@@ -80,7 +80,7 @@ instructions of multiple kernel instances to each of the SIMD engine lanes, rath
 than  exploiting data parallelism within a single instance of a kernel and spreading
 identical instructions over the available SIMD engines.
 
-Consider the following kernel
+Consider the following kernel:
 
 .. code:: cu
 
@@ -115,8 +115,8 @@ usually isn't exploited from the width of the built-in vector types, but via the
 thread id constants ``threadIdx.x``, ``blockIdx.x``, etc. For more details,
 refer to :ref:`inherent_thread_model`.
 
-Heterogenous Programming
-===============================================================================
+Heterogeneous Programming
+=========================
 
 The HIP programming model assumes two execution contexts. One is referred to as
 *host* while compute kernels execute on a *device*. These contexts have
@@ -129,7 +129,7 @@ a few key differences between the two:
 * The C++ abstract machine assumes a unified memory address space, meaning that
   one can always access any given address in memory (assuming the absence of
   data races). HIP however introduces several memory namespaces, an address
-  from one means nothing in another. Moreover not all address spaces are
+  from one means nothing in another. Moreover, not all address spaces are
   accessible from all contexts.
 
   If one were to look at :ref:`cdna2_gcd` and inside the :ref:`cdna3_cu`,
@@ -148,7 +148,7 @@ a few key differences between the two:
   architectures.
 
 * Asynchrony is at the forefront of the HIP API. Computations launched on the device
-  execute asynchronously with respect to the host and it is the user's responsibility to
+  execute asynchronously with respect to the host, and it is the user's responsibility to
   synchronize their data dispatch/fetch with computations on the device. HIP
   does perform implicit synchronization on occasions, more advanced than other APIs such as
   OpenCL or SYCL, in which the responsibility of synchronization mostly depends on the user. 

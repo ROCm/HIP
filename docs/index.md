@@ -6,7 +6,7 @@ portable applications for AMD and NVIDIA GPUs from single source code.
 ## Overview
 
 ::::{grid} 1 1 2 2
-:gutter: 1
+:gutter: 3
 
 :::{grid-item-card} Installation
 

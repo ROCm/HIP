@@ -5,7 +5,7 @@
   :keywords: AMD, ROCm, HIP, CUDA, C++ language extensions
 
 *******************************************************************************
-Programming Model
+Programming model reference
 *******************************************************************************
 
 HIP defines a model of mapping SIMT programs (Single Instruction, Multiple
@@ -14,20 +14,20 @@ expressed in most imperative languages, (eg. Python via PyHIP) this document
 will focus on the original C/C++ API of HIP.
 
 Threading Model
-===============================================================================
+===============
 
 The SIMT nature of HIP is captured by the ability to execute user-provided
 device programs, expressed as single-source C/C++ functions or sources compiled
 online/offline to binaries in bulk.
 
-Multiple instances of the device program (aka. kernel), so called threads, may execute in parallel,
+Multiple instances of the device program (aka. kernel), so-called threads, may execute in parallel,
 all uniquely identified by a set of integral values. The set of integers identifying a thread relate to the hierarchy in
 which threads execute.
 
 .. _inherent_thread_model:
 
 Inherent Thread Model
--------------------------------------------------------------------------------
+---------------------
 
 The thread hierarchy inherent to how AMD GPUs operate is depicted in
 :numref:`inherent_thread_hierarchy`.
@@ -51,7 +51,7 @@ Warp
   When referring to threads inside a warp, they may be called lanes, and the
   integral value identifying them the lane ID. Lane IDs aren't queried like
   other thread IDs, but are user-calculated. As a consequence they are only as
-  multi-dimensional as the user interprets the calculated values to be.
+  multidimensional as the user interprets the calculated values to be.
 
   The size of a warp is architecture dependent and always fixed. Warps are
   signified by the set of communication primitives at their disposal, detailed
@@ -75,12 +75,12 @@ Grid
   by every thread within the block.
 
 Cooperative Groups Thread Model
--------------------------------------------------------------------------------
+-------------------------------
 
 The Cooperative Groups API introduces new APIs to launch, group, subdivide,
 synchronize and identify threads, as well as some predefined group-collective
 algorithms, but most importantly a matching threading model to think in terms
-of. It relaxes some of the restrictions of the :ref:`inherent_thread_model`
+of. It relaxes some restrictions of the :ref:`inherent_thread_model`
 imposed by the strict 1:1 mapping of architectural details to the programming
 model.
 
@@ -98,8 +98,8 @@ The thread hierarchy abstraction of Cooperative Groups manifest as depicted in
   :alt: Diagram depicting the structure of Cooperative Groups using nested
         rectangles. The outermost rectangle is titled Multi Grid, containing
         sets of different shaped rectangles titled Grid. Each Grid contains sets
-        of uniform rectangles layered on oneanother titled Cluster. The Clusters
-        have different shapes in different Grids. Inside of the Clusters are
+        of uniform rectangles layered on one another titled Cluster. The Clusters
+        have different shapes in different Grids. Inside the Clusters are
         uniform rectangles layered on each other titled Block, which include
         arrows that represent threads.
 
@@ -140,7 +140,7 @@ Block
   part of the API, for instance, ``tiled_partition``.
 
 Memory Model
-===============================================================================
+============
 
 The hierarchy of threads introduced by the :ref:`inherent_thread_model` is
 induced by the memory subsystem of GPUs. :numref:`memory_hierarchy` summarizes
@@ -164,7 +164,7 @@ model.
 
 Local
   Read-write storage only visible to the threads defining the given variables,
-  also called per-threas memory. The size of a block for a given kernel,
+  also called per-thread memory. The size of a block for a given kernel,
   the number of concurrent warps are limited by local memory usage.
   This relates to an important aspect: occupancy. This is the default memory
   namespace.
@@ -192,7 +192,7 @@ Surface
   Read-write version of texture memory.
 
 Execution Model
-===============================================================================
+===============
 
 HIP programs consist of two distinct scopes:
 
@@ -204,7 +204,7 @@ HIP programs consist of two distinct scopes:
     model.
 
   * The HIP driver API which sits at a lower level and most importantly differs
-    by removing some of the facilities provided by the runtime API, most
+    by removing some facilities provided by the runtime API, most
     importantly around kernel launching and argument setting. It is geared
     towards implementing abstractions atop, such as the runtime API itself.
 
@@ -213,7 +213,7 @@ HIP programs consist of two distinct scopes:
 Both the host and the device-side APIs have synchronous and asynchronous functions in them.
 
 Host-side execution
--------------------------------------------------------------------------------
+-------------------
 
 The part of the host-side API which deals with device management and their
 queries are synchronous. All asynchronous APIs, such as kernel execution, data
@@ -222,7 +222,7 @@ device streams.
 
 Streams are FIFO buffers of commands to execute on a given device.
 Commands which enqueue tasks on a stream all return promptly and the command is
-executed asynchronously. All side-effects of a command on a stream are visible
+executed asynchronously. All side effects of a command on a stream are visible
 to all subsequent commands on the same stream. Multiple streams may point to
 the same device and those streams may be fed from multiple concurrent host-side
 threads. Execution on multiple streams may be concurrent but isn't required to
@@ -231,20 +231,20 @@ be.
 Asynchronous APIs involving a stream all return a stream event which may be
 used to synchronize the execution of multiple streams. A user may enqueue a
 barrier onto a stream referencing an event. The barrier will block until all
-commands related to the event complete, at which point all side-effects of
+commands related to the event complete, at which point all side effects of
 the commands are visible to commands following the barrier, even if those
-side-effects manifest on different devices.
+side effects manifest on different devices.
 
 Streams also support executing user-defined functions as callbacks on the host.
 The stream will not launch subsequent commands until the callback completes.
 
 Device-side execution
--------------------------------------------------------------------------------
+---------------------
 
 The SIMT programming model behind the HIP device-side execution is a
 middle-ground between SMT (Simultaneous Multi-Threading) programming known from
-multi-core CPUs, and SIMD (Single Instruction, Multiple Data) programming
-mostly known from exploiting relevant instruction sets on CPUs (eg.
+multicore CPUs, and SIMD (Single Instruction, Multiple Data) programming
+mostly known from exploiting relevant instruction sets on CPUs (for example
 SSE/AVX/Neon).
 
 A HIP device compiler maps our SIMT code written in HIP C++ to an inherently
@@ -254,7 +254,7 @@ engines at hand, but by scalarizing the entire kernel and issuing the scalar
 instructions of multiple kernel instances to each of the SIMD engine lanes.
 
 Kernel launch
--------------------------------------------------------------------------------
+-------------
 
 Kernels may be launched in multiple ways all with different syntaxes and
 intended use-cases.
