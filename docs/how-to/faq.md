@@ -243,7 +243,7 @@ hipCUResultTohipError
 If platform portability is important, use #ifdef __HIP_PLATFORM_NVIDIA__ to guard the CUDA-specific code.
 
 ## How do I trace HIP application flow?
-See {doc}`/developer_guide/logging` for more information.
+See {doc}`/how-to/logging` for more information.
 
 ## What are the maximum limits of kernel launch parameters?
 Product of block.x, block.y, and block.z should be less than 1024.
@@ -256,7 +256,7 @@ __shfl_*_sync is not supported on HIP but for nvcc path CUDA 9.0 and above all s
 The compiler defines the `__HIP_DEVICE_COMPILE__` macro only when compiling the code for the GPU.  It could be used to guard code that is specific to the host or the GPU.
 
 ## Why _OpenMP is undefined when compiling with -fopenmp?
-When compiling an OpenMP source file with `hipcc -fopenmp`, the compiler may generate error if there is a reference to the `_OPENMP` macro.  This is due to a limitation in hipcc that treats any source file type (e.g., `.cpp`) as an HIP translation unit leading to some conflicts with the OpenMP language switch.  If the OpenMP source file doesn't contain any HIP language construct, you could work around this issue by adding the `-x c++` switch to force the compiler to treat the file as regular C++.  Another approach would be to guard the OpenMP code with `#ifdef _OPENMP` so that the code block is disabled when compiling for the GPU.  The `__HIP_DEVICE_COMPILE__` macro defined by the HIP compiler when compiling GPU code could also be used for guarding code paths specific to the host or the GPU.
+When compiling an OpenMP source file with `hipcc -fopenmp`, the compiler may generate error if there is a reference to the `_OPENMP` macro.  This is due to a limitation in hipcc that treats any source file type (for example `.cpp`) as an HIP translation unit leading to some conflicts with the OpenMP language switch.  If the OpenMP source file doesn't contain any HIP language constructs you could work around this issue by adding the `-x c++` switch to force the compiler to treat the file as regular C++.  Another approach would be to guard the OpenMP code with `#ifdef _OPENMP` so that the code block is disabled when compiling for the GPU.  The `__HIP_DEVICE_COMPILE__` macro defined by the HIP compiler when compiling GPU code could also be used for guarding code paths specific to the host or the GPU.
 
 ## Does the HIP-Clang compiler support extern shared declarations?
 
