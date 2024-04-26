@@ -1,6 +1,6 @@
 # HIP documentation
 
-HIP is a C++ runtime API and kernel language that allows developers to create
+HIP is a C++ runtime API and kernel language that lets developers create
 portable applications for AMD and NVIDIA GPUs from single source code.
 
 ## Overview
