@@ -1,4 +1,4 @@
-# HIP RTC Programming Guide
+# Programming for HIP Runtime Compiler (RTC)
 
 ## HIP RTC lib
 HIP allows you to compile kernels at runtime with its ```hiprtc*``` APIs.
@@ -6,7 +6,7 @@ Kernels can be stored as a text string and can be passed on to HIPRTC APIs along
 
 NOTE:
 
-  - This library can be used on systems without HIP install nor AMD GPU driver installed at all (offline compilation). Therefore it does not depend on any HIP runtime library.
+  - This library can be used on systems without HIP installed nor AMD GPU driver installed at all (offline compilation). Therefore, it does not depend on any HIP runtime library.
   - But it does depend on COMGr. You may try to statically link COMGr into HIPRTC to avoid any ambiguity.
   - Developers can decide to bundle this library with their application.
 
