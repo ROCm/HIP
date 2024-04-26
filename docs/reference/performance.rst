@@ -246,11 +246,11 @@ predicate are scheduled but not executed, avoiding unnecessary operations.
 
 Synchronization
 -------------------------------------------------------------------------------
- Synchronization ensures that all threads within a block have completed their
- computations and memory accesses before moving forward, which is critical when
- threads are dependent on the results of other threads. However,
- synchronization can also lead to performance overhead, as it requires threads
- to wait, potentially leading to idle GPU resources.
+Synchronization ensures that all threads within a block have completed their
+computations and memory accesses before moving forward, which is critical when
+threads are dependent on the results of other threads. However,
+synchronization can also lead to performance overhead, as it requires threads
+to wait, potentially leading to idle GPU resources.
 
 ``__syncthreads()`` is used to synchronize all threads in a block, ensuring
 that all threads have reached the same point in the code and that shared memory
@@ -267,6 +267,7 @@ Applications frequently allocating and freeing memory may experience slower
 allocation calls over time. This is expected as memory is released back to the
 operating system. To optimize performance in such scenarios, consider some
 recommendations:
+
 - avoid allocating all available memory with ``hipMalloc`` / ``hipHostMalloc``,
   as this immediately reserves memory and can block other applications from
   using it. This could strain the operating system schedulers or even prevent
