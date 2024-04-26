@@ -17,7 +17,7 @@ optimization potential of HIP.
 
 - parallel execution
 - memory usage optimization
-- optimization for maximum instruction
+- optimization for maximum throughput
 - minimizing memory thrashing
 
 In the following chapters, we will show you their benefits and how to use them
@@ -26,7 +26,7 @@ effectively.
 .. _parallel execution:
 Parallel execution
 ===============================================================================
-For optimal use, the application should reveal and efficiently allocate as much
+For optimal use, the application should reveal and efficiently imply as much
 parallelism as possible to keep all system components active.
 
 Application level
@@ -36,7 +36,7 @@ using asynchronous calls and streams. Workloads should be assigned based on
 efficiency: serial to the host, parallel to the devices.
 
 For parallel workloads, when threads need to synchronize to share data, if they
-belong to the same block, they should use `__syncthreads()` (see:
+belong to the same block, they should use ``__syncthreads()`` (see:
 :ref:`synchronization functions`) within the same kernel invocation. If they 
 belong to different blocks, they must use global memory with two separate 
 kernel invocations. The latter should be minimized as it adds overhead.
@@ -63,7 +63,7 @@ handle.
 
 The key to multiprocessor-level optimization is to efficiently utilize the 
 various functional units within a multiprocessor. This can be achieved by 
-ensuring a sufficient number of resident warps, and at every instruction issue 
+ensuring a sufficient number of resident warps, as at every instruction issue
 time, a warp scheduler selects an instruction that is ready to execute. This 
 instruction can be another independent instruction of the same warp, exploiting
 :ref:`instruction optimization<instruction-level parallelism>`, or more 
@@ -91,7 +91,7 @@ allocates and accesses it. A common programming pattern is to stage data from
 device memory into shared memory. This involves each thread of a block loading 
 data from device memory to shared memory, synchronizing with all other threads 
 of the block, processing the data in shared memory, synchronizing again if 
-necessary, and writing the results back to device memory.
+necessary, and writing the results back to device global memory.
 
 For some applications, a traditional hardware-managed cache is more appropriate
 to exploit data locality. On devices of certain compute capabilities, the same 
@@ -108,7 +108,7 @@ generally have a high impact on performance.
 
 Data Transfer
 -------------------------------------------------------------------------------
-applications should aim to minimize data transfers between the host and the 
+Applications should aim to minimize data transfers between the host and the 
 device. This can be achieved by moving more computations from the host to the 
 device, even if it means running kernels that do not fully utilize the 
 parallelism for device. Intermediate data structures can be created, used, 
@@ -150,11 +150,12 @@ performance. Therefore, using data types that meet these requirements, ensuring
 alignment for structures, and maintaining alignment for all values or arrays is
 crucial for correct results and optimal performance.
 
-threads often access 2D arrays at an address calculated by 
-`BaseAddress + xIndex + width * yIndex`. For efficient memory access, the array
-and thread block widths should be multiples of the warp size. If the array 
-width is not a multiple of the warp size, it is more efficient to allocate it
-with a width rounded up to the nearest multiple and pad the rows accordingly.
+Threads often access 2D arrays at an address calculated as
+``BaseAddress + xIndex + width * yIndex``. For efficient memory access, the
+array and thread block widths should be multiples of the warp size. If the
+array width is not a multiple of the warp size, it is usually more efficient to
+allocate it with a width rounded up to the nearest multiple and pad the rows
+accordingly.
 
 Local memory is used for certain automatic variables, such as arrays with 
 non-constant indices, large structures or arrays, and any variable when the 
@@ -182,16 +183,17 @@ for threads reading close 2D addresses. Reading device memory through texture
 or surface fetching can be advantageous, offering higher bandwidth for local
 texture fetches or surface reads, offloading addressing calculations,
 allowing data broadcasting, and optional conversion of 8-bit and 16-bit integer
-input data to 32-bit floating-point values.
+input data to 32-bit floating-point values on-the-fly.
 
 .. _instruction optimization:
-Optimization for maximum instruction
+Optimization for maximum instruction throughput
 ===============================================================================
 To maximize instruction throughput:
 
 - minimize low throughput arithmetic instructions
 - minimize divergent warps inflicted by control flow instructions
 - minimize the number of instruction as possible
+- maximize instruction parallelism
 
 Arithmetic instructions
 -------------------------------------------------------------------------------
@@ -201,7 +203,8 @@ it.
 
 Using efficient operations: Some arithmetic operations are more costly than 
 others. For example, multiplication is typically faster than division, and 
-integer operations are usually faster than floating-point operations.
+integer operations are usually faster than floating-point operations,
+especially with double-precision.
 
 Minimizing low-throughput instructions: This might involve trading precision 
 for speed when it does not affect the final result. For instance, consider 
@@ -209,8 +212,8 @@ using single-precision arithmetic instead of double-precision.
 
 Leverage intrinsic functions: Intrinsic functions are pre-defined functions 
 available in HIP that can often be executed faster than equivalent arithmetic 
-operations. They can help optimize performance by replacing more complex 
-arithmetic operations.
+operations (subject to some input or accuracy restrictions). They can help
+optimize performance by replacing more complex arithmetic operations.
 
 Avoiding divergent warps: Divergent warps occur when threads within the same 
 warp follow different execution paths. This can happen due to conditional 
@@ -223,34 +226,40 @@ of arithmetic operations. Coalesced memory access, where threads in a warp
 access consecutive memory locations, can improve memory throughput and thus 
 the speed of arithmetic operations.
 
+Maximizing instruction parallelism: Some GPU architectures could issue parallel
+independent instructions simultaneously, for example integer and floating
+point, or two operations with independent inputs and outputs. Mostly this is a
+work for compiler, but expressing parallelism in the code explicitly can
+improve instructions throughput.
+
 Control flow instructions
 -------------------------------------------------------------------------------
-Flow control instructions (`if`, `else`, `for`, `do`, `while`, `break`, 
-`continue`, `switch`) can impact instruction throughput by causing threads 
-within a warp to diverge and follow different execution paths. To optimize 
-performance, control conditions should be written to minimize divergent warps. 
-For example, when the control condition depends on (`threadIdx` / `warpSize`), 
-no warp diverges. The compiler may optimize loops or short if or switch blocks 
-using branch predication, preventing warp divergence. With branch predication, 
-instructions associated with a false predicate are scheduled but not executed, 
-avoiding unnecessary operations.
+Flow control instructions (``if``, ``else``, ``for``, ``do``, ``while``,
+``break``, ``continue``, ``switch``) can impact instruction throughput by
+causing threads within a warp to diverge and follow different execution paths.
+To optimize performance, control conditions should be written to minimize
+divergent warps. For example, when the control condition depends on
+(``threadIdx`` / ``warpSize``), no warp diverges. The compiler may optimize
+loops or short if or switch blocks using branch predication, preventing warp
+divergence. With branch predication, instructions associated with a false
+predicate are scheduled but not executed, avoiding unnecessary operations.
 
 Synchronization
 -------------------------------------------------------------------------------
- Synchronization ensures that all threads within a block have completed their 
- computations before moving forward, which is critical when threads are 
- dependent on the results of other threads. However, synchronization can also 
- lead to performance overhead, as it requires threads to wait, potentially
- leading to idle GPU resources.
+ Synchronization ensures that all threads within a block have completed their
+ computations and memory accesses before moving forward, which is critical when
+ threads are dependent on the results of other threads. However,
+ synchronization can also lead to performance overhead, as it requires threads
+ to wait, potentially leading to idle GPU resources.
 
-`__syncthreads()` is used to synchronize all threads in a block, ensuring that
-all threads have reached the same point in the code and that shared memory is
-visible to all threads after the point of synchronization.
+``__syncthreads()`` is used to synchronize all threads in a block, ensuring
+that all threads have reached the same point in the code and that shared memory
+is visible to all threads after the point of synchronization.
 
- As for alternative ways to synchronize is using streams. Different streams 
- can execute commands out of order with respect to one another or concurrently.
- This allows for more fine-grained control over the execution order of 
- commands, which can be beneficial in certain scenarios.
+An alternative way to synchronize is using streams. Different streams can
+execute commands out of order with respect to one another or concurrently. This
+allows for more fine-grained control over the execution order of commands,
+which can be beneficial in certain scenarios.
 
 Minimizing memory thrashing
 ===============================================================================
@@ -258,20 +267,20 @@ Applications frequently allocating and freeing memory may experience slower
 allocation calls over time. This is expected as memory is released back to the 
 operating system. To optimize performance in such scenarios, consider some 
 recommendations:
-- avoid allocating all available memory with `hipMalloc` / `hipHostMalloc`, 
+- avoid allocating all available memory with ``hipMalloc`` / ``hipHostMalloc``,
   as this immediately reserves memory and can block other applications from 
   using it. This could strain the operating system schedulers or even prevent
   other applications from running on the same GPU.
 - aim to allocate memory in suitably sized blocks early in the lifecycle of the
   application and deallocate only when the application no longer needs it. 
-  Minimize the number of `hipMalloc` and `hipFree` calls in your application,
-  particularly in areas critical to performance.
+  Minimize the number of ``hipMalloc`` and ``hipFree`` calls in your
+  application, particularly in areas critical to performance.
 - if an application is unable to allocate sufficient device memory, consider 
-  resorting to other memory types such as `hipHostMalloc` or 
-  `hipMallocManaged`. While these may not offer the same performance, they can 
-  allow the application to continue running.
-- For supported platforms, `hipMallocManaged` allows for oversubscription. With
-  the right memory advise policies, it can maintain most, if not all, of the 
-  performance of `hipMalloc`. hipMallocManaged does not require an allocation 
-  to be resident until it is needed or prefetched, easing the load on the 
-  operating system schedulers and facilitating multi-tenant scenarios.
+  resorting to other memory types such as ``hipHostMalloc`` or
+  ``hipMallocManaged``. While these may not offer the same performance, they
+  can allow the application to continue running.
+- For supported platforms, ``hipMallocManaged`` allows for oversubscription.
+  With the right memory advise policies, it can maintain most, if not all, of
+  the performance of ``hipMalloc``. ``hipMallocManaged`` does not require an
+  allocation to be resident until it is needed or prefetched, easing the load
+  on the operating system schedulers and facilitating multi-tenant scenarios.
