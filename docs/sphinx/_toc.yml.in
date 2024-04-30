@@ -16,7 +16,6 @@ subtrees:
 - caption: Reference
   entries:
     - file: reference/programming_model
-    - file: reference/performance_guidelines
     - file: old/reference/kernel_language
     - file: doxygen/mainpage.md
       title: API library
@@ -29,6 +28,8 @@ subtrees:
     title: Logging
   - file: how-to/debugging
     title: Debugging
+  - file: how-to/performance_guidelines
+    title: Performance Guidelines
 
 - caption: Conceptual
   entries:
