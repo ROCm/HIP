@@ -24,6 +24,7 @@ subtrees:
   - file: how-to/hip_porting_guide
   - file: how-to/hip_porting_driver_api
   - file: how-to/hip_rtc
+  - file: reference/performance_guidelines
   - file: how-to/debugging
   - file: how-to/logging
   - file: how-to/faq
@@ -32,11 +33,17 @@ subtrees:
   entries:
   - file: doxygen/html/index
   - file: reference/kernel_language
-    title: C++ kernel language
-  - file: reference/math_api
+    title: C++ language extensions
   - file: reference/terms
   - file: reference/deprecated_api_list
     title: List of deprecated APIs
+
+- caption: Tutorials
+  entries:
+  - file: https://github.com/ROCm/HIP-Examples
+    title: HIP examples
+  - file: https://github.com/ROCm/hip-tests/tree/develop/samples
+    title: HIP test samples
 
 - caption: About
   entries:
