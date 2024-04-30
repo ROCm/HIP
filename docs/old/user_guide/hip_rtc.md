@@ -6,7 +6,7 @@ Kernels can be stored as a text string and can be passed on to HIPRTC APIs along
 
 NOTE:
 
-  - This library can be used on systems without HIP install nor AMD GPU driver installed at all (offline compilation). Therefore it does not depend on any HIP runtime library.
+  - This library can be used on systems without HIP install nor AMD GPU driver installed at all (offline compilation). Therefore, it does not depend on any HIP runtime library.
   - But it does depend on COMGr. You may try to statically link COMGr into HIPRTC to avoid any ambiguity.
   - Developers can decide to bundle this library with their application.
 
@@ -19,24 +19,27 @@ To use HIPRTC functionality, HIPRTC header needs to be included first.
 
 Kernels can be stored in a string:
 ```cpp
-static constexpr auto kernel {
+static constexpr auto kernel_source {
 R"(
     extern "C"
-    __global__ void gpu_kernel(...) {
-        // Kernel Functionality
+    __global__ void vector_add(float* output, float* input1, float* input2, size_t size) {
+      int i = threadIdx.x;
+      if (i < size) {
+        output[i] = input1[i] + input2[i];
+      }
     }
 )"};
 ```
 
-Now to compile this kernel, it needs to be associated with hiprtcProgram type, which is done via declaring ```hiprtcProgram prog;``` and associating the string of kernel with this program:
+Now to compile this kernel, it needs to be associated with hiprtcProgram type, which is done by declaring ```hiprtcProgram prog;``` and associating the string of kernel with this program:
 
 ```cpp
-hiprtcCreateProgram(&prog,                 // HIPRTC program
-                    kernel,                // kernel string
-                    "gpu_kernel.cu",       // Name of the file
-                    num_headers,           // Number of headers
-                    &header_sources[0],    // Header sources
-                    &header_names[0]);     // Name of header files
+hiprtcCreateProgram(&prog,                 // HIPRTC program handle
+                    kernel_source,         // HIP kernel source string
+                    "vector_add.cpp",      // Name of the HIP program, can be null or an empty string
+                    0,                     // Number of headers
+                    NULL,                  // Header sources
+                    NULL);                 // Name of header files
 ```
 
 hiprtcCreateProgram API also allows you to add headers which can be included in your rtc program.
@@ -82,12 +85,142 @@ hipModule_t module;
 hipFunction_t kernel;
 
 hipModuleLoadData(&module, kernel_binary.data());
-hipModuleGetFunction(&kernel, module, "gpu_kernel");
+hipModuleGetFunction(&kernel, module, "vector_add");
 ```
 
 And now this kernel can be launched via hipModule APIs.
 
-Please have a look at saxpy.cpp and hiprtcGetLoweredName.cpp files for a detailed example.
+The full example is below:
+```cpp
+#include <hip/hip_runtime.h>
+#include <hip/hiprtc.h>
+
+#include <iostream>
+#include <string>
+#include <vector>
+
+#define CHECK_RET_CODE(call, ret_code)                                                             \
+  {                                                                                                \
+    if ((call) != ret_code) {                                                                      \
+      std::cout << "Failed in call: " << #call << std::endl;                                       \
+      std::abort();                                                                                \
+    }                                                                                              \
+  }
+#define HIP_CHECK(call) CHECK_RET_CODE(call, hipSuccess)
+#define HIPRTC_CHECK(call) CHECK_RET_CODE(call, HIPRTC_SUCCESS)
+
+// source code for hiprtc
+static constexpr auto kernel_source{
+    R"(
+    extern "C"
+    __global__ void vector_add(float* output, float* input1, float* input2, size_t size) {
+      int i = threadIdx.x;
+      if (i < size) {
+        output[i] = input1[i] + input2[i];
+      }
+    }
+)"};
+
+int main() {
+  hiprtcProgram prog;
+  auto rtc_ret_code = hiprtcCreateProgram(&prog,            // HIPRTC program handle
+                                          kernel_source,    // kernel source string
+                                          "vector_add.cpp", // Name of the file
+                                          0,                // Number of headers
+                                          NULL,             // Header sources
+                                          NULL);            // Name of header file
+
+  if (rtc_ret_code != HIPRTC_SUCCESS) {
+    std::cout << "Failed to create program" << std::endl;
+    std::abort();
+  }
+
+  hipDeviceProp_t props;
+  int device = 0;
+  HIP_CHECK(hipGetDeviceProperties(&props, device));
+  std::string sarg = std::string("--gpu-architecture=") +
+      props.gcnArchName;  // device for which binary is to be generated
+
+  const char* options[] = {sarg.c_str()};
+
+  rtc_ret_code = hiprtcCompileProgram(prog,      // hiprtcProgram
+                                      0,         // Number of options
+                                      options);  // Clang Options
+  if (rtc_ret_code != HIPRTC_SUCCESS) {
+    std::cout << "Failed to create program" << std::endl;
+    std::abort();
+  }
+
+  size_t logSize;
+  HIPRTC_CHECK(hiprtcGetProgramLogSize(prog, &logSize));
+
+  if (logSize) {
+    std::string log(logSize, '\0');
+    HIPRTC_CHECK(hiprtcGetProgramLog(prog, &log[0]));
+    std::cout << "Compilation failed with: " << log << std::endl;
+    std::abort();
+  }
+
+  size_t codeSize;
+  HIPRTC_CHECK(hiprtcGetCodeSize(prog, &codeSize));
+
+  std::vector<char> kernel_binary(codeSize);
+  HIPRTC_CHECK(hiprtcGetCode(prog, kernel_binary.data()));
+
+  HIPRTC_CHECK(hiprtcDestroyProgram(&prog));
+
+  hipModule_t module;
+  hipFunction_t kernel;
+
+  HIP_CHECK(hipModuleLoadData(&module, kernel_binary.data()));
+  HIP_CHECK(hipModuleGetFunction(&kernel, module, "vector_add"));
+
+  constexpr size_t ele_size = 256;  // total number of items to add
+  std::vector<float> hinput, output;
+  hinput.reserve(ele_size);
+  output.reserve(ele_size);
+  for (size_t i = 0; i < ele_size; i++) {
+    hinput.push_back(static_cast<float>(i + 1));
+    output.push_back(0.0f);
+  }
+
+  float *dinput1, *dinput2, *doutput;
+  HIP_CHECK(hipMalloc(&dinput1, sizeof(float) * ele_size));
+  HIP_CHECK(hipMalloc(&dinput2, sizeof(float) * ele_size));
+  HIP_CHECK(hipMalloc(&doutput, sizeof(float) * ele_size));
+
+  HIP_CHECK(hipMemcpy(dinput1, hinput.data(), sizeof(float) * ele_size, hipMemcpyHostToDevice));
+  HIP_CHECK(hipMemcpy(dinput2, hinput.data(), sizeof(float) * ele_size, hipMemcpyHostToDevice));
+
+  struct {
+    float* output;
+    float* input1;
+    float* input2;
+    size_t size;
+  } args{doutput, dinput1, dinput2, ele_size};
+
+  auto size = sizeof(args);
+  void* config[] = {HIP_LAUNCH_PARAM_BUFFER_POINTER, &args, HIP_LAUNCH_PARAM_BUFFER_SIZE, &size,
+                    HIP_LAUNCH_PARAM_END};
+
+  HIP_CHECK(hipModuleLaunchKernel(kernel, 1, 1, 1, ele_size, 1, 1, 0, nullptr, nullptr, config));
+
+  HIP_CHECK(hipMemcpy(output.data(), doutput, sizeof(float) * ele_size, hipMemcpyDeviceToHost));
+
+  for (size_t i = 0; i < ele_size; i++) {
+    if ((hinput[i] + hinput[i]) != output[i]) {
+      std::cout << "Failed in validation: " << (hinput[i] + hinput[i]) << " - " << output[i]
+                << std::endl;
+      std::abort();
+    }
+  }
+  std::cout << "Passed" << std::endl;
+
+  HIP_CHECK(hipFree(dinput1));
+  HIP_CHECK(hipFree(dinput2));
+  HIP_CHECK(hipFree(doutput));
+}
+```
 
 #### HIPRTC specific options
 HIPRTC provides a few HIPRTC specific flags
@@ -118,9 +251,9 @@ hiprtcGetBitcode(prog, kernel_bitcode.data());
 
 #### CU Mode vs WGP mode
 
-AMD GPUs consist of array of workgroup processors, which are built with 2 compute units(CUs) each capeable of executing SIMD32. Local data share(LDS) is shared by all the CUs inside a workgroup processor.
+AMD GPUs consist of an array of workgroup processors, each built with 2 compute units (CUs) capable of executing SIMD32. All the CUs inside a workgroup processor use local data share (LDS).
 
-gfx10+ support execution of wavefront in CU mode and WGP mode. Please refer to section 2.3 of [RDNA3 ISA reference](https://www.amd.com/content/dam/amd/en/documents/radeon-tech-docs/instruction-set-architectures/rdna3-shader-instruction-set-architecture-feb-2023_0.pdf).
+gfx10+ support execution of wavefront in CU mode and work-group processor mode (WGP). Please refer to section 2.3 of [RDNA3 ISA reference](https://www.amd.com/content/dam/amd/en/documents/radeon-tech-docs/instruction-set-architectures/rdna3-shader-instruction-set-architecture-feb-2023_0.pdf).
 
 gfx9 and below only supports CU mode.
 
@@ -162,7 +295,7 @@ hiprtcLinkAddFile(rtc_link_state,        // HIPRTC link state
                   0);                    // Array of option values cast to void*
 ```
 
-Once the bitcodes for multiple archs are added to the link instance, the linking of the device code must be completed using hiprtcLinkComplete which generates the final binary.
+Once the bitcodes for multiple architectures are added to the link instance, the linking of the device code must be completed using hiprtcLinkComplete which generates the final binary.
 ```cpp
 hiprtcLinkComplete(rtc_link_state,       // HIPRTC link state
                    &binary,              // upon success, points to the output binary
@@ -272,7 +405,7 @@ The two APIs hiprtcAddNameExpression and hiprtcGetLoweredName provide this funct
 kernel containing various definitions ```__global__``` functions/function templates and ```__device__/__constant__``` variables can be stored in a string.
 
 ```cpp
-static constexpr const char gpu_program[]{
+static constexpr const char gpu_program[] {
 R"(
 __device__ int V1; // set from host code
 static __global__ void f1(int *result) { *result = V1 + 10; }
@@ -334,13 +467,13 @@ Please have a look at hiprtcGetLoweredName.cpp for the detailed example.
 HIPRTC follows the below versioning.
  - Linux
     - HIPRTC follows the same versioning as HIP runtime library.
-    - The soname field for the shared library is set to MAJOR version. eg: For HIP 5.3 the soname is set to 5 (hiprtc.so.5).
+    - The `so` name field for the shared library is set to MAJOR version. For example, for HIP 5.3 the `so` name is set to 5 (hiprtc.so.5).
  - Windows
-    - HIPRTC dll is named as hiprtcXXYY.dll where XX is MAJOR version and YY is MINOR version. eg: For HIP 5.3 the name is hiprtc0503.dll.
+    - HIPRTC dll is named as hiprtcXXYY.dll where XX is MAJOR version and YY is MINOR version. For example, for HIP 5.3 the name is hiprtc0503.dll.
 
 ## HIP header support
  - Added HIPRTC support for all the hip common header files such as library_types.h, hip_math_constants.h, hip_complex.h, math_functions.h, surface_types.h etc. from 6.1. HIPRTC users need not include any HIP macros or constants explicitly in their header files. All of these should get included via HIPRTC builtins when the app links to HIPRTC library.
 
 ## Deprecation notice
- - Currently HIPRTC APIs are separated from HIP APIs and HIPRTC is available as a separate library libhiprtc.so/libhiprtc.dll. But on Linux, HIPRTC symbols are also present in libhipamd64.so in order to support the existing applications. Gradually, these symbols will be removed from HIP library and applications using HIPRTC will be required to explictly link to HIPRTC library. However, on Windows hiprtc.dll must be used as the hipamd64.dll doesn't contain the HIPRTC symbols.
- - Datatypes such as uint32_t, uint64_t, int32_t, int64_t defined in std namespace in HIPRTC are deprecated earlier and are being removed from ROCm release 6.1 since these can conflict with the standard C++ datatypes. These datatypes are now prefixed with __hip__, e.g. __hip_uint32_t. Apps previously using std::uint32_t or similar types can use __hip_ prefixed types to avoid conflicts with standard std namespace or apps can have their own definitions for these types. Also, type_traits templates previously defined in std namespace are moved to __hip_internal namespace as implementation details.
+ - Currently HIPRTC APIs are separated from HIP APIs and HIPRTC is available as a separate library libhiprtc.so/libhiprtc.dll. But on Linux, HIPRTC symbols are also present in libhipamd64.so in order to support the existing applications. Gradually, these symbols will be removed from HIP library and applications using HIPRTC will be required to explicitly link to HIPRTC library. However, on Windows hiprtc.dll must be used as the hipamd64.dll doesn't contain the HIPRTC symbols.
+ - Data types such as uint32_t, uint64_t, int32_t, int64_t defined in std namespace in HIPRTC are deprecated earlier and are being removed from ROCm release 6.1 since these can conflict with the standard C++ data types. These data types are now prefixed with __hip__, e.g. __hip_uint32_t. Applications previously using std::uint32_t or similar types can use __hip_ prefixed types to avoid conflicts with standard std namespace or application can have their own definitions for these types. Also, type_traits templates previously defined in std namespace are moved to __hip_internal namespace as implementation details.

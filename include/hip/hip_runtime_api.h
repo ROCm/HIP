@@ -102,7 +102,7 @@ typedef struct hipDeviceProp_t {
     char luid[8];                     ///< 8-byte unique identifier. Only valid on windows
     unsigned int luidDeviceNodeMask;  ///< LUID node mask
     size_t totalGlobalMem;            ///< Size of global memory region (in bytes).
-    size_t sharedMemPerBlock;         ///< Size of shared memory region (in bytes).
+    size_t sharedMemPerBlock;         ///< Size of shared memory per block (in bytes).
     int regsPerBlock;                 ///< Registers per block.
     int warpSize;                     ///< Warp size.
     size_t memPitch;                  ///< Maximum pitch in bytes allowed by memory copies
@@ -111,7 +111,8 @@ typedef struct hipDeviceProp_t {
     int maxThreadsDim[3];             ///< Max number of threads in each dimension (XYZ) of a block.
     int maxGridSize[3];               ///< Max grid dimensions (XYZ).
     int clockRate;                    ///< Max clock frequency of the multiProcessors in khz.
-    size_t totalConstMem;             ///< Size of shared memory region (in bytes).
+    size_t totalConstMem;             ///< Size of shared constant memory region on the device
+                                      ///< (in bytes).
     int major;  ///< Major compute capability.  On HCC, this is an approximation and features may
                 ///< differ from CUDA CC.  See the arch feature flags for portable ways to query
                 ///< feature caps.
@@ -746,6 +747,9 @@ enum hipLimit_t {
 /** Memory allocated will be uncached. */
 #define hipDeviceMallocUncached 0x3
 
+/** Memory allocated will be contiguous. */
+#define hipDeviceMallocContiguous 0x4
+
 //Flags that can be used with hipHostRegister.
 /** Memory is Mapped and Portable.*/
 #define hipHostRegisterDefault 0x0
@@ -803,6 +807,8 @@ enum hipLimit_t {
 // Stream per thread
 /** Implicit stream per application thread.*/
 #define hipStreamPerThread ((hipStream_t)2)
+
+#define hipStreamLegacy ((hipStream_t)1)
 
 // Indicates that the external memory object is a dedicated resource
 #define hipExternalMemoryDedicated 0x1
@@ -979,7 +985,8 @@ typedef struct hipMemPoolProps {
      * Windows-specific LPSECURITYATTRIBUTES required when @p hipMemHandleTypeWin32 is specified
      */
     void*                       win32SecurityAttributes;
-    unsigned char               reserved[64]; ///< Reserved for future use, must be 0
+    size_t                      maxSize;  ///< Maximum pool size. When set to 0, defaults to a system dependent value
+    unsigned char               reserved[56];  ///< Reserved for future use, must be 0
 } hipMemPoolProps;
 /**
  * Opaque data structure for exporting a pool allocation
@@ -1614,6 +1621,44 @@ typedef struct hipGraphNodeParams {
 
     long long reserved2;
 } hipGraphNodeParams;
+
+/**
+ * This port activates when the kernel has finished executing.
+ */
+#define hipGraphKernelNodePortDefault 0
+
+/**
+ * This port activates when all blocks of the kernel have begun execution.
+ */
+#define hipGraphKernelNodePortLaunchCompletion 2
+
+/**
+ * This port activates when all blocks of the kernel have performed
+ * hipTriggerProgrammaticLaunchCompletion() or have terminated.
+ * It must be used with edge type hipGraphDependencyTypeProgrammatic.
+ */
+#define hipGraphKernelNodePortProgrammatic 1
+
+typedef enum hipGraphDependencyType {
+  hipGraphDependencyTypeDefault = 0,
+  hipGraphDependencyTypeProgrammatic = 1
+}hipGraphDependencyType;
+
+typedef struct hipGraphEdgeData {
+  unsigned char
+      from_port;  ///< This indicates when the dependency is triggered from the upstream node on the
+                  ///< edge. The meaning is specfic to the node type. A value of 0 in all cases
+                  ///< means full completion of the upstream node, with memory visibility to the
+                  ///< downstream node or portion thereof (indicated by to_port). Only kernel nodes
+                  ///< define non-zero ports. A kernel node can use the following output port types:
+                  ///< hipGraphKernelNodePortDefault, hipGraphKernelNodePortProgrammatic, or
+                  ///< hipGraphKernelNodePortLaunchCompletion.
+  unsigned char reserved[5];  ///< These bytes are unused and must be zeroed
+  unsigned char
+      to_port;  ///< Currently no node types define non-zero ports. This field must be set to zero.
+  unsigned char type;  ///< This should be populated with a value from hipGraphDependencyType
+} hipGraphEdgeData;
+
 // Doxygen end group GlobalDefs
 /**
 * @}
@@ -2334,7 +2379,7 @@ hipError_t hipDrvGetErrorString(hipError_t hipError, const char** errorString);
  * Create a new asynchronous stream.  @p stream returns an opaque handle that can be used to
  * reference the newly created stream in subsequent hipStream* commands.  The stream is allocated on
  * the heap and will remain allocated even if the handle goes out-of-scope.  To release the memory
- * used by the stream, applicaiton must call hipStreamDestroy.
+ * used by the stream, application must call hipStreamDestroy.
  *
  * @return #hipSuccess, #hipErrorInvalidValue
  *
@@ -2351,7 +2396,7 @@ hipError_t hipStreamCreate(hipStream_t* stream);
  * Create a new asynchronous stream.  @p stream returns an opaque handle that can be used to
  * reference the newly created stream in subsequent hipStream* commands.  The stream is allocated on
  * the heap and will remain allocated even if the handle goes out-of-scope.  To release the memory
- * used by the stream, applicaiton must call hipStreamDestroy. Flags controls behavior of the
+ * used by the stream, application must call hipStreamDestroy. Flags controls behavior of the
  * stream.  See #hipStreamDefault, #hipStreamNonBlocking.
  *
  *
@@ -2369,7 +2414,7 @@ hipError_t hipStreamCreateWithFlags(hipStream_t* stream, unsigned int flags);
  * Create a new asynchronous stream with the specified priority.  @p stream returns an opaque handle
  * that can be used to reference the newly created stream in subsequent hipStream* commands.  The
  * stream is allocated on the heap and will remain allocated even if the handle goes out-of-scope.
- * To release the memory used by the stream, applicaiton must call hipStreamDestroy. Flags controls
+ * To release the memory used by the stream, application must call hipStreamDestroy. Flags controls
  * behavior of the stream.  See #hipStreamDefault, #hipStreamNonBlocking.
  *
  *
@@ -2387,7 +2432,7 @@ hipError_t hipStreamCreateWithPriority(hipStream_t* stream, unsigned int flags, 
  * and greatest stream priority respectively. Stream priorities follow a convention where lower numbers
  * imply greater priorities. The range of meaningful stream priorities is given by
  * [*greatestPriority, *leastPriority]. If the user attempts to create a stream with a priority value
- * that is outside the the meaningful range as specified by this API, the priority is automatically
+ * that is outside the meaningful range as specified by this API, the priority is automatically
  * clamped to within the valid range.
  */
 hipError_t hipDeviceGetStreamPriorityRange(int* leastPriority, int* greatestPriority);
@@ -2459,8 +2504,8 @@ hipError_t hipStreamSynchronize(hipStream_t stream);
  * All future work submitted to @p stream will wait until @p event reports completion before
  * beginning execution.
  *
- * This function only waits for commands in the current stream to complete.  Notably,, this function
- * does not impliciy wait for commands in the default stream to complete, even if the specified
+ * This function only waits for commands in the current stream to complete.  Notably, this function
+ * does not implicitly wait for commands in the default stream to complete, even if the specified
  * stream is created with hipStreamNonBlocking = 0.
  *
  * @see hipStreamCreate, hipStreamCreateWithFlags, hipStreamCreateWithPriority, hipStreamSynchronize, hipStreamDestroy
@@ -3310,7 +3355,7 @@ hipError_t hipStreamAttachMemAsync(hipStream_t stream,
  *
  * Inserts a memory allocation operation into @p stream.
  * A pointer to the allocated memory is returned immediately in *dptr.
- * The allocation must not be accessed until the the allocation operation completes.
+ * The allocation must not be accessed until the allocation operation completes.
  * The allocation comes from the memory pool associated with the stream's device.
  *
  * @note The default memory pool of a device contains device memory from that device.
@@ -3562,7 +3607,7 @@ hipError_t hipMemPoolDestroy(hipMemPool_t mem_pool);
  *
  * Inserts an allocation operation into @p stream.
  * A pointer to the allocated memory is returned immediately in @p dev_ptr.
- * The allocation must not be accessed until the the allocation operation completes.
+ * The allocation must not be accessed until the allocation operation completes.
  * The allocation comes from the specified memory pool.
  *
  * @note The specified memory pool may be from a device different than that of the specified @p stream.
@@ -5299,6 +5344,16 @@ hipError_t hipFuncGetAttributes(struct hipFuncAttributes* attr, const void* func
  */
 hipError_t hipFuncGetAttribute(int* value, hipFunction_attribute attrib, hipFunction_t hfunc);
 /**
+ * @brief Gets pointer to device entry function that matches entry function symbolPtr.
+ *
+ * @param [out] functionPtr  Device entry function
+ * @param [in]  symbolPtr  Pointer to device entry function to search for
+ *
+ * @returns #hipSuccess, #hipErrorInvalidDeviceFunction
+ *
+ */
+hipError_t hipGetFuncBySymbol(hipFunction_t* functionPtr, const void* symbolPtr);
+/**
  * @brief returns the handle of the texture reference with the name from the module.
  *
  * @param [in] hmod  Module
@@ -6254,7 +6309,7 @@ hipError_t hipGetTextureAlignmentOffset(
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipUnbindTexture(const textureReference* tex);
 /**
- * @brief Gets the the address for a texture reference.
+ * @brief Gets the address for a texture reference.
  *
  * @param [out] dev_ptr  Pointer of device address.
  * @param [in] texRef  Pointer of texture reference.
@@ -6636,6 +6691,30 @@ int hipGetStreamDeviceId(hipStream_t stream);
  *
  */
 hipError_t hipStreamBeginCapture(hipStream_t stream, hipStreamCaptureMode mode);
+
+/**
+* @brief Begins graph capture on a stream to an existing graph.
+*
+* @param [in] stream - Stream to initiate capture.
+* @param [in] graph - Graph to capture into.
+* @param [in] dependencies - Dependencies of the first node captured in the stream. Can be NULL if
+* numDependencies is 0.
+* @param [in] dependencyData - Optional array of data associated with each dependency.
+* @param [in] numDependencies - Number of dependencies.
+* @param [in] mode - Controls the interaction of this capture sequence with other API calls that
+are not safe.
+*
+* @returns #hipSuccess, #hipErrorInvalidValue
+*
+* @warning : param "const hipGraphEdgeData* dependencyData" is currently not supported and has to
+passed as nullptr. This API is marked as beta, meaning, while this is feature complete, it is still
+open to changes and may have outstanding issues.
+*
+*/
+hipError_t hipStreamBeginCaptureToGraph(hipStream_t stream, hipGraph_t graph,
+                                        const hipGraphNode_t* dependencies,
+                                        const hipGraphEdgeData* dependencyData,
+                                        size_t numDependencies, hipStreamCaptureMode mode);
 
 /**
  * @brief Ends capture on a stream, returning the captured graph.
