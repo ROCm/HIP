@@ -1,6 +1,5 @@
 .. meta::
-  :description: This chapter describes a set of best practices designed to help
-   developers optimize the performance of HIP-capable GPU architectures.
+  :description: This chapter describes a set of best practices designed to help developers optimize the performance of HIP-capable GPU architectures.
   :keywords: AMD, ROCm, HIP, CUDA, performance, guidelines
 
 *******************************************************************************
@@ -24,13 +23,16 @@ In the following chapters, we will show you their benefits and how to use them
 effectively.
 
 .. _parallel execution:
+
 Parallel execution
-===============================================================================
+==================
+
 For optimal use, the application should reveal and efficiently imply as much
 parallelism as possible to keep all system components active.
 
 Application level
--------------------------------------------------------------------------------
+-----------------
+
 The application should optimize parallel execution across the host and devices
 using asynchronous calls and streams. Workloads should be assigned based on
 efficiency: serial to the host, parallel to the devices.
@@ -42,7 +44,8 @@ belong to different blocks, they must use global memory with two separate
 kernel invocations. The latter should be minimized as it adds overhead.
 
 Device level
--------------------------------------------------------------------------------
+------------
+
 Device-level optimization primarily involves maximizing parallel execution
 across the multiprocessors of the device. This can be achieved by executing
 multiple kernels concurrently on a device. The management of these kernels is
@@ -54,7 +57,8 @@ performance. This approach helps in achieving maximum utilization of the
 resources of the device.
 
 Multiprocessor level
--------------------------------------------------------------------------------
+--------------------
+
 Multiprocessor-level optimization involves maximizing parallel execution within
 each multiprocessor on a device. Each multiprocessor can execute a number of
 threads concurrently, and the total number of threads that can run in parallel
@@ -66,8 +70,8 @@ various functional units within a multiprocessor. This can be achieved by
 ensuring a sufficient number of resident warps, as at every instruction issue
 time, a warp scheduler selects an instruction that is ready to execute. This
 instruction can be another independent instruction of the same warp, exploiting
-:ref:`instruction optimization<instruction-level parallelism>`, or more
-commonly an instruction of another warp, exploiting thread-level parallelism.
+:ref:`instruction optimization`, or more commonly an instruction of another warp, 
+exploiting thread-level parallelism.
 
 In comparison, device-level optimization focuses on the device as a whole,
 aiming to keep all multiprocessors busy by executing enough kernels
@@ -77,8 +81,10 @@ resources of the GPU, from the individual multiprocessors to the device as a
 whole.
 
 .. _memory optimization:
+
 Memory optimization
-===============================================================================
+===================
+
 The first step in maximizing memory throughput is to minimize low-bandwidth
 data transfers. This involves reducing data transfers between the host and the
 device, as these have lower bandwidth than transfers between global memory and
@@ -107,7 +113,8 @@ arithmetic instruction throughput. Thus, non-optimal global memory accesses
 generally have a high impact on performance.
 
 Data Transfer
--------------------------------------------------------------------------------
+-------------
+
 Applications should aim to minimize data transfers between the host and the
 device. This can be achieved by moving more computations from the host to the
 device, even if it means running kernels that do not fully utilize the
@@ -131,7 +138,8 @@ is integrated by querying the integrated device property.
 
 
 Device Memory Access
--------------------------------------------------------------------------------
+--------------------
+
 Memory access instructions may be repeated due to the spread of memory
 addresses across warp threads. The impact on throughput varies with memory type
 and is generally reduced when addresses are more scattered, especially in
@@ -186,8 +194,10 @@ allowing data broadcasting, and optional conversion of 8-bit and 16-bit integer
 input data to 32-bit floating-point values on-the-fly.
 
 .. _instruction optimization:
+
 Optimization for maximum instruction throughput
-===============================================================================
+===============================================
+
 To maximize instruction throughput:
 
 - minimize low throughput arithmetic instructions
@@ -196,7 +206,8 @@ To maximize instruction throughput:
 - maximize instruction parallelism
 
 Arithmetic instructions
--------------------------------------------------------------------------------
+-----------------------
+
 The type and complexity of arithmetic operations can significantly impact the
 performance of your application. We are highlighting some hints how to maximize
 it.
@@ -233,7 +244,8 @@ work for compiler, but expressing parallelism in the code explicitly can
 improve instructions throughput.
 
 Control flow instructions
--------------------------------------------------------------------------------
+-------------------------
+
 Flow control instructions (``if``, ``else``, ``for``, ``do``, ``while``,
 ``break``, ``continue``, ``switch``) can impact instruction throughput by
 causing threads within a warp to diverge and follow different execution paths.
@@ -245,7 +257,8 @@ divergence. With branch predication, instructions associated with a false
 predicate are scheduled but not executed, avoiding unnecessary operations.
 
 Synchronization
--------------------------------------------------------------------------------
+---------------
+
 Synchronization ensures that all threads within a block have completed their
 computations and memory accesses before moving forward, which is critical when
 threads are dependent on the results of other threads. However,
@@ -262,7 +275,8 @@ allows for more fine-grained control over the execution order of commands,
 which can be beneficial in certain scenarios.
 
 Minimizing memory thrashing
-===============================================================================
+===========================
+
 Applications frequently allocating and freeing memory may experience slower
 allocation calls over time. This is expected as memory is released back to the
 operating system. To optimize performance in such scenarios, consider some

@@ -19,12 +19,13 @@ portable applications for AMD and NVIDIA GPUs from single source code.
 
 * {doc}`./understand/programming_model`
 * {doc}`./understand/programming_model_reference`
+* {doc}`./understand/hardware_implementation`
 
 :::
 
 :::{grid-item-card} How-to
 
-* [Programming Manual](./how-to/hip-rtc)
+* [Programming Manual](./how-to/programming_manual)
 * [HIP Porting Guide](./how-to/hip_porting_guide)
 * [HIP Porting: Driver API Guide](./how-to/hip_porting_driver_api)
 * {doc}`./how-to/hip_rtc`

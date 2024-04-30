@@ -228,5 +228,5 @@ Build HIP tests
       However, you must first set ``-DHIP_PLATFORM=nvidia``.
 
       * Run HIP.
-        Compile and run the
-      `square sample <https://github.com/ROCm-Developer-Tools/hip-tests/tree/rocm-5.5.x/samples/0_Intro/square>`_.
+        Compile and run the `square sample <https://github.com/ROCm-Developer-Tools/hip-tests/tree/rocm-5.5.x/samples/0_Intro/square>`_.
+        

@@ -17,6 +17,7 @@ subtrees:
   entries:
   - file: understand/programming_model
   - file: understand/programming_model_reference
+  - file: understand/hardware_implementation
 
 - caption: How-to
   entries:
@@ -24,7 +25,7 @@ subtrees:
   - file: how-to/hip_porting_guide
   - file: how-to/hip_porting_driver_api
   - file: how-to/hip_rtc
-  - file: reference/performance_guidelines
+  - file: how-to/performance_guidelines
   - file: how-to/debugging
   - file: how-to/logging
   - file: how-to/faq
@@ -40,9 +41,9 @@ subtrees:
 
 - caption: Tutorials
   entries:
-  - file: https://github.com/ROCm/HIP-Examples
+  - url: https://github.com/ROCm/HIP-Examples
     title: HIP examples
-  - file: https://github.com/ROCm/hip-tests/tree/develop/samples
+  - url: https://github.com/ROCm/hip-tests/tree/develop/samples
     title: HIP test samples
 
 - caption: About
