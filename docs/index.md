@@ -19,15 +19,17 @@ portable applications for AMD and NVIDIA GPUs from single source code.
 
 * {doc}`./understand/programming_model`
 * {doc}`./understand/programming_model_reference`
+* {doc}`./understand/hardware_implementation`
 
 :::
 
 :::{grid-item-card} How-to
 
-* [Programming Manual](./how-to/hip-rtc)
+* [Programming Manual](./how-to/programming_manual)
 * [HIP Porting Guide](./how-to/hip_porting_guide)
 * [HIP Porting: Driver API Guide](./how-to/hip_porting_driver_api)
 * {doc}`./how-to/hip_rtc`
+* {doc}`./how-to/performance_guidelines`
 * [Debugging with HIP](./how-to/debugging)
 * {doc}`./how-to/logging`
 * {doc}`./how-to/faq`
@@ -37,10 +39,16 @@ portable applications for AMD and NVIDIA GPUs from single source code.
 :::{grid-item-card} Reference
 
 * {doc}`/doxygen/html/index`
-* [C++ kernel language](./reference/kernel_language)
-* {doc}`./reference/math_api`
+* [C++ language extensions](./reference/kernel_language)
 * [Comparing Syntax for different APIs](./reference/terms)
 * [List of deprecated APIs](./reference/deprecated_api_list)
+
+:::
+
+:::{grid-item-card} Tutorial
+
+* [HIP examples](https://github.com/ROCm/HIP-Examples)
+* [HIP test samples](https://github.com/ROCm/hip-tests/tree/develop/samples)
 
 :::
 
