@@ -1,18 +1,15 @@
-# Programming for HIP Runtime Compiler (HIP RTC) 
+# Programming for HIP Runtime Compiler (RTC)
 
-## HIP RTC lib
-HIP allows you to compile kernels at runtime with its ```hiprtc*``` APIs.
-Kernels can be stored as a text string and can be passed on to HIPRTC APIs alongside options to guide the compilation.
+HIP lets you compile kernels at runtime with the ```hiprtc*``` APIs.
+Kernels can be stored as a text string and can be passed to HIPRTC APIs alongside options to guide the compilation.
 
 NOTE:
 
-  - This library can be used on systems without HIP install nor AMD GPU driver installed at all (offline compilation). Therefore, it does not depend on any HIP runtime library.
+  - This library can be used on systems without HIP installed nor AMD GPU driver installed at all (offline compilation). Therefore, it does not depend on any HIP runtime library.
   - But it does depend on COMGr. You may try to statically link COMGr into HIPRTC to avoid any ambiguity.
   - Developers can decide to bundle this library with their application.
 
-## Compile APIs
-
-#### Example
+## Example
 To use HIPRTC functionality, HIPRTC header needs to be included first.
 ```#include <hip/hiprtc.h>```
 
@@ -34,12 +31,12 @@ R"(
 Now to compile this kernel, it needs to be associated with hiprtcProgram type, which is done by declaring ```hiprtcProgram prog;``` and associating the string of kernel with this program:
 
 ```cpp
-hiprtcCreateProgram(&prog,                 // HIPRTC program handle
-                    kernel_source,         // HIP kernel source string
-                    "vector_add.cpp",      // Name of the HIP program, can be null or an empty string
-                    0,                     // Number of headers
-                    NULL,                  // Header sources
-                    NULL);                 // Name of header files
+hiprtcCreateProgram(&prog,                 // HIPRTC program
+                    kernel,                // kernel string
+                    "gpu_kernel.cu",       // Name of the file
+                    num_headers,           // Number of headers
+                    &header_sources[0],    // Header sources
+                    &header_names[0]);     // Name of header files
 ```
 
 hiprtcCreateProgram API also allows you to add headers which can be included in your rtc program.
@@ -222,14 +219,14 @@ int main() {
 }
 ```
 
-#### HIPRTC specific options
+## HIPRTC specific options
 HIPRTC provides a few HIPRTC specific flags
  - ```--gpu-architecture``` : This flag can guide the code object generation for a specific gpu arch. Example: ```--gpu-architecture=gfx906:sramecc+:xnack-```, its equivalent to ```--offload-arch```.
     - This option is compulsory if compilation is done on a system without AMD GPUs supported by HIP runtime.
     - Otherwise, HIPRTC will load the hip runtime and gather the current device and its architecture info and use it as option.
  - ```-fgpu-rdc``` : This flag when provided during the hiprtcCompileProgram generates the bitcode (HIPRTC doesn't convert this bitcode into ISA and binary). This bitcode can later be fetched using hiprtcGetBitcode and hiprtcGetBitcodeSize APIs.
 
-#### Bitcode
+### Bitcode
 In the usual scenario, the kernel associated with hiprtcProgram is compiled into the binary which can be loaded and run. However, if -fpu-rdc option is provided in the compile options, HIPRTC calls comgr and generates only the LLVM bitcode.  It doesn't convert this bitcode to ISA and generate the final binary.
 ```cpp
 std::string sarg = std::string("-fgpu-rdc");
@@ -249,7 +246,7 @@ vector<char> kernel_bitcode(bitCodeSize);
 hiprtcGetBitcode(prog, kernel_bitcode.data());
 ```
 
-#### CU Mode vs WGP mode
+### CU Mode vs WGP mode
 
 AMD GPUs consist of an array of workgroup processors, each built with 2 compute units (CUs) capable of executing SIMD32. All the CUs inside a workgroup processor use local data share (LDS).
 
@@ -263,10 +260,9 @@ HIPRTC assumes **WGP mode by default** for gfx10+. This can be overridden by pas
 
 ## Linker APIs
 
-#### Introduction
 The bitcode generated using the HIPRTC Bitcode APIs can be loaded using hipModule APIs and also can be linked with other generated bitcodes with appropriate linker flags using the HIPRTC linker APIs.  This also provides more flexibility and optimizations to the applications who want to generate the binary dynamically according to their needs. The input bitcodes can be generated only for a specific architecture or it can be a bundled bitcode which is generated for multiple architectures.
 
-#### Example
+### Example
 Firstly, HIPRTC link instance or a pending linker invocation must be created using hiprtcLinkCreate, with the appropriate linker options provided.
 ```cpp
 hiprtcLinkCreate( num_options,           // number of options
@@ -314,7 +310,7 @@ hiprtcLinkDestroy(rtc_link_state);
 ```
  - The correct sequence of calls is : hiprtcLinkCreate, hiprtcLinkAddData or hiprtcLinkAddFile, hiprtcLinkComplete, hiprtcModuleLoadData, hiprtcLinkDestroy.
 
-#### Input Types
+### Input Types
 HIPRTC provides hiprtcJITInputType enumeration type which defines the input types accepted by the Linker APIs. Here are the enum values of hiprtcJITInputType. However only the input types  HIPRTC_JIT_INPUT_LLVM_BITCODE, HIPRTC_JIT_INPUT_LLVM_BUNDLED_BITCODE and HIPRTC_JIT_INPUT_LLVM_ARCHIVES_OF_BUNDLED_BITCODE are supported currently.
 
 HIPRTC_JIT_INPUT_LLVM_BITCODE can be used to load both LLVM bitcode or LLVM IR assembly code. However, HIPRTC_JIT_INPUT_LLVM_BUNDLED_BITCODE and HIPRTC_JIT_INPUT_LLVM_ARCHIVES_OF_BUNDLED_BITCODE are only for bundled bitcode and archive of bundled bitcode.
@@ -333,7 +329,7 @@ HIPRTC_JIT_INPUT_LLVM_ARCHIVES_OF_BUNDLED_BITCODE = 102,
 HIPRTC_JIT_NUM_INPUT_TYPES = (HIPRTC_JIT_NUM_LEGACY_INPUT_TYPES + 3)
 ```
 
-#### Backward Compatibility of LLVM Bitcode/IR
+### Backward Compatibility of LLVM Bitcode/IR
 
 For HIP applications utilizing HIPRTC to compile LLVM bitcode/IR, compatibility is assured only when the ROCm or HIP SDK version used for generating the LLVM bitcode/IR matches the version used during the runtime compilation. When an application requires the ingestion of bitcode/IR not derived from the currently installed AMD compiler, it must run with HIPRTC and COMgr dynamic libraries that are compatible with the version of the bitcode/IR.
 
@@ -341,7 +337,7 @@ COMgr, a shared library, incorporates the LLVM/Clang compiler that HIPRTC relies
 
 To ensure smooth operation and compatibility, an application may choose to ship the specific versions of HIPRTC and COMgr dynamic libraries, or it may opt to clearly specify the version requirements and dependencies. This approach guarantees that the application can correctly compile the specified version of bitcode/IR.
 
-#### Link Options
+### Link Options
 - `HIPRTC_JIT_IR_TO_ISA_OPT_EXT` - AMD Only. Options to be passed on to link step of compiler by `hiprtcLinkCreate`.
 - `HIPRTC_JIT_IR_TO_ISA_OPT_COUNT_EXT` - AMD Only. Count of options passed on to link step of compiler.
 
@@ -396,12 +392,12 @@ HIPRTC mangles the ```__global__``` function names and names of ```__device__```
 
 The two APIs hiprtcAddNameExpression and hiprtcGetLoweredName provide this functionality. First, a 'name expression' string denoting the address for the ```__global__``` function or ```__device__/__constant__``` variable is provided to hiprtcAddNameExpression. Then, the program is compiled with hiprtcCompileProgram. During compilation, HIPRTC will parse the name expression string as a C++ constant expression at the end of the user program. Finally, the function hiprtcGetLoweredName is called with the original name expression and it returns a pointer to the lowered name. The lowered name can be used to refer to the kernel or variable in the HIP Runtime API.
 
-#### Note
+### Note
  - The identical name expression string must be provided on a subsequent call to hiprtcGetLoweredName to extract the lowered name.
  - The correct sequence of calls is : hiprtcAddNameExpression, hiprtcCompileProgram, hiprtcGetLoweredName, hiprtcDestroyProgram.
  - The lowered names must be fetched using hiprtcGetLoweredName only after the HIPRTC program has been compiled, and before it has been destroyed.
 
-#### Example
+### Example
 kernel containing various definitions ```__global__``` functions/function templates and ```__device__/__constant__``` variables can be stored in a string.
 
 ```cpp
