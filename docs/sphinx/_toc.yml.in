@@ -6,12 +6,12 @@ defaults:
 root: index
 subtrees:
 
-- caption: Installation
+- caption: Install
   entries:
   - file: install/install
-    title: Install HIP
+    title: Installing HIP
   - file: install/build
-    title: Build HIP
+    title: Building HIP from source
 
 - caption: Conceptual
   entries:
@@ -36,6 +36,7 @@ subtrees:
   - file: reference/kernel_language
     title: C++ language extensions
   - file: reference/terms
+    title: Comparing Syntax for different APIs
   - file: reference/virtual_rocr
   - file: reference/deprecated_api_list
     title: List of deprecated APIs
