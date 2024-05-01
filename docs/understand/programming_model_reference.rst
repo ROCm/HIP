@@ -53,7 +53,8 @@ Warp
   multidimensional as the user interprets the calculated values to be.
 
   The size of a warp is architecture dependent and always fixed. Warps are
-  signified by the set of communication primitives at their disposal.
+  signified by the set of communication primitives at their disposal, as 
+  discussed in :ref:`warp-cross-lane`.
 
 Block 
   The middle grouping is called a block or thread block. The defining feature
@@ -82,9 +83,10 @@ of. It relaxes some restrictions of the :ref:`inherent_thread_model`
 imposed by the strict 1:1 mapping of architectural details to the programming
 model.
 
-The rich set of APIs introduced by Cooperative Groups allow the programmer
-to define their own groups based on run-time predicates, but a set of implicit
-groups manifest based on kernel launch parameters.
+The rich set of APIs introduced by Cooperative Groups allow the programmer to 
+define their own set of thread groups which may fit their user-cases better than 
+those defined by the hardware. The set of implicit groups by kernel launch 
+parameters are still available.
 
 The thread hierarchy abstraction of Cooperative Groups manifest as depicted in
 :numref:`coop_thread_hierarchy`.

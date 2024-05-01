@@ -8,10 +8,10 @@ portable applications for AMD and NVIDIA GPUs from single source code.
 ::::{grid} 1 1 2 2
 :gutter: 3
 
-:::{grid-item-card} Installation
+:::{grid-item-card} Install
 
-* [Install HIP](./install/install)
-* [Build HIP from source](./install/build)
+* [Installing HIP](./install/install)
+* [Building HIP from source](./install/build)
 
 :::
 
