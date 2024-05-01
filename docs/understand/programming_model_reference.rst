@@ -53,7 +53,8 @@ Warp
   multidimensional as the user interprets the calculated values to be.
 
   The size of a warp is architecture dependent and always fixed. Warps are
-  signified by the set of communication primitives at their disposal.
+  signified by the set of communication primitives at their disposal, as 
+  discussed in :ref:`warp-cross-lane`.
 
 Block 
   The middle grouping is called a block or thread block. The defining feature
