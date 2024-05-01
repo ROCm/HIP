@@ -23,7 +23,7 @@ portable applications for AMD and NVIDIA GPUs from single source code.
 
 :::
 
-:::{grid-item-card} How-to
+:::{grid-item-card} How to
 
 * [Programming Manual](./how-to/programming_manual)
 * [HIP Porting Guide](./how-to/hip_porting_guide)

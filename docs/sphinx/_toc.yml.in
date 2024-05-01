@@ -19,7 +19,7 @@ subtrees:
   - file: understand/programming_model_reference
   - file: understand/hardware_implementation
 
-- caption: How-to
+- caption: How to
   entries:
   - file: how-to/programming_manual
   - file: how-to/hip_porting_guide
