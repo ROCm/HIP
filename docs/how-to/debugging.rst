@@ -308,6 +308,12 @@ Here are some of the more commonly used environment variables:
         | 0x10000: Log message location
         | 0xFFFFFFFF: Log always even mask flag is zero
 
+    * - HIP_LAUNCH_BLOCKING
+        | <sub> Used for serialization on kernel execution.</sub>
+      - 0
+      - 0: Disable. Kernel executes normally.
+        | 1: Enable. Serializes kernel enqueue, behaves the same as AMD_SERIALIZE_KERNEL.
+    
     * - HIP_VISIBLE_DEVICES (or CUDA_VISIBLE_DEVICES)
         | <sub> Only devices whose index is present in the sequence are visible to HIP</sub>
       -
