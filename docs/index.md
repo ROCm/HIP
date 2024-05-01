@@ -41,6 +41,7 @@ portable applications for AMD and NVIDIA GPUs from single source code.
 * {doc}`/doxygen/html/index`
 * [C++ language extensions](./reference/kernel_language)
 * [Comparing Syntax for different APIs](./reference/terms)
+* [HSA Runtime API for ROCm](./reference/virtual_rocr)
 * [List of deprecated APIs](./reference/deprecated_api_list)
 
 :::
