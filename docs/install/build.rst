@@ -2,7 +2,24 @@
 Build HIP from source
 *******************************************
 
-.. _Building the HIP runtime:
+Prerequisites
+=================================================
+
+HIP code can be developed either on AMD ROCm platform using HIP-Clang compiler, or a CUDA platform with nvcc installed.
+Before build and run HIP, make sure drivers and pre-build packages are installed properly on the platform.
+
+You also need to install Python 3, which includes the CppHeaderParser package. 
+Install Python 3 using the command:
+
+.. code:: shell
+
+   apt-get install python3
+
+Check and install CppHeaderParser package using the command:
+
+.. code:: shell
+
+   pip3 install CppHeaderParser
 
 Building the HIP runtime
 ==========================================================
@@ -33,7 +50,6 @@ Set the repository branch using the variable: ``ROCM_BRANCH``. For example, for 
 
             git clone -b "$ROCM_BRANCH" https://github.com/ROCm/clr.git
             git clone -b "$ROCM_BRANCH" https://github.com/ROCm/hip.git
-            git clone -b "$ROCM_BRANCH" https://github.com/ROCm/hipother.git
             git clone -b "$ROCM_BRANCH" https://github.com/ROCm/HIPCC.git
 
          CLR (Common Language Runtime) repository includes ROCclr, HIPAMD and OpenCL.
@@ -52,7 +68,6 @@ Set the repository branch using the variable: ``ROCM_BRANCH``. For example, for 
 
             export CLR_DIR="$(readlink -f clr)"
             export HIP_DIR="$(readlink -f hip)"
-            export HIP_OTHER="$(readlink -f hipother)"
             export HIPCC_DIR="$(readlink -f HIPCC)"
 
       #. Build the HIPCC runtime.
@@ -227,6 +242,9 @@ Build HIP tests
       The commands to build HIP tests on an NVIDIA platform are the same as on an AMD platform.
       However, you must first set ``-DHIP_PLATFORM=nvidia``.
 
-      * Run HIP.
-        Compile and run the
-      `square sample <https://github.com/ROCm-Developer-Tools/hip-tests/tree/rocm-5.5.x/samples/0_Intro/square>`_.
+
+Run HIP
+=================================================
+
+After installation and building HIP, you can compile your application and run. 
+A simple example is `square sample <https://github.com/ROCm/hip-tests/tree/develop/samples/0_Intro/square>`_.
