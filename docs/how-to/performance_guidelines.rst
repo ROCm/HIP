@@ -113,7 +113,9 @@ When using mapped page-locked memory, there is no need to allocate device
 memory or explicitly copy data between device and host memory. Data transfers
 occur implicitly each time the kernel accesses the mapped memory. For optimal
 performance, these memory accesses should be coalesced, similar to global
-memory accesses.
+memory accesses. When threads in a warp access sequential memory locations, a
+process known as coalesced memory access, it can enhance the efficiency of
+memory data transfer.
 
 On integrated systems where device and host memory are physically the same,
 any copy operation between host and device memory is unnecessary, and mapped
@@ -205,17 +207,12 @@ available in HIP that can often be executed faster than equivalent arithmetic
 operations (subject to some input or accuracy restrictions). They can help
 optimize performance by replacing more complex arithmetic operations.
 
-Avoiding divergent warps: Divergent warps occur when threads within the same
-warp follow different execution paths. This can happen due to conditional
-statements that lead to different arithmetic operations being performed by
-different threads. Divergent warps can significantly reduce instruction
-throughput, so try to structure your code to minimize divergence.
-
 Optimizing memory access: The efficiency of memory access can impact the speed
 of arithmetic operations. Coalesced memory access, where threads in a warp
 access consecutive memory locations, can improve memory throughput and thus
 the speed of arithmetic operations.
 
+.. _control flow instructions:
 Control flow instructions
 -------------------------------------------------------------------------------
 Flow control instructions (``if``, ``else``, ``for``, ``do``, ``while``,
@@ -227,6 +224,12 @@ divergent warps. For example, when the control condition depends on
 loops or short if or switch blocks using branch predication, preventing warp
 divergence. With branch predication, instructions associated with a false
 predicate are scheduled but not executed, avoiding unnecessary operations.
+
+Avoiding divergent warps: Divergent warps occur when threads within the same
+warp follow different execution paths. This can happen due to conditional
+statements that lead to different arithmetic operations being performed by
+different threads. Divergent warps can significantly reduce instruction
+throughput, so try to structure your code to minimize divergence.
 
 Synchronization
 -------------------------------------------------------------------------------
