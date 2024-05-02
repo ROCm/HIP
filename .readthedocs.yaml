@@ -21,5 +21,4 @@ build:
     - "graphviz" # For dot graphs in doxygen
   jobs:
     post_checkout:
-      - git clone --depth=1 --single-branch --branch rocdoc-195 https://github.com/StreamHPC/llvm-project.git ../llvm-project
       - git clone --depth=1 --single-branch --branch develop    https://github.com/ROCm/clr.git ../clr
