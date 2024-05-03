@@ -209,7 +209,7 @@ operations (subject to some input or accuracy restrictions). They can help
 optimize performance by replacing more complex arithmetic operations.
 
 Optimizing memory access: The efficiency of memory access can impact the speed
-of arithmetic operations. See: :ref:`device memory access.
+of arithmetic operations. See: :ref:`device memory access`.
 
 .. _control flow instructions:
 Control flow instructions
