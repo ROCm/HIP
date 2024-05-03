@@ -75,7 +75,7 @@ whole.
 Memory throughput optimization
 ===============================================================================
 The first step in maximizing memory throughput is to minimize low-bandwidth
-data transfers data transfers between the host and the device.
+data transfers between the host and the device.
 
 Additionally loads from and stores to global memory should be minimized by
 maximizing the use of on-chip memory: shared memory and caches. Shared memory
@@ -97,6 +97,7 @@ low compared to available on-chip bandwidths and arithmetic instruction
 throughput. Thus, non-optimal global memory accesses generally have a high
 impact on performance.
 
+.. _data transfer:
 Data Transfer
 -------------------------------------------------------------------------------
 Applications should aim to minimize data transfers between the host and the
@@ -122,7 +123,7 @@ any copy operation between host and device memory is unnecessary, and mapped
 page-locked memory should be used instead. Applications can check if a device
 is integrated by querying the integrated device property.
 
-
+.. _device memory access:
 Device Memory Access
 -------------------------------------------------------------------------------
 Memory access instructions may be repeated due to the spread of memory
@@ -132,9 +133,9 @@ global memory.
 
 Device memory is accessed via 32-, 64-, or 128-byte transactions that must be
 naturally aligned. Maximizing memory throughput involves coalescing memory
-accesses of threads within a warp into minimal transactions, following optimal
-access patterns, using properly sized and aligned data types, and padding data
-when necessary.
+(see: :ref:`data transfer`) accesses of threads within a warp into minimal
+transactions, following optimal access patterns, using properly sized and
+aligned data types, and padding data when necessary.
 
 Global memory instructions support reading or writing data of specific sizes
 (1, 2, 4, 8, or 16 bytes) that are naturally aligned. If the size and alignment
@@ -208,9 +209,7 @@ operations (subject to some input or accuracy restrictions). They can help
 optimize performance by replacing more complex arithmetic operations.
 
 Optimizing memory access: The efficiency of memory access can impact the speed
-of arithmetic operations. Coalesced memory access, where threads in a warp
-access consecutive memory locations, can improve memory throughput and thus
-the speed of arithmetic operations.
+of arithmetic operations. See: :ref:`device memory access.
 
 .. _control flow instructions:
 Control flow instructions
