@@ -422,7 +422,7 @@ Following is the list of supported single precision mathematical functions.
       - ✓
 
     * - | float fabsf ( float  x ) 
-        | Calculate the absolute value of its argument.</sub> 
+        | Calculate the absolute value of its argument. 
       - ✓
       - ✓
  

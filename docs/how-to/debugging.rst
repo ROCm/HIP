@@ -268,9 +268,14 @@ HSA provides environment variables that help analyze issues in drivers or hardwa
     polling, rather than interrupts.
 
 HIP environment variable summary
------------------------------------------------------------------------------------------------
+--------------------------------
 
 Here are some of the more commonly used environment variables:
+
+.. # COMMENT: The following lines define a break for use in the table below. 
+.. |br| raw:: html 
+
+    <br />
 
 .. list-table::
 
@@ -278,81 +283,81 @@ Here are some of the more commonly used environment variables:
       - **Default value**
       - **Usage**
 
-    * - AMD_LOG_LEVEL
-        | <sub>Enable HIP log on different Level</sub>
+    * - AMD_LOG_LEVEL 
+        |br| Enable HIP log on different Level
       - 0
-      - 0: Disable log.
-        | 1: Enable log on error level
-        | 2: Enable log on warning and below levels
-        | 0x3: Enable log on information and below levels
-        | 0x4: Decode and display AQL packets
+      - 0: Disable log. 
+        |br| 1: Enable log on error level
+        |br| 2: Enable log on warning and below levels
+        |br| 0x3: Enable log on information and below levels
+        |br| 0x4: Decode and display AQL packets
 
     * - AMD_LOG_MASK
-        | <sub>Enable HIP log on different Level</sub>
+        |br| Enable HIP log on different Level
       - 0x7FFFFFFF
       - 0x1: Log API calls
-        | 0x02: Kernel and Copy Commands and Barriers
-        | 0x4: Synchronization and waiting for commands to finish
-        | 0x8: Enable log on information and below levels
-        | 0x20: Queue commands and queue contents
-        | 0x40: Signal creation, allocation, pool
-        | 0x80: Locks and thread-safety code
-        | 0x100: Copy debug
-        | 0x200: Detailed copy debug
-        | 0x400: Resource allocation, performance-impacting events
-        | 0x800: Initialization and shutdown
-        | 0x1000: Misc debug, not yet classified
-        | 0x2000: Show raw bytes of AQL packet
-        | 0x4000: Show code creation debug
-        | 0x8000: More detailed command info, including barrier commands
-        | 0x10000: Log message location
-        | 0xFFFFFFFF: Log always even mask flag is zero
+        |br| 0x02: Kernel and Copy Commands and Barriers
+        |br| 0x4: Synchronization and waiting for commands to finish
+        |br| 0x8: Enable log on information and below levels
+        |br| 0x20: Queue commands and queue contents
+        |br| 0x40: Signal creation, allocation, pool
+        |br| 0x80: Locks and thread-safety code
+        |br| 0x100: Copy debug
+        |br| 0x200: Detailed copy debug
+        |br| 0x400: Resource allocation, performance-impacting events
+        |br| 0x800: Initialization and shutdown
+        |br| 0x1000: Misc debug, not yet classified
+        |br| 0x2000: Show raw bytes of AQL packet
+        |br| 0x4000: Show code creation debug
+        |br| 0x8000: More detailed command info, including barrier commands
+        |br| 0x10000: Log message location
+        |br| 0xFFFFFFFF: Log always even mask flag is zero
 
     * - HIP_LAUNCH_BLOCKING
-        | <sub> Used for serialization on kernel execution.</sub>
+        |br|  Used for serialization on kernel execution.
       - 0
       - 0: Disable. Kernel executes normally.
-        | 1: Enable. Serializes kernel enqueue, behaves the same as AMD_SERIALIZE_KERNEL.
+        |br| 1: Enable. Serializes kernel enqueue, behaves the same as AMD_SERIALIZE_KERNEL.
     
     * - HIP_VISIBLE_DEVICES (or CUDA_VISIBLE_DEVICES)
-        | <sub> Only devices whose index is present in the sequence are visible to HIP</sub>
+        |br|  Only devices whose index is present in the sequence are visible to HIP
       -
       - 0,1,2: Depending on the number of devices on the system
 
     * - GPU_DUMP_CODE_OBJECT
-        | <sub>Dump code object</sub>
+        |br| Dump code object
       - 0
       - 0: Disable
-        | 1: Enable
+        |br| 1: Enable
 
     * - AMD_SERIALIZE_KERNEL
-        | <sub> Serialize kernel enqueue</sub>
+        |br|  Serialize kernel enqueue
       - 0
       - 1: Wait for completion before enqueue
-        | 2: Wait for completion after enqueue
-        | 3: Both
+        |br| 2: Wait for completion after enqueue
+        |br| 3: Both
 
     * - AMD_SERIALIZE_COPY
-        | <sub>Serialize copies</sub>
+        |br| Serialize copies
       - 0
       - 1: Wait for completion before enqueue
-        | 2: Wait for completion after enqueue
-        | 3: Both
+        |br| 2: Wait for completion after enqueue
+        |br| 3: Both
 
     * - HIP_HOST_COHERENT
-        | <sub>Coherent memory in hipHostMalloc</sub>
+        |br| Coherent memory in hipHostMalloc
       - 0
       - 0: memory is not coherent between host and GPU
-        | 1: memory is coherent with host
+        |br| 1: memory is coherent with host
 
     * - AMD_DIRECT_DISPATCH
-        | <sub> Enable direct kernel dispatch (Currently for Linux; under development for Windows)</sub>
+        |br| Enable direct kernel dispatch (Currently for Linux; under development for Windows)
       - 1
       - 0: Disable
-        | 1: Enable
+        |br| 1: Enable
 
     * - GPU_MAX_HW_QUEUES
-        | <sub>The maximum number of hardware queues allocated per device</sub>
+        |br| The maximum number of hardware queues allocated per device
       - 4
       - The variable controls how many independent hardware queues HIP runtime can create per process,
         per device. If an application allocates more HIP streams than this number, then HIP runtime reuses
