@@ -5919,15 +5919,20 @@ hipError_t hipLaunchKernel(const void* function_address,
  * @returns #hipSuccess, #hipErrorInvalidResourceHandle, #hipErrorInvalidValue,
  * #hipErrorNotSupported
  *
- * @warning : This API is marked as beta, meaning, while this is feature complete,
- * it is still open to changes and may have outstanding issues.
- *
- * @note  The function to call in this API will be executed after the preceding operations in the
- * stream are complete. The function is a blocking operation that blocks operations in the stream
- * that follow it, until the function is returned.
+ * The host function to call in this API will be executed after the preceding operations in
+ * the stream are complete. The function is a blocking operation that blocks operations in the
+ * stream that follow it, until the function is returned.
  * Event synchronization and internal callback functions make sure enqueued operations will
  * execute in order, in the stream.
  *
+ * The host function must not make any HIP API calls. The host function is non-reentrant. It must
+ * not perform sychronization with any operation that may depend on other processing execution
+ * but is not enqueued to run earlier in the stream.
+ *
+ * Host functions that are enqueued respectively in different non-blocking streams can run concurrently.
+ *
+ * @warning  This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipLaunchHostFunc(hipStream_t stream, hipHostFn_t fn, void* userData);
 
