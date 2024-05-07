@@ -5,32 +5,32 @@
   :keywords: AMD, ROCm, HIP, CUDA, API design
 
 *******************************************************************************
-Programming Model
+Understanding the HIP programming model
 *******************************************************************************
 
 The HIP programming model makes it easy to map data-parallel C/C++ algorithms to
-massively parallel, wide SIMD architectures, such as GPUs. As a consequence, one
-needs a basic understanding of the underlying device architecture to make efficient
-use of HIP and GPGPU (General Purpose Graphics Processing Unit) programming in general.
+massively parallel, wide single instruction, multiple data (SIMD) architectures, 
+such as GPUs. A basic understanding of the underlying device architecture helps you 
+make efficient use of HIP and general purpose graphics processing unit (GPGPU) 
+programming in general.
 
 RDNA & CDNA Architecture Summary
-===============================================================================
+================================
 
 Most GPU architectures, like RDNA and CDNA, have a hierarchical structure.
-The inner-most piece is a Single Instruction Multiple Data (SIMD) enabled
-vector Arithmetic Logical Unit (ALU). In addition to the vector ALUs, most
-recent GPUs also house also house matrix ALUs for accelerating algorithms involving
-matrix multiply-accumulate operations. AMD GPUs also contain scalar ALUs, that
-can be used to reduce the load on the vector ALU by performing operations which
-are uniform for all threads of a warp.
+The innermost piece is a SIMD-enabled vector Arithmetic Logical Unit (ALU). 
+In addition to the vector ALUs, most recent GPUs also house matrix ALUs for 
+accelerating algorithms involving matrix multiply-accumulate operations. 
+AMD GPUs also contain scalar ALUs, that can be used to reduce the load on the 
+vector ALU by performing operations which are uniform for all threads of a warp.
 
 A set of ALUs, together with register files, caches and shared memory, comprise
-a larger block, often referred to as a Compute Unit (CU), e.g. in OpenCL and
-AMD block diagrams, or as Streaming Multiprocessor (SM).
+a larger block, often referred to as a compute unit (CU), e.g. in OpenCL and
+AMD block diagrams, or as streaming multiprocessor (SM).
 
 .. _rdna3_cu:
 
-.. figure:: ../data/understand/programming_model/rdna3_cu.png
+.. figure:: ../data/programming_model/understand/rdna3_cu.png
   :alt: Block diagram showing the structure of an RDNA3 Compute Unit. It
         consists of four SIMD units, each including a vector and scalar register
         file, with the corresponding scalar and vector ALUs. All four SIMDs
@@ -41,7 +41,7 @@ AMD block diagrams, or as Streaming Multiprocessor (SM).
 
 .. _cdna3_cu:
 
-.. figure:: ../data/understand/programming_model/cdna3_cu.png
+.. figure:: ../data/programming_model/understand/cdna3_cu.png
   :alt: Block diagram showing the structure of a CDNA3 compute unit. It includes
         Shader Cores, the Matrix Core Unit, a Local Data Share used for sharing
         memory between threads in a block, an L1 Cache and a Scheduler. The
@@ -50,13 +50,13 @@ AMD block diagrams, or as Streaming Multiprocessor (SM).
 
   Block Diagram of a CDNA3 Compute Unit.
 
-FFor implementation in hardware, multiple Compute Units are grouped together into
+For implementation in hardware, multiple CUs are grouped together into
 a Shader Engine or Compute Engine, typically sharing some fixed function units or
 memory subsystem resources.
 
 .. _cdna2_gcd:
 
-.. figure:: ../data/understand/programming_model/cdna2_gcd.png
+.. figure:: ../data/programming_model/understand/cdna2_gcd.png
   :alt: Block diagram showing four Compute Engines each with 28 Compute Units
         inside. These four Compute Engines share one block of L2 Cache. Around
         them are four Memory Controllers. To the top and bottom of all these are
@@ -66,21 +66,23 @@ memory subsystem resources.
 
   Block Diagram of a CDNA2 Graphics Compute Die.
 
-Single Instruction Multiple Threads
-===============================================================================
+.. _programming_model_simt:
 
-The SIMT programming model behind the HIP device-side execution is a
-middle-ground between SMT (Simultaneous Multi-Threading) programming known from
-multi-core CPUs, and SIMD (Single Instruction, Multiple Data) programming
-mostly known from exploiting relevant instruction sets on CPUs (eg. SSE/AVX/Neon).
+Single Instruction Multiple Threads
+===================================
+
+The single instruction, multiple threads (SIMT) programming model behind the 
+HIP device-side execution is a middle-ground between SMT (Simultaneous Multi-Threading) 
+programming known from multicore CPUs, and SIMD (Single Instruction, Multiple Data) programming
+mostly known from exploiting relevant instruction sets on CPUs (for example SSE/AVX/Neon).
 
 A HIP device compiler maps SIMT code written in HIP C++ to an inherently SIMD
-architecture (like GPUs), by scalarizing the entire kernel, and issuing the scalar
+architecture (like GPUs). This is done by scalarizing the entire kernel and issuing the scalar
 instructions of multiple kernel instances to each of the SIMD engine lanes, rather
-than  exploiting data parallelism within a single instance of a kernel and spreading
+than exploiting data parallelism within a single instance of a kernel and spreading
 identical instructions over the available SIMD engines.
 
-Consider the following kernel
+Consider the following kernel:
 
 .. code:: cu
 
@@ -101,7 +103,7 @@ typically look the following:
 
 .. _simt:
 
-.. figure:: ../data/understand/programming_model/simt.svg
+.. figure:: ../data/programming_model/understand/simt.svg
   :alt: Image representing the instruction flow of a SIMT program. Two identical
         arrows pointing downward with blocks representing the instructions
         inside and ellipsis between the arrows. The instructions represented in
@@ -115,8 +117,8 @@ usually isn't exploited from the width of the built-in vector types, but via the
 thread id constants ``threadIdx.x``, ``blockIdx.x``, etc. For more details,
 refer to :ref:`inherent_thread_model`.
 
-Heterogenous Programming
-===============================================================================
+Heterogeneous Programming
+=========================
 
 The HIP programming model assumes two execution contexts. One is referred to as
 *host* while compute kernels execute on a *device*. These contexts have
@@ -129,7 +131,7 @@ a few key differences between the two:
 * The C++ abstract machine assumes a unified memory address space, meaning that
   one can always access any given address in memory (assuming the absence of
   data races). HIP however introduces several memory namespaces, an address
-  from one means nothing in another. Moreover not all address spaces are
+  from one means nothing in another. Moreover, not all address spaces are
   accessible from all contexts.
 
   If one were to look at :ref:`cdna2_gcd` and inside the :ref:`cdna3_cu`,
@@ -148,7 +150,7 @@ a few key differences between the two:
   architectures.
 
 * Asynchrony is at the forefront of the HIP API. Computations launched on the device
-  execute asynchronously with respect to the host and it is the user's responsibility to
+  execute asynchronously with respect to the host, and it is the user's responsibility to
   synchronize their data dispatch/fetch with computations on the device. HIP
   does perform implicit synchronization on occasions, more advanced than other APIs such as
   OpenCL or SYCL, in which the responsibility of synchronization mostly depends on the user. 
