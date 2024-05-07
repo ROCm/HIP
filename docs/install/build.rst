@@ -5,21 +5,24 @@ Build HIP from source
 Prerequisites
 =================================================
 
-HIP code can be developed either on AMD ROCm platform using HIP-Clang compiler, or a CUDA platform with nvcc installed.
-Before build and run HIP, make sure drivers and pre-build packages are installed properly on the platform.
+HIP code can be developed either on AMD ROCm platform using HIP-Clang compiler, or a CUDA platform with ``nvcc`` installed.
+Before building and running HIP, make sure drivers and prebuilt packages are installed properly on the platform.
 
-You also need to install Python 3, which includes the CppHeaderParser package. 
-Install Python 3 using the command:
+You also need to install Python 3, which includes the ``CppHeaderParser`` package. 
+Install Python 3 using the following command:
 
 .. code:: shell
 
    apt-get install python3
 
-Check and install CppHeaderParser package using the command:
+Check and install ``CppHeaderParser`` package using the command:
 
 .. code:: shell
 
    pip3 install CppHeaderParser
+
+
+.. _Building the HIP runtime:
 
 Building the HIP runtime
 ==========================================================

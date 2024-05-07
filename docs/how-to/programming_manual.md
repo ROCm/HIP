@@ -63,7 +63,7 @@ Developers can control the release scope for hipEvents:
 
 A stronger system-level fence can be specified when the event is created with hipEventCreateWithFlags:
 - hipEventReleaseToSystem : Perform a system-scope release operation when the event is recorded.  This will make both Coherent and Non-Coherent host memory visible to other agents in the system, but may involve heavyweight operations such as cache flushing.  Coherent memory will typically use lighter-weight in-kernel synchronization mechanisms such as an atomic operation and thus does not need to use hipEventReleaseToSystem.
-- hipEventDisableTiming: Events created with this flag would not record profiling data and provide best performance if used for synchronization.
+- hipEventDisableTiming: Events created with this flag will not record profiling data and provide the best performance if used for synchronization.
 
 ### Summary and Recommendations:
 
@@ -74,9 +74,9 @@ A stronger system-level fence can be specified when the event is created with hi
 Managed memory, including the `__managed__` keyword, is supported in HIP combined host/device compilation, on Linux, not on Windows (under development).
 
 Managed memory, via unified memory allocation, allows data be shared and accessible to both the CPU and GPU using a single pointer.
-The allocation will be managed by AMD GPU driver using the linux HMM (Heterogeneous Memory Management) mechanism, the user can call managed memory API hipMallocManaged to allocate a large chuch of HMM memory, execute kernels on device and fetch data between the host and device as needed.
+The allocation will be managed by AMD GPU driver using the Linux HMM (Heterogeneous Memory Management) mechanism, the user can call managed memory API hipMallocManaged to allocate a large chunk of HMM memory, execute kernels on device and fetch data between the host and device as needed.
 
-In HIP application,  It is recommend to do the capability check before calling the managed memory APIs. For example:
+In HIP application, it is recommended to do the capability check before calling the managed memory APIs. For example:
 
 ```
 int managed_memory = 0;
@@ -107,7 +107,7 @@ HIP supports Stream Memory Operations to enable direct synchronization between N
 Note, CPU access to the semaphore's memory requires volatile keyword to disable CPU compiler's optimizations on memory access.
 For more details, please check the documentation HIP-API.pdf.
 
-Please note, HIP stream does not gurantee concurrency on AMD hardware for the case of multiple (at least 6) long running streams executing concurrently, using hipStreamSynchronize(nullptr) for synchronization.
+Please note, HIP stream does not guarantee concurrency on AMD hardware for the case of multiple (at least 6) long-running streams executing concurrently, using hipStreamSynchronize(nullptr) for synchronization.
 
 ## Direct Dispatch
 HIP runtime has Direct Dispatch enabled by default in ROCM 4.4 on Linux.
@@ -129,7 +129,7 @@ HIPRTC APIs accept HIP source files in character string format as input paramete
 
 For more details on HIPRTC APIs, refer to [HIP Runtime API Reference](https://rocm.docs.amd.com/projects/HIP/en/latest/doxygen/html/index.html).
 
-For Linux developers, the link [here](https://github.com/ROCm/hip-tests/blob/develop/samples/2_Cookbook/23_cmake_hiprtc/saxpy.cpp) shows an example how to program HIP application using runtime compilation mechanism, and detail HIPRTC programming guide is also available in Github (https://github.com/ROCm/HIP/blob/develop/docs/user_guide/hip_rtc.md).
+For Linux developers, the link [here](https://github.com/ROCm/hip-tests/blob/develop/samples/2_Cookbook/23_cmake_hiprtc/saxpy.cpp) shows an example how to program HIP application using runtime compilation mechanism, and a detailed [HIPRTC programming guide](./hip_rtc) is also available.
 
 ## HIP Graph
 HIP graph is supported. For more details, refer to the HIP API Guide.
@@ -170,11 +170,11 @@ can be contracted. Tolerance should be used for floating point comparsions.
 
 ## Math functions with special rounding modes
 
-Note: Currently, HIP only supports basic math functions with rounding mode rn (round to nearest). HIP does not support basic math functions with rounding modes ru (round up), rd (round down), and rz (round towards zero).
+Note: Currently, HIP only supports basic math functions with rounding modern (round to nearest). HIP does not support basic math functions with rounding modes ru (round up), rd (round down), and rz (round towards zero).
 
 ## Creating Static Libraries
 
-HIP-Clang supports generating two types of static libraries. The first type of static library does not export device functions, and only exports and launches host functions within the same library. The advantage of this type is the ability to link with a non-hipcc compiler such as gcc. The second type exports device functions to be linked by other code objects. However this requires using hipcc as the linker.
+HIP-Clang supports generating two types of static libraries. The first type of static library does not export device functions, and only exports and launches host functions within the same library. The advantage of this type is the ability to link with a non-hipcc compiler such as gcc. The second type exports device functions to be linked by other code objects. However, this requires using hipcc as the linker.
 
 In addition, the first type of library contains host objects with device code embedded as fat binaries. It is generated using the flag --emit-static-lib. The second type of library contains relocatable device objects and is generated using ar.
 
@@ -191,4 +191,4 @@ Here is an example to create and use static libraries:
     hipcc libHipDevice.a test.cpp -fgpu-rdc -o test.out
     ```
 
-For more information, please see [HIP samples](https://github.com/ROCm/hip-tests/tree/develop/samples/2_Cookbook/15_static_library/host_functions) and [samples](https://github.com/ROCm/hip-tests/tree/rocm-5.5.x/samples/2_Cookbook/15_static_library/device_functions).
+For more information, please see [HIP samples host functions](https://github.com/ROCm/hip-tests/tree/develop/samples/2_Cookbook/15_static_library/host_functions) and [device_functions](https://github.com/ROCm/hip-tests/tree/rocm-5.5.x/samples/2_Cookbook/15_static_library/device_functions).
