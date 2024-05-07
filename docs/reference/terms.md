@@ -33,6 +33,6 @@
 |Fast Math|`__cos(f)`|`__cos(f)`|`native_cos(f)`|
 |Vector|`float4`|`float4`|`float4`|
 
-### Notes
+## Notes
 The indexing functions (starting with `thread-index`) show the terminology for a 1D grid.  Some APIs use reverse order of xyz / 012 indexing for 3D grids.
 

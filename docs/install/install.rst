@@ -38,8 +38,8 @@ Installation
       HIP is automatically installed during the ROCm installation. If you haven't yet installed ROCm, you
       can find installation instructions here:
 
-         * :doc:`rocm-install-on-linux:reference/system-requirements`
-         * :doc:`rocm-install-on-windows:reference/system-requirements`
+         * :doc:`rocm-install-on-linux:index`
+         * :doc:`rocm-install-on-windows:index`
 
       By default, HIP is installed into ``/opt/rocm/hip``.
 

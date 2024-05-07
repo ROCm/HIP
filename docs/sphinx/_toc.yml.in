@@ -6,52 +6,48 @@ defaults:
 root: index
 subtrees:
 
-- caption: Installation
+- caption: Install
   entries:
   - file: install/install
-    title: Install HIP
+    title: Installing HIP
   - file: install/build
-    title: Build HIP
-
-- caption: Reference
-  entries:
-    - file: reference/programming_model
-    - file: old/reference/kernel_language
-    - file: doxygen/mainpage.md
-      title: API library
-    - file: reference/deprecated_api_list
-      title: Deprecated API list
-
-- caption: How-to
-  entries:
-  - file: how-to/logging
-    title: Logging
-  - file: how-to/debugging
-    title: Debugging
+    title: Building HIP from source
 
 - caption: Conceptual
   entries:
   - file: understand/programming_model
+  - file: understand/programming_model_reference
+  - file: understand/hardware_implementation
 
-- caption: Compatibility & support
+- caption: How to
   entries:
-  - url: https://rocm.docs.amd.com/projects/install-on-linux/en/${branch}/reference/system-requirements.html
-    title: Linux (GPU & OS)
-  - url: https://rocm.docs.amd.com/projects/install-on-windows/en/${branch}/reference/system-requirements.html
-    title: Windows (GPU & OS)
-  - url: https://rocm.docs.amd.com/projects/install-on-linux/en/${branch}/reference/3rd-partry-support-matrix.html
-    title: Third-party
-  - url: https://rocm.docs.amd.com/projects/install-on-linux/en/${branch}/reference/user-kernel-space-compat-matrix.html
-    title: User/kernel space support
-  - url: https://rocm.docs.amd.com/projects/install-on-linux/en/${branch}/reference/docker-image-support-matrix.html
-    title: Docker
-  - url: https://rocm.docs.amd.com/en/${branch}/about/compatibility/openmp.html
-    title: OpenMP
+  - file: how-to/programming_manual
+  - file: how-to/hip_porting_guide
+  - file: how-to/hip_porting_driver_api
+  - file: how-to/hip_rtc
+  - file: how-to/performance_guidelines
+  - file: how-to/debugging
+  - file: how-to/logging
+  - file: how-to/faq
 
-- caption: Contribute
+- caption: Reference
   entries:
-  - file: CONTRIBUTING
-    title: Contribute to HIP
-  - url: https://rocm.docs.amd.com/en/latest/contribute/contributing.html
-    title: Contribute to ROCm docs
+  - file: doxygen/html/index
+  - file: reference/kernel_language
+    title: C++ language extensions
+  - file: reference/terms
+    title: Comparing Syntax for different APIs
+  - file: reference/virtual_rocr
+  - file: reference/deprecated_api_list
+    title: List of deprecated APIs
+
+- caption: Tutorials
+  entries:
+  - url: https://github.com/ROCm/HIP-Examples
+    title: HIP examples
+  - url: https://github.com/ROCm/hip-tests/tree/develop/samples
+    title: HIP test samples
+
+- caption: About
+  entries:
   - file: license.md
