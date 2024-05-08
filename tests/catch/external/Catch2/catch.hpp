@@ -21,6 +21,11 @@
 #define CATCH_VERSION_MINOR 13
 #define CATCH_VERSION_PATCH 4
 
+#ifndef DBL_MAX_10_EXP
+#define DBL_MAX_10_EXP 308
+#endif
+
+
 #ifdef __clang__
 #    pragma clang system_header
 #elif defined __GNUC__
