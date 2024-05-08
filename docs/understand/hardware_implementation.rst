@@ -110,7 +110,7 @@ The general structure of CUs stays mostly as it is in GCN
 architectures. The most prominent change is the addition of matrix ALUs, which
 can greatly improve the performance of algorithms involving matrix
 multiply-accumulate operations for
-:doc:`int8, float16, bfloat16 or float32<rocm:about/compatibility/precision-support>`.
+:doc:`int8, float16, bfloat16 or float32<rocm:compatibility/precision-support>`.
 
 .. figure:: ../data/hardware_implementation/cdna3_cu.png
   :alt: Block diagram showing the structure of a CDNA3 compute unit. It includes
