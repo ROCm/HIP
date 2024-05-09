@@ -34,7 +34,7 @@ The thread hierarchy inherent to how AMD GPUs operate is depicted in
 
 .. _inherent_thread_hierarchy:
 
-.. figure:: ../data/programming_model/reference/thread_hierarchy.svg
+.. figure:: ../data/understand/programming_model_reference/thread_hierarchy.svg
   :alt: Diagram depicting nested rectangles of varying color. The outermost one
         titled "Grid", inside sets of uniform rectangles layered on one another
         titled "Block". Each "Block" containing sets of uniform rectangles
@@ -93,7 +93,7 @@ The thread hierarchy abstraction of Cooperative Groups manifest as depicted in
 
 .. _coop_thread_hierarchy:
 
-.. figure:: ../data/programming_model/reference/thread_hierarchy_coop.svg
+.. figure:: ../data/understand/programming_model_reference/thread_hierarchy_coop.svg
   :alt: Diagram depicting nested rectangles of varying color. The outermost one
         titled "Grid", inside sets of different sized rectangles layered on
         one another titled "Block". Each "Block" containing sets of uniform
@@ -134,7 +134,7 @@ how they relate to the various levels of the threading model.
 
 .. _memory_hierarchy:
 
-.. figure:: ../data/programming_model/reference/memory_hierarchy.svg
+.. figure:: ../data/understand/programming_model_reference/memory_hierarchy.svg
   :alt: Diagram depicting nested rectangles of varying color. The outermost one
         titled "Grid", inside on the upper half a rectangle titled "Cluster".
         Inside it are two identical rectangles titled "Block", inside them are
