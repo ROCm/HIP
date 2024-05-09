@@ -162,7 +162,7 @@ sphinxcontrib-serializinghtml==1.1.10
     # via sphinx
 tomli==2.0.1
     # via sphinx
-tqdm==4.66.2
+tqdm==4.66.3
     # via mpire
 typing-extensions==4.11.0
     # via
