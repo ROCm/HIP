@@ -1260,15 +1260,12 @@ The index returned by ``__lastbit_`` instructions starts at -1, while for ffs th
 Floating-point Intrinsics
 --------------------------------------------------------------------------------------------
 Following is the list of supported floating-point intrinsics. Note that intrinsics are supported on device only.
-In the list there are functions with multiple suffix. These suffix are the ``rn, rz, ru`` and ``rd``, which covers the differnt roundings
 
-* ``_rn`` suffixed functions are using the round to nearest even rounding mode during calculations.
-* ``_rz`` suffixed functions are using the round towards zero rounding mode during calculations.
-* ``_ru`` suffixed functions are using the round up (to positive infinity) rounding mode during calculations.
-* ``_rd`` suffixed functions are using the round down (to negative infinity) rounding mode during calculations.
+.. note::
 
-For example ``__fadd_[rn,rz,ru,rd]`` are four different addition function with differen rounding modes.
-
+  In HIP, the nearest even rounding mode supported and the ``_rz``, ``_ru`` and ``_rd`` suffixed intrinsic functions 
+  are not defined in HIP.
+        
 .. list-table:: Single precision intrinsics mathematical functions
 
     * - **Function**
@@ -1282,29 +1279,29 @@ For example ``__fadd_[rn,rz,ru,rd]`` are four different addition function with d
     * - | ``float __expf(float  x)``
         | Calculate the fast approximate base e exponential of the input argument.
 
-    * - | ``float __fadd_[rn, ru, rz, rd](float  x, float  y)``
-        | Compute ``x + y`` in the sufix specific rounding mode.
+    * - | ``float __fadd_rn(float  x, float  y)``
+        | Compute ``x + y`` in round-to-nearest-even mode.
 
-    * - | ``float __fdiv_[rn, ru, rz, rd](float  x, float  y)``
-        | Divide two floating point values in the sufix specific rounding mode.
+    * - | ``float __fdiv_rn(float  x, float  y)``
+        | Divide two floating point values in round-to-nearest-even mode.
 
-    * - | ``float __fmaf_[rn, ru, rz, rd](float  x, float  y, float  z)``
-        | Compute ``x × y + z`` as a single operation in the sufix specific rounding mode.
+    * - | ``float __fmaf_rn(float  x, float  y, float  z)``
+        | Compute ``x × y + z`` as a single operation in round-to-nearest-even mode.
 
-    * - | ``float __fmul_[rn, ru, rz, rd](float  x, float  y)``
-        | Compute ``x × y`` in the sufix specific rounding mode.
+    * - | ``float __fmul_rn(float  x, float  y)``
+        | Compute ``x × y`` in round-to-nearest-even mode.
 
-    * - | ``float __frcp_[rn, ru, rz, rd](float  x, float  y)``
-        | Compute ``1 / x`` in the sufix specific rounding mode.
+    * - | ``float __frcp_rn(float  x, float  y)``
+        | Compute ``1 / x`` in round-to-nearest-even mode.
 
-    * - | ``float __frsqrt_[rn, ru, rz, rd](float  x)``
-        | Compute ``1 / √x`` in the sufix specific rounding mode.
+    * - | ``float __frsqrt_rn(float  x)``
+        | Compute ``1 / √x`` in round-to-nearest-even mode.
 
-    * - | ``float __fsqrt_[rn, ru, rz, rd](float  x)``
-        | Compute ``√x`` in the sufix specific rounding mode.
+    * - | ``float __fsqrt_rn(float  x)``
+        | Compute ``√x`` in round-to-nearest-even mode.
 
-    * - | ``float __fsub_[ru, rz, rd](float  x, float  y)``
-        | Subtract two floating-point values in the sufix specific rounding mode.
+    * - | ``float __fsub_rn(float  x, float  y)``
+        | Subtract two floating-point values in round-to-nearest-even mode.
 
     * - | ``float __log10f(float  x)``
         | Calculate the fast approximate base 10 logarithm of the input argument.
@@ -1334,26 +1331,26 @@ For example ``__fadd_[rn,rz,ru,rd]`` are four different addition function with d
 
     * - **Function**
 
-    * - | ``double __dadd_[rn, ru, rz, rd](double  x, double  y)``
-        | Compute ``x + y`` in the sufix specific rounding mode.
+    * - | ``double __dadd_rn(double  x, double  y)``
+        | Compute ``x + y`` in round-to-nearest-even mode.
 
-    * - | ``double __ddiv_[rn, ru, rz, rd](double  x, double  y)``
-        | Divide two floating point values in the sufix specific rounding mode.
+    * - | ``double __ddiv_rn(double  x, double  y)``
+        | Divide two floating point values in round-to-nearest-even mode.
 
-    * - | ``double __dmul_[rn, ru, rz, rd](double  x, double  y)``
-        | Compute ``x × y`` in the sufix specific rounding mode.
+    * - | ``double __dmul_rn(double  x, double  y)``
+        | Compute ``x × y`` in round-to-nearest-even mode.
 
-    * - | ``double __drcp_[rn, ru, rz, rd](double  x, double  y)``
-        | Compute ``1 / x`` in the sufix specific rounding mode.
+    * - | ``double __drcp_rn(double  x, double  y)``
+        | Compute ``1 / x`` in round-to-nearest-even mode.
 
-    * - | ``double __dsqrt_[rn, ru, rz, rd](double  x)``
-        | Compute ``√x`` in the sufix specific rounding mode.
+    * - | ``double __dsqrt_rn(double  x)``
+        | Compute ``√x`` in round-to-nearest-even mode.
 
-    * - | ``double __dsub_[ru, rz, rd](double  x, double  y)``
-        | Subtract two floating-point values in the sufix specific rounding mode.
+    * - | ``double __dsub_rn(double  x, double  y)``
+        | Subtract two floating-point values in round-to-nearest-even mode.
 
-    * - | ``double __fma_[rn, ru, rz, rd](double  x, double  y, double  z)``
-        | Compute ``x × y + z`` as a single operation in the sufix specific rounding mode.
+    * - | ``double __fma_rn(double  x, double  y, double  z)``
+        | Compute ``x × y + z`` as a single operation in round-to-nearest-even mode.
 
 Texture functions
 ===============================================
