@@ -46,7 +46,7 @@ The amount of warps that can reside concurrently on a CU, known
 as occupancy, is determined by the warp's resource usage of registers and
 shared memory.
 
-.. figure:: ../data/hardware_implementation/compute_unit.svg
+.. figure:: ../data/understand/hardware_implementation/compute_unit.svg
     :alt: Diagram depicting the general structure of a compute unit of an AMD
           GPU.
 
@@ -110,9 +110,9 @@ The general structure of CUs stays mostly as it is in GCN
 architectures. The most prominent change is the addition of matrix ALUs, which
 can greatly improve the performance of algorithms involving matrix
 multiply-accumulate operations for
-:doc:`int8, float16, bfloat16 or float32<rocm:about/compatibility/precision-support>`.
+:doc:`int8, float16, bfloat16 or float32<rocm:compatibility/precision-support>`.
 
-.. figure:: ../data/hardware_implementation/cdna3_cu.png
+.. figure:: ../data/understand/hardware_implementation/cdna3_cu.png
   :alt: Block diagram showing the structure of a CDNA3 compute unit. It includes
         Shader Cores, the Matrix Core Unit, a Local Data Share used for sharing
         memory between threads in a block, an L1 Cache and a Scheduler. The
@@ -136,7 +136,7 @@ It also adds an extra layer of cache to the WGP, shared by the CUs
 within it. This cache is referred to as L1 cache, promoting the per-CU cache to
 an L0 cache.
 
-.. figure:: ../data/hardware_implementation/rdna3_cu.png
+.. figure:: ../data/understand/hardware_implementation/rdna3_cu.png
   :alt: Block diagram showing the structure of an RDNA3 Compute Unit. It
         consists of four SIMD units, each including a vector and scalar register
         file, with the corresponding scalar and vector ALUs. All four SIMDs
@@ -152,7 +152,7 @@ For hardware implementation's sake, multiple CUs are grouped
 together into a Shader Engine or Compute Engine, typically sharing some fixed
 function units or memory subsystem resources.
 
-.. figure:: ../data/hardware_implementation/cdna2_gcd.png
+.. figure:: ../data/understand/hardware_implementation/cdna2_gcd.png
   :alt: Block diagram showing four Compute Engines each with 28 Compute Units
         inside. These four Compute Engines share one block of L2 Cache. Around
         them are four Memory Controllers. To the top and bottom of all these are
