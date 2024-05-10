@@ -1206,12 +1206,9 @@ Integer intrinsics
 --------------------------------------------------------------------------------------------
 Following is the list of supported integer intrinsics. Note that intrinsics are supported on device only.
 
-.. list-table:: Single precision mathematical functions
+.. list-table:: Integer intrinsics mathematical functions
 
     * - **Function**
-
-    * - | ``double acos(double  x)``
-        | Calculate the arc cosine of the input argument.
 
     * - | ``unsigned int __brev(unsigned int x)``
         | Reverse the bit order of a 32 bit unsigned integer.
@@ -1263,22 +1260,51 @@ The index returned by ``__lastbit_`` instructions starts at -1, while for ffs th
 Floating-point Intrinsics
 --------------------------------------------------------------------------------------------
 Following is the list of supported floating-point intrinsics. Note that intrinsics are supported on device only.
+In the list there are functions with multiple suffix. These suffix are the ``rn, rz, ru`` and ``rd``, which covers the differnt roundings
 
-.. list-table:: Single precision mathematical functions
+* ``_rn`` suffixed functions are using the round to nearest even rounding mode during calculations.
+* ``_rz`` suffixed functions are using the round towards zero rounding mode during calculations.
+* ``_ru`` suffixed functions are using the round up (to positive infinity) rounding mode during calculations.
+* ``_rd`` suffixed functions are using the round down (to negative infinity) rounding mode during calculations.
+
+For example ``__fadd_[rn,rz,ru,rd]`` are four different addition function with differen rounding modes.
+
+.. list-table:: Single precision intrinsics mathematical functions
 
     * - **Function**
 
     * - | ``float __cosf(float  x)``
         | Calculate the fast approximate cosine of the input argument.
 
+    * - | ``float __exp10f(float  x)``
+        | Calculate the fast approximate base 10 exponential of the input argument.
+
     * - | ``float __expf(float  x)``
         | Calculate the fast approximate base e exponential of the input argument.
 
-    * - | ``float __frsqrt_rn(float  x)``
-        | Compute ``1 / √x`` in round-to-nearest-even mode.
+    * - | ``float __fadd_[rn, ru, rz, rd](float  x, float  y)``
+        | Compute ``x + y`` in the sufix specific rounding mode.
 
-    * - | ``float __fsqrt_rn(float  x)``
-        | Compute ``√x`` in round-to-nearest-even mode.
+    * - | ``float __fdiv_[rn, ru, rz, rd](float  x, float  y)``
+        | Divide two floating point values in the sufix specific rounding mode.
+
+    * - | ``float __fmaf_[rn, ru, rz, rd](float  x, float  y, float  z)``
+        | Compute ``x × y + z`` as a single operation in the sufix specific rounding mode.
+
+    * - | ``float __fmul_[rn, ru, rz, rd](float  x, float  y)``
+        | Compute ``x × y`` in the sufix specific rounding mode.
+
+    * - | ``float __frcp_[rn, ru, rz, rd](float  x, float  y)``
+        | Compute ``1 / x`` in the sufix specific rounding mode.
+
+    * - | ``float __frsqrt_[rn, ru, rz, rd](float  x)``
+        | Compute ``1 / √x`` in the sufix specific rounding mode.
+
+    * - | ``float __fsqrt_[rn, ru, rz, rd](float  x)``
+        | Compute ``√x`` in the sufix specific rounding mode.
+
+    * - | ``float __fsub_[ru, rz, rd](float  x, float  y)``
+        | Subtract two floating-point values in the sufix specific rounding mode.
 
     * - | ``float __log10f(float  x)``
         | Calculate the fast approximate base 10 logarithm of the input argument.
@@ -1290,7 +1316,13 @@ Following is the list of supported floating-point intrinsics. Note that intrinsi
         | Calculate the fast approximate base e logarithm of the input argument.
 
     * - | ``float __powf(float  x, float  y)``
-        | Calculate the fast approximate of x<sup>y</sup>.
+        | Calculate the fast approximate of x :sup:`y`.
+
+    * - | ``float __saturatef(float  x)``
+        | Clamp the input argument to [+0.0, 1.0].
+
+    * - | ``float __sincosf(float  x, float* sinptr, float* cosptr)``
+        | Calculate the fast approximate sine and cosine of the first input argument.
 
     * - | ``float __sinf(float  x)``
         | Calculate the fast approximate sine of the input argument.
@@ -1298,8 +1330,30 @@ Following is the list of supported floating-point intrinsics. Note that intrinsi
     * - | ``float __tanf(float  x)``
         | Calculate the fast approximate tangent of the input argument.
 
-    * - | ``double __dsqrt_rn(double  x)``
-        | Compute ``√x`` in round-to-nearest-even mode.
+.. list-table:: Double precision intrinsics mathematical functions
+
+    * - **Function**
+
+    * - | ``double __dadd_[rn, ru, rz, rd](double  x, double  y)``
+        | Compute ``x + y`` in the sufix specific rounding mode.
+
+    * - | ``double __ddiv_[rn, ru, rz, rd](double  x, double  y)``
+        | Divide two floating point values in the sufix specific rounding mode.
+
+    * - | ``double __dmul_[rn, ru, rz, rd](double  x, double  y)``
+        | Compute ``x × y`` in the sufix specific rounding mode.
+
+    * - | ``double __drcp_[rn, ru, rz, rd](double  x, double  y)``
+        | Compute ``1 / x`` in the sufix specific rounding mode.
+
+    * - | ``double __dsqrt_[rn, ru, rz, rd](double  x)``
+        | Compute ``√x`` in the sufix specific rounding mode.
+
+    * - | ``double __dsub_[ru, rz, rd](double  x, double  y)``
+        | Subtract two floating-point values in the sufix specific rounding mode.
+
+    * - | ``double __fma_[rn, ru, rz, rd](double  x, double  y, double  z)``
+        | Compute ``x × y + z`` as a single operation in the sufix specific rounding mode.
 
 Texture functions
 ===============================================
