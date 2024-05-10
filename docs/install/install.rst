@@ -66,6 +66,7 @@ Installation
          If the above packages are not found, `download the package signing key <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/native-install/ubuntu.html#package-signing-key>`_ and add the following repository. 
 
          .. code:: shell
+
             echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/rocm/apt/debian/ jammy main" \
                 | sudo tee --append /etc/apt/sources.list.d/rocm.list
             sudo apt update
