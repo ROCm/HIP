@@ -20,8 +20,8 @@ RDNA & CDNA Architecture Summary
 Most GPU architectures, like RDNA and CDNA, have a hierarchical structure.
 The innermost piece is a SIMD-enabled vector Arithmetic Logical Unit (ALU). 
 In addition to the vector ALUs, most recent GPUs also house matrix ALUs for 
-accelerating algorithms involving matrix multiply-accumulate operations. 
-AMD GPUs also contain scalar ALUs, that can be used to reduce the load on the 
+accelerating algorithms involving matrix multiply-accumulate operations.
+AMD GPUs also contain scalar ALUs, that can be used to reduce the load on the
 vector ALU by performing operations which are uniform for all threads of a warp.
 
 A set of ALUs, together with register files, caches and shared memory, comprise
@@ -30,7 +30,7 @@ AMD block diagrams, or as streaming multiprocessor (SM).
 
 .. _rdna3_cu:
 
-.. figure:: ../data/programming_model/understand/rdna3_cu.png
+.. figure:: ../data/understand/programming_model/rdna3_cu.png
   :alt: Block diagram showing the structure of an RDNA3 Compute Unit. It
         consists of four SIMD units, each including a vector and scalar register
         file, with the corresponding scalar and vector ALUs. All four SIMDs
@@ -41,7 +41,7 @@ AMD block diagrams, or as streaming multiprocessor (SM).
 
 .. _cdna3_cu:
 
-.. figure:: ../data/programming_model/understand/cdna3_cu.png
+.. figure:: ../data/understand/programming_model/cdna3_cu.png
   :alt: Block diagram showing the structure of a CDNA3 compute unit. It includes
         Shader Cores, the Matrix Core Unit, a Local Data Share used for sharing
         memory between threads in a block, an L1 Cache and a Scheduler. The
@@ -56,7 +56,7 @@ memory subsystem resources.
 
 .. _cdna2_gcd:
 
-.. figure:: ../data/programming_model/understand/cdna2_gcd.png
+.. figure:: ../data/understand/programming_model/cdna2_gcd.png
   :alt: Block diagram showing four Compute Engines each with 28 Compute Units
         inside. These four Compute Engines share one block of L2 Cache. Around
         them are four Memory Controllers. To the top and bottom of all these are
@@ -103,7 +103,7 @@ typically look the following:
 
 .. _simt:
 
-.. figure:: ../data/programming_model/understand/simt.svg
+.. figure:: ../data/understand/programming_model/simt.svg
   :alt: Image representing the instruction flow of a SIMT program. Two identical
         arrows pointing downward with blocks representing the instructions
         inside and ellipsis between the arrows. The instructions represented in
