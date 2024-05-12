@@ -1216,29 +1216,56 @@ Following is the list of supported integer intrinsics. Note that intrinsics are 
     * - | ``unsigned long long int __brevll(unsigned long long int x)``
         | Reverse the bit order of a 64 bit unsigned integer. 
 
-    * - | ``int __clz(int  x)``
-        | Return the number of consecutive high-order zero bits in a 32 bit integer.
+    * - | ``unsigned int __byte_perm(unsigned int  x, unsigned int  y, unsigned int  z)``
+        | Return selected bytes from two 32-bit unsigned integers.
 
-    * - | ``unsigned int __clz(unsigned int x)``
-        | Return the number of consecutive high-order zero bits in 32 bit unsigned integer.
-
-    * - | ``int __clzll(long long int x)``
-        | Count the number of consecutive high-order zero bits in a 64 bit integer.
+    * - | ``unsigned int __clz(int x)``
+        | Return the number of consecutive high-order zero bits in 32 bit integer.
 
     * - | ``unsigned int __clzll(long long int x)``
-        | Return the number of consecutive high-order zero bits in 64 bit signed integer.
-
-    * - | ``unsigned int __ffs(unsigned int x)``
-        | Find the position of least signigicant bit set to 1 in a 32 bit unsigned integer.
+        | Return the number of consecutive high-order zero bits in 64 bit integer.
 
     * - | ``unsigned int __ffs(int x)``
-        | Find the position of least signigicant bit set to 1 in a 32 bit signed integer.
-
-    * - | ``unsigned int __ffsll(unsigned long long int x)``
-        | Find the position of least signigicant bit set to 1 in a 64 bit unsigned integer.
+        | Find the position of least signigicant bit set to 1 in a 32 bit integer.
 
     * - | ``unsigned int __ffsll(long long int x)``
         | Find the position of least signigicant bit set to 1 in a 64 bit signed integer.
+
+    * - | ``unsigned int __fns32(unsigned int mask, unsigned int base, int offset)``
+        | Find the position of the n-th set to 1 bit in a 32-bit integer.
+
+    * - | ``unsigned int __fns64(unsigned long long int mask, unsigned int base, int offset)``
+        | Find the position of the n-th set to 1 bit in a 64-bit integer.
+
+    * - | ``unsigned int __funnelshift_l(unsigned int lo, unsigned int hi, unsigned int shift)``
+        | Concatenate ``hi`` : ``lo``, shift left by shift & 31 bits, return the most significant 32 bits.
+
+    * - | ``unsigned int __funnelshift_lc(unsigned int lo, unsigned int hi, unsigned int shift)``
+        | Concatenate ``hi`` : ``lo``, shift left by min(shift, 32) bits, return the most significant 32 bits.
+
+    * - | ``unsigned int __funnelshift_r(unsigned int lo, unsigned int hi, unsigned int shift)``
+        | Concatenate ``hi`` : ``lo``, shift right by shift & 31 bits, return the least significant 32 bits.
+
+    * - | ``unsigned int __funnelshift_rc(unsigned int lo, unsigned int hi, unsigned int shift)``
+        | Concatenate ``hi`` : ``lo``, shift right by min(shift, 32) bits, return the least significant 32 bits.
+    
+    * - | ``unsigned int __hadd(int x, int y)``
+        | Compute average of signed input arguments, avoiding overflow in the intermediate sum.
+
+    * - | ``unsigned int __rhadd(int x, int y)``
+        | Compute rounded average of signed input arguments, avoiding overflow in the intermediate sum.
+
+    * - | ``unsigned int __uhadd(int x, int y)``
+        | Compute average of unsigned input arguments, avoiding overflow in the intermediate sum.
+
+    * - | ``unsigned int __urhadd (unsigned int  x, unsigned int  y)``
+        | Compute rounded average of unsigned input arguments, avoiding overflow in the intermediate sum.
+
+    * - | ``int __sad(int x, int y, int z)``
+        | Calculate ``|x - y| + z``, the sum of absolute difference.
+
+    * - | ``unsigned int __usad(unsigned int x, unsigned int y, unsigned int z)``
+        | Calculate ``|x - y| + z``, the sum of absolute difference.
 
     * - | ``unsigned int __popc(unsigned int x)``
         | Count the number of bits that are set to 1 in a 32 bit integer.
@@ -1252,6 +1279,18 @@ Following is the list of supported integer intrinsics. Note that intrinsics are 
     * - | ``unsigned int __umul24(unsigned int x, unsigned int y)``
         | Multiply two 24bit unsigned integers.
 
+    * - | ``int __mulhi(int x, int y)``
+        | Calculate the most significant 32 bits of the product of the two 32-bit integers.
+
+    * - | ``unsigned int __umulhi(unsigned int x, unsigned int y)``
+        | Calculate the most significant 32 bits of the product of the two 32-bit unsigned integers.
+
+    * - | ``long long int __mul64hi(long long int x, long long int y)``
+        | Calculate the most significant 64 bits of the product of the two 64-bit integers.
+
+    * - | ``unsigned long long int __umul64hi(unsigned long long int x, unsigned long long int y)``
+        | Calculate the most significant 64 bits of the product of the two 64 unsigned bit integers.
+
 The HIP-Clang implementation of ``__ffs()`` and ``__ffsll()`` contains code to add a constant +1 to produce the ffs result format.
 For the cases where this overhead is not acceptable and programmer is willing to specialize for the platform,
 HIP-Clang provides `__lastbit_u32_u32(unsigned int input)` and `__lastbit_u32_u64(unsigned long long int input)`.
@@ -1263,8 +1302,8 @@ Following is the list of supported floating-point intrinsics. Note that intrinsi
 
 .. note::
 
-  In HIP, the nearest even rounding mode supported and the ``_rz``, ``_ru`` and ``_rd`` suffixed intrinsic functions 
-  are not defined in HIP.
+  Only the nearest even rounding mode supported on AMD GPUs. The ``_rz``, ``_ru`` and ``_rd`` suffixed intrinsic functions 
+  are not defined in HIP at AMD backend.
         
 .. list-table:: Single precision intrinsics mathematical functions
 
