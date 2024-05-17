@@ -53,7 +53,6 @@ Set the repository branch using the variable: ``ROCM_BRANCH``. For example, for 
 
             git clone -b "$ROCM_BRANCH" https://github.com/ROCm/clr.git
             git clone -b "$ROCM_BRANCH" https://github.com/ROCm/hip.git
-            git clone -b "$ROCM_BRANCH" https://github.com/ROCm/HIPCC.git
 
          CLR (Common Language Runtime) repository includes ROCclr, HIPAMD and OpenCL.
 
@@ -71,16 +70,7 @@ Set the repository branch using the variable: ``ROCM_BRANCH``. For example, for 
 
             export CLR_DIR="$(readlink -f clr)"
             export HIP_DIR="$(readlink -f hip)"
-            export HIPCC_DIR="$(readlink -f HIPCC)"
 
-      #. Build the HIPCC runtime.
-
-         .. code:: shell
-
-            cd "$HIPCC_DIR"
-            mkdir -p build; cd build
-            cmake ..
-            make -j4
 
       #. Build HIP.
 
@@ -88,7 +78,7 @@ Set the repository branch using the variable: ``ROCM_BRANCH``. For example, for 
 
             cd "$CLR_DIR"
             mkdir -p build; cd build
-            cmake -DHIP_COMMON_DIR=$HIP_DIR -DHIP_PLATFORM=amd -DCMAKE_PREFIX_PATH="/opt/rocm/" -DCMAKE_INSTALL_PREFIX=$PWD/install -DHIPCC_BIN_DIR=$HIPCC_DIR/build -DHIP_CATCH_TEST=0 -DCLR_BUILD_HIP=ON -DCLR_BUILD_OCL=OFF ..
+            cmake -DHIP_COMMON_DIR=$HIP_DIR -DHIP_PLATFORM=amd -DCMAKE_PREFIX_PATH="/opt/rocm/" -DCMAKE_INSTALL_PREFIX=$PWD/install -DHIP_CATCH_TEST=0 -DCLR_BUILD_HIP=ON -DCLR_BUILD_OCL=OFF ..
 
             make -j$(nproc)
             sudo make install
@@ -97,9 +87,9 @@ Set the repository branch using the variable: ``ROCM_BRANCH``. For example, for 
 
             Note, if you don't specify ``CMAKE_INSTALL_PREFIX``, the HIP runtime is installed at
             ``<ROCM_PATH>/hip``.
-            
+
             By default, release version of HIP is built. If need debug version, you can put the option ``CMAKE_BUILD_TYPE=Debug`` in the command line.
-         
+
          Default paths and environment variables:
 
             * HIP is installed into ``<ROCM_PATH>/hip``. This can be overridden by setting the ``HIP_PATH``
@@ -157,7 +147,6 @@ Set the repository branch using the variable: ``ROCM_BRANCH``. For example, for 
             git clone -b "$ROCM_BRANCH" https://github.com/ROCm/clr.git
             git clone -b "$ROCM_BRANCH" https://github.com/ROCm/hip.git
             git clone -b "$ROCM_BRANCH" https://github.com/ROCm/hipother.git
-            git clone -b "$ROCM_BRANCH" https://github.com/ROCm/HIPCC.git
 
       #. Set the environment variables.
 
@@ -166,16 +155,6 @@ Set the repository branch using the variable: ``ROCM_BRANCH``. For example, for 
             export CLR_DIR="$(readlink -f clr)"
             export HIP_DIR="$(readlink -f hip)"
             export HIP_OTHER="$(readlink -f hipother)"
-            export HIPCC_DIR="$(readlink -f HIPCC)"
-
-      #. Build the HIPCC runtime.
-
-         .. code:: shell
-
-            cd "$HIPCC_DIR"
-            mkdir -p build; cd build
-            cmake ..
-            make -j4
 
       #. Build HIP.
 
@@ -183,7 +162,7 @@ Set the repository branch using the variable: ``ROCM_BRANCH``. For example, for 
 
             cd "$CLR_DIR"
             mkdir -p build; cd build
-            cmake -DHIP_COMMON_DIR=$HIP_DIR -DHIP_PLATFORM=nvidia -DCMAKE_INSTALL_PREFIX=$PWD/install -DHIPCC_BIN_DIR=$HIPCC_DIR/build -DHIP_CATCH_TEST=0 -DCLR_BUILD_HIP=ON -DCLR_BUILD_OCL=OFF -DHIPNV_DIR=$HIP_OTHER/hipnv ..
+            cmake -DHIP_COMMON_DIR=$HIP_DIR -DHIP_PLATFORM=nvidia -DCMAKE_INSTALL_PREFIX=$PWD/install -DHIP_CATCH_TEST=0 -DCLR_BUILD_HIP=ON -DCLR_BUILD_OCL=OFF -DHIPNV_DIR=$HIP_OTHER/hipnv ..
             make -j$(nproc)
             sudo make install
 
@@ -212,9 +191,8 @@ Build HIP tests
                export HIPTESTS_DIR="$(readlink -f hip-tests)"
                cd "$HIPTESTS_DIR"
                mkdir -p build; cd build
-               export HIP_PATH=$CLR_DIR/build/install  # or any path where HIP is installed; for example: ``/opt/rocm``
-               cmake ../catch/ -DHIP_PLATFORM=amd
-               make -j$(nproc) build_tests
+               cmake ../catch -DHIP_PLATFORM=amd -DHIP_PATH=$CLR_DIR/build/install  # or any path where HIP is installed; for example: ``/opt/rocm`` 
+               make build_tests
                ctest # run tests
 
             HIP catch tests are built in ``$HIPTESTS_DIR/build``.
