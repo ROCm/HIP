@@ -1445,6 +1445,34 @@ The following surface functions are supported in HIP:
 .. doxygengroup:: Surface
    :content-only:
 
+.. doxygenfunction:: surf1Dread
+
+.. doxygenfunction:: surf1DWrite
+
+.. doxygenfunction:: surf2Dread
+
+.. doxygenfunction:: surf2DWrite
+
+.. doxygenfunction:: surf3Dread
+
+.. doxygenfunction:: surf3Dwrite
+
+.. doxygenfunction:: surf1DLayeredread
+
+.. doxygenfunction:: surf1DLayeredWrite
+
+.. doxygenfunction:: surf2DLayeredread
+
+.. doxygenfunction:: surf2DLayeredWrite
+
+.. doxygenfunction:: surfCubemapread
+
+.. doxygenfunction:: surfCubemapwrite
+
+.. doxygenfunction:: surfCubemapLayeredread
+
+.. doxygenfunction:: surfCubemapLayeredwrite
+
 Timer functions
 ===============================================
 
