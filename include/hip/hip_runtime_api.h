@@ -3191,7 +3191,8 @@ hipError_t hipMemAllocHost(void** ptr, size_t size);
  *  @param[out] ptr Pointer to the allocated host pinned memory
  *  @param[in]  size Requested memory size in bytes
  *  If size is 0, no memory is allocated, *ptr returns nullptr, and hipSuccess is returned.
- *  @param[in]  flags Type of host memory allocation
+ *  @param[in]  flags Type of host memory allocation. See the description of flags in
+ *  hipSetDeviceFlags.
  *
  *  If no input for flags, it will be the default pinned memory allocation on the host.
  *
@@ -3818,7 +3819,7 @@ hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr);
  *
  *  After registering the memory, use #hipHostGetDevicePointer to obtain the mapped device pointer.
  *  On many systems, the mapped device pointer will have a different value than the mapped host
- * pointer.  Applications must use the device pointer in device code, and the host pointer in device
+ * pointer.  Applications must use the device pointer in device code, and the host pointer in host
  * code.
  *
  *  On some systems, registered memory is pinned.  On some systems, registered memory may not be

@@ -51,8 +51,7 @@ Supported ``__global__`` functions are:
   * Run on the device
   * Called (launched) from the host
 
-HIP ``__global__`` functions must have a ``void`` return type. The first parameter in a HIP ``__global__``
-function must have the type ``hipLaunchParm``. Refer to :ref:`kernel-launch-example` to see usage.
+HIP ``__global__`` functions must have a ``void`` return type.
 
 HIP doesn't support dynamic-parallelism, which means that you can't call ``__global__`` functions from
 the device.
@@ -1441,7 +1440,10 @@ code.
 Surface functions
 ===============================================
 
-Surface functions are not supported.
+The following surface functions are supported in HIP:
+
+.. doxygengroup:: Surface
+   :content-only:
 
 Timer functions
 ===============================================
@@ -1452,8 +1454,7 @@ To read a high-resolution timer from the device, HIP provides the following buil
 
   .. code-block:: cpp
 
-    clock_t clock()
-    long long int clock64()
+    long long int wall_clock64()
 
   The difference between the values that are returned represents the cycles used.
 
