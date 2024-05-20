@@ -2830,7 +2830,6 @@ hipError_t hipEventDestroy(hipEvent_t event);
  *  If hipEventRecord() has not been called on @p event, this function returns #hipSuccess when no
  *  event is captured.
  *
- *  This function needs to support hipEventBlockingSync parameter.
  *
  *  @param[in] event Event on which to wait.
  *
