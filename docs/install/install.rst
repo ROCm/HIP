@@ -43,6 +43,9 @@ Installation
 
       By default, HIP is installed into ``/opt/rocm/hip``.
 
+      .. note::
+         There is no autodetection for the HIP installation. If you choose to install it somewhere other than the default location, you must set the ``HIP_PATH`` environment variable as explained in `Build HIP from source <./build.html>`_. 
+
    .. tab-item:: NVIDIA
       :sync: nvidia
 
