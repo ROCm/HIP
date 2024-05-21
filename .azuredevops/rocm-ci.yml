@@ -9,15 +9,20 @@ resources:
     endpoint: ROCm
     name: ROCm/clr
     ref: develop
+  - repository: hipother_repo
+    type: github
+    endpoint: ROCm
+    name: ROCm/hipother
+    ref: develop
   pipelines:
   - pipeline: rocr-runtime_pipeline
-    source: rocr-runtime
+    source: \ROCR-Runtime
     trigger:
       branches:
         include:
         - master
   - pipeline: rocprofiler-register_pipeline
-    source: rocprofiler-register
+    source: \rocprofiler-register
     trigger:
       branches:
         include:
