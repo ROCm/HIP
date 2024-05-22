@@ -104,7 +104,7 @@ You can include your kernel arguments after these parameters.
 .. code-block:: cpp
 
   // Example hipLaunchKernelGGL pseudocode:
-  __global__ MyKernel(hipLaunchParm lp, float *A, float *B, float *C, size_t N)
+  __global__ MyKernel(float *A, float *B, float *C, size_t N)
   {
   ...
   }
@@ -1490,7 +1490,8 @@ To read a high-resolution timer from the device, HIP provides the following buil
 
   .. code-block:: cpp
 
-    long long int wall_clock64()
+    clock_t clock()
+    long long int clock64()
 
   This can be queried using the HIP API with the ``hipDeviceAttributeWallClockRate`` attribute of the
   device in HIP application code. For example:
@@ -1502,6 +1503,8 @@ To read a high-resolution timer from the device, HIP provides the following buil
 
   Where ``hipDeviceAttributeWallClockRate`` is a device attribute. Note that wall clock frequency is a
   per-device attribute.
+  
+  Note that ``clock()`` and ``clock64()`` do not work properly on AMD RDNA3 (GFX11) graphic processors.
 
 Atomic functions
 ===============================================
