@@ -136,15 +136,11 @@ how they relate to the various levels of the threading model.
 
 .. figure:: ../data/understand/programming_model_reference/memory_hierarchy.svg
   :alt: Diagram depicting nested rectangles of varying color. The outermost one
-        titled "Grid", inside on the upper half a rectangle titled "Cluster".
-        Inside it are two identical rectangles titled "Block", inside them are
-        ones titled "Local" with multiple "Warp" titled rectangles. Blocks have
-        not just Local inside, but also rectangles titled "Shared". The Shared
-        rectangles of Blocks in the same Cluster are grouped together with a
-        translucent halo titled "Cluster shared". Outside the Cluster but
-        inside the Grid is a rectangle titled "Global" with three others
-        inside: "Surface", "Texture" (same color) and "Constant" (different
-        color).
+        titled "Grid", inside it are two identical rectangles titled "Block",
+        inside them are ones titled "Local" with multiple "Warp" titled rectangles.
+        Blocks have not just Local inside, but also rectangles titled "Shared".
+        Inside the Grid is a rectangle titled "Global" with three others inside:
+        "Surface", "Texture" (same color) and "Constant" (different color).
 
   Memory hierarchy.
 
@@ -157,9 +153,6 @@ Local or per-thread memory
 
 Shared memory
   Read-write storage visible to all the threads in a given block.
-
-Distributed shared memory
-  Read-write storage visible to all the threads in a given block cluster.
 
 Global
   Read-write storage visible to all threads in a given grid. There are
