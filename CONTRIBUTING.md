@@ -29,12 +29,12 @@ Some guidelines are outlined below:
 
 ### Add a new HIP API ###
 
-- Add a translation to the hipify-clang tool ; many examples abound.
-    - For stat tracking purposes, place the API into an appropriate stat category ("dev", "mem", "stream", etc).
-- Add a inlined NVIDIA implementation for the function in /hipnv/include/hip/nvidia_detail/nvidia_hip_runtime_api.h in the repository [hipother](https://github.com/ROCm/hipother).
-    - These are typically headers
-- Add an HIP definition and Doxygen comments for the function in /include/hip/hip_runtime_api.h, in the repository [hip](https://github.com/ROCm/hip).
-    - Source implementation typically go in clr/hipamd/src/hip_*.cpp in the reposotory [clr](https://github.com/ROCm/clr). The implementation involves calls to HIP runtime (ie for hipStream_t).
+* Add a translation to the hipify-clang tool ; many examples abound.
+  * For stat tracking purposes, place the API into an appropriate stat category ("dev", "mem", "stream", etc).
+* Add a inlined NVIDIA implementation for the function in /hipnv/include/hip/nvidia_detail/nvidia_hip_runtime_api.h in the repository [hipother](https://github.com/ROCm/hipother).
+  * These are typically headers
+* Add an HIP definition and Doxygen comments for the function in /include/hip/hip_runtime_api.h, in the repository [hip](https://github.com/ROCm/hip).
+  * Source implementation typically go in clr/hipamd/src/hip_*.cpp in the reposotory [clr](https://github.com/ROCm/clr). The implementation involves calls to HIP runtime (ie for hipStream_t).
 
 ### Run Unit Tests ###
 
@@ -42,23 +42,26 @@ For new features or bug fixes, it's mandatory to run associate [hip-tests](https
 Please go to the repo and follow the steps.
 
 For applications and benchmarks outside the hip-tests environment, developments should use a two-step development flow:
-- #1. Compile, link, and install HIP. See {ref}`Building the HIP runtime` notes.
-- #2. Relink the target application to include changes in HIP runtime file.
+
+* #1. Compile, link, and install HIP. See {ref}`Building the HIP runtime` notes.
+* #2. Relink the target application to include changes in HIP runtime file.
 
 ## Coding Style ##
-- Code Indentation:
-    - Tabs should be expanded to spaces.
-    - Use 4 spaces indentation.
-- Capitalization and Naming
-    - Prefer camelCase for HIP interfaces and internal symbols.  Note HCC uses _ for separator.
-      This guideline is not yet consistently followed in HIP code - eventual compliance is aspirational.
-    - Member variables should begin with a leading "_".  This allows them to be easily distinguished from other variables or functions.
 
-- `{}` placement
-    - namespace should be on same line as `{` and separated by a space.
-    - Single-line if statement should still use `{/}` pair (even though C++ does not require).
-    - For functions, the opening `{` should be placed on a new line.
-    - For if/else blocks, the opening `{` is placed on same line as the if/else. Use a space to separate `{` from if/else. For example,
+* Code Indentation:
+  * Tabs should be expanded to spaces.
+  * Use 4 spaces indentation.
+* Capitalization and Naming
+  * Prefer camelCase for HIP interfaces and internal symbols.  Note HCC uses _ for separator.
+    This guideline is not yet consistently followed in HIP code * eventual compliance is aspirational.
+  * Member variables should begin with a leading "_".  This allows them to be easily distinguished from other variables or functions.
+
+* `{}` placement
+  * namespace should be on same line as `{` and separated by a space.
+  * Single-line if statement should still use `{/}` pair (even though C++ does not require).
+  * For functions, the opening `{` should be placed on a new line.
+  * For if/else blocks, the opening `{` is placed on same line as the if/else. Use a space to separate `{` from if/else. For example,
+
 ```console
     if (foo) {
         doFoo()
@@ -67,16 +70,16 @@ For applications and benchmarks outside the hip-tests environment, developments 
     }
 ```
 
-- Miscellaneous
-    - All references in function parameter lists should be const.
-    - "ihip" means internal hip structures.  These should not be exposed through the HIP API.
-    - Keyword TODO refers to a note that should be addressed in long-term.  Could be style issue, software architecture, or known bugs.
-    - FIXME refers to a short-term bug that needs to be addressed.
+* Miscellaneous
+  * All references in function parameter lists should be const.
+  * "ihip" means internal hip structures.  These should not be exposed through the HIP API.
+  * Keyword TODO refers to a note that should be addressed in long-term.  Could be style issue, software architecture, or known bugs.
+  * FIXME refers to a short-term bug that needs to be addressed.
 
-- `HIP_INIT_API()` should be placed at the start of each top-level HIP API.  This function will make sure the HIP runtime is initialized, and also constructs an appropriate API string for tracing and CodeXL marker tracing. The arguments to HIP_INIT_API should match those of the parent function.
-- `hipExtGetLastError()` can be called as the AMD platform specific API, to return error code from last HIP API called from the active host thread. `hipGetLastError()` and `hipPeekAtLastError()` can also return the last error that was returned by any of the HIP runtime calls in the same host thread.
-- All HIP environment variables should begin with the keyword HIP_
-Environment variables should be long enough to describe their purpose but short enough so they can be remembered - perhaps 10-20 characters, with 3-4 parts separated by underscores.
+* `HIP_INIT_API()` should be placed at the start of each top-level HIP API.  This function will make sure the HIP runtime is initialized, and also constructs an appropriate API string for tracing and CodeXL marker tracing. The arguments to HIP_INIT_API should match those of the parent function.
+* `hipExtGetLastError()` can be called as the AMD platform specific API, to return error code from last HIP API called from the active host thread. `hipGetLastError()` and `hipPeekAtLastError()` can also return the last error that was returned by any of the HIP runtime calls in the same host thread.
+* All HIP environment variables should begin with the keyword HIP_
+Environment variables should be long enough to describe their purpose but short enough so they can be remembered * perhaps 10-20 characters, with 3-4 parts separated by underscores.
 To see the list of current environment variables, along with their values, set HIP_PRINT_ENV and run any hip applications on ROCm platform.
 HIPCC or other tools may support additional environment variables which should follow the above convention.
 
@@ -91,16 +94,18 @@ Some tips:
     https://robots.thoughtbot.com/5-useful-tips-for-a-better-commit-message
 
 In particular :
-   - Use imperative voice, ie "Fix this bug", "Refactor the XYZ routine", "Update the doc".
-     Not : "Fixing the bug", "Fixed the bug", "Bug fix", etc.
-   - Subject should summarize the commit.  Do not end subject with a period.  Use a blank line
-     after the subject.
+
+* Use imperative voice, ie "Fix this bug", "Refactor the XYZ routine", "Update the doc".
+  Not : "Fixing the bug", "Fixed the bug", "Bug fix", etc.
+* Subject should summarize the commit.  Do not end subject with a period.  Use a blank line
+  after the subject.
 
 ### Deliverables ###
 
 HIP is an open source library. Because of this, we include the following license description at the top of every source file.
 If you create new source files in the repository, please include this text in them as well (replacing "xx" with the digits for the current year):
-```
+
+```cpp
 // Copyright (c) 20xx Advanced Micro Devices, Inc. All rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -139,5 +144,5 @@ To update the code in your PR (eg. in response to a code review discussion), you
 
 ### Doxygen Editing Guidelines ###
 
-- bugs should be marked with @bugs near the code where the bug might be fixed.  The @bug message will appear in the API description and also in the
+* bugs should be marked with @bugs near the code where the bug might be fixed.  The @bug message will appear in the API description and also in the
 doxygen bug list.
