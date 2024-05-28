@@ -1,23 +1,20 @@
 <mxfile host="65bd71144e">
     <diagram id="zBbb_w2fufU70cdOGtND" name="1 oldal">
-        <mxGraphModel dx="2445" dy="776" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="660" pageHeight="610" background="none" math="0" shadow="0">
+        <mxGraphModel dx="755" dy="996" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="660" pageHeight="610" background="none" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
                 <mxCell id="5927" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#5E5B61;fontColor=#FFFFFF;strokeColor=none;spacing=0;" parent="1" vertex="1">
-                    <mxGeometry width="610" height="370" as="geometry"/>
+                    <mxGeometry y="20" width="610" height="320" as="geometry"/>
                 </mxCell>
                 <mxCell id="5928" value="Grid" style="text;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontFamily=klavika;fontSize=17;fontColor=#FFFFFF;" parent="1" vertex="1">
-                    <mxGeometry x="275" width="60" height="30" as="geometry"/>
-                </mxCell>
-                <mxCell id="5925" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#4F1623;fontColor=#FFFFFF;strokeColor=none;" parent="1" vertex="1">
-                    <mxGeometry x="10" y="30" width="590" height="280" as="geometry"/>
+                    <mxGeometry x="275" y="20" width="60" height="30" as="geometry"/>
                 </mxCell>
                 <mxCell id="5879" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C23555;fontColor=#FFFFFF;strokeColor=none;" parent="1" vertex="1">
-                    <mxGeometry x="310" y="60" width="280" height="240" as="geometry"/>
+                    <mxGeometry x="310" y="60" width="280" height="220" as="geometry"/>
                 </mxCell>
                 <mxCell id="5835" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C23555;fontColor=#FFFFFF;strokeColor=none;" parent="1" vertex="1">
-                    <mxGeometry x="20" y="60" width="280" height="240" as="geometry"/>
+                    <mxGeometry x="20" y="60" width="280" height="220" as="geometry"/>
                 </mxCell>
                 <mxCell id="5836" value="&lt;font face=&quot;Klavika&quot; style=&quot;font-size: 17px;&quot;&gt;Block&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=17;fontColor=#FFFFFF;" parent="1" vertex="1">
                     <mxGeometry x="130" y="60" width="60" height="30" as="geometry"/>
@@ -189,12 +186,6 @@
                 </mxCell>
                 <mxCell id="5878" value="Local" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Klavika;fontSize=17;fontColor=#FFFFFF;container=0;" parent="1" vertex="1">
                     <mxGeometry x="120" y="90" width="80" height="30" as="geometry"/>
-                </mxCell>
-                <mxCell id="5692" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#4F1623;fontColor=#FFFFFF;strokeColor=none;opacity=75;" parent="1" vertex="1">
-                    <mxGeometry x="30" y="220" width="550" height="70" as="geometry"/>
-                </mxCell>
-                <mxCell id="5693" value="&lt;font face=&quot;Klavika&quot; style=&quot;font-size: 17px;&quot;&gt;Cluster shared&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=17;fontColor=#FFFFFF;" parent="1" vertex="1">
-                    <mxGeometry x="247.5" y="260" width="115" height="30" as="geometry"/>
                 </mxCell>
                 <mxCell id="5876" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#9C2A44;fontColor=#FFFFFF;strokeColor=none;" parent="1" vertex="1">
                     <mxGeometry x="40" y="230" width="240" height="30" as="geometry"/>
@@ -379,32 +370,29 @@
                 <mxCell id="5924" value="&lt;font face=&quot;Klavika&quot; style=&quot;font-size: 17px;&quot;&gt;Shared&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=17;fontColor=#FFFFFF;" parent="1" vertex="1">
                     <mxGeometry x="420" y="230" width="60" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="5926" value="&lt;font face=&quot;Klavika&quot; style=&quot;font-size: 17px;&quot;&gt;Cluster&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=17;fontColor=#FFFFFF;" parent="1" vertex="1">
-                    <mxGeometry x="273.75" y="30" width="62.5" height="30" as="geometry"/>
-                </mxCell>
                 <mxCell id="5930" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#262626;fontColor=#FFFFFF;strokeColor=none;" parent="1" vertex="1">
-                    <mxGeometry x="10" y="320" width="590" height="40" as="geometry"/>
+                    <mxGeometry x="10" y="290" width="590" height="40" as="geometry"/>
                 </mxCell>
                 <mxCell id="5940" value="&lt;font face=&quot;Klavika&quot; style=&quot;font-size: 17px;&quot;&gt;Global&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=17;fontColor=#FFFFFF;" parent="1" vertex="1">
-                    <mxGeometry x="392.5" y="325" width="115" height="30" as="geometry"/>
+                    <mxGeometry x="392.5" y="295" width="115" height="30" as="geometry"/>
                 </mxCell>
                 <mxCell id="5941" value="&lt;span style=&quot;color: rgba(0, 0, 0, 0); font-family: monospace; font-size: 0px; text-align: start;&quot;&gt;%3CmxGraphModel%3E%3Croot%3E%3CmxCell%20id%3D%220%22%2F%3E%3CmxCell%20id%3D%221%22%20parent%3D%220%22%2F%3E%3CmxCell%20id%3D%222%22%20value%3D%22%26lt%3Bfont%20face%3D%26quot%3BKlavika%26quot%3B%20style%3D%26quot%3Bfont-size%3A%2017px%3B%26quot%3B%26gt%3BCluster%20shared%26lt%3B%2Ffont%26gt%3B%22%20style%3D%22text%3Bhtml%3D1%3BstrokeColor%3Dnone%3BfillColor%3Dnone%3Balign%3Dcenter%3BverticalAlign%3Dmiddle%3BwhiteSpace%3Dwrap%3Brounded%3D0%3BfontSize%3D17%3BfontColor%3D%23FFFFFF%3B%22%20vertex%3D%221%22%20parent%3D%221%22%3E%3CmxGeometry%20x%3D%221007.5%22%20y%3D%22150%22%20width%3D%22115%22%20height%3D%2230%22%20as%3D%22geometry%22%2F%3E%3C%2FmxCell%3E%3C%2Froot%3E%3C%2FmxGraphModel%3E&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#585556;fontColor=#FFFFFF;strokeColor=none;container=0;" parent="1" vertex="1">
-                    <mxGeometry x="20" y="325" width="90" height="30" as="geometry"/>
+                    <mxGeometry x="20" y="295" width="90" height="30" as="geometry"/>
                 </mxCell>
                 <mxCell id="5942" value="&lt;font face=&quot;Klavika&quot; style=&quot;font-size: 17px;&quot;&gt;Constant&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=17;fontColor=#FFFFFF;" parent="1" vertex="1">
-                    <mxGeometry x="30" y="325" width="70" height="30" as="geometry"/>
+                    <mxGeometry x="30" y="295" width="70" height="30" as="geometry"/>
                 </mxCell>
                 <mxCell id="5943" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#9C2A44;fontColor=#FFFFFF;strokeColor=none;" parent="1" vertex="1">
-                    <mxGeometry x="120" y="325" width="110" height="30" as="geometry"/>
+                    <mxGeometry x="120" y="295" width="110" height="30" as="geometry"/>
                 </mxCell>
                 <mxCell id="5944" value="&lt;font face=&quot;Klavika&quot; style=&quot;font-size: 17px;&quot;&gt;Texture&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=17;fontColor=#FFFFFF;" parent="1" vertex="1">
-                    <mxGeometry x="140" y="325" width="70" height="30" as="geometry"/>
+                    <mxGeometry x="140" y="295" width="70" height="30" as="geometry"/>
                 </mxCell>
                 <mxCell id="5945" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#9C2A44;fontColor=#FFFFFF;strokeColor=none;" parent="1" vertex="1">
-                    <mxGeometry x="240" y="325" width="110" height="30" as="geometry"/>
+                    <mxGeometry x="240" y="295" width="110" height="30" as="geometry"/>
                 </mxCell>
                 <mxCell id="5946" value="&lt;font face=&quot;Klavika&quot; style=&quot;font-size: 17px;&quot;&gt;Surface&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=17;fontColor=#FFFFFF;" parent="1" vertex="1">
-                    <mxGeometry x="260" y="325" width="70" height="30" as="geometry"/>
+                    <mxGeometry x="260" y="295" width="70" height="30" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>
