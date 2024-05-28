@@ -84,7 +84,7 @@ identical instructions over the available SIMD engines.
 
 Consider the following kernel:
 
-.. code:: cu
+.. code-block:: cpp
 
   __global__ void k(float4* a, const float4* b)
   {
