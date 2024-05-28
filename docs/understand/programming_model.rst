@@ -9,17 +9,17 @@ Understanding the HIP programming model
 *******************************************************************************
 
 The HIP programming model makes it easy to map data-parallel C/C++ algorithms to
-massively parallel, wide single instruction, multiple data (SIMD) architectures, 
-such as GPUs. A basic understanding of the underlying device architecture helps you 
-make efficient use of HIP and general purpose graphics processing unit (GPGPU) 
+massively parallel, wide single instruction, multiple data (SIMD) architectures,
+such as GPUs. A basic understanding of the underlying device architecture helps you
+make efficient use of HIP and general purpose graphics processing unit (GPGPU)
 programming in general.
 
 RDNA & CDNA Architecture Summary
 ================================
 
 Most GPU architectures, like RDNA and CDNA, have a hierarchical structure.
-The innermost piece is a SIMD-enabled vector Arithmetic Logical Unit (ALU). 
-In addition to the vector ALUs, most recent GPUs also house matrix ALUs for 
+The innermost piece is a SIMD-enabled vector Arithmetic Logical Unit (ALU).
+In addition to the vector ALUs, most recent GPUs also house matrix ALUs for
 accelerating algorithms involving matrix multiply-accumulate operations.
 AMD GPUs also contain scalar ALUs, that can be used to reduce the load on the
 vector ALU by performing operations which are uniform for all threads of a warp.
@@ -71,8 +71,8 @@ memory subsystem resources.
 Single Instruction Multiple Threads
 ===================================
 
-The single instruction, multiple threads (SIMT) programming model behind the 
-HIP device-side execution is a middle-ground between SMT (Simultaneous Multi-Threading) 
+The single instruction, multiple threads (SIMT) programming model behind the
+HIP device-side execution is a middle-ground between SMT (Simultaneous Multi-Threading)
 programming known from multicore CPUs, and SIMD (Single Instruction, Multiple Data) programming
 mostly known from exploiting relevant instruction sets on CPUs (for example SSE/AVX/Neon).
 
@@ -84,7 +84,7 @@ identical instructions over the available SIMD engines.
 
 Consider the following kernel:
 
-.. code:: cu
+.. code-block:: cpp
 
   __global__ void k(float4* a, const float4* b)
   {
@@ -153,4 +153,4 @@ a few key differences between the two:
   execute asynchronously with respect to the host, and it is the user's responsibility to
   synchronize their data dispatch/fetch with computations on the device. HIP
   does perform implicit synchronization on occasions, more advanced than other APIs such as
-  OpenCL or SYCL, in which the responsibility of synchronization mostly depends on the user. 
+  OpenCL or SYCL, in which the responsibility of synchronization mostly depends on the user.

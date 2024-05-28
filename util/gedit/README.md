@@ -1,4 +1,5 @@
-### How to Install? ###
+### How to Install?
+
 There are two ways to install the configuration file
 
 1. Run the installer

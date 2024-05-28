@@ -1,9 +1,9 @@
-### How to install? ###
+### How to install?
+
 1. Add the <code>hip.vim</code> to <code>~/.vim/syntax/</code> directory
 2. Add the following text to the end of <code>~/.vimrc</code>
 
-
-```
+```shell
 augroup filetypedetect
  au BufNewFile,BufRead *.cpp set filetype=cpp syntax=hip
 augroup END

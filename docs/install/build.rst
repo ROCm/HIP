@@ -8,16 +8,16 @@ Prerequisites
 HIP code can be developed either on AMD ROCm platform using HIP-Clang compiler, or a CUDA platform with ``nvcc`` installed.
 Before building and running HIP, make sure drivers and prebuilt packages are installed properly on the platform.
 
-You also need to install Python 3, which includes the ``CppHeaderParser`` package. 
+You also need to install Python 3, which includes the ``CppHeaderParser`` package.
 Install Python 3 using the following command:
 
-.. code:: shell
+.. code-block:: shell
 
    apt-get install python3
 
 Check and install ``CppHeaderParser`` package using the command:
 
-.. code:: shell
+.. code-block:: shell
 
    pip3 install CppHeaderParser
 
@@ -29,7 +29,7 @@ Building the HIP runtime
 
 Set the repository branch using the variable: ``ROCM_BRANCH``. For example, for ROCm 6.1, use:
 
-.. code:: shell
+.. code-block:: shell
 
    export ROCM_BRANCH=rocm-6.1.x
 
@@ -49,7 +49,7 @@ Set the repository branch using the variable: ``ROCM_BRANCH``. For example, for 
             ``hipother`` provides files required to support the HIP back-end implementation on some non-AMD platforms,
             like NVIDIA.
 
-         .. code:: shell
+         .. code-block:: shell
 
             git clone -b "$ROCM_BRANCH" https://github.com/ROCm/clr.git
             git clone -b "$ROCM_BRANCH" https://github.com/ROCm/hip.git
@@ -66,7 +66,7 @@ Set the repository branch using the variable: ``ROCM_BRANCH``. For example, for 
 
       #. Set the environment variables.
 
-         .. code:: shell
+         .. code-block:: shell
 
             export CLR_DIR="$(readlink -f clr)"
             export HIP_DIR="$(readlink -f hip)"
@@ -74,7 +74,7 @@ Set the repository branch using the variable: ``ROCM_BRANCH``. For example, for 
 
       #. Build HIP.
 
-         .. code:: shell
+         .. code-block:: shell
 
             cd "$CLR_DIR"
             mkdir -p build; cd build
@@ -116,7 +116,7 @@ Set the repository branch using the variable: ``ROCM_BRANCH``. For example, for 
 
             Usage:
 
-            .. code:: shell
+            .. code-block:: shell
 
                `hip_prof_gen.py [-v] <input HIP API .h file> <patched srcs path> <previous output> [<output>]`
 
@@ -131,7 +131,7 @@ Set the repository branch using the variable: ``ROCM_BRANCH``. For example, for 
 
             Example usage:
 
-            .. code:: shell
+            .. code-block:: shell
 
                hip_prof_gen.py -v -p -t --priv <hip>/include/hip/hip_runtime_api.h \
                <hipamd>/src <hipamd>/include/hip/amd_detail/hip_prof_str.h \
@@ -142,7 +142,7 @@ Set the repository branch using the variable: ``ROCM_BRANCH``. For example, for 
 
       #. Get the HIP source code.
 
-         .. code:: shell
+         .. code-block:: shell
 
             git clone -b "$ROCM_BRANCH" https://github.com/ROCm/clr.git
             git clone -b "$ROCM_BRANCH" https://github.com/ROCm/hip.git
@@ -150,7 +150,7 @@ Set the repository branch using the variable: ``ROCM_BRANCH``. For example, for 
 
       #. Set the environment variables.
 
-         .. code:: shell
+         .. code-block:: shell
 
             export CLR_DIR="$(readlink -f clr)"
             export HIP_DIR="$(readlink -f hip)"
@@ -158,7 +158,7 @@ Set the repository branch using the variable: ``ROCM_BRANCH``. For example, for 
 
       #. Build HIP.
 
-         .. code:: shell
+         .. code-block:: shell
 
             cd "$CLR_DIR"
             mkdir -p build; cd build
@@ -180,18 +180,18 @@ Build HIP tests
 
          * Get HIP tests source code.
 
-            .. code:: shell
+            .. code-block:: shell
 
                git clone -b "$ROCM_BRANCH" https://github.com/ROCm/hip-tests.git
 
          * Build HIP tests from source.
 
-            .. code:: shell
+            .. code-block:: shell
 
                export HIPTESTS_DIR="$(readlink -f hip-tests)"
                cd "$HIPTESTS_DIR"
                mkdir -p build; cd build
-               cmake ../catch -DHIP_PLATFORM=amd -DHIP_PATH=$CLR_DIR/build/install  # or any path where HIP is installed; for example: ``/opt/rocm`` 
+               cmake ../catch -DHIP_PLATFORM=amd -DHIP_PATH=$CLR_DIR/build/install  # or any path where HIP is installed; for example: ``/opt/rocm``
                make build_tests
                ctest # run tests
 
@@ -199,14 +199,14 @@ Build HIP tests
 
             To run any single catch test, use this example:
 
-            .. code:: shell
+            .. code-block:: shell
 
                cd $HIPTESTS_DIR/build/catch_tests/unit/texture
                ./TextureTest
 
          * Build a HIP Catch2 standalone test.
 
-            .. code:: shell
+            .. code-block:: shell
 
                cd "$HIPTESTS_DIR"
                hipcc $HIPTESTS_DIR/catch/unit/memory/hipPointerGetAttributes.cc \
@@ -227,5 +227,5 @@ Build HIP tests
 Run HIP
 =================================================
 
-After installation and building HIP, you can compile your application and run. 
+After installation and building HIP, you can compile your application and run.
 A simple example is `square sample <https://github.com/ROCm/hip-tests/tree/develop/samples/0_Intro/square>`_.

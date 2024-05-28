@@ -20,7 +20,7 @@ Refer to the following sections for examples.
   Logging works for the release and debug versions of HIP. If you want to save logging output in a file,
   define the file when running the application via command line. For example:
 
-  ..  code-block:: bash
+  .. code-block:: bash
 
     user@user-test:~/hip/bin$ ./hipinfo > ~/hip_log.txt
 
@@ -30,7 +30,7 @@ Logging level
 HIP logging is disabled by default. You can enable it via the ``AMD_LOG_LEVEL`` environment variable.
 The value of this variable controls your logging level. Levels are defined as follows:
 
-..  code-block:: cpp
+.. code-block:: cpp
 
   enum LogLevel {
     LOG_NONE    = 0,
@@ -52,7 +52,7 @@ The logging mask is designed to print functionality types when you're running a 
 Once you set ``AMD_LOG_LEVEL``, the logging mask is set as the default value (``0x7FFFFFFF``). You can
 change this to any of the valid values:
 
-..  code-block:: cpp
+.. code-block:: cpp
 
   enum LogMask {
     LOG_API       = 0x00000001, //!< API call
@@ -84,7 +84,7 @@ Logging command
 
 You can use the following code to print HIP logging information:
 
-..  code-block:: cpp
+.. code-block:: cpp
 
   #define ClPrint(level, mask, format, ...)                                       \
     do {                                                                          \
@@ -102,7 +102,7 @@ You can use the following code to print HIP logging information:
 
 Using HIP code, call the ``ClPrint()`` function with the desired input variables. For example:
 
-..  code-block:: cpp
+.. code-block:: cpp
 
   ClPrint(amd::LOG_INFO, amd::LOG_INIT, "Initializing HSA stack.");
 
@@ -112,7 +112,7 @@ Logging examples
 
 On **Linux**, you can enable HIP logging and retrieve logging information when you run ``hipinfo``.
 
-..  code-block:: console
+.. code-block:: console
 
   user@user-test:~/hip/bin$ export AMD_LOG_LEVEL=4
   user@user-test:~/hip/bin$ ./hipinfo
@@ -192,7 +192,7 @@ On **Windows**, you can set ``AMD_LOG_LEVEL`` via environment variable from the 
 settings or the command prompt (when run as administrator). The following example shows debug log
 information when calling the backend runtime.
 
-..  code-block:: bash
+.. code-block:: bash
 
   C:\hip\bin>set AMD_LOG_LEVEL=4
   C:\hip\bin>hipinfo

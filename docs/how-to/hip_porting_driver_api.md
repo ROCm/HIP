@@ -1,16 +1,18 @@
 # Porting CUDA Driver API
 
 ## Introduction to the CUDA Driver and Runtime APIs
+
 CUDA provides a separate CUDA Driver and Runtime APIs. The two APIs have significant overlap in functionality:
-- Both APIs support events, streams, memory management, memory copy, and error handling.
-- Both APIs deliver similar performance.
-- Driver APIs calls begin with the prefix `cu` while Runtime APIs begin with the prefix `cuda`. For example, the Driver API API contains `cuEventCreate` while the Runtime API contains `cudaEventCreate`, with similar functionality.
-- The Driver API defines a different but largely overlapping error code space than the Runtime API, and uses a different coding convention. For example, Driver API defines `CUDA_ERROR_INVALID_VALUE` while the Runtime API defines `cudaErrorInvalidValue`
 
+* Both APIs support events, streams, memory management, memory copy, and error handling.
+* Both APIs deliver similar performance.
+* Driver APIs calls begin with the prefix `cu` while Runtime APIs begin with the prefix `cuda`. For example, the Driver API API contains `cuEventCreate` while the Runtime API contains `cudaEventCreate`, with similar functionality.
+* The Driver API defines a different but largely overlapping error code space than the Runtime API, and uses a different coding convention. For example, Driver API defines `CUDA_ERROR_INVALID_VALUE` while the Runtime API defines `cudaErrorInvalidValue`
 
-The Driver API offers two additional pieces of functionality not provided by the Runtime API: cuModule and cuCtx APIs.
+The Driver API offers two additional pieces of functionality not provided by the Runtime API: `cuModule` and `cuCtx` APIs.
 
-### cuModule API
+### `cuModule` API
+
 The Module section of the Driver API provides additional control over how and when accelerator code objects are loaded.
 For example, the driver API allows code objects to be loaded from files or memory pointers.
 Symbols for kernels or global data can be extracted from the loaded code objects.
@@ -28,7 +30,8 @@ Other environments have many kernels and do not want them to be all loaded autom
 The Module functions can be used to load the generated code objects and launch kernels.
 As we will see below, HIP defines a Module API which provides similar explicit control over code object management.
 
-### cuCtx API
+### `cuCtx` API
+
 The Driver API defines "Context" and "Devices" as separate entities.
 Contexts contain a single device, and a device can theoretically have multiple contexts.
 Each context contains a set of streams and events specific to the context.
@@ -38,95 +41,106 @@ HIP as well as a recent versions of CUDA Runtime provide other mechanisms to acc
 
 The CUDA Runtime API unifies the Context API with the Device API. This simplifies the APIs and has little loss of functionality since each Context can contain a single device, and the benefits of multiple contexts has been replaced with other interfaces.
 HIP provides a context API to facilitate easy porting from existing Driver codes.
-In HIP, the Ctx functions largely provide an alternate syntax for changing the active device.
+In HIP, the `Ctx` functions largely provide an alternate syntax for changing the active device.
 
-Most new applications will prefer to use `hipSetDevice` or the stream APIs , therefore HIP has marked hipCtx APIs as **deprecated**. Support for these APIs may not be available in future releases. For more details on deprecated APIs please refer [HIP deprecated APIs](https://github.com/ROCm/HIP/blob/develop/docs/reference/deprecated_api_list.md).
+Most new applications will prefer to use `hipSetDevice` or the stream APIs , therefore HIP has marked `hipCtx` APIs as **deprecated**. Support for these APIs may not be available in future releases. For more details on deprecated APIs please refer [HIP deprecated APIs](https://github.com/ROCm/HIP/blob/develop/docs/reference/deprecated_api_list.md).
 
-## HIP Module and Ctx APIs
+## HIP Module and `Ctx` APIs
 
-Rather than present two separate APIs, HIP extends the HIP API with new APIs for Modules and Ctx control.
+Rather than present two separate APIs, HIP extends the HIP API with new APIs for Modules and `Ctx` control.
 
-### hipModule API
+### `hipModule` API
 
 Like the CUDA Driver API, the Module API provides additional control over how code is loaded, including options to load code from files or from in-memory pointers.
 NVCC and HIP-Clang target different architectures and use different code object formats: NVCC is `cubin` or `ptx` files, while the HIP-Clang path is the `hsaco` format.
 The external compilers which generate these code objects are responsible for generating and loading the correct code object for each platform.
 Notably, there is not a fat binary format that can contain code for both NVCC and HIP-Clang platforms. The following table summarizes the formats used on each platform:
 
-| Format        | APIs                             | NVCC               | HIP-CLANG    |
-| ---           | ---                              | ---                | ---          |
-| Code Object   | hipModuleLoad, hipModuleLoadData | .cubin or PTX text | .hsaco       |
-| Fat Binary    | hipModuleLoadFatBin              | .fatbin            | .hip_fatbin  |
+| Format        | APIs                                 | NVCC                 | HIP-CLANG     |
+| ---           | ---                                  | ---                  | ---           |
+| Code Object   | `hipModuleLoad`, `hipModuleLoadData` | `.cubin` or PTX text | `.hsaco`      |
+| Fat Binary    | `hipModuleLoadFatBin`                | `.fatbin`            | `.hip_fatbin` |
 
 `hipcc` uses HIP-Clang or NVCC to compile host codes. Both of these may embed code objects into the final executable, and these code objects will be automatically loaded when the application starts.
-The hipModule API can be used to load additional code objects, and in this way provides an extended capability to the automatically loaded code objects.
+The `hipModule` API can be used to load additional code objects, and in this way provides an extended capability to the automatically loaded code objects.
 HIP-Clang allows both of these capabilities to be used together, if desired. Of course it is possible to create a program with no kernels and thus no automatic loading.
 
+### `hipCtx` API
 
-### hipCtx API
-HIP provides a `Ctx` API as a thin layer over the existing Device functions. This Ctx API can be used to set the current context, or to query properties of the device associated with the context.
+HIP provides a `Ctx` API as a thin layer over the existing Device functions. This `Ctx` API can be used to set the current context, or to query properties of the device associated with the context.
 The current context is implicitly used by other APIs such as `hipStreamCreate`.
 
 ### hipify translation of CUDA Driver API
+
 The HIPIFY tools convert CUDA Driver APIs for streams, events, modules, devices, memory management, context, profiler to the equivalent HIP driver calls. For example, `cuEventCreate` will be translated to `hipEventCreate`.
 HIPIFY tools also convert error codes from the Driver namespace and coding convention to the equivalent HIP error code. Thus, HIP unifies the APIs for these common functions.
 
-The memory copy API requires additional explanation. The CUDA driver includes the memory direction in the name of the API (ie `cuMemcpyH2D`) while the CUDA driver API provides a single memory copy API with a parameter that specifies the direction and additionally supports a "default" direction where the runtime determines the direction automatically.
+The memory copy API requires additional explanation. The CUDA driver includes the memory direction in the name of the API (`cuMemcpyH2D`) while the CUDA driver API provides a single memory copy API with a parameter that specifies the direction and additionally supports a "default" direction where the runtime determines the direction automatically.
 HIP provides APIs with both styles: for example, `hipMemcpyH2D` as well as `hipMemcpy`.
 The first flavor may be faster in some cases since they avoid host overhead to detect the different memory directions.
 
 HIP defines a single error space, and uses camel-case for all errors (i.e. `hipErrorInvalidValue`).
 
 #### Address Spaces
+
 HIP-Clang defines a process-wide address space where the CPU and all devices allocate addresses from a single unified pool.
 Thus addresses may be shared between contexts, and unlike the original CUDA definition a new context does not create a new address space for the device.
 
-#### Using hipModuleLaunchKernel
+#### Using `hipModuleLaunchKernel`
+
 `hipModuleLaunchKernel` is `cuLaunchKernel` in HIP world. It takes the same arguments as `cuLaunchKernel`.
 
 #### Additional Information
-- HIP-Clang creates a primary context when the HIP API is called. So in a pure driver API code, HIP-Clang will create a primary context while HIP/NVCC will have empty context stack.
+
+* HIP-Clang creates a primary context when the HIP API is called. So in a pure driver API code, HIP-Clang will create a primary context while HIP/NVCC will have empty context stack.
 HIP-Clang will push primary context to context stack when it is empty. This can have subtle differences on applications which mix the runtime and driver APIs.
 
-### hip-clang Implementation Notes
-#### .hip_fatbin
-hip-clang links device code from different translation units together. For each device target, a code object is generated. Code objects for different device targets are bundled by clang-offload-bundler as one fatbinary, which is embeded as a global symbol `__hip_fatbin` in the .hip_fatbin section of the ELF file of the executable or shared object.
+### `hip-clang` Implementation Notes
+
+#### `.hip_fatbin`
+
+hip-clang links device code from different translation units together. For each device target, a code object is generated. Code objects for different device targets are bundled by `clang-offload-bundler` as one fatbinary, which is embeded as a global symbol `__hip_fatbin` in the `.hip_fatbin` section of the ELF file of the executable or shared object.
 
 #### Initialization and Termination Functions
-hip-clang generates initializatiion and termination functions for each translation unit for host code compilation. The initialization functions call `__hipRegisterFatBinary` to register the fatbinary embeded in the ELF file. They also call `__hipRegisterFunction` and `__hipRegisterVar` to register kernel functions and device side global variables. The termination functions call `__hipUnregisterFatBinary`.
+
+hip-clang generates initialization and termination functions for each translation unit for host code compilation. The initialization functions call `__hipRegisterFatBinary` to register the fatbinary embeded in the ELF file. They also call `__hipRegisterFunction` and `__hipRegisterVar` to register kernel functions and device side global variables. The termination functions call `__hipUnregisterFatBinary`.
 hip-clang emits a global variable `__hip_gpubin_handle` of void** type with linkonce linkage and inital value 0 for each host translation unit. Each initialization function checks `__hip_gpubin_handle` and register the fatbinary only if `__hip_gpubin_handle` is 0 and saves the return value of `__hip_gpubin_handle` to `__hip_gpubin_handle`. This is to guarantee that the fatbinary is only registered once. Similar check is done in the termination functions.
 
 #### Kernel Launching
+
 hip-clang supports kernel launching by CUDA `<<<>>>` syntax, hipLaunchKernelGGL. The latter one is macro which expand to CUDA `<<<>>>` syntax.
 
-When the executable or shared library is loaded by the dynamic linker, the initilization functions are called. In the initialization functions, when `__hipRegisterFatBinary` is called, the code objects containing all kernels are loaded; when `__hipRegisterFunction` is called, the stub functions are associated with the corresponding kernels in code objects.
+When the executable or shared library is loaded by the dynamic linker, the initialization functions are called. In the initialization functions, when `__hipRegisterFatBinary` is called, the code objects containing all kernels are loaded; when `__hipRegisterFunction` is called, the stub functions are associated with the corresponding kernels in code objects.
 
 hip-clang implements two sets of kernel launching APIs.
 
-By default, in the host code, for the `<<<>>>` statement, hip-clang first emits call of hipConfigureCall to set up the threads and grids, then emits call of the stub function with the given arguments. In the stub function, hipSetupArgument is called for each kernel argument, then hipLaunchByPtr is called with a function pointer to the stub function. In hipLaunchByPtr, the real kernel associated with the stub function is launched.
+By default, in the host code, for the `<<<>>>` statement, hip-clang first emits call of `hipConfigureCall` to set up the threads and grids, then emits call of the stub function with the given arguments. In the stub function, `hipSetupArgument` is called for each kernel argument, then `hipLaunchByPtr` is called with a function pointer to the stub function. In `hipLaunchByPtr`, the real kernel associated with the stub function is launched.
 
 ### NVCC Implementation Notes
 
 #### Interoperation between HIP and CUDA Driver
+
 CUDA applications may want to mix CUDA driver code with HIP code (see example below). This table shows the type equivalence to enable this interaction.
 
-|**HIP Type**   |**CU Driver Type**|**CUDA Runtime Type**|
-| ----          | ----             | ----                |
-| hipModule_t   |  CUmodule        |                     |
-| hipFunction_t |  CUfunction      |                     |
-| hipCtx_t      |  CUcontext       |                     |
-| hipDevice_t   |  CUdevice        |                     |
-| hipStream_t   |  CUstream        | cudaStream_t        |
-| hipEvent_t    |  CUevent         | cudaEvent_t         |
-| hipArray      |  CUarray         | cudaArray           |
+|**HIP Type**     |**CU Driver Type**|**CUDA Runtime Type**|
+| ----            | ----             | ----                |
+| `hipModule_t`   |  `CUmodule`      |                     |
+| `hipFunction_t` |  `CUfunction`    |                     |
+| `hipCtx_t`      |  `CUcontext`     |                     |
+| `hipDevice_t`   |  `CUdevice`      |                     |
+| `hipStream_t`   |  `CUstream`      | `cudaStream_t`      |
+| `hipEvent_t`    |  `CUevent`       | `cudaEvent_t`       |
+| `hipArray`      |  `CUarray`       | `cudaArray`         |
 
 #### Compilation Options
+
 The `hipModule_t` interface does not support `cuModuleLoadDataEx` function, which is used to control PTX compilation options.
 HIP-Clang does not use PTX and does not support these compilation options.
 In fact, HIP-Clang code objects always contain fully compiled ISA and do not require additional compilation as a part of the load step.
 The corresponding HIP function `hipModuleLoadDataEx` behaves as `hipModuleLoadData` on HIP-Clang path (compilation options are not used) and as `cuModuleLoadDataEx` on NVCC path.
 For example (CUDA):
-```
+
+```cpp
 CUmodule module;
 void *imagePtr = ...;  // Somehow populate data pointer with code object
 
@@ -143,8 +157,10 @@ cuModuleLoadDataEx(module, imagePtr, numOptions, options, optionValues);
 CUfunction k;
 cuModuleGetFunction(&k, module, "myKernel");
 ```
+
 HIP:
-```
+
+```cpp
 hipModule_t module;
 void *imagePtr = ...;  // Somehow populate data pointer with code object
 
@@ -166,7 +182,7 @@ hipModuleGetFunction(&k, module, "myKernel");
 
 The below sample shows how to use `hipModuleGetFunction`.
 
-```
+```cpp
 #include<hip_runtime.h>
 #include<hip_runtime_api.h>
 #include<iostream>
@@ -246,9 +262,9 @@ int main(){
 
 ## HIP Module and Texture Driver API
 
-HIP supports texture driver APIs however texture reference should be declared in host scope. Following code explains the use of texture reference for __HIP_PLATFORM_AMD__ platform.
+HIP supports texture driver APIs however texture reference should be declared in host scope. Following code explains the use of texture reference for `__HIP_PLATFORM_AMD__` platform.
 
-```
+```cpp
 // Code to generate code object
 
 #include "hip/hip_runtime.h"
@@ -264,7 +280,8 @@ __global__ void tex2dKernel(hipLaunchParm lp, float* outputData,
 }
 
 ```
-```
+
+```cpp
 // Host code:
 
 texture<float, 2, hipReadModeElementType> tex;
