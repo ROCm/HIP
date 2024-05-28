@@ -10,7 +10,7 @@ Programming model reference
 
 HIP defines a model for mapping single instruction, multiple threads (SIMT) programs 
 onto various architectures, primarily GPUs. While the model may be expressed 
-in most imperative languages, (eg. Python via PyHIP) this document will focus on 
+in most imperative languages, (for example Python via PyHIP) this document will focus on 
 the original C/C++ API of HIP.
 
 Threading Model

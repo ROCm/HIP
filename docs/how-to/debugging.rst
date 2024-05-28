@@ -1,13 +1,13 @@
 .. meta::
    :description: How to debug using HIP.
-   :keywords: AMD, ROCm, HIP, debugging, ltrace, ROCdgb, Windgb
+   :keywords: AMD, ROCm, HIP, debugging, ltrace, ROCgdb, WinGDB
 
 *************************************************************************
 Debugging with HIP
 *************************************************************************
 
-AMD debugging tools include *ltrace* and *ROCdgb*. External tools are available and can be found
-online. For example, if you're using Windows, you can use *Microsoft Visual Studio* and *Windgb*.
+AMD debugging tools include *ltrace* and *ROCgdb*. External tools are available and can be found
+online. For example, if you're using Windows, you can use *Microsoft Visual Studio* and *WinGDB*.
 
 You can trace and debug your code using the following tools and techniques.
 
@@ -23,7 +23,7 @@ can use ltrace to visualize the runtime behavior of the entire ROCm software sta
 
 Here's a simple command-line example that uses ltrace to trace HIP APIs and output:
 
-.. code:: console
+.. code-block:: console
 
     $ ltrace -C -e "hip*" ./hipGetChanDesc
     hipGetChanDesc->hipCreateChannelDesc(0x7ffdc4b66860, 32, 0, 0) = 0x7ffdc4b66860
@@ -36,7 +36,7 @@ Here's a simple command-line example that uses ltrace to trace HIP APIs and outp
 
 Here's another example that uses ltrace to trace hsa APIs and output:
 
-.. code:: console
+.. code-block:: console
 
     $ ltrace -C -e "hsa*" ./hipGetChanDesc
     libamdhip64.so.4->hsa_init(0, 0x7fff325a69d0, 0x9c80e0, 0 <unfinished ...>
@@ -94,12 +94,12 @@ Debugging
 You can use ROCgdb for debugging and profiling.
 
 ROCgdb is the ROCm source-level debugger for Linux and is based on GNU Project debugger (GDB).
-the GNU source-level debugger, equivalent of cuda-gdb, can be used with debugger frontends, such as eclipse, vscode, or gdb-dashboard.
+the GNU source-level debugger, equivalent of CUDA-GDB, can be used with debugger frontends, such as Eclipse, Visual Studio Code, or GDB dashboard.
 For details, see (https://github.com/ROCm/ROCgdb).
 
-Below is a sample how to use ROCgdb run and debug HIP application, rocgdb is installed with ROCM package in the folder /opt/rocm/bin.
+Below is a sample how to use ROCgdb run and debug HIP application, ROCgdb is installed with ROCM package in the folder /opt/rocm/bin.
 
-.. code:: console
+.. code-block:: console
 
     $ export PATH=$PATH:/opt/rocm/bin
     $ rocgdb ./hipTexObjPitch
@@ -132,7 +132,7 @@ Debugging HIP applications
 The following Linux example shows how to get useful information from the debugger while running a
 simple memory copy test, which caused a segmentation fault issue.
 
-.. code:: console
+.. code-block:: console
 
     test: simpleTest2<?> numElements=4194304 sizeElements=4194304 bytes
     Segmentation fault (core dumped)
@@ -231,13 +231,13 @@ For systems with multiple devices, you can choose to make only certain device(s)
 ``HIP_VISIBLE_DEVICES`` (or ``CUDA_VISIBLE_DEVICES`` on an NVIDIA platform). Once enabled, HIP can
 only view devices that have indices present in the sequence. For example:
 
-.. code:: console
+.. code-block:: console
 
     $ HIP_VISIBLE_DEVICES=0,1
 
 Or in the application:
 
-.. code:: cpp
+.. code-block:: cpp
 
     if (totalDeviceNum > 2) {
     setenv("HIP_VISIBLE_DEVICES", "0,1,2", 1);
@@ -272,10 +272,14 @@ HIP environment variable summary
 
 Here are some of the more commonly used environment variables:
 
+.. <!-- spellcheck-disable -->
+
 .. # COMMENT: The following lines define a break for use in the table below. 
-.. |br| raw:: html 
+.. |break| raw:: html 
 
     <br />
+
+.. <!-- spellcheck-enable -->
 
 .. list-table::
 
@@ -284,80 +288,80 @@ Here are some of the more commonly used environment variables:
       - **Usage**
 
     * - AMD_LOG_LEVEL 
-        |br| Enable HIP log on different Level
+        |break| Enable HIP log on different Level
       - 0
       - 0: Disable log. 
-        |br| 1: Enable log on error level
-        |br| 2: Enable log on warning and below levels
-        |br| 0x3: Enable log on information and below levels
-        |br| 0x4: Decode and display AQL packets
+        |break| 1: Enable log on error level
+        |break| 2: Enable log on warning and below levels
+        |break| 0x3: Enable log on information and below levels
+        |break| 0x4: Decode and display AQL packets
 
     * - AMD_LOG_MASK
-        |br| Enable HIP log on different Level
+        |break| Enable HIP log on different Level
       - 0x7FFFFFFF
       - 0x1: Log API calls
-        |br| 0x02: Kernel and Copy Commands and Barriers
-        |br| 0x4: Synchronization and waiting for commands to finish
-        |br| 0x8: Enable log on information and below levels
-        |br| 0x20: Queue commands and queue contents
-        |br| 0x40: Signal creation, allocation, pool
-        |br| 0x80: Locks and thread-safety code
-        |br| 0x100: Copy debug
-        |br| 0x200: Detailed copy debug
-        |br| 0x400: Resource allocation, performance-impacting events
-        |br| 0x800: Initialization and shutdown
-        |br| 0x1000: Misc debug, not yet classified
-        |br| 0x2000: Show raw bytes of AQL packet
-        |br| 0x4000: Show code creation debug
-        |br| 0x8000: More detailed command info, including barrier commands
-        |br| 0x10000: Log message location
-        |br| 0xFFFFFFFF: Log always even mask flag is zero
+        |break| 0x02: Kernel and Copy Commands and Barriers
+        |break| 0x4: Synchronization and waiting for commands to finish
+        |break| 0x8: Enable log on information and below levels
+        |break| 0x20: Queue commands and queue contents
+        |break| 0x40: Signal creation, allocation, pool
+        |break| 0x80: Locks and thread-safety code
+        |break| 0x100: Copy debug
+        |break| 0x200: Detailed copy debug
+        |break| 0x400: Resource allocation, performance-impacting events
+        |break| 0x800: Initialization and shutdown
+        |break| 0x1000: Misc debug, not yet classified
+        |break| 0x2000: Show raw bytes of AQL packet
+        |break| 0x4000: Show code creation debug
+        |break| 0x8000: More detailed command info, including barrier commands
+        |break| 0x10000: Log message location
+        |break| 0xFFFFFFFF: Log always even mask flag is zero
 
     * - HIP_LAUNCH_BLOCKING
-        |br|  Used for serialization on kernel execution.
+        |break|  Used for serialization on kernel execution.
       - 0
       - 0: Disable. Kernel executes normally.
-        |br| 1: Enable. Serializes kernel enqueue, behaves the same as AMD_SERIALIZE_KERNEL.
+        |break| 1: Enable. Serializes kernel enqueue, behaves the same as AMD_SERIALIZE_KERNEL.
     
     * - HIP_VISIBLE_DEVICES (or CUDA_VISIBLE_DEVICES)
-        |br|  Only devices whose index is present in the sequence are visible to HIP
+        |break|  Only devices whose index is present in the sequence are visible to HIP
       -
       - 0,1,2: Depending on the number of devices on the system
 
     * - GPU_DUMP_CODE_OBJECT
-        |br| Dump code object
+        |break| Dump code object
       - 0
       - 0: Disable
-        |br| 1: Enable
+        |break| 1: Enable
 
     * - AMD_SERIALIZE_KERNEL
-        |br|  Serialize kernel enqueue
+        |break|  Serialize kernel enqueue
       - 0
       - 1: Wait for completion before enqueue
-        |br| 2: Wait for completion after enqueue
-        |br| 3: Both
+        |break| 2: Wait for completion after enqueue
+        |break| 3: Both
 
     * - AMD_SERIALIZE_COPY
-        |br| Serialize copies
+        |break| Serialize copies
       - 0
       - 1: Wait for completion before enqueue
-        |br| 2: Wait for completion after enqueue
-        |br| 3: Both
+        |break| 2: Wait for completion after enqueue
+        |break| 3: Both
 
     * - HIP_HOST_COHERENT
-        |br| Coherent memory in hipHostMalloc
+        |break| Coherent memory in hipHostMalloc
       - 0
       - 0: memory is not coherent between host and GPU
-        |br| 1: memory is coherent with host
+        |break| 1: memory is coherent with host
 
     * - AMD_DIRECT_DISPATCH
-        |br| Enable direct kernel dispatch (Currently for Linux; under development for Windows)
+        |break| Enable direct kernel dispatch (Currently for Linux; under development for Windows)
       - 1
       - 0: Disable
-        |br| 1: Enable
+        |break| 1: Enable
 
     * - GPU_MAX_HW_QUEUES
-        |br| The maximum number of hardware queues allocated per device
+        |break| The maximum number of hardware queues allocated per device
       - 4
       - The variable controls how many independent hardware queues HIP runtime can create per process,
         per device. If an application allocates more HIP streams than this number, then HIP runtime reuses
@@ -371,7 +375,7 @@ General debugging tips
 * ``gdb --args`` can be used to pass the executable and arguments to ``gdb``.
 * You can set environment variables (``set env``) from within GDB on Linux:
 
-    .. code:: bash
+    .. code-block:: bash
 
         (gdb) set env AMD_SERIALIZE_KERNEL 3
 
@@ -379,7 +383,7 @@ General debugging tips
         This ``gdb`` command does not use an equal (=) sign.
 
 * The GDB backtrace shows a path in the runtime. This is because a fault is caught by the runtime, but it is generated by an asynchronous command running on the GPU.
-* To determine the true location of a fault, you can force the kernels to run synchronously by setting the environment variables ``AMD_SERIALIZE_KERNEL=3`` and ``AMD_SERIALIZE_COPY=3``. This forces HIP runtime to wait for the kernel to finish running before retuning. If the fault occurs when a kernel is running, you can see the code that launched the kernel inside the backtrace. The thread that's causing the issue is typically the one inside ``libhsa-runtime64.so``.
+* To determine the true location of a fault, you can force the kernels to run synchronously by setting the environment variables ``AMD_SERIALIZE_KERNEL=3`` and ``AMD_SERIALIZE_COPY=3``. This forces HIP runtime to wait for the kernel to finish running before returning. If the fault occurs when a kernel is running, you can see the code that launched the kernel inside the backtrace. The thread that's causing the issue is typically the one inside ``libhsa-runtime64.so``.
 * VM faults inside kernels can be caused by:
 
     * Incorrect code (e.g., a for loop that extends past array boundaries)
