@@ -9297,7 +9297,7 @@ static inline hipError_t hipMallocFromPoolAsync(
 /**
  * @brief: C++ wrapper for hipMalloc
  * @ingroup Memory
- * Perform automatic type conversion to eliminate need for excessive typecasting (ie void**)
+ * Perform automatic type conversion to eliminate the need for excessive typecasting (ie void**)
  *
  * __HIP_DISABLE_CPP_FUNCTIONS__ macro can be defined to suppress these
  * wrappers. It is useful for applications which need to obtain decltypes of
@@ -9309,6 +9309,21 @@ static inline hipError_t hipMallocFromPoolAsync(
 template <class T>
 static inline hipError_t hipMalloc(T** devPtr, size_t size) {
     return hipMalloc((void**)devPtr, size);
+}
+/**
+ * @brief: C++ wrapper for hipMallocPitch
+ * @ingroup Memory
+ * Perform automatic type conversion to eliminate the need for excessive typecasting (ie void**)
+ *
+ * __HIP_DISABLE_CPP_FUNCTIONS__ macro can be defined to suppress these
+ * wrappers. It is useful for applications which need to obtain decltypes of
+ * HIP runtime APIs.
+ *
+ * @see hipMallocPitch
+ */
+template <class T>
+static inline hipError_t hipMallocPitch(T** devPtr, size_t* pitch, size_t width, size_t height) {
+    return hipMallocPitch((void**)devPtr, pitch, width, height);
 }
 /**
  * @brief: C++ wrapper for hipHostMalloc
