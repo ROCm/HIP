@@ -1482,7 +1482,8 @@ To read a high-resolution timer from the device, HIP provides the following buil
 
   .. code-block:: cpp
 
-    long long int wall_clock64()
+    clock_t clock()
+    long long int clock64()
 
   The difference between the values that are returned represents the cycles used.
 
@@ -1490,8 +1491,7 @@ To read a high-resolution timer from the device, HIP provides the following buil
 
   .. code-block:: cpp
 
-    clock_t clock()
-    long long int clock64()
+    long long int wall_clock64()
 
   This can be queried using the HIP API with the ``hipDeviceAttributeWallClockRate`` attribute of the
   device in HIP application code. For example:
