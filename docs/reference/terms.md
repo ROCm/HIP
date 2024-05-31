@@ -12,10 +12,10 @@
 | |thread|thread|work-item|
 | |warp|warp|sub-group|
 |||||
-|Thread-<br>index | threadIdx.x | threadIdx.x  | get_local_id(0) |
-|Block-<br>index  | blockIdx.x  | blockIdx.x  | get_group_id(0) |
-|Block-<br>dim    | blockDim.x  | blockDim.x  | get_local_size(0) |
-|Grid-dim     | gridDim.x   | gridDim.x  | get_num_groups(0) |
+|Thread-<br>index | `threadIdx.x` | `threadIdx.x`  | `get_local_id(0)` |
+|Block-<br>index  | `blockIdx.x`  | `blockIdx.x`  | `get_group_id(0)` |
+|Block-<br>dim    | `blockDim.x`  | `blockDim.x`  | `get_local_size(0)` |
+|Grid-dim     | `gridDim.x`   | `gridDim.x`  | `get_num_groups(0)` |
 |||||
 |Device Kernel|`__global__`|`__global__`|`__kernel`|
 |Device Function|`__device__`|`__device__`|Implied in device compilation|
@@ -34,5 +34,5 @@
 |Vector|`float4`|`float4`|`float4`|
 
 ## Notes
-The indexing functions (starting with `thread-index`) show the terminology for a 1D grid.  Some APIs use reverse order of xyz / 012 indexing for 3D grids.
 
+The indexing functions (starting with `thread-index`) show the terminology for a 1D grid.  Some APIs use reverse order of `xyz` / 012 indexing for 3D grids.

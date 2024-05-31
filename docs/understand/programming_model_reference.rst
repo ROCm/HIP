@@ -8,9 +8,9 @@
 Programming model reference
 *******************************************************************************
 
-HIP defines a model for mapping single instruction, multiple threads (SIMT) programs 
-onto various architectures, primarily GPUs. While the model may be expressed 
-in most imperative languages, (eg. Python via PyHIP) this document will focus on 
+HIP defines a model for mapping single instruction, multiple threads (SIMT) programs
+onto various architectures, primarily GPUs. While the model may be expressed
+in most imperative languages, (for example Python via PyHIP) this document will focus on
 the original C/C++ API of HIP.
 
 Threading Model
@@ -20,8 +20,8 @@ The SIMT nature of HIP is captured by the ability to execute user-provided
 device programs, expressed as single-source C/C++ functions or sources compiled
 online/offline to binaries in bulk.
 
-Multiple instances of the device program (or kernel) are called threads and may 
-execute in parallel. All uniquely identified by a set of integral values, or thread IDs. 
+Multiple instances of the device program (or kernel) are called threads and may
+execute in parallel. All uniquely identified by a set of integral values, or thread IDs.
 The set of integers identifying a thread relate to the hierarchy in which threads execute.
 
 .. _inherent_thread_model:
@@ -53,10 +53,10 @@ Warp
   multidimensional as the user interprets the calculated values to be.
 
   The size of a warp is architecture dependent and always fixed. Warps are
-  signified by the set of communication primitives at their disposal, as 
+  signified by the set of communication primitives at their disposal, as
   discussed in :ref:`warp-cross-lane`.
 
-Block 
+Block
   The middle grouping is called a block or thread block. The defining feature
   of a block is that all threads in a block will share an instance of memory
   which they may use to share data or synchronize with one another.
@@ -67,7 +67,7 @@ Block
   within a block, assume the "fast index" being dimension ``x``, followed by
   the ``y`` and ``z`` dimensions.
 
-Grid 
+Grid
   The outermost grouping is called a grid. A grid manifests as a single
   dispatch of kernels for execution. The unique ID of each block within a grid
   is 3-dimensional, as provided by the API and is queryable by every thread
