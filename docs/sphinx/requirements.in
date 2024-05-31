@@ -1,2 +1,1 @@
-rocm-docs-core[api_reference]==1.1.1
-sphinxcontrib.doxylink
+rocm-docs-core[api_reference]==1.2.0
