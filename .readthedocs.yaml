@@ -22,9 +22,9 @@ build:
      - "graphviz" # For dot graphs in doxygen
    jobs:
      post_checkout:
-       - if [ -d ../llvm-project ]; then rm -r ../llvm-project; fi
-       - if [ -d ../clr ]; then rm -r ../clr; fi
-       - if [ -d ../ROCR-Runtime ]; then rm -r ../ROCR-Runtime; fi
+       - if [ -d ../llvm-project ]; then rm -rf ../llvm-project; fi
+       - if [ -d ../clr ]; then rm -rf ../clr; fi
+       - if [ -d ../ROCR-Runtime ]; then rm -rf ../ROCR-Runtime; fi
        - git clone --depth=1 --single-branch --branch rocdoc-195 https://github.com/StreamHPC/llvm-project.git ../llvm-project
        - git clone --depth=1 --single-branch --branch develop    https://github.com/ROCm/clr.git ../clr
        - git clone --depth=1 --single-branch --branch master     https://github.com/ROCm/ROCR-Runtime.git ../ROCR-Runtime
