@@ -63,6 +63,7 @@ On non-AMD platforms, like NVIDIA, HIP provides header files required to support
 * [HIP virtual memory management API](./reference/virtual_memory_reference)
 * [HIP Cooperative groups API](./reference/cooperative_groups)
 * [List of deprecated APIs](./reference/deprecated_api_list)
+* [FP8 numbers in HIP](./reference/fp8_numbers)
 
 :::
 
