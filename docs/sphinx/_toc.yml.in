@@ -41,6 +41,8 @@ subtrees:
   - file: reference/virtual_rocr
   - file: reference/deprecated_api_list
     title: List of deprecated APIs
+  - file: reference/fp8_numbers
+    title: FP8 numbers in HIP
 
 - caption: Tutorials
   entries:
