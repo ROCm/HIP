@@ -82,8 +82,8 @@ __global__ functions
 -------------------------------------------------------------------------------
 Functions that work as an entry point for device execution are called kernels and are
 specified with the ``__global__`` qualifier. Calling these functions happen with the
-tripple chevron operator: ``<<< >>>``. Kernel functions return type must be ``void``,
-they can't be ``constexpr``, can't have a parameter of type ``std::initializer_list`` or
+triple chevron operator: ``<<< >>>``. Kernel functions return type must be ``void``, they
+can't be ``constexpr``, can't have a parameter of type ``std::initializer_list`` or
 ``va_list``, can't have a parameter of rvalue reference type. Kernels can have variadic
 template parameters, but only one pack and it must be the last in the template parameter
 list. 

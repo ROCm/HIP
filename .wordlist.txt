@@ -13,12 +13,15 @@ builtins
 Builtins
 CAS
 clr
+constexpr
+coroutines
 cuBLASLt
 cuCtx
 cuDNN
 dataflow
 deallocate
 denormal
+Dereferencing
 dll
 DirectX
 EIGEN
@@ -31,6 +34,7 @@ enum
 embeded
 extern
 fatbinary
+foundationally
 frontends
 gedit
 GPGPU
@@ -93,6 +97,7 @@ ROCm's
 rocTX
 RTC
 RTTI
+rvalue
 SAXPY
 scalarizing
 sceneries
@@ -105,5 +110,6 @@ syntaxes
 tradeoffs
 typedefs
 UMM
+variadic
 WinGDB
 zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
