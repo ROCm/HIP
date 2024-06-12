@@ -13,7 +13,7 @@ Introduction
 
 The main way to harness the power of the ROCm platform is through the usage C++ and HIP
 code. This code is then compiled with a ``clang`` or ``clang++`` compiler. The official
-versions support the HIP platform, but for the most up to date feature set use the
+versions support the HIP platform, but for the most up-to-date feature set use the
 ``amdclang`` or ``amdclang++`` installed with your ROCm installation.
 
 The source code will be processed based on the ``C++03``, ``C++11``, ``C++14``, ``C++17``
@@ -39,11 +39,16 @@ the lack of concurrency support on the device. This is because the HIP device co
 model is fundamentally different compared to the C++ model, which is used on the host
 side. E.G: it doesn't make sense to start a new thread on the device.
 
-There are some restrictions and clarifications for certain features. For example lambdas
-can't be used as template argument for kernels unless they are defined in a device
-function or a kernel. Also some new features were like functions using ``initializer
-lists``, ``std::move`` and ``std::forward`` or functions with ``constexpr`` qualifier are
-implicitly considered to have ``__host__`` and ``__device__`` execution space specifier.
+There are some restrictions and clarifications for certain features. For example some new
+features were like functions using ``initializer lists``, ``std::move`` and
+``std::forward`` or functions with ``constexpr`` qualifier are implicitly considered to
+have ``__host__`` and ``__device__`` execution space specifier. Also ``constexpr``
+variables that are static member variables or namespace scoped can be used from both host
+and device, but only for value access. Dereferencing a static constexpr on a different
+execution space than specified will cause an error.
+
+Lambdas work but there are some extensions and restrictions on their usage. To learn more
+about them read the `extended lambdas`_ sections.
 
 C++14 support
 -------------------------------------------------------------------------------
@@ -58,10 +63,13 @@ All C++17 language features are supported.
 C++20 support
 -------------------------------------------------------------------------------
 
-All C++20 language features are supported, but extensions and restrictions apply. For
-example coroutines are not supported in device code and consteval functions can be called
-from host and device, even if it is specified for host use only.
+All C++20 language features are supported, but extensions and restrictions apply. C++20
+introduced features that change programs foundationally with coroutines and modules, but
+unfortunately these aren't supported by HIP. On the other hand ``consteval`` functions
+can be called from host and device, even if it is specified for host use only. 
 
+The three way comparison operator (also known as spaceship operator ``<=>``) works in
+both host and device code.
 
 .. _language_restrictions:
 Extensions and Restrictions
@@ -69,6 +77,16 @@ Extensions and Restrictions
 
 Besides the above mentioned deviations from the standard, there are more general
 extensions and restrictions to consider. 
+
+__global__ functions
+-------------------------------------------------------------------------------
+Functions that work as an entry point for device execution are called kernels and are
+specified with the ``__global__`` qualifier. Calling these functions happen with the
+tripple chevron operator: ``<<< >>>``. Kernel functions return type must be ``void``,
+they can't be ``constexpr``, can't have a parameter of type ``std::initializer_list`` or
+``va_list``, can't have a parameter of rvalue reference type. Kernels can have variadic
+template parameters, but only one pack and it must be the last in the template parameter
+list. 
 
 Device Space Memory Specifiers
 -------------------------------------------------------------------------------
@@ -96,7 +114,7 @@ Exception handling
 
 An important difference between the host and device code is exception handling. In device
 code it is not available, error handling needs to be done with return codes. This is
-because of the hardware architecture does not allow for this kind o control flow.
+because of the hardware architecture does not allow for this kind of control flow.
 
 Kernel parameters
 -------------------------------------------------------------------------------
@@ -115,11 +133,32 @@ virtual function from the host, when the object was created on the device, or th
 other way around. This also means, that you can't pass an object with virtual functions
 as a parameter to a kernel.
 
+Polymorphic Function Wrappers
+-------------------------------------------------------------------------------
+
+Since C++11 the standard library has a polymorphic function wrapper ``std::function``.
+This has an equivalent in CUDA called ``nvstd::function`` to work on CUDA enabled
+devices. Unfortunately HIP doesn't have it's own version currently.
+
 Extended Lambdas
 -------------------------------------------------------------------------------
 
-Lambdas are a powerful tool in modern C++ and in HIP they have an extension making them
-even more powerful. Lambdas can have ``__host__`` or ``__device__`` qualifiers. This way
-developers can define lambdas in host code, that can run on the device side as well, and
-used as template parameter for ``__global__`` functions.
+Lambdas are a powerful tool in modern C++ and are supported by the HIP ecosystem. By
+default the lambda will work as you expect, but keep in mind that they will inherit the
+execution space specification from the surrounding context. For example in a device
+the lambda can only be called from other device functions. This also means that lambdas
+can't be used as template argument for kernels unless they are defined in a device
+function or a kernel. To help develop versatile software HIP has an extension making
+lambdas even more powerful. They can have ``__host__`` or ``__device__`` qualifiers. This
+way developers can define lambdas in host code, that can run on the device side as well,
+and used as template parameter for ``__global__`` functions.
 
+Inline namespaces
+-------------------------------------------------------------------------------
+
+Inline namespaces are supported, but with a few exception. The following entities can't
+be declared in namespace scope within an inline unnamed namespace:
+
+* ``__managed__``, ``__device__``, ``__shared__`` and ``__constant__`` variables
+* ``__global__`` function and function templates
+* variables with surface or texture type
