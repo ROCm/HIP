@@ -44,7 +44,7 @@ features were like functions using ``initializer lists``, ``std::move`` and
 ``std::forward`` or functions with ``constexpr`` qualifier are implicitly considered to
 have ``__host__`` and ``__device__`` execution space specifier. Also ``constexpr``
 variables that are static member variables or namespace scoped can be used from both host
-and device, but only for value access. Dereferencing a static constexpr on a different
+and device, but only for value access. Dereferencing a static ``constexpr`` on a different
 execution space than specified will cause an error.
 
 Lambdas work but there are some extensions and restrictions on their usage. To learn more
@@ -126,7 +126,7 @@ variable number of arguments is not allowed.
 Classes
 -------------------------------------------------------------------------------
 
-Classes work on both host and device side, but there are some constraints. ``Static``
+Classes work on both host and device side, but there are some constraints. ``static``
 data members need to be ``const`` qualified and ``static`` member functions can't be
 ``__global__``. ``Virtual`` member functions work, but it's undefined behaviour to call a
 virtual function from the host, when the object was created on the device, or the
