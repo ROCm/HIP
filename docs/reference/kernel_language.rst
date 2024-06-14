@@ -1917,15 +1917,15 @@ The default width is ``warpSize`` (see :ref:`warp-cross-lane`). Half-float shuff
 
 .. code:: cpp
 
-  int   __shfl      (T var,   int srcLane, int width=warpSize);
-  int   __shfl_up   (T var,   unsigned int delta, int width=warpSize);
-  int   __shfl_down (T var,   unsigned int delta, int width=warpSize);
-  int   __shfl_xor  (T var,   int laneMask, int width=warpSize);
+  T __shfl      (T var, int srcLane, int width=warpSize);
+  T __shfl_up   (T var, unsigned int delta, int width=warpSize);
+  T __shfl_down (T var, unsigned int delta, int width=warpSize);
+  T __shfl_xor  (T var, int laneMask, int width=warpSize);
 
-  int   __shfl_sync      (unsigned long long mask, T var,   int srcLane, int width=warpSize);
-  int   __shfl_up_sync   (unsigned long long mask, T var,   unsigned int delta, int width=warpSize);
-  int   __shfl_down_sync (unsigned long long mask, T var,   unsigned int delta, int width=warpSize);
-  int   __shfl_xor_sync  (unsigned long long mask, T var,   int laneMask, int width=warpSize);
+  T __shfl_sync      (unsigned long long mask, T var, int srcLane, int width=warpSize);
+  T __shfl_up_sync   (unsigned long long mask, T var, unsigned int delta, int width=warpSize);
+  T __shfl_down_sync (unsigned long long mask, T var, unsigned int delta, int width=warpSize);
+  T __shfl_xor_sync  (unsigned long long mask, T var, int laneMask, int width=warpSize);
 
 ``T`` can be a 32-bit integer type, 64-bit integer type or a single precision or
 double precision floating point type.
