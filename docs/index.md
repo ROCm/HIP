@@ -45,6 +45,7 @@ On non-AMD platforms, like NVIDIA, HIP provides header files required to support
 * {doc}`./how-to/performance_guidelines`
 * [Debugging with HIP](./how-to/debugging)
 * {doc}`./how-to/logging`
+* [Unified Memory](./reference/unified_memory)
 * {doc}`./how-to/faq`
 
 :::
@@ -55,6 +56,7 @@ On non-AMD platforms, like NVIDIA, HIP provides header files required to support
 * [C++ language extensions](./reference/kernel_language)
 * [Comparing Syntax for different APIs](./reference/terms)
 * [HSA Runtime API for ROCm](./reference/virtual_rocr)
+* [HIP Managed Memory Allocation API](./reference/unified_memory_reference)
 * [List of deprecated APIs](./reference/deprecated_api_list)
 * [FP8 numbers in HIP](./reference/fp8_numbers)
 

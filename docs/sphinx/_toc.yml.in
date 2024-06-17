@@ -29,6 +29,8 @@ subtrees:
   - file: how-to/performance_guidelines
   - file: how-to/debugging
   - file: how-to/logging
+  - file: how-to/unified_memory
+    title: Unified Memory
   - file: how-to/faq
 
 - caption: Reference
@@ -39,6 +41,8 @@ subtrees:
   - file: reference/terms
     title: Comparing Syntax for different APIs
   - file: reference/virtual_rocr
+  - file: reference/unified_memory_reference
+    title: HIP Managed Memory Allocation API
   - file: reference/deprecated_api_list
     title: List of deprecated APIs
   - file: reference/fp8_numbers

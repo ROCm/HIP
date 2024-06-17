@@ -45,6 +45,7 @@ HIPRTC
 hcBLAS
 icc
 IILE
+iGPU
 inplace
 Interoperation
 interoperate
@@ -83,6 +84,7 @@ preprocessor
 PTX
 PyHIP
 queryable
+prefetching
 representable
 RMW
 ROCm's
@@ -100,5 +102,6 @@ SYCL
 syntaxes
 tradeoffs
 typedefs
+UMM
 WinGDB
 zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
