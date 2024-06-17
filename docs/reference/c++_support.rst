@@ -28,7 +28,7 @@ Modern C++ support
 ===============================================================================
 
 The C++11 and later standards had huge additions to C++ making it a truly modern
-language. In this section we'll describe which of these features HIP supports.
+language. In this section, we'll describe which of these features HIP supports.
 
 C++11 support
 -------------------------------------------------------------------------------
@@ -39,16 +39,16 @@ the lack of concurrency support on the device. This is because the HIP device co
 model is fundamentally different compared to the C++ model, which is used on the host
 side. E.G: it doesn't make sense to start a new thread on the device.
 
-There are some restrictions and clarifications for certain features. For example some new
-features were like functions using ``initializer lists``, ``std::move`` and
+There are some restrictions and clarifications for certain features. For example, some
+new features were like functions using ``initializer lists``, ``std::move`` and
 ``std::forward`` or functions with ``constexpr`` qualifier are implicitly considered to
-have ``__host__`` and ``__device__`` execution space specifier. Also ``constexpr``
+have ``__host__`` and ``__device__`` execution space specifier. Also, ``constexpr``
 variables that are static member variables or namespace scoped can be used from both host
 and device, but only for value access. Dereferencing a static ``constexpr`` on a different
 execution space than specified will cause an error.
 
-Lambdas work but there are some extensions and restrictions on their usage. To learn more
-about them read the `extended lambdas`_ sections.
+Lambdas work, but there are some extensions and restrictions on their usage. To learn
+more about them, read the `extended lambdas`_ sections.
 
 C++14 support
 -------------------------------------------------------------------------------
@@ -65,10 +65,10 @@ C++20 support
 
 All C++20 language features are supported, but extensions and restrictions apply. C++20
 introduced features that change programs foundationally with coroutines and modules, but
-unfortunately these aren't supported by HIP. On the other hand ``consteval`` functions
+unfortunately these aren't supported by HIP. On the other hand, ``consteval`` functions
 can be called from host and device, even if it is specified for host use only. 
 
-The three way comparison operator (also known as spaceship operator ``<=>``) works in
+The three-way comparison operator (also known as spaceship operator ``<=>``) works in
 both host and device code.
 
 .. _language_restrictions:
@@ -78,20 +78,21 @@ Extensions and Restrictions
 Besides the above mentioned deviations from the standard, there are more general
 extensions and restrictions to consider. 
 
-__global__ functions
+``__global__`` functions
 -------------------------------------------------------------------------------
+
 Functions that work as an entry point for device execution are called kernels and are
 specified with the ``__global__`` qualifier. Calling these functions happen with the
 triple chevron operator: ``<<< >>>``. Kernel functions return type must be ``void``, they
 can't be ``constexpr``, can't have a parameter of type ``std::initializer_list`` or
 ``va_list``, can't have a parameter of rvalue reference type. Kernels can have variadic
-template parameters, but only one pack and it must be the last in the template parameter
+template parameters, but only one pack, and it must be the last in the template parameter
 list. 
 
 Device Space Memory Specifiers
 -------------------------------------------------------------------------------
 
-To specify whether a variable is allocated in host or device memory HIP has qualifiers
+To specify whether a variable is allocated in host or device memory, HIP has qualifiers
 called device space memory specifiers. These are ``__device__``, ``__shared__``,
 ``__managed__`` and ``__constant__``. These are meant to specify what memory is allocated
 for a variable. ``__device__`` and ``__constant__`` specifier are used for static
@@ -104,7 +105,7 @@ binary and is registered by ``__hipRegisterManagedVariable`` in init functions. 
 runtime allocates managed memory and uses it to define the symbol when loading the device
 binary. A managed variable can be accessed in both device and host code. It is important
 to know where each variable is because they will be only available in certain places.
-Generally variables allocated in the host memory will not be available from device code
+Generally, variables allocated in the host memory will not be available from device code
 and variables allocated in the device memory will not be available from host code. This
 can be an issue mostly with pointers in host memory, which are pointing to device memory.
 Dereferencing these will cause a segmentation fault.
@@ -120,14 +121,14 @@ Kernel parameters
 -------------------------------------------------------------------------------
 
 There are some restrictions on kernel function parameters. They cannot be passed by
-reference, as these functions run on the device, but are called from the host. Also
+reference, as these functions run on the device, but are called from the host. Also,
 variable number of arguments is not allowed.
 
 Classes
 -------------------------------------------------------------------------------
 
 Classes work on both host and device side, but there are some constraints. ``static``
-data members need to be ``const`` qualified and ``static`` member functions can't be
+data members need to be ``const`` qualified, and ``static`` member functions can't be
 ``__global__``. ``Virtual`` member functions work, but it's undefined behaviour to call a
 virtual function from the host, when the object was created on the device, or the
 other way around. This also means, that you can't pass an object with virtual functions
@@ -138,17 +139,17 @@ Polymorphic Function Wrappers
 
 Since C++11 the standard library has a polymorphic function wrapper ``std::function``.
 This has an equivalent in CUDA called ``nvstd::function`` to work on CUDA enabled
-devices. Unfortunately HIP doesn't have it's own version currently.
+devices. Unfortunately, HIP doesn't have its own version currently.
 
 Extended Lambdas
 -------------------------------------------------------------------------------
 
 Lambdas are a powerful tool in modern C++ and are supported by the HIP ecosystem. By
-default the lambda will work as you expect, but keep in mind that they will inherit the
-execution space specification from the surrounding context. For example in a device
+default, the lambda will work as you expect, but keep in mind that they will inherit the
+execution space specification from the surrounding context. For example, in a device
 the lambda can only be called from other device functions. This also means that lambdas
 can't be used as template argument for kernels unless they are defined in a device
-function or a kernel. To help develop versatile software HIP has an extension making
+function or a kernel. To help develop versatile software, HIP has an extension making
 lambdas even more powerful. They can have ``__host__`` or ``__device__`` qualifiers. This
 way developers can define lambdas in host code, that can run on the device side as well,
 and used as template parameter for ``__global__`` functions.
@@ -156,7 +157,7 @@ and used as template parameter for ``__global__`` functions.
 Inline namespaces
 -------------------------------------------------------------------------------
 
-Inline namespaces are supported, but with a few exception. The following entities can't
+Inline namespaces are supported, but with a few exceptions. The following entities can't
 be declared in namespace scope within an inline unnamed namespace:
 
 * ``__managed__``, ``__device__``, ``__shared__`` and ``__constant__`` variables
