@@ -3760,10 +3760,7 @@ hipError_t hipMemPoolImportPointer(
  *  If size is 0, no memory is allocated, *ptr returns nullptr, and hipSuccess is returned.
  *
  *  @return #hipSuccess, #hipErrorOutOfMemory
- *
- *  @warning This API is deprecated, use hipHostMalloc() instead
  */
-DEPRECATED("use hipHostMalloc instead")
 hipError_t hipHostAlloc(void** ptr, size_t size, unsigned int flags);
 /**
  *  @brief Get Device pointer from Host Pointer allocated through hipHostMalloc
