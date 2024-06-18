@@ -162,7 +162,7 @@ NOTE: If HIP_ROCCLR_HOME is set, there is no need to set HIP_CLANG_PATH since hi
 
 ## What is AMD clr?
 
-AMD clr (Common Language Runtime) is a repository for the AMD platform, which contains source codes for AMD's compute languages runtimes as follows,
+AMD [Common Language Runtime (CLR)](https://github.com/ROCm/clr) is a repository for the AMD platform, which contains source codes for AMD's compute languages runtimes as follows,
 
 * hipamd - contains implementation of HIP language for AMD GPU.
 * rocclr - contains virtual device interfaces that compute runtimes interact with backends, such as ROCr on Linux and PAL on Windows.
@@ -170,7 +170,7 @@ AMD clr (Common Language Runtime) is a repository for the AMD platform, which co
 
 ## What is hipother?
 
-A new repository 'hipother' is added in the ROCm 6.1 release, which is branched out from HIP.
+A new repository ['hipother'](https://github.com/ROCm/hipother) is added in the ROCm 6.1 release, which is branched out from HIP.
 hipother supports the HIP back-end implementation on some non-AMD platforms, like NVIDIA.
 
 ## Can I get HIP open source repository for Windows?

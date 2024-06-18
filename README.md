@@ -111,13 +111,13 @@ The HIP Runtime API code and compute kernel definition can exist in the same sou
 
 HIP C++ code can be compiled with either,
 
-* On the NVIDIA CUDA platform, HIP provides header file which translate from the HIP runtime APIs to CUDA runtime APIs.  The header file contains mostly inlined
+* On the NVIDIA CUDA platform, HIP provides header file in the repository [hipother](https://github.com/ROCm/hipother) which translate from the HIP runtime APIs to CUDA runtime APIs.  The header file contains mostly inlined
   functions and thus has very low overhead - developers coding in HIP should expect the same performance as coding in native CUDA.  The code is then
   compiled with nvcc, the standard C++ compiler provided with the CUDA SDK.  Developers can use any tools supported by the CUDA SDK including the CUDA
   profiler and debugger.
-* On the AMD ROCm platform, HIP provides a header and runtime library built on top of HIP-Clang compiler.  The HIP runtime implements HIP streams, events, and memory APIs,
+* On the AMD ROCm platform, HIP provides a header and runtime library built on top of HIP-Clang compiler in the repository [Common Language Runtime (CLR)](https://github.com/ROCm/clr).  The HIP runtime implements HIP streams, events, and memory APIs,
   and is a object library that is linked with the application.  The source code for all headers and the library implementation is available on GitHub.
-  HIP developers on ROCm can use AMD's ROCgdb (https://github.com/ROCm/ROCgdb) for debugging and profiling.
+  HIP developers on ROCm can use AMD's [ROCgdb](https://github.com/ROCm/ROCgdb) for debugging and profiling.
 
 Thus HIP source code can be compiled to run on either platform.  Platform-specific features can be isolated to a specific platform using conditional compilation.  Thus HIP
 provides source portability to either platform.   HIP provides the _hipcc_ compiler driver which will call the appropriate toolchain depending on the desired platform.
