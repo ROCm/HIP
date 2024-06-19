@@ -1,10 +1,10 @@
-# Porting CUDA Driver API
+# Porting CUDA driver API projects
 
 ## Introduction to the CUDA Driver and Runtime APIs
-CUDA provides a separate CUDA Driver and Runtime APIs. The two APIs have significant overlap in functionality:
+CUDA provides a separate CUDA Driver API and Runtime APIs. The two APIs have significant overlap in functionality:
 - Both APIs support events, streams, memory management, memory copy, and error handling.
 - Both APIs deliver similar performance.
-- Driver APIs calls begin with the prefix `cu` while Runtime APIs begin with the prefix `cuda`. For example, the Driver API API contains `cuEventCreate` while the Runtime API contains `cudaEventCreate`, with similar functionality.
+- Driver APIs calls begin with the prefix `cu` while Runtime APIs begin with the prefix `cuda`. For example, the Driver API contains `cuEventCreate` while the Runtime API contains `cudaEventCreate`, with similar functionality.
 - The Driver API defines a different but largely overlapping error code space than the Runtime API, and uses a different coding convention. For example, Driver API defines `CUDA_ERROR_INVALID_VALUE` while the Runtime API defines `cudaErrorInvalidValue`
 
 
@@ -40,7 +40,7 @@ The CUDA Runtime API unifies the Context API with the Device API. This simplifie
 HIP provides a context API to facilitate easy porting from existing Driver codes.
 In HIP, the Ctx functions largely provide an alternate syntax for changing the active device.
 
-Most new applications will prefer to use `hipSetDevice` or the stream APIs , therefore HIP has marked hipCtx APIs as **deprecated**. Support for these APIs may not be available in future releases. For more details on deprecated APIs please refer [HIP deprecated APIs](https://github.com/ROCm/HIP/blob/develop/docs/reference/deprecated_api_list.md).
+Most new applications will use `hipSetDevice` or the stream APIs, therefore HIP has marked `hipCtx` APIs as **deprecated**. Support for these APIs may not be available in future releases. For more details on deprecated APIs please refer [HIP deprecated APIs](../reference/deprecated_api_list).
 
 ## HIP Module and Ctx APIs
 
