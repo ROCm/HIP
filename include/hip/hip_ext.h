@@ -64,6 +64,8 @@ THE SOFTWARE.
  * Currently, timing between startEvent and stopEvent does not include the time it takes to perform
  * a system scope release/cache flush - only the time it takes to issues writes to cache.
  *
+ * @note  For this HIP API, the flag 'hipExtAnyOrderLaunch' is not supported on AMD GFX9xx boards.
+ *
  */
 HIP_PUBLIC_API
  extern "C" hipError_t hipExtModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
