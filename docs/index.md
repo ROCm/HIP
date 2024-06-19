@@ -26,8 +26,8 @@ portable applications for AMD and NVIDIA GPUs from single source code.
 :::{grid-item-card} How to
 
 * [Programming Manual](./how-to/programming_manual)
-* [HIP Porting Guide](./how-to/hip_porting_guide)
-* [HIP Porting: Driver API Guide](./how-to/hip_porting_driver_api)
+* [Porting CUDA projects to HIP](./how-to/hip_porting_guide)
+* [Porting CUDA driver API projects](./how-to/hip_porting_driver_api)
 * {doc}`./how-to/hip_rtc`
 * {doc}`./how-to/performance_guidelines`
 * [Debugging with HIP](./how-to/debugging)

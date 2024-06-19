@@ -1,10 +1,10 @@
-# Porting CUDA Driver API
+# Porting CUDA driver API projects
 
 ## Introduction to the CUDA Driver and Runtime APIs
-CUDA provides a separate CUDA Driver and Runtime APIs. The two APIs have significant overlap in functionality:
+CUDA provides a separate CUDA Driver API and Runtime APIs. The two APIs have significant overlap in functionality:
 - Both APIs support events, streams, memory management, memory copy, and error handling.
 - Both APIs deliver similar performance.
-- Driver APIs calls begin with the prefix `cu` while Runtime APIs begin with the prefix `cuda`. For example, the Driver API API contains `cuEventCreate` while the Runtime API contains `cudaEventCreate`, with similar functionality.
+- Driver APIs calls begin with the prefix `cu` while Runtime APIs begin with the prefix `cuda`. For example, the Driver API contains `cuEventCreate` while the Runtime API contains `cudaEventCreate`, with similar functionality.
 - The Driver API defines a different but largely overlapping error code space than the Runtime API, and uses a different coding convention. For example, Driver API defines `CUDA_ERROR_INVALID_VALUE` while the Runtime API defines `cudaErrorInvalidValue`
 
 
