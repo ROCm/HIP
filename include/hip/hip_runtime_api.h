@@ -1859,6 +1859,18 @@ hipError_t hipDeviceReset(void);
  */
 hipError_t hipSetDevice(int deviceId);
 /**
+ * @brief Set a list of devices that can be used.
+ *
+ * @param[in] device_arr List of devices to try
+ * @param[in] len Number of devices in specified list
+ *
+ * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
+ *
+ * @see #hipGetDevice, #hipGetDeviceCount. #hipSetDevice. #hipGetDeviceProperties. #hipSetDeviceFlags. #hipChooseDevice
+ *
+ * */
+hipError_t hipSetValidDevices(int* device_arr, int len);
+/**
  * @brief Return the default device id for the calling host thread.
  *
  * @param [out] deviceId *device is written with the default device
@@ -4019,6 +4031,68 @@ hipError_t hipMemcpyDtoH(void* dst, hipDeviceptr_t src, size_t sizeBytes);
  */
 hipError_t hipMemcpyDtoD(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeBytes);
 /**
+ *  @brief Copies from one 1D array to device memory.
+ *
+ *  @param[out]  dstDevice Destination device pointer
+ *  @param[in]   srcArray Source array
+ *  @param[in]   srcOffset Offset in bytes of source array
+ *  @param[in]   ByteCount Size of memory copy in bytes
+ *
+ *  @return #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ * #hipErrorInvalidValue
+ *
+ *  @see hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc, hipMemAllocHost,
+ * hipMemAllocPitch, hipMemcpy2D, hipMemcpy2DAsync, hipMemcpy2DUnaligned, hipMemcpyAtoA,
+ * hipMemcpyAtoD, hipMemcpyAtoH, hipMemcpyAtoHAsync, hipMemcpyDtoA, hipMemcpyDtoD,
+ * hipMemcpyDtoDAsync, hipMemcpyDtoH, hipMemcpyDtoHAsync, hipMemcpyHtoA, hipMemcpyHtoAAsync,
+ * hipMemcpyHtoDAsync, hipMemFree, hipMemFreeHost, hipMemGetAddressRange, hipMemGetInfo,
+ * hipMemHostAlloc, hipMemHostGetDevicePointer
+ */
+hipError_t hipMemcpyAtoD(hipDeviceptr_t dstDevice, hipArray_t srcArray, size_t srcOffset,
+                         size_t ByteCount);
+/**
+ *  @brief Copies from device memory to a 1D array.
+ *
+ *  @param[out]  dstArray Destination array
+ *  @param[in]   dstOffset Offset in bytes of destination array
+ *  @param[in]   srcDevice Source device pointer
+ *  @param[in]   ByteCount Size of memory copy in bytes
+ *
+ *  @return #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ * #hipErrorInvalidValue
+ *
+ *  @see hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc, hipMemAllocHost,
+ * hipMemAllocPitch, hipMemcpy2D, hipMemcpy2DAsync, hipMemcpy2DUnaligned, hipMemcpyAtoA,
+ * hipMemcpyAtoD, hipMemcpyAtoH, hipMemcpyAtoHAsync, hipMemcpyDtoA, hipMemcpyDtoD,
+ * hipMemcpyDtoDAsync, hipMemcpyDtoH, hipMemcpyDtoHAsync, hipMemcpyHtoA, hipMemcpyHtoAAsync,
+ * hipMemcpyHtoDAsync, hipMemFree, hipMemFreeHost, hipMemGetAddressRange, hipMemGetInfo,
+ * hipMemHostAlloc, hipMemHostGetDevicePointer
+ */
+hipError_t hipMemcpyDtoA(hipArray_t dstArray, size_t dstOffset, hipDeviceptr_t srcDevice,
+                         size_t ByteCount);
+
+/**
+ *  @brief Copies from one 1D array to another.
+ *
+ *  @param[out]  dstArray Destination array
+ *  @param[in]   dstOffset Offset in bytes of destination array
+ *  @param[in]   srcArray Source array
+ *  @param[in]   srcOffset Offset in bytes of source array
+ *  @param[in]   ByteCount Size of memory copy in bytes
+ *
+ *  @return #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ * #hipErrorInvalidValue
+ *
+ *  @see hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc, hipMemAllocHost,
+ * hipMemAllocPitch, hipMemcpy2D, hipMemcpy2DAsync, hipMemcpy2DUnaligned, hipMemcpyAtoA,
+ * hipMemcpyAtoD, hipMemcpyAtoH, hipMemcpyAtoHAsync, hipMemcpyDtoA, hipMemcpyDtoD,
+ * hipMemcpyDtoDAsync, hipMemcpyDtoH, hipMemcpyDtoHAsync, hipMemcpyHtoA, hipMemcpyHtoAAsync,
+ * hipMemcpyHtoDAsync, hipMemFree, hipMemFreeHost, hipMemGetAddressRange, hipMemGetInfo,
+ * hipMemHostAlloc, hipMemHostGetDevicePointer
+ */
+hipError_t hipMemcpyAtoA(hipArray_t dstArray, size_t dstOffset, hipArray_t srcArray,
+                         size_t srcOffset, size_t ByteCount);
+/**
  *  @brief Copy data from Host to Device asynchronously
  *
  *  @param[out]  dst  Data being copy to
@@ -4076,7 +4150,48 @@ hipError_t hipMemcpyDtoHAsync(void* dst, hipDeviceptr_t src, size_t sizeBytes, h
  */
 hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeBytes,
                               hipStream_t stream);
-
+/**
+ * @brief Copies from one 1D array to host memory.
+ *
+ *  @param[out]  dstHost Destination pointer
+ *  @param[in]   srcArray Source array
+ *  @param[in]   srcOffset Offset in bytes of source array
+ *  @param[in]   ByteCount Size of memory copy in bytes
+ *  @param[in]   stream Stream identifier
+ *
+ *  @return #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ * #hipErrorInvalidValue
+ *
+ *  @see hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc, hipMemAllocHost,
+ * hipMemAllocPitch, hipMemcpy2D, hipMemcpy2DAsync, hipMemcpy2DUnaligned, hipMemcpyAtoA,
+ * hipMemcpyAtoD, hipMemcpyAtoH, hipMemcpyAtoHAsync, hipMemcpyDtoA, hipMemcpyDtoD,
+ * hipMemcpyDtoDAsync, hipMemcpyDtoH, hipMemcpyDtoHAsync, hipMemcpyHtoA, hipMemcpyHtoAAsync,
+ * hipMemcpyHtoDAsync, hipMemFree, hipMemFreeHost, hipMemGetAddressRange, hipMemGetInfo,
+ * hipMemHostAlloc, hipMemHostGetDevicePointer
+ */
+hipError_t hipMemcpyAtoHAsync(void* dstHost, hipArray_t srcArray, size_t srcOffset,
+                              size_t ByteCount, hipStream_t stream);
+/**
+ * @brief Copies from host memory to a 1D array.
+ *
+ *  @param[out]  dstArray Destination array
+ *  @param[in]   dstOffset Offset in bytes of destination array
+ *  @param[in]   srcHost Source host pointer
+ *  @param[in]   ByteCount Size of memory copy in bytes
+ *  @param[in]   stream Stream identifier
+ *
+ *  @return #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ * #hipErrorInvalidValue
+ *
+ *  @see hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc, hipMemAllocHost,
+ * hipMemAllocPitch, hipMemcpy2D, hipMemcpy2DAsync, hipMemcpy2DUnaligned, hipMemcpyAtoA,
+ * hipMemcpyAtoD, hipMemcpyAtoH, hipMemcpyAtoHAsync, hipMemcpyDtoA, hipMemcpyDtoD,
+ * hipMemcpyDtoDAsync, hipMemcpyDtoH, hipMemcpyDtoHAsync, hipMemcpyHtoA, hipMemcpyHtoAAsync,
+ * hipMemcpyHtoDAsync, hipMemFree, hipMemFreeHost, hipMemGetAddressRange, hipMemGetInfo,
+ * hipMemHostAlloc, hipMemHostGetDevicePointer
+ */
+hipError_t hipMemcpyHtoAAsync(hipArray_t dstArray, size_t dstOffset, const void* srcHost,
+                              size_t ByteCount, hipStream_t stream);
 /**
  *  @brief Returns a global pointer from a module.
  *  Returns in *dptr and *bytes the pointer and size of the global of name name located in module hmod.
@@ -4649,6 +4764,27 @@ hipError_t hipMemcpy2DToArray(hipArray_t dst, size_t wOffset, size_t hOffset, co
 hipError_t hipMemcpy2DToArrayAsync(hipArray_t dst, size_t wOffset, size_t hOffset, const void* src,
                                    size_t spitch, size_t width, size_t height, hipMemcpyKind kind,
                                    hipStream_t stream __dparm(0));
+/**
+ *  @brief Copies data between host and device.
+ *
+ *  @param[in]   dst Destination memory address
+ *  @param[in]   wOffsetDst Destination starting X offset
+ *  @param[in]   hOffsetDst Destination starting Y offset
+ *  @param[in]   src  Source memory address
+ *  @param[in]   wOffsetSrc Source starting X offset
+ *  @param[in]   hOffsetSrc Source starting Y offset (columns in bytes)
+ *  @param[in]   width  Width of matrix transfer (columns in bytes)
+ *  @param[in]   height  Height of matrix transfer (rows)
+ *  @param[in]   kind Type of transfer
+ *
+ *  @returns      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidMemcpyDirection
+ *
+ *  @see hipMemcpy, hipMemcpyToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol,
+ * hipMemcpyAsync
+ */
+hipError_t hipMemcpy2DArrayToArray(hipArray_t dst, size_t wOffsetDst, size_t hOffsetDst,
+                                   hipArray_const_t src, size_t wOffsetSrc, size_t hOffsetSrc,
+                                   size_t width, size_t height, hipMemcpyKind kind);
 /**
  *  @brief Copies data between host and device.
  *
@@ -7133,40 +7269,6 @@ hipError_t hipGraphAddNode(hipGraphNode_t *pGraphNode, hipGraph_t graph,
                            hipGraphNodeParams *nodeParams);
 
 /**
- * @brief Return the flags on executable graph.
- *
- * @param [in] graphExec - Executable graph to get the flags.
- * @param [out] flags - Flags used to instantiate this executable graph.
- * @returns #hipSuccess, #hipErrorInvalidValue.
- * @warning : This API is marked as beta, meaning, while this is feature complete,
- * it is still open to changes and may have outstanding issues.
- */
-hipError_t hipGraphExecGetFlags(hipGraphExec_t graphExec, unsigned long long* flags);
-
-/**
- * @brief Updates parameters of a created node.
- *
- * @param [in] node - instance of the node to set parameters to.
- * @param [in] nodeParams - pointer to the parameters.
- * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidDeviceFunction, #hipErrorNotSupported.
- * @warning : This API is marked as beta, meaning, while this is feature complete,
- * it is still open to changes and may have outstanding issues.
- */
-hipError_t hipGraphNodeSetParams(hipGraphNode_t node, hipGraphNodeParams *nodeParams);
-
-/**
- * @brief Updates parameters of a created node on executable graph.
- *
- * @param [in] graphExec - instance of executable graph.
- * @param [in] node - instance of the node to set parameters to.
- * @param [in] nodeParams - pointer to the parameters.
- * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidDeviceFunction, #hipErrorNotSupported.
- * @warning : This API is marked as beta, meaning, while this is feature complete,
- * it is still open to changes and may have outstanding issues.
- */
-hipError_t hipGraphExecNodeSetParams(hipGraphExec_t graphExec, hipGraphNode_t node, hipGraphNodeParams* nodeParams);
-
-/**
  * @brief Destroys an executable graph
  *
  * @param [in] graphExec - instance of executable graph to destry.
@@ -8091,28 +8193,6 @@ hipError_t hipGraphExecExternalSemaphoresWaitNodeSetParams(hipGraphExec_t hGraph
                                                            const hipExternalSemaphoreWaitNodeParams* nodeParams);
 
 /**
- * @brief Gets a memcpy node's parameters.
- *
- * @param [in] hNode - instance of the node to get parameters from.
- * @param [out] nodeParams - pointer to the parameters.
- * @returns #hipSuccess, #hipErrorInvalidValue
- * @warning : This API is marked as beta, meaning, while this is feature complete,
- * it is still open to changes and may have outstanding issues.
- */
-hipError_t hipDrvGraphMemcpyNodeGetParams(hipGraphNode_t hNode, HIP_MEMCPY3D* nodeParams);
-
-/**
- * @brief Sets a memcpy node's parameters.
- *
- * @param [in] hNode - instance of the node to Set parameters for.
- * @param [out] nodeParams - pointer to the parameters.
- * @returns #hipSuccess, #hipErrorInvalidValue
- * @warning : This API is marked as beta, meaning, while this is feature complete,
- * it is still open to changes and may have outstanding issues.
- */
-hipError_t hipDrvGraphMemcpyNodeSetParams(hipGraphNode_t hNode, const HIP_MEMCPY3D* nodeParams);
-
-/**
  * @brief Creates a memset node and adds it to a graph.
  *
  * @param [out] phGraphNode - pointer to graph node to create.
@@ -8128,50 +8208,6 @@ hipError_t hipDrvGraphMemcpyNodeSetParams(hipGraphNode_t hNode, const HIP_MEMCPY
 hipError_t hipDrvGraphAddMemsetNode(hipGraphNode_t* phGraphNode, hipGraph_t hGraph,
                                  const hipGraphNode_t* dependencies, size_t numDependencies,
                                  const HIP_MEMSET_NODE_PARAMS* memsetParams, hipCtx_t ctx);
-
-/**
- * @brief Creates a memory free node and adds it to a graph
- *
- * @param [out] phGraphNode - Pointer to the graph node to create and add to the graph
- * @param [in]  hGraph - Instane of the graph the node to be added
- * @param [in]  dependencies - Const pointer to the node dependenties
- * @param [in]  numDependencies - The number of dependencies
- * @param [in]  dptr - Pointer to the memory to be freed
- * @returns #hipSuccess, #hipErrorInvalidValue
- * @warning : This API is marked as beta, meaning, while this is feature complete,
- * it is still open to changes and may have outstanding issues.
- */
-hipError_t hipDrvGraphAddMemFreeNode(hipGraphNode_t* phGraphNode, hipGraph_t hGraph,
-                                  const hipGraphNode_t* dependencies, size_t numDependencies,
-                                  hipDeviceptr_t dptr);
-
-/**
- * @brief Sets the parameters for a memcpy node in the given graphExec.
- *
- * @param [in] hGraphExec - instance of the executable graph with the node.
- * @param [in] hNode - instance of the node to set parameters to.
- * @param [in] copyParams - const pointer to the memcpy node params.
- * @param [in] ctx - cotext related to current device.
- * @returns #hipSuccess, #hipErrorInvalidValue
- * @warning : This API is marked as beta, meaning, while this is feature complete,
- * it is still open to changes and may have outstanding issues.
- */
-hipError_t hipDrvGraphExecMemcpyNodeSetParams(hipGraphExec_t hGraphExec, hipGraphNode_t hNode,
-                                   const HIP_MEMCPY3D* copyParams, hipCtx_t ctx);
-
-/**
- * @brief Sets the parameters for a memset node in the given graphExec.
- *
- * @param [in] hGraphExec - instance of the executable graph with the node.
- * @param [in] hNode - instance of the node to set parameters to.
- * @param [in] memsetParams - pointer to the parameters.
- * @param [in] ctx - cotext related to current device.
- * @returns #hipSuccess, #hipErrorInvalidValue
- * @warning : This API is marked as beta, meaning, while this is feature complete,
- * it is still open to changes and may have outstanding issues.
- */
-hipError_t hipDrvGraphExecMemsetNodeSetParams(hipGraphExec_t hGraphExec, hipGraphNode_t hNode,
-                                   const HIP_MEMSET_NODE_PARAMS* memsetParams, hipCtx_t ctx);
 
 // doxygen end graph API
 /**
