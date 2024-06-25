@@ -97,7 +97,7 @@ timestamps {
         skipDefaultCheckout()
 
         // labels belonging to each backend - AMD, NVIDIA
-        String[] labels = ['hip-amd-mi100-ubu2004', 'hip-nvidia-rtx5000-ubu2004']
+        String[] labels = ['hip-amd-gfx908-ubu2004', 'hip-nvidia-rtx5000-ubu2004']
         buildMap = [:]
 
         labels.each { backendLabel ->
