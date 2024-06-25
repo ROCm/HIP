@@ -58,6 +58,7 @@ The CUDA enabled NVIDIA GPUs are supported by HIP. For more information, see [GP
 
 * [HIP examples](https://github.com/ROCm/HIP-Examples)
 * [HIP test samples](https://github.com/ROCm/hip-tests/tree/develop/samples)
+* [SAXPY tutorial](./tutorial/saxpy)
 
 :::
 
