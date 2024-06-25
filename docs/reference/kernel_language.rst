@@ -98,7 +98,7 @@ When using ``hipLaunchKernelGGL``, your first five parameters must be:
   * **size_t dynamicShared**: The amount of additional shared memory that you want to allocate
     when launching the kernel (see :ref:`shared-variable-type`).
   * **hipStream_t**: The stream where you want to run the kernel. A value of ``0`` corresponds to the
-    NULL stream (see :ref:`synchronization-functions`).
+    NULL stream (see :ref:`synchronization functions`).
 
 You can include your kernel arguments after these parameters.
 
@@ -314,8 +314,8 @@ The ``__syncthreads()`` built-in function is supported in HIP. The ``__syncthrea
 Math functions
 ====================================================
 
-HIP-Clang supports a set of math operations that are callable from the device. These are described in
-the following sections.
+HIP-Clang supports a set of math operations that are callable from the device. HIP supports most of the device functions supported by CUDA. 
+These are described in the following sections.
 
 Single precision mathematical functions
 --------------------------------------------------------------------------------------------
@@ -422,7 +422,7 @@ Following is the list of supported single precision mathematical functions.
       - ✓
 
     * - | float fabsf ( float  x ) 
-        | Calculate the absolute value of its argument.</sub> 
+        | Calculate the absolute value of its argument. 
       - ✓
       - ✓
  
@@ -2180,8 +2180,8 @@ The file format for binary is `.co` which means Code Object. The following comma
 
 .. note::
 
-  When using binary code objects is that the number of arguments to the kernel is different on HIP-Clang and NVCC path. Refer to the sample in samples/0_Intro/module_api for differences in the arguments to be passed to the kernel.
+  When using binary code objects is that the number of arguments to the kernel is different on HIP-Clang and NVCC path. Refer to the `HIP module_api sample <https://github.com/ROCm/hip-tests/tree/develop/samples/0_Intro/module_api>`_ for differences in the arguments to be passed to the kernel.
 
 gfx-arch-specific-kernel
 ============================================================
-Clang defined '__gfx*__' macros can be used to execute gfx arch specific codes inside the kernel. Refer to the sample ``14_gpu_arch`` in ``samples/2_Cookbook``.
+Clang defined '__gfx*__' macros can be used to execute gfx arch specific codes inside the kernel. Refer to the sample  in `HIP 14_gpu_arch sample <https://github.com/ROCm/hip-tests/tree/develop/samples/2_Cookbook/14_gpu_arch>`_.

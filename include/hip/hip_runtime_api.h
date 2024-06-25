@@ -1859,6 +1859,18 @@ hipError_t hipDeviceReset(void);
  */
 hipError_t hipSetDevice(int deviceId);
 /**
+ * @brief Set a list of devices that can be used.
+ *
+ * @param[in] device_arr List of devices to try
+ * @param[in] len Number of devices in specified list
+ *
+ * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
+ *
+ * @see #hipGetDevice, #hipGetDeviceCount. #hipSetDevice. #hipGetDeviceProperties. #hipSetDeviceFlags. #hipChooseDevice
+ *
+ * */
+hipError_t hipSetValidDevices(int* device_arr, int len);
+/**
  * @brief Return the default device id for the calling host thread.
  *
  * @param [out] deviceId *device is written with the default device
@@ -2833,7 +2845,6 @@ hipError_t hipEventDestroy(hipEvent_t event);
  *  If hipEventRecord() has not been called on @p event, this function returns #hipSuccess when no
  *  event is captured.
  *
- *  This function needs to support hipEventBlockingSync parameter.
  *
  *  @param[in] event Event on which to wait.
  *
@@ -4019,6 +4030,68 @@ hipError_t hipMemcpyDtoH(void* dst, hipDeviceptr_t src, size_t sizeBytes);
  */
 hipError_t hipMemcpyDtoD(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeBytes);
 /**
+ *  @brief Copies from one 1D array to device memory.
+ *
+ *  @param[out]  dstDevice Destination device pointer
+ *  @param[in]   srcArray Source array
+ *  @param[in]   srcOffset Offset in bytes of source array
+ *  @param[in]   ByteCount Size of memory copy in bytes
+ *
+ *  @return #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ * #hipErrorInvalidValue
+ *
+ *  @see hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc, hipMemAllocHost,
+ * hipMemAllocPitch, hipMemcpy2D, hipMemcpy2DAsync, hipMemcpy2DUnaligned, hipMemcpyAtoA,
+ * hipMemcpyAtoD, hipMemcpyAtoH, hipMemcpyAtoHAsync, hipMemcpyDtoA, hipMemcpyDtoD,
+ * hipMemcpyDtoDAsync, hipMemcpyDtoH, hipMemcpyDtoHAsync, hipMemcpyHtoA, hipMemcpyHtoAAsync,
+ * hipMemcpyHtoDAsync, hipMemFree, hipMemFreeHost, hipMemGetAddressRange, hipMemGetInfo,
+ * hipMemHostAlloc, hipMemHostGetDevicePointer
+ */
+hipError_t hipMemcpyAtoD(hipDeviceptr_t dstDevice, hipArray_t srcArray, size_t srcOffset,
+                         size_t ByteCount);
+/**
+ *  @brief Copies from device memory to a 1D array.
+ *
+ *  @param[out]  dstArray Destination array
+ *  @param[in]   dstOffset Offset in bytes of destination array
+ *  @param[in]   srcDevice Source device pointer
+ *  @param[in]   ByteCount Size of memory copy in bytes
+ *
+ *  @return #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ * #hipErrorInvalidValue
+ *
+ *  @see hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc, hipMemAllocHost,
+ * hipMemAllocPitch, hipMemcpy2D, hipMemcpy2DAsync, hipMemcpy2DUnaligned, hipMemcpyAtoA,
+ * hipMemcpyAtoD, hipMemcpyAtoH, hipMemcpyAtoHAsync, hipMemcpyDtoA, hipMemcpyDtoD,
+ * hipMemcpyDtoDAsync, hipMemcpyDtoH, hipMemcpyDtoHAsync, hipMemcpyHtoA, hipMemcpyHtoAAsync,
+ * hipMemcpyHtoDAsync, hipMemFree, hipMemFreeHost, hipMemGetAddressRange, hipMemGetInfo,
+ * hipMemHostAlloc, hipMemHostGetDevicePointer
+ */
+hipError_t hipMemcpyDtoA(hipArray_t dstArray, size_t dstOffset, hipDeviceptr_t srcDevice,
+                         size_t ByteCount);
+
+/**
+ *  @brief Copies from one 1D array to another.
+ *
+ *  @param[out]  dstArray Destination array
+ *  @param[in]   dstOffset Offset in bytes of destination array
+ *  @param[in]   srcArray Source array
+ *  @param[in]   srcOffset Offset in bytes of source array
+ *  @param[in]   ByteCount Size of memory copy in bytes
+ *
+ *  @return #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ * #hipErrorInvalidValue
+ *
+ *  @see hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc, hipMemAllocHost,
+ * hipMemAllocPitch, hipMemcpy2D, hipMemcpy2DAsync, hipMemcpy2DUnaligned, hipMemcpyAtoA,
+ * hipMemcpyAtoD, hipMemcpyAtoH, hipMemcpyAtoHAsync, hipMemcpyDtoA, hipMemcpyDtoD,
+ * hipMemcpyDtoDAsync, hipMemcpyDtoH, hipMemcpyDtoHAsync, hipMemcpyHtoA, hipMemcpyHtoAAsync,
+ * hipMemcpyHtoDAsync, hipMemFree, hipMemFreeHost, hipMemGetAddressRange, hipMemGetInfo,
+ * hipMemHostAlloc, hipMemHostGetDevicePointer
+ */
+hipError_t hipMemcpyAtoA(hipArray_t dstArray, size_t dstOffset, hipArray_t srcArray,
+                         size_t srcOffset, size_t ByteCount);
+/**
  *  @brief Copy data from Host to Device asynchronously
  *
  *  @param[out]  dst  Data being copy to
@@ -4076,7 +4149,48 @@ hipError_t hipMemcpyDtoHAsync(void* dst, hipDeviceptr_t src, size_t sizeBytes, h
  */
 hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeBytes,
                               hipStream_t stream);
-
+/**
+ * @brief Copies from one 1D array to host memory.
+ *
+ *  @param[out]  dstHost Destination pointer
+ *  @param[in]   srcArray Source array
+ *  @param[in]   srcOffset Offset in bytes of source array
+ *  @param[in]   ByteCount Size of memory copy in bytes
+ *  @param[in]   stream Stream identifier
+ *
+ *  @return #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ * #hipErrorInvalidValue
+ *
+ *  @see hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc, hipMemAllocHost,
+ * hipMemAllocPitch, hipMemcpy2D, hipMemcpy2DAsync, hipMemcpy2DUnaligned, hipMemcpyAtoA,
+ * hipMemcpyAtoD, hipMemcpyAtoH, hipMemcpyAtoHAsync, hipMemcpyDtoA, hipMemcpyDtoD,
+ * hipMemcpyDtoDAsync, hipMemcpyDtoH, hipMemcpyDtoHAsync, hipMemcpyHtoA, hipMemcpyHtoAAsync,
+ * hipMemcpyHtoDAsync, hipMemFree, hipMemFreeHost, hipMemGetAddressRange, hipMemGetInfo,
+ * hipMemHostAlloc, hipMemHostGetDevicePointer
+ */
+hipError_t hipMemcpyAtoHAsync(void* dstHost, hipArray_t srcArray, size_t srcOffset,
+                              size_t ByteCount, hipStream_t stream);
+/**
+ * @brief Copies from host memory to a 1D array.
+ *
+ *  @param[out]  dstArray Destination array
+ *  @param[in]   dstOffset Offset in bytes of destination array
+ *  @param[in]   srcHost Source host pointer
+ *  @param[in]   ByteCount Size of memory copy in bytes
+ *  @param[in]   stream Stream identifier
+ *
+ *  @return #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ * #hipErrorInvalidValue
+ *
+ *  @see hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc, hipMemAllocHost,
+ * hipMemAllocPitch, hipMemcpy2D, hipMemcpy2DAsync, hipMemcpy2DUnaligned, hipMemcpyAtoA,
+ * hipMemcpyAtoD, hipMemcpyAtoH, hipMemcpyAtoHAsync, hipMemcpyDtoA, hipMemcpyDtoD,
+ * hipMemcpyDtoDAsync, hipMemcpyDtoH, hipMemcpyDtoHAsync, hipMemcpyHtoA, hipMemcpyHtoAAsync,
+ * hipMemcpyHtoDAsync, hipMemFree, hipMemFreeHost, hipMemGetAddressRange, hipMemGetInfo,
+ * hipMemHostAlloc, hipMemHostGetDevicePointer
+ */
+hipError_t hipMemcpyHtoAAsync(hipArray_t dstArray, size_t dstOffset, const void* srcHost,
+                              size_t ByteCount, hipStream_t stream);
 /**
  *  @brief Returns a global pointer from a module.
  *  Returns in *dptr and *bytes the pointer and size of the global of name name located in module hmod.
@@ -4119,14 +4233,23 @@ hipError_t hipGetSymbolAddress(void** devPtr, const void* symbol);
 hipError_t hipGetSymbolSize(size_t* size, const void* symbol);
 
 /**
- * @brief Gets the symbol's function address
+ * @brief Gets the pointer of requested HIP driver function.
  *
- * @param[in] symbol symbol name in char*
- * @param[out] pfn output pointer to symbol
- * @param[in] hipVersion version of the function requested. Rocm 6.0.1 = 601
- * @param[in] flags currently there is no flags other than default
- * @param[out] symbolStatus optional enum returned to indicate what part failed
- * @return #hipSuccess, #hipErrorInvalidValue
+ * @param[in] symbol  The Symbol name of the driver function to request.
+ * @param[out] pfn  Output pointer to the requested driver function.
+ * @param[in] hipVersion  The HIP version for the requested driver function symbol.
+ * HIP version is defined as 100*version_major + version_minor. For example, in HIP 6.1, the
+ * hipversion is 601, for the symbol function "hipGetDeviceProperties", the specified hipVersion 601
+ * is greater or equal to the version 600, the symbol function will be handle properly as backend
+ * compatible function.
+ *
+ * @param[in] flags  Currently only default flag is suppported.
+ * @param[out] symbolStatus  Optional enumeration for returned status of searching for symbol driver
+ * function based on the input hipVersion.
+ *
+ * Returns hipSuccess if the returned pfn is addressed to the pointer of found driver function.
+ *
+ * @return #hipSuccess, #hipErrorInvalidValue.
  */
 hipError_t hipGetProcAddress(const char* symbol, void** pfn, int  hipVersion, uint64_t flags,
                              hipDriverProcAddressQueryResult* symbolStatus);
@@ -4137,8 +4260,10 @@ hipError_t hipGetProcAddress(const char* symbol, void** pfn, int  hipVersion, ui
  * the host side. The symbol can be in __constant or device space.
  * Note that the symbol name needs to be encased in the HIP_SYMBOL macro.
  * This also applies to hipMemcpyFromSymbol, hipGetSymbolAddress, and hipGetSymbolSize.
- * For detail usage, see the example at
- * https://github.com/ROCm/HIP/blob/develop/docs/user_guide/hip_porting_guide.md
+ * For detailed usage, see the 
+ * <a href="https://rocm.docs.amd.com/projects/HIP/en/latest/how-to/hip_porting_guide.html#memcpytosymbol">memcpyToSymbol example</a>
+ * in the HIP Porting Guide.
+ * 
  *
  *  @param[out]  symbol  pointer to the device symbole
  *  @param[in]   src  pointer to the source address
@@ -4638,6 +4763,27 @@ hipError_t hipMemcpy2DToArray(hipArray_t dst, size_t wOffset, size_t hOffset, co
 hipError_t hipMemcpy2DToArrayAsync(hipArray_t dst, size_t wOffset, size_t hOffset, const void* src,
                                    size_t spitch, size_t width, size_t height, hipMemcpyKind kind,
                                    hipStream_t stream __dparm(0));
+/**
+ *  @brief Copies data between host and device.
+ *
+ *  @param[in]   dst Destination memory address
+ *  @param[in]   wOffsetDst Destination starting X offset
+ *  @param[in]   hOffsetDst Destination starting Y offset
+ *  @param[in]   src  Source memory address
+ *  @param[in]   wOffsetSrc Source starting X offset
+ *  @param[in]   hOffsetSrc Source starting Y offset (columns in bytes)
+ *  @param[in]   width  Width of matrix transfer (columns in bytes)
+ *  @param[in]   height  Height of matrix transfer (rows)
+ *  @param[in]   kind Type of transfer
+ *
+ *  @returns      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidMemcpyDirection
+ *
+ *  @see hipMemcpy, hipMemcpyToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol,
+ * hipMemcpyAsync
+ */
+hipError_t hipMemcpy2DArrayToArray(hipArray_t dst, size_t wOffsetDst, size_t hOffsetDst,
+                                   hipArray_const_t src, size_t wOffsetSrc, size_t hOffsetSrc,
+                                   size_t width, size_t height, hipMemcpyKind kind);
 /**
  *  @brief Copies data between host and device.
  *
@@ -5774,12 +5920,26 @@ hipError_t hipLaunchKernel(const void* function_address,
 /**
  * @brief Enqueues a host function call in a stream.
  *
- * @param [in] stream - stream to enqueue work to.
- * @param [in] fn - function to call once operations enqueued preceeding are complete.
+ * @param [in] stream - The stream to enqueue work in.
+ * @param [in] fn - The function to call once enqueued preceeding operations are complete.
  * @param [in] userData - User-specified data to be passed to the function.
+ *
  * @returns #hipSuccess, #hipErrorInvalidResourceHandle, #hipErrorInvalidValue,
  * #hipErrorNotSupported
- * @warning : This API is marked as beta, meaning, while this is feature complete,
+ *
+ * The host function to call in this API will be executed after the preceding operations in
+ * the stream are complete. The function is a blocking operation that blocks operations in the
+ * stream that follow it, until the function is returned.
+ * Event synchronization and internal callback functions make sure enqueued operations will
+ * execute in order, in the stream.
+ *
+ * The host function must not make any HIP API calls. The host function is non-reentrant. It must
+ * not perform sychronization with any operation that may depend on other processing execution
+ * but is not enqueued to run earlier in the stream.
+ *
+ * Host functions that are enqueued respectively in different non-blocking streams can run concurrently.
+ *
+ * @warning  This API is marked as beta, meaning, while this is feature complete,
  * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipLaunchHostFunc(hipStream_t stream, hipHostFn_t fn, void* userData);
@@ -9137,7 +9297,7 @@ static inline hipError_t hipMallocFromPoolAsync(
 /**
  * @brief: C++ wrapper for hipMalloc
  * @ingroup Memory
- * Perform automatic type conversion to eliminate need for excessive typecasting (ie void**)
+ * Perform automatic type conversion to eliminate the need for excessive typecasting (ie void**)
  *
  * __HIP_DISABLE_CPP_FUNCTIONS__ macro can be defined to suppress these
  * wrappers. It is useful for applications which need to obtain decltypes of
@@ -9149,6 +9309,21 @@ static inline hipError_t hipMallocFromPoolAsync(
 template <class T>
 static inline hipError_t hipMalloc(T** devPtr, size_t size) {
     return hipMalloc((void**)devPtr, size);
+}
+/**
+ * @brief: C++ wrapper for hipMallocPitch
+ * @ingroup Memory
+ * Perform automatic type conversion to eliminate the need for excessive typecasting (ie void**)
+ *
+ * __HIP_DISABLE_CPP_FUNCTIONS__ macro can be defined to suppress these
+ * wrappers. It is useful for applications which need to obtain decltypes of
+ * HIP runtime APIs.
+ *
+ * @see hipMallocPitch
+ */
+template <class T>
+static inline hipError_t hipMallocPitch(T** devPtr, size_t* pitch, size_t width, size_t height) {
+    return hipMallocPitch((void**)devPtr, pitch, width, height);
 }
 /**
  * @brief: C++ wrapper for hipHostMalloc
