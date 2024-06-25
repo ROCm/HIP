@@ -44,7 +44,7 @@ possible to start a new thread on the device.
 Certain features have restrictions and clarifications. For example, any functions using
 the ``constexpr`` qualifier or the new ``initializer lists``, ``std::move`` or
 ``std::forward`` features are implicitly considered to have the ``__host__`` and
-``__device__`` execution space specifier. Also, constexpr variables that are static
+``__device__`` execution space specifier. Also, ``constexpr`` variables that are static
 members or namespace scoped can be used from both host and device, but only for read
 access. Dereferencing a static ``constexpr`` outside its specified execution space causes
 an error.
@@ -85,7 +85,7 @@ Global functions
 
 Functions that serve as an entry point for device execution are called kernels and are
 specified with the ``__global__`` qualifier. To call a kernel function, use the triple
-chevron operator: ``<<< >>>``. Kernel functions must have a void return type. These
+chevron operator: ``<<< >>>``. Kernel functions must have a ``void`` return type. These
 functions can't:
 
 * have a ``constexpr`` specifier
@@ -100,7 +100,7 @@ Device space memory specifiers
 
 HIP includes device space memory specifiers to indicate whether a variable is allocated
 in host or device memory and how its memory should be allocated. HIP supports the
-``__device__``, ``__shared__``, ``__managed__`` and ``__constant__`` specifiers.
+``__device__``, ``__shared__``, ``__managed__``, and ``__constant__`` specifiers.
 
 The ``__device__`` and ``__constant__`` specifiers define static variables, which are
 allocated within global memory on the HIP devices. The only difference is that
