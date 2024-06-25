@@ -3,6 +3,7 @@ ALUs
 AmgX
 APU
 AQL
+AXPY
 Asynchrony
 backtrace
 Bitcode
@@ -15,6 +16,7 @@ clr
 cuBLASLt
 cuCtx
 cuDNN
+dataflow
 deallocate
 denormal
 dll
@@ -23,6 +25,8 @@ EIGEN
 EIGEN's
 enqueue
 enqueues
+entrypoint
+entrypoints
 enum
 embeded
 extern
@@ -40,12 +44,14 @@ hipother
 HIPRTC
 hcBLAS
 icc
+IILE
 inplace
 Interoperation
 interoperate
 Intrinsics
 intrinsics
 IPC
+IPs
 isa
 Lapack
 latencies
@@ -67,7 +73,10 @@ NDRange
 nonnegative
 Numa
 Nsight
+overindex
+overindexing
 oversubscription
+pragmas
 preconditioners
 prefetched
 preprocessor
@@ -80,13 +89,16 @@ ROCm's
 rocTX
 RTC
 RTTI
+SAXPY
 scalarizing
 sceneries
+shaders
 SIMT
 SPMV
 structs
 SYCL
 syntaxes
+tradeoffs
 typedefs
 WinGDB
 zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz

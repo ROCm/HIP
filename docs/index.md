@@ -64,6 +64,7 @@ On non-AMD platforms, like NVIDIA, HIP provides header files required to support
 
 * [HIP examples](https://github.com/ROCm/HIP-Examples)
 * [HIP test samples](https://github.com/ROCm/hip-tests/tree/develop/samples)
+* [SAXPY tutorial](./tutorial/saxpy)
 
 :::
 

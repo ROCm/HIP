@@ -50,6 +50,7 @@ subtrees:
     title: HIP examples
   - url: https://github.com/ROCm/hip-tests/tree/develop/samples
     title: HIP test samples
+  - file: tutorial/saxpy
 
 - caption: About
   entries:
