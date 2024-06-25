@@ -56,6 +56,8 @@ Warp
   signified by the set of communication primitives at their disposal, as
   discussed in :ref:`warp-cross-lane`.
 
+.. _inherent_thread_hierarchy_block:
+
 Block
   The middle grouping is called a block or thread block. The defining feature
   of a block is that all threads in a block will share an instance of memory
@@ -66,6 +68,8 @@ Block
   block is 3-dimensional as provided by the API. When linearizing thread IDs
   within a block, assume the "fast index" being dimension ``x``, followed by
   the ``y`` and ``z`` dimensions.
+
+.. _inherent_thread_hierarchy_grid:
 
 Grid
   The outermost grouping is called a grid. A grid manifests as a single
