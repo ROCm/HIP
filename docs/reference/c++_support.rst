@@ -7,21 +7,18 @@
 C++ language support
 *******************************************************************************
 
-.. _language_introduction:
-Introduction
-===============================================================================
-
-The ROCm platform enables the power of combined C++ and HIP code. This code is compiled
-with a ``clang`` or ``clang++`` compiler. The official compilers support the HIP
-platform, but for the most up-to-date feature set, use the ``amdclang`` or ``amdclang++``
-components included in the ROCm installation.
+The ROCm platform enables the power of combined C++ and HIP (Heterogeneous-computing
+Interface for Portability) code. This code is compiled with a ``clang`` or ``clang++``
+compiler. The official compilers support the HIP platform, but for the most up-to-date
+feature set, use the ``amdclang`` or ``amdclang++`` components included in the ROCm
+installation.
 
 The source code is compiled according to the ``C++03``, ``C++11``, ``C++14``, ``C++17``,
 and ``C++20`` standards, along with HIP-specific extensions, but is subject to
 restrictions. The key restriction is the lack of standard library support. This is due to
-the Single Instruction/Multiple Data (SIMD) nature of the HIP device, which makes most of
-the standard library implementations not performant or useful. However, essential
-operations are implemented in HIP-specific libraries such as `rocPRIM
+the HIP device's Single Instruction/Multiple Data (SIMD) nature, which makes most of the
+standard library implementations not performant or useful. However, essential operations
+are implemented in HIP-specific libraries such as `rocPRIM
 <https://github.com/ROCm/rocprim>`_, `rocThrust <https://github.com/ROCm/rocthrust/>`_,
 and `hipCUB <https://github.com/ROCm/hipcub/>`_.
 
@@ -38,7 +35,7 @@ C++11 support
 The C++11 standard introduced many new features. These features are supported in HIP
 device code, with some notable omissions. The most significant is the lack of concurrency
 support on the device. This is because the HIP device concurrency model fundamentally
-differs from the C++ model used on the host side. For example, it is not necessary or
+differs from the C++ model used on the host side. For example, it's not necessary or
 possible to start a new thread on the device.
 
 Certain features have restrictions and clarifications. For example, any functions using
@@ -66,7 +63,7 @@ C++20 support
 -------------------------------------------------------------------------------
 
 All C++20 language features are supported, but extensions and restrictions apply. C++20
-introduced coroutines and modules, which fundamentally change how programs are written.
+introduced coroutines and modules, which fundamentally changed how programs are written.
 HIP doesn't support these features. However, ``consteval`` functions can be called from
 host and device, even if specified for host use only.
 
@@ -92,8 +89,8 @@ functions can't:
 * have a parameter of type ``std::initializer_list`` or ``va_list``
 * use an rvalue reference as a parameter.
 
-Kernels can have variadic template parameters, but they can only have one parameter pack,
-which must be the last item in the template parameter list.
+Kernels can have variadic template parameters, but only one parameter pack, which must be
+the last item in the template parameter list.
 
 Device space memory specifiers
 -------------------------------------------------------------------------------
@@ -108,11 +105,11 @@ allocated within global memory on the HIP devices. The only difference is that
 specifier allocates the variable within shared memory, which is available for all threads
 in a block.
 
-The ``__managed__`` variable specifier is used to create global variables that are
-initially undefined and unaddressed within the global symbol table. The HIP runtime
-allocates managed memory and defines the symbol when it loads the device binary. A
-managed variable can be accessed in both device and host code. To register managed
-variables, use ``__hipRegisterManagedVariable`` in an initialization function.
+The ``__managed__`` variable specifier creates global variables that are initially
+undefined and unaddressed within the global symbol table. The HIP runtime allocates
+managed memory and defines the symbol when it loads the device binary. A managed variable
+can be accessed in both device and host code. To register managed variables, use
+``__hipRegisterManagedVariable`` in an initialization function.
 
 It's important to know where a variable is stored because it is only available from
 certain locations. Generally, variables allocated in the host memory are not accessible
@@ -124,7 +121,7 @@ Exception handling
 -------------------------------------------------------------------------------
 
 An important difference between the host and device code is exception handling. In device
-code, this control flow is not available due to the hardware architecture. The device
+code, this control flow isn't available due to the hardware architecture. The device
 code must use return codes to handle errors.
 
 Kernel parameters
@@ -157,8 +154,8 @@ HIP supports Lambdas, which by default work as expected.
 
 Lambdas inherit the execution space specification from the surrounding context. For
 example, in a device, the lambda can only be called from other device functions. This
-also means that lambdas can't be used as a template argument for kernels unless they are
-defined in a device function or a kernel.
+also means that lambdas can't be used as a template argument for kernels unless defined
+in a device function or a kernel.
 
 To help develop versatile software, HIP supports an extension that makes lambdas even
 more powerful. They can have ``__host__`` or ``__device__`` qualifiers. Developers can
