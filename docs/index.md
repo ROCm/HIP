@@ -40,7 +40,7 @@ The CUDA enabled NVIDIA GPUs are supported by HIP. For more information, see [GP
 * {doc}`./how-to/performance_guidelines`
 * [Debugging with HIP](./how-to/debugging)
 * {doc}`./how-to/logging`
-* [Unified Memory](./reference/unified_memory)
+* [Unified Memory](./how-to/unified_memory)
 * {doc}`./how-to/faq`
 
 :::
