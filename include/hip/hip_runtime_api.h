@@ -4995,7 +4995,7 @@ hipError_t hipDeviceDisablePeerAccess(int peerDeviceId);
  * @param [out] psize - Size of allocation
  * @param [in]  dptr- Device Pointer
  *
- * @returns #hipSuccess, #hipErrorInvalidDevicePointer
+ * @returns #hipSuccess, #hipErrorNotFound
  *
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
