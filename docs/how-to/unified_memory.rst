@@ -7,8 +7,6 @@
 Unified Memory
 *******************************************************************************
 
-Introduction
-============
 In conventional architectures, CPUs and GPUs have dedicated memory like Random
 Access Memory (RAM) and Video Random Access Memory (VRAM). This architectural
 design, while effective, can be limiting in terms of memory capacity and
@@ -35,7 +33,7 @@ throughput (data processed by unit time).
 
 .. _unified memory system requirements:
 
-System Requirements
+System requirements
 ===================
 Unified memory is supported on Linux by all modern AMD GPUs from the Vega
 series onward. Unified memory management can be achieved with managed memory
@@ -75,38 +73,43 @@ the next section.
 ❌: **Unsupported**
 
 :sup:`1` Works only with ``XNACK=1``. First GPU access causes recoverable
-page-fault.
+page-fault. For more details, visit
+`GPU memory <https://rocm.docs.amd.com/en/latest/conceptual/gpu-memory.html#xnack>`_.
 
 .. _unified memory programming models:
 
-Unified Memory Programming Models
+Unified memory programming models
 =================================
 
-Showcasing various unified memory programming models, their availability
-depends on your architecture. For further details, visit :ref:`unified memory
+Showcasing various unified memory programming models, the model availability
+depends on your architecture. For more information, see :ref:`unified memory
 system requirements` and :ref:`checking unified memory management support`.
 
-- **HIP Managed Memory Allocation API**:
-The ``hipMallocManaged()`` is a dynamic memory allocator that is available on
-all GPUs with unified memory support. For more details, visit :doc:`reference
-page <reference/unified_memory_reference>`.
+- **HIP managed memory allocation API**:
 
-- **HIP Managed Variables**:
-The ``__managed__`` declaration specifier, which serves as its counterpart, is
-supported on all modern AMD cards and can be utilized for static allocation.
+  The ``hipMallocManaged()`` is a dynamic memory allocator available on
+  all GPUs with unified memory support. For more details, visit
+  :ref:`unified_memory_reference`.
 
-- **System Allocation API**:
-Starting with the MI300 series, the ``malloc()`` system allocator allows you
-to reserve unified memory. The system allocator is more versatile, and it
-offers an easy transition from a CPU written C++ code to a HIP code as the same
-system allocation API is used.
+- **HIP managed variables**:
+
+  The ``__managed__`` declaration specifier, which serves as its counterpart,
+  is supported on all modern AMD cards and can be utilized for static
+  allocation.
+
+- **System allocation API**:
+
+  Starting with the AMD MI300 series, the ``malloc()`` system allocator allows
+  you to reserve unified memory. The system allocator is more versatile and
+  offers an easy transition from a CPU written C++ code to a HIP code as the
+  same system allocation API is used.
 
 .. _checking unified memory management support:
 
-Checking Unified Memory Management Support
+Checking unified memory management support
 ------------------------------------------
-Some device attribute can offer information about which :ref:`unified memory
-programming models` are supported. The attribute value is an integer 1 if the
+Some device attributes can offer information about which :ref:`unified memory
+programming models` are supported. The attribute value is 1 if the
 functionality is supported, and 0 if it is not supported.
 
 .. list-table:: Device attributes for unified memory management
@@ -142,7 +145,7 @@ The following examples show how to use device attributes:
         return 0;
     }
 
-Example for Unified Memory Management
+Example for unified memory management
 -------------------------------------
 
 The following example shows how to use unified memory management with
@@ -321,46 +324,50 @@ Memory Management example is presented in the last tab.
 
 .. _using unified memory management:
 
-Using Unified Memory Management (UMM)
+Using unified memory management (UMM)
 =====================================
-Unified Memory Management (UMM) is a feature that can simplify the complexities
+
+Unified memory management (UMM) is a feature that can simplify the complexities
 of memory management in GPU computing. It is particularly useful in
 heterogeneous computing environments with heavy memory usage with both a CPU
 and a GPU, which would require large memory transfers. Here are some areas
 where UMM can be beneficial:
 
 - **Simplification of Memory Management**:
-UMM can help to simplify the complexities of memory management. This can make
-it easier for developers to write code without worrying about memory allocation
-and deallocation details.
+
+  UMM can help to simplify the complexities of memory management. This can make
+  it easier for developers to write code without worrying about memory
+  allocation and deallocation details.
 
 - **Data Migration**:
-UMM allows for efficient data migration between the host (CPU) and the device
-(GPU). This can be particularly useful for applications that need to move data
-back and forth between the device and host.
+
+  UMM allows for efficient data migration between the host (CPU) and the device
+  (GPU). This can be particularly useful for applications that need to move
+  data back and forth between the device and host.
 
 - **Improved Programming Productivity**:
-As a positive side effect, the use of UMM can reduce the lines of code,
-thereby improving programming productivity.
+
+  As a positive side effect, UMM can reduce the lines of code, thereby
+  improving programming productivity.
 
 In HIP, pinned memory allocations are coherent by default. Pinned memory is
 host memory mapped into the address space of all GPUs, meaning that the pointer
 can be used on both host and device. Using pinned memory instead of pageable
 memory on the host can improve bandwidth.
 
-While UMM can provide numerous benefits, it is important to be aware of the
+While UMM can provide numerous benefits, it's important to be aware of the
 potential performance overhead associated with UMM. You must thoroughly test
-and profile your code to ensure it is the most suitable choice for your use
+and profile your code to ensure it's the most suitable choice for your use
 case.
 
-.. _unified memory compiler hints:
+.. _unified memory runtime hints:
 
-Unified Memory Compiler Hints for the Better Performance
-========================================================
+Unified memory HIP runtime hints for the better performance
+===========================================================
 
-Unified memory compiler hints can help to improve the performance of your code,
-if you know the ability of your code and the infrastructure that you use. Some
-hint techniques are presented in this section.
+Unified memory HIP runtime hints can help improve the performance of your code if
+you know your code's ability and infrastructure. Some hint techniques are
+presented in this section.
 
 The hint functions can set actions on a selected device, which can be
 identified by ``hipGetDeviceProperties(&prop, device_id)``. There are two
@@ -369,13 +376,14 @@ special ``device_id`` values:
 - ``hipCpuDeviceId`` = -1 means that the advised device is the CPU.
 - ``hipInvalidDeviceId`` = -2 means that the device is invalid.
 
-For the best performance you can profile your application to optimize the
-utilization of compiler hits.
+For the best performance, profile your application to optimize the
+utilization of HIP runtime hints.
 
-Data Prefetching
+Data prefetching
 ----------------
+
 Data prefetching is a technique used to improve the performance of your
-application by moving data closer to the processing unit before it is actually
+application by moving data closer to the processing unit before it's actually
 needed.
 
 .. code-block:: cpp
@@ -429,10 +437,11 @@ needed.
     }
 
 Remember to check the return status of ``hipMemPrefetchAsync()`` to ensure that
-the prefetch operations complete successfully!
+the prefetch operations are completed successfully.
 
-Memory Advise
+Memory advice
 -------------
+
 The effectiveness of ``hipMemAdvise()`` comes from its ability to inform the
 runtime system of the developer's intentions regarding memory usage. When the
 runtime system has knowledge of the expected memory access patterns, it can
@@ -441,10 +450,10 @@ efficient execution of the application. However, the actual impact on
 performance can vary based on the specific use case and the hardware
 architecture.
 
-For the description of ``hipMemAdvise()`` and the detailed list of advises,
-visit the :doc:`reference page <reference/unified_memory_reference>`.
+For the description of ``hipMemAdvise()`` and the detailed list of advice,
+visit the :ref:`unified_memory_reference`.
 
-Here is the updated version of the example above with memory advises.
+Here is the updated version of the example above with memory advice.
 
 .. code-block:: cpp
     :emphasize-lines: 17-26
@@ -460,17 +469,17 @@ Here is the updated version of the example above with memory advises.
     int main() {
         int *a, *b, *c;
 
-        // Allocate memory for a, b and c that is accessible to both device and host codes.
+        // Allocate memory for a, b, and c accessible to both device and host codes.
         hipMallocManaged(&a, sizeof(*a));
         hipMallocManaged(&b, sizeof(*b));
         hipMallocManaged(&c, sizeof(*c));
 
-        // Set memory advise for a, b, and c to be accessed by the CPU.
+        // Set memory advice for a, b, and c to be accessed by the CPU.
         hipMemAdvise(a, sizeof(*a), hipMemAdviseSetPreferredLocation, hipCpuDeviceId);
         hipMemAdvise(b, sizeof(*b), hipMemAdviseSetPreferredLocation, hipCpuDeviceId);
         hipMemAdvise(c, sizeof(*c), hipMemAdviseSetPreferredLocation, hipCpuDeviceId);
 
-        // Additionally, set memory advise for a, b, and c to be read mostly from the device 0.
+        // Additionally, set memory advice for a, b, and c to be read mostly from the device 0.
         constexpr int device = 0;
         hipMemAdvise(a, sizeof(*a), hipMemAdviseSetReadMostly, device);
         hipMemAdvise(b, sizeof(*b), hipMemAdviseSetReadMostly, device);
@@ -498,8 +507,9 @@ Here is the updated version of the example above with memory advises.
     }
 
 
-Memory Range attributes
+Memory range attributes
 -----------------------
+
 Memory Range attributes allow you to query attributes of a given memory range.
 
 The ``hipMemRangeGetAttribute()`` is added to the example to query the
@@ -507,7 +517,7 @@ The ``hipMemRangeGetAttribute()`` is added to the example to query the
 ``a``. The result is stored in ``attributeValue`` and then printed out.
 
 For more details, visit the
-:doc:`reference page <reference/unified_memory_reference>`.
+:ref:`unified_memory_reference`.
 
 .. code-block:: cpp
     :emphasize-lines: 29-34
@@ -559,72 +569,9 @@ For more details, visit the
         return 0;
     }
 
-Asynchronously Attach Memory to a Stream
+Asynchronously attach memory to a stream
 ----------------------------------------
 
-The ``hipStreamAttachMemAsync`` function is used to asynchronously attach
-memory to a stream, which can help with concurrent execution when using
-streams.
+The ``hipStreamAttachMemAsync`` function would be able to asynchronously attach memory to a stream, which can help concurrent execution when using streams.
 
-In the example, a stream is created by using ``hipStreamCreate()`` and then
-the managed memory is attached to the stream using
-``hipStreamAttachMemAsync()``. The ``hipMemAttachGlobal`` flag is used to
-indicate that the memory can be accessed from any stream on any device.
-The kernel launch and synchronization are now done on this stream.
-Using streams and attaching memory to them can help with overlapping data
-transfers and computation.
-
-For more details and description of flags, visit
-:doc:`reference page <reference/unified_memory_reference>`.
-
-.. code-block:: cpp
-    :emphasize-lines: 21-24
-
-    #include <hip/hip_runtime.h>
-    #include <iostream>
-
-    // Addition of two values.
-    __global__ void add(int *a, int *b, int *c) {
-        *c = *a + *b;
-    }
-
-    int main() {
-        int *a, *b, *c;
-        hipStream_t stream;
-
-        // Create a stream.
-        hipStreamCreate(&stream);
-
-        // Allocate memory for a, b and c that is accessible to both device and host codes.
-        hipMallocManaged(&a, sizeof(*a));
-        hipMallocManaged(&b, sizeof(*b));
-        hipMallocManaged(&c, sizeof(*c));
-
-        // Attach memory to the stream asynchronously.
-        hipStreamAttachMemAsync(stream, a, sizeof(*a), hipMemAttachGlobal);
-        hipStreamAttachMemAsync(stream, b, sizeof(*b), hipMemAttachGlobal);
-        hipStreamAttachMemAsync(stream, c, sizeof(*c), hipMemAttachGlobal);
-
-        // Setup input values.
-        *a = 1;
-        *b = 2;
-
-        // Launch add() kernel on GPU on the created stream.
-        hipLaunchKernelGGL(add, dim3(1), dim3(1), 0, stream, a, b, c);
-
-        // Wait for stream to finish before accessing on host.
-        hipStreamSynchronize(stream);
-
-        // Prints the result.
-        std::cout << *a << " + " << *b << " = " << *c << std::endl;
-
-        // Cleanup allocated memory.
-        hipFree(a);
-        hipFree(b);
-        hipFree(c);
-
-        // Destroy the stream.
-        hipStreamDestroy(stream);
-
-        return 0;
-    }
+Currently, this function is a no-operation (NOP) function on AMD GPUs. It simply returns success after the runtime memory validation passed. This function is necessary on Microsoft Windows, and UMM is not supported on this operating system with AMD GPUs at the moment.
