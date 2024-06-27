@@ -45,7 +45,7 @@ On non-AMD platforms, like NVIDIA, HIP provides header files required to support
 * {doc}`./how-to/performance_guidelines`
 * [Debugging with HIP](./how-to/debugging)
 * {doc}`./how-to/logging`
-* [Unified Memory](./reference/unified_memory)
+* [Unified Memory](./how-to/unified_memory)
 * {doc}`./how-to/faq`
 
 :::
