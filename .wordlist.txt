@@ -123,6 +123,7 @@ scalarizing
 sceneries
 shaders
 SIMT
+SOMA
 SPMV
 structs
 SYCL
