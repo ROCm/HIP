@@ -3,13 +3,11 @@
                 how to use it in AMD HIP.
   :keywords: AMD, ROCm, HIP, CUDA, unified memory, unified, memory, UM, APU
 
+.. _unified_memory_reference:
+
 *******************************************************************************
 HIP Managed Memory Allocation API
 *******************************************************************************
 
 .. doxygengroup:: MemoryM
    :content-only:
-
-.. doxygenfunction:: hipMemoryAdvise
-
-.. doxygenfunction:: hipMemRangeAttribute
