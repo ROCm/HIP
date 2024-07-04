@@ -2215,7 +2215,7 @@ hipError_t hipIpcGetEventHandle(hipIpcEventHandle_t* handle, hipEvent_t event);
 /**
  * @brief Opens an interprocess event handles.
  *
- * Opens an interprocess event handle exported from another process with cudaIpcGetEventHandle. The returned
+ * Opens an interprocess event handle exported from another process with hipIpcGetEventHandle. The returned
  * hipEvent_t behaves like a locally created event with the hipEventDisableTiming flag specified. This event
  * need be freed with hipEventDestroy. Operations on the imported event after the exported event has been freed
  * with hipEventDestroy will result in undefined behavior. If the function is called within the same process where
@@ -2845,7 +2845,6 @@ hipError_t hipEventDestroy(hipEvent_t event);
  *  If hipEventRecord() has not been called on @p event, this function returns #hipSuccess when no
  *  event is captured.
  *
- *  This function needs to support hipEventBlockingSync parameter.
  *
  *  @param[in] event Event on which to wait.
  *
@@ -4999,7 +4998,7 @@ hipError_t hipDeviceDisablePeerAccess(int peerDeviceId);
  * @param [out] psize - Size of allocation
  * @param [in]  dptr- Device Pointer
  *
- * @returns #hipSuccess, #hipErrorInvalidDevicePointer
+ * @returns #hipSuccess, #hipErrorNotFound
  *
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice

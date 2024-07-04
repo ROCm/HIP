@@ -2,7 +2,7 @@
 Install HIP
 *******************************************
 
-HIP can be installed on AMD (ROCm with HIP-Clang) and NVIDIA (CUDA with nvcc) platforms.
+HIP can be installed on AMD (ROCm with HIP-Clang) and NVIDIA (CUDA with NVCC) platforms.
 
 Note: The version definition for the HIP runtime is different from CUDA. On an AMD platform, the
 ``hipRuntimeGerVersion`` function returns the HIP runtime version; on an NVIDIA platform, this function
@@ -43,12 +43,15 @@ Installation
 
       By default, HIP is installed into ``/opt/rocm/hip``.
 
+      .. note::
+         There is no autodetection for the HIP installation. If you choose to install it somewhere other than the default location, you must set the ``HIP_PATH`` environment variable as explained in `Build HIP from source <./build.html>`_.
+
    .. tab-item:: NVIDIA
       :sync: nvidia
 
       #. Install the NVIDIA driver.
 
-         .. code:: shell
+         .. code-block:: shell
 
             sudo apt-get install ubuntu-drivers-common && sudo ubuntu-drivers autoinstall
             sudo reboot
@@ -59,7 +62,7 @@ Installation
       #. Install the ``hip-runtime-nvidia`` and ``hip-dev`` packages. This installs the CUDA SDK and HIP
          porting layer.
 
-         .. code:: shell
+         .. code-block:: shell
 
             apt-get install hip-runtime-nvidia hip-dev
 
@@ -74,6 +77,6 @@ Verify your installation
 
 Run ``hipconfig`` in your installation path.
 
-.. code:: shell
+.. code-block:: shell
 
    /opt/rocm/bin/hipconfig --full
