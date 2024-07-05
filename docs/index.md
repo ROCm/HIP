@@ -64,6 +64,7 @@ On non-AMD platforms, like NVIDIA, HIP provides header files required to support
 
 :::{grid-item-card} Tutorial
 
+* [HIP basic examples](https://github.com/ROCm/rocm-examples/tree/develop/HIP-Basic)
 * [HIP examples](https://github.com/ROCm/HIP-Examples)
 * [HIP test samples](https://github.com/ROCm/hip-tests/tree/develop/samples)
 * [SAXPY tutorial](./tutorial/saxpy)

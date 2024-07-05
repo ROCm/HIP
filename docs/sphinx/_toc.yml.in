@@ -50,6 +50,8 @@ subtrees:
 
 - caption: Tutorials
   entries:
+  - url: https://github.com/ROCm/rocm-examples/tree/develop/HIP-Basic
+    title: HIP basic examples
   - url: https://github.com/ROCm/HIP-Examples
     title: HIP examples
   - url: https://github.com/ROCm/hip-tests/tree/develop/samples
