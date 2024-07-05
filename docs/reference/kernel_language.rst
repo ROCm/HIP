@@ -51,8 +51,7 @@ Supported ``__global__`` functions are:
   * Run on the device
   * Called (launched) from the host
 
-HIP ``__global__`` functions must have a ``void`` return type. The first parameter in a HIP ``__global__``
-function must have the type ``hipLaunchParm``. Refer to :ref:`kernel-launch-example` to see usage.
+HIP ``__global__`` functions must have a ``void`` return type.
 
 HIP doesn't support dynamic-parallelism, which means that you can't call ``__global__`` functions from
 the device.
@@ -105,7 +104,7 @@ You can include your kernel arguments after these parameters.
 .. code-block:: cpp
 
   // Example hipLaunchKernelGGL pseudocode:
-  __global__ MyKernel(hipLaunchParm lp, float *A, float *B, float *C, size_t N)
+  __global__ MyKernel(float *A, float *B, float *C, size_t N)
   {
   ...
   }
@@ -1441,7 +1440,38 @@ code.
 Surface functions
 ===============================================
 
-Surface functions are not supported.
+The following surface functions are supported in HIP:
+
+.. doxygengroup:: Surface
+   :content-only:
+
+.. doxygenfunction:: surf1Dread
+
+.. doxygenfunction:: surf1DWrite
+
+.. doxygenfunction:: surf2Dread
+
+.. doxygenfunction:: surf2DWrite
+
+.. doxygenfunction:: surf3Dread
+
+.. doxygenfunction:: surf3Dwrite
+
+.. doxygenfunction:: surf1DLayeredread
+
+.. doxygenfunction:: surf1DLayeredWrite
+
+.. doxygenfunction:: surf2DLayeredread
+
+.. doxygenfunction:: surf2DLayeredWrite
+
+.. doxygenfunction:: surfCubemapread
+
+.. doxygenfunction:: surfCubemapwrite
+
+.. doxygenfunction:: surfCubemapLayeredread
+
+.. doxygenfunction:: surfCubemapLayeredwrite
 
 Timer functions
 ===============================================
@@ -1473,6 +1503,8 @@ To read a high-resolution timer from the device, HIP provides the following buil
 
   Where ``hipDeviceAttributeWallClockRate`` is a device attribute. Note that wall clock frequency is a
   per-device attribute.
+
+  Note that ``clock()`` and ``clock64()`` do not work properly on AMD RDNA3 (GFX11) graphic processors.
 
 Atomic functions
 ===============================================
