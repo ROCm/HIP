@@ -70,7 +70,7 @@ various functional units within a multiprocessor. This can be achieved by
 ensuring a sufficient number of resident warps, as at every instruction issue
 time, a warp scheduler selects an instruction that is ready to execute. This
 instruction can be another independent instruction of the same warp, exploiting
-:ref:`instruction optimization`, or more commonly an instruction of another warp, 
+:ref:`instruction optimization`, or more commonly an instruction of another warp,
 exploiting thread-level parallelism.
 
 In comparison, device-level optimization focuses on the device as a whole,
