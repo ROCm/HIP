@@ -53,8 +53,8 @@ On non-AMD platforms, like NVIDIA, HIP provides header files required to support
 :::{grid-item-card} Reference
 
 * {doc}`/doxygen/html/index`
-* [C++ language extensions](./reference/kernel_language)
-* [Comparing Syntax for different APIs](./reference/terms)
+* [C++ Language Extensions](./reference/cpp_language_extensions)
+* [Comparing Syntax for Different APIs](./reference/terms)
 * [HSA Runtime API for ROCm](./reference/virtual_rocr)
 * [HIP Managed Memory Allocation API](./reference/unified_memory_reference)
 * [List of deprecated APIs](./reference/deprecated_api_list)
