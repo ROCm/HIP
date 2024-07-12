@@ -18,10 +18,6 @@ RDNA & CDNA Architecture Summary
 ================================
 
 Most GPU architectures, like RDNA and CDNA, have a hierarchical structure.
-The innermost piece is a SIMD-enabled vector Arithmetic Logical Unit (ALU). 
-In addition to the vector ALUs, most recent GPUs also house matrix ALUs for 
-accelerating algorithms involving matrix multiply-accumulate operations. 
-AMD GPUs also contain scalar ALUs, that can be used to reduce the load on the 
 The innermost piece is a SIMD-enabled vector Arithmetic Logical Unit (ALU).
 In addition to the vector ALUs, most recent GPUs also house matrix ALUs for
 accelerating algorithms involving matrix multiply-accumulate operations.
