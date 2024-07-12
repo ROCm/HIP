@@ -87,9 +87,9 @@ of. It relaxes some restrictions of the :ref:`inherent_thread_model`
 imposed by the strict 1:1 mapping of architectural details to the programming
 model.
 
-The rich set of APIs introduced by Cooperative Groups allow the programmer to 
-define their own set of thread groups which may fit their user-cases better than 
-those defined by the hardware. The set of implicit groups by kernel launch 
+The rich set of APIs introduced by Cooperative Groups allow the programmer to
+define their own set of thread groups which may fit their user-cases better than
+those defined by the hardware. The set of implicit groups by kernel launch
 parameters are still available.
 
 The thread hierarchy abstraction of Cooperative Groups manifest as depicted in
@@ -106,7 +106,7 @@ The thread hierarchy abstraction of Cooperative Groups manifest as depicted in
 
   Cooperative group thread hierarchy.
 
-Multi Grid 
+Multi Grid
   An abstraction of potentially multiple simultaneous launches of
   the same kernel over multiple devices. Grids inside a multi device kernel
   launch need not be of uniform size, thus allowing taking into account
@@ -114,7 +114,7 @@ Multi Grid
 
   .. deprecated:: 5.0
 
-Grid 
+Grid
   Same as the :ref:`inherent_thread_model` Grid entity. The ability to
   synchronize over a grid requires the kernel to be launched using the
   Cooperative Groups API.
