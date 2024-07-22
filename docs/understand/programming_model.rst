@@ -34,7 +34,7 @@ vector ALU by performing operations which are uniform for all threads of a warp.
 
 A set of ALUs, together with register files, caches and shared memory, comprise
 a larger block, often referred to as a Compute Unit (CU) as described in 
-:ref:`<./hardware_impementation>`, or as streaming multiprocessor (SM).
+:ref:`hardware_implementation`, or as streaming multiprocessor (SM).
 
 .. _rdna3_cu:
 
