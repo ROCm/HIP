@@ -68,6 +68,7 @@ ltrace
 makefile
 Malloc
 malloc
+MALU
 multicore
 multigrid
 multithreading
@@ -77,7 +78,7 @@ nonnegative
 NOP
 Numa
 Nsight
-omintrace
+omnitrace
 overindex
 overindexing
 oversubscription
