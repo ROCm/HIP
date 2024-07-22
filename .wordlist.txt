@@ -40,12 +40,14 @@ HIP's
 hipcc
 hipexamine
 hipified
+HIPify
 hipother
 HIPRTC
 hcBLAS
 icc
 IILE
 iGPU
+inlined
 inplace
 Interoperation
 interoperate
@@ -75,6 +77,7 @@ nonnegative
 NOP
 Numa
 Nsight
+omintrace
 overindex
 overindexing
 oversubscription
@@ -82,12 +85,14 @@ pragmas
 preconditioners
 prefetched
 preprocessor
+profilers
 PTX
 PyHIP
 queryable
 prefetching
 representable
 RMW
+rocgdb
 ROCm's
 rocTX
 RTC
