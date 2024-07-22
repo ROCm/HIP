@@ -12,13 +12,7 @@ For HIP supported AMD GPUs on multiple operating systems, see:
 * [Linux system requirements](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html#supported-gpus)
 * [Microsoft Windows system requirements](https://rocm.docs.amd.com/projects/install-on-windows/en/latest/reference/system-requirements.html#windows-supported-gpus)
 
-The CUDA enabled NVIDIA GPUs are supported by HIP. For more information, see [GPU Compute Capability](https://developer.nvidia.com/cuda-gpus).
-
-On the AMD ROCm platform, HIP provides header files and runtime library built on top of HIP-Clang compiler in the repository [Common Language Runtime (CLR)](./understand/amd_clr), which contains source codes for AMD's compute languages runtimes as follows,
-
-On non-AMD platforms, like NVIDIA, HIP provides header files required to support non-AMD specific back-end implementation in the repository ['hipother'](https://github.com/ROCm/hipother), which translates from the HIP runtime APIs to CUDA runtime APIs.
-
-## Overview
+The HIP documentation is organized as follows:
 
 ::::{grid} 1 1 2 2
 :gutter: 3
