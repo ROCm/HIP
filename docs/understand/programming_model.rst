@@ -21,7 +21,6 @@ A basic understanding of the underlying device architecture helps you
 make efficient use of HIP and general purpose graphics processing unit (GPGPU)
 programming in general.
 
-
 RDNA & CDNA Architecture Summary
 ================================
 
