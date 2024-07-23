@@ -57,7 +57,7 @@ subtrees:
   - url: https://github.com/ROCm/hip-tests/tree/develop/samples
     title: HIP test samples
   - file: tutorial/saxpy
-  - file: tutorial/reduction.md
+  - file: tutorial/reduction
 
 - caption: About
   entries:
