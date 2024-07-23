@@ -833,7 +833,6 @@ INPUT                  = mainpage.md \
                          ../../include/hip \
                          ../../../clr/hipamd/include/hip/amd_detail/amd_hip_gl_interop.h \
                          ../../../clr/hipamd/include/hip/amd_detail/amd_surface_functions.h \
-                         ../../../llvm-project/clang/lib/Headers/__clang_hip_math.h \
                          ../../../ROCR-Runtime/src/inc/hsa_ext_amd.h
 
 # This tag can be used to specify the character encoding of the source files
