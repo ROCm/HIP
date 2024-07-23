@@ -95,8 +95,8 @@ Analyze at the signature of the offloaded function:
   shaders, or just shaders for short.
 - Arguments are taken by value and all arguments shall be
   `TriviallyCopyable <https://en.cppreference.com/w/cpp/named_req/TriviallyCopyable>`_,
-  meaning they should be `memcpy`-friendly. _(Imagine if they had custom copy
-  constructors. Where would that logic execute? On the host? On the device?)_
+  meaning they should be `memcpy`-friendly. (Imagine if they had custom copy
+  constructors. Where would that logic execute? On the host? On the device?)
   Pointer arguments are pointers to device memory, one typically backed by
   VRAM.
 - We said that we'll be computing :math:`a\cdot x+y=z`, however we only pass
@@ -131,8 +131,8 @@ Look at how the kernel is implemented.
       }
   }
 
-- The unique linear index identifying the thread is computed from the :ref:`block <inherent_thread_hierarchy_block>` id
-  the thread is a member of, the :ref:`block <inherent_thread_hierarchy_block>`'s size and the id of the thread within
+- The unique linear index identifying the thread is computed from the :ref:`block <inherent_thread_hierarchy_block>` ID
+  the thread is a member of, the :ref:`block <inherent_thread_hierarchy_block>`'s size and the ID of the thread within
   the :ref:`block <inherent_thread_hierarchy_block>`.
 - A check is made to avoid overindexing the input.
 - The useful part of the computation is carried out.
