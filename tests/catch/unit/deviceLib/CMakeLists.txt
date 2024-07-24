@@ -11,6 +11,13 @@ set(TEST_SRC
     ldg.cc
 )
 
+# Due to a bug in LLVM toolchain, -O1 is required. Without we get the following link error:
+# InvalidBitWidth: Invalid bit width in input: 128 
+# https://github.com/CHIP-SPV/chipStar/issues/885 
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+  add_compile_options(-O1)
+endif()
+
 add_subdirectory(SinglePrecisionIntrinsics)
 add_subdirectory(DoublePrecisionIntrinsics)
 add_subdirectory(IntegerIntrinsics)
