@@ -7,11 +7,6 @@ HIP provides a simple marshalling language to access either the AMD ROCM back-en
 or NVIDIA CUDA back-end, to build and run application kernels. For more information,
 see [Introduction to HIP](./understand/introduction_to_hip).
 
-For HIP supported AMD GPUs on multiple operating systems, see:
-
-* [Linux system requirements](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html#supported-gpus)
-* [Microsoft Windows system requirements](https://rocm.docs.amd.com/projects/install-on-windows/en/latest/reference/system-requirements.html#windows-supported-gpus)
-
 The HIP documentation is organized as follows:
 
 ::::{grid} 1 1 2 2
@@ -19,6 +14,7 @@ The HIP documentation is organized as follows:
 
 :::{grid-item-card} Install
 
+* [Linux system requirements](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html#supported-gpus)
 * [Installing HIP](./install/install)
 * [Building HIP from source](./install/build)
 
