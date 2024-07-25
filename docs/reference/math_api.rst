@@ -5,7 +5,7 @@
 .. _math_api_reference:
 
 ********************************************************************************
-HIP MATH API
+HIP math API
 ********************************************************************************
 
 HIP-Clang supports a set of math operations that are callable from the device. HIP supports most of the device functions supported by NVIDIA CUDA. These are described in the following sections.
