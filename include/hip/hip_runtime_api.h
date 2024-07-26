@@ -389,6 +389,8 @@ typedef enum __HIP_NODISCARD hipError_t {
                                            ///< not performed because it included changes which
                                            ///< violated constraintsspecific to instantiated graph
                                            ///< update.
+    hipErrorInvalidChannelDescriptor = 911,  ///< Invalid channel descriptor.
+    hipErrorInvalidTexture = 912,  ///< Invalid texture.
     hipErrorUnknown = 999,  ///< Unknown error.
     // HSA Runtime Error Codes start here.
     hipErrorRuntimeMemory = 1052,  ///< HSA runtime memory call returned error.  Typically not seen
