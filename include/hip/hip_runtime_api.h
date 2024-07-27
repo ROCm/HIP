@@ -1325,7 +1325,13 @@ typedef struct dim3 {
   uint32_t z;  ///< z
 #ifdef __cplusplus
   constexpr __host__ __device__ dim3(uint32_t _x = 1, uint32_t _y = 1, uint32_t _z = 1)
-      : x(_x), y(_y), z(_z) {};
+      : x(_x), y(_y), z(_z) {}
+#if defined(__clang__) && defined(__HIP__)
+  __host__ __device__ dim3(const __hip_builtin_threadIdx_t& idx) : x(idx.x), y(idx.y), z(idx.z) {}
+  __host__ __device__ dim3(const __hip_builtin_blockIdx_t& idx) : x(idx.x), y(idx.y), z(idx.z) {}
+  __host__ __device__ dim3(const __hip_builtin_blockDim_t& dim) : x(dim.x), y(dim.y), z(dim.z) {}
+  __host__ __device__ dim3(const __hip_builtin_gridDim_t& dim) : x(dim.x), y(dim.y), z(dim.z) {}
+#endif
 #endif
 } dim3;
 /**
