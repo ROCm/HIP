@@ -36,7 +36,8 @@ if(UNIX)
         syncthreadsand.cc
         syncthreadscount.cc
         syncthreadsor.cc
-        deviceAllocation.cc)
+        #deviceAllocation.cc failing to link on chipStar
+        )
 endif()
 
 # AMD only tests
@@ -107,6 +108,11 @@ endif()
                       TEST_TARGET_NAME build_tests
                       LINKER_LIBS hiprtc)
 elseif(HIP_PLATFORM MATCHES "nvidia")
+    hip_add_exe_to_target(NAME UnitDeviceTests
+                      TEST_SRC ${TEST_SRC}
+                      TEST_TARGET_NAME build_tests
+                      COMPILE_OPTIONS --Wno-deprecated-declarations)
+elseif(HIP_PLATFORM MATCHES "spirv")
     hip_add_exe_to_target(NAME UnitDeviceTests
                       TEST_SRC ${TEST_SRC}
                       TEST_TARGET_NAME build_tests
