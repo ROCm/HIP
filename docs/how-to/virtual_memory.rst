@@ -9,7 +9,7 @@
 HIP Virtual Memory Management
 *****************************
 
-Managing memory management is important when creating high-performance applications in the HIP ecosystem. Both allocating and copying memory can result in bottlenecks, which can significantly impact performance.
+Memory management is important when creating high-performance applications in the HIP ecosystem. Both allocating and copying memory can result in bottlenecks, which can significantly impact performance.
 
 Global memory allocation in HIP uses the C language style allocation function. This works fine for simple cases but can cause problems if your memory needs change. If you need to increase the size of your memory, you must allocate a second larger buffer and copy the data to it before you can free the original buffer. This increases overall memory usage and causes unnecessary ``memcpy`` calls. Another solution is to allocate a larger buffer than you initially need. However, this isn't an efficient way to handle resources and doesn't solve the issue of reallocation when the extra buffer runs out.
 
@@ -19,7 +19,7 @@ Virtual memory management solves these memory management problems. It helps to r
 Memory Allocation
 =================
 
-Previously, you called the ``hipMalloc`` function to allocate a chunk of memory on the device. ``hipMalloc`` returns a pointer, which is immediately usable after the call. When using virtual memory, this is separated into multiple steps using the ``hipMemCreate``, ``hipMemAddressReserve``, ``hipMemMap``, and ``hipMemSetAccess`` functions. This guide explains what these functions do and how you can use them for your needs.
+Standard memory allocation uses the ``hipMalloc`` function to allocate a block of memory on the device. However, when using virtual memory, this process is separated into multiple steps using the ``hipMemCreate``, ``hipMemAddressReserve``, ``hipMemMap``, and ``hipMemSetAccess`` functions. This guide explains what these functions do and how you can use them for virtual memory management.
 
 Allocate Physical Memory
 ------------------------
@@ -51,7 +51,7 @@ After you have acquired an allocation of physical memory, you must map it before
 Set Memory Access
 -----------------
 
-Finally, use the ``hipMemSetAccess`` function to enable memory access. It accepts the pointer to the virtual memory, the size, and a ``hipMemAccessDesc`` descriptor as parameters.
+Finally, use the ``hipMemSetAccess`` function to enable memory access. It accepts the pointer to the virtual memory, the size, and a ``hipMemAccessDesc`` descriptor as parameters. In a multi-GPU environment, you can map the device memory of one GPU to another. This feature also works with the traditional memory management system, but isn't as scalable as with virtual memory. When memory is allocated with ``hipMalloc``, ``hipDeviceEnablePeerAccess`` is used to enable peer access. This function enables access between two devices, but it means that every call to ``hipMalloc`` takes more time to perform the checks and the mapping between the devices. When using virtual memory management, peer access is enabled by ``hipMemSetAccess``, which provides a finer level of control over what is shared. This has no performance impact on memory allocation and gives you more control over what memory buffers are shared with which devices.
 
 .. code-block:: cpp
 
@@ -66,7 +66,7 @@ At this point the memory is allocated, mapped, and ready for use. You can read a
 Free Virtual Memory
 -------------------
 
-To free the memory allocated in this manner, use the corresponding free functions. To unmap the memory, use ``hipMemUnmap``. To release the virtual address range, use ``hipMemAddressFree``.  Finally, to release the physical memory, use ``hipMemRelease``.
+To free the memory allocated in this manner, use the corresponding free functions. To unmap the memory, use ``hipMemUnmap``. To release the virtual address range, use ``hipMemAddressFree``.  Finally, to release the physical memory, use ``hipMemRelease``. A side effect of these functions is the lack of synchronization when memory is released. If you call ``hipFree`` when you have multiple streams running in parallel, it synchronizes the device. This causes worse resource usage and performance.
 
 .. code-block:: cpp
 
@@ -75,11 +75,11 @@ To free the memory allocated in this manner, use the corresponding free function
     hipMemAddressFree(ptr, size);
 
 .. _usage_virtual_memory:
-Usage
-=====
+Memory usage
+============
 
-Increase Allocation Size
-------------------------
+Dynamically increase allocation size
+------------------------------------
 
 The ``hipMemAddressReserve`` function allows you to increase the amount of pre-allocated memory. This function accepts a parameter representing the requested starting address of the virtual memory. This allows you to have a continuous virtual address space without worrying about the underlying physical allocation.
 
@@ -90,13 +90,3 @@ The ``hipMemAddressReserve`` function allows you to increase the amount of pre-a
     hipMemSetAccess(new_ptr, (new_size - padded_size), &accessDesc, 1);
 
 The code sample above assumes that ``hipMemAddressReserve`` was able to reserve the memory address at the specified location. However, this isn't guaranteed to be true, so you should validate that ``new_ptr`` points to a specific virtual address before using it.
-
-Avoid Synchronization
----------------------
-
-Another major advantage of virtual memory management is the lack of synchronization when memory is released. If you call ``hipFree`` when you have multiple streams running in parallel, it synchronizes the device. This causes worse resource usage and performance.
-
-Enable Peer Access
-------------------
-
-In a multi-GPU environment, you can map the device memory of one GPU to another. This feature also works with the traditional memory management system, but isn't as scalable as with virtual memory. When memory is allocated with ``hipMalloc``, ``hipDeviceEnablePeerAccess`` is used to enable peer access. This function enables access between two devices, but it means that every call to ``hipMalloc`` takes more time to perform the checks and the mapping between the devices. When using virtual memory management, peer access is enabled by ``hipMemSetAccess``, which provides a finer level of control over what is shared. This has no performance impact on memory allocation and gives you more control over what memory buffers are shared with which devices.
