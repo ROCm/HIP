@@ -38,6 +38,7 @@ subtrees:
   - file: doxygen/html/index
   - file: reference/cpp_language_extensions
     title: C++ Language Extensions
+  - file: reference/math_api
   - file: reference/terms
     title: Comparing Syntax for different APIs
   - file: reference/virtual_rocr
