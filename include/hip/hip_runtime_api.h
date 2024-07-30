@@ -3766,7 +3766,7 @@ hipError_t hipMemPoolImportPointer(
  */
 
 /**
- *  @brief Allocate device accessible page locked host memory [Deprecated]
+ *  @brief Allocate device accessible page locked host memory
  *
  *  @param[out] ptr Pointer to the allocated host pinned memory
  *  @param[in]  size Requested memory size in bytes
@@ -3774,7 +3774,7 @@ hipError_t hipMemPoolImportPointer(
  *
  *  If size is 0, no memory is allocated, *ptr returns nullptr, and hipSuccess is returned.
  *
- *  @return #hipSuccess, #hipErrorOutOfMemory
+ *  @return #hipSuccess, #hipErrorOutOfMemory, #hipErrorInvalidValue
  */
 hipError_t hipHostAlloc(void** ptr, size_t size, unsigned int flags);
 /**
