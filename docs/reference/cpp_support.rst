@@ -19,7 +19,7 @@ restrictions. The key restriction is the reduced support of standard library in 
 code. This is due to the fact that by default a function is considered to run on host,
 except for ``constexpr`` functions, which can run on host and device as well.
 
-.. _language_modern_c++_support:
+.. _language_modern_cpp_support:
 Modern C++ support
 ===============================================================================
 
@@ -138,6 +138,8 @@ Classes work on both the host and device side, but there are some constraints. T
 ``static`` member functions can't be ``__global__``. ``Virtual`` member functions work,
 but a ``virtual`` function must not be called from the host if the parent object was
 created on the device, or the other way around, because this behavior is undefined.
+Another minor restriction is that ``__device__`` variables, that are global scoped must
+have trivial constructors.
 
 Polymorphic function wrappers
 -------------------------------------------------------------------------------
