@@ -3327,7 +3327,8 @@ hipError_t hipMemRangeGetAttributes(void** data,
  *
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
- * @note  This API is implemented on Linux and is under development on Microsoft Windows.
+ * @warning This API is under development. Currently it is a no-operation (NOP)
+ *          function on AMD GPUs and returns #hipSuccess.
  */
 hipError_t hipStreamAttachMemAsync(hipStream_t stream,
                                    void* dev_ptr,
@@ -4258,10 +4259,10 @@ hipError_t hipGetProcAddress(const char* symbol, void** pfn, int  hipVersion, ui
  * the host side. The symbol can be in __constant or device space.
  * Note that the symbol name needs to be encased in the HIP_SYMBOL macro.
  * This also applies to hipMemcpyFromSymbol, hipGetSymbolAddress, and hipGetSymbolSize.
- * For detailed usage, see the 
+ * For detailed usage, see the
  * <a href="https://rocm.docs.amd.com/projects/HIP/en/latest/how-to/hip_porting_guide.html#memcpytosymbol">memcpyToSymbol example</a>
  * in the HIP Porting Guide.
- * 
+ *
  *
  *  @param[out]  symbol  pointer to the device symbole
  *  @param[in]   src  pointer to the source address
@@ -5056,7 +5057,7 @@ hipError_t hipMemcpyPeerAsync(void* dst, int dstDeviceId, const void* src, int s
  *  existing driver codes.
  *
  *  These APIs are only for equivalent driver APIs on the NVIDIA platform.
- * 
+ *
  */
 
 /**
@@ -8319,8 +8320,11 @@ hipError_t hipDrvGraphExecMemsetNodeSetParams(hipGraphExec_t hGraphExec, hipGrap
  *  @{
  *  This section describes the virtual memory management functions of HIP runtime API.
  *
- *  @note  Please note, the virtual memory management functions of HIP runtime API are implemented
- *  on Linux, under development on Windows.
+ *  @note  Please note, the virtual memory management functions of HIP runtime
+ *         API are implemented on Linux, under development on Windows. The
+ *         following Virtual Virtual Memory Management APIs are not (yet)
+ *         supported in HIP:
+ *          - hipMemMapArrayAsync
  */
 
 /**
@@ -8461,10 +8465,8 @@ hipError_t hipMemMap(void* ptr, size_t size, size_t offset, hipMemGenericAllocat
  * @param [in] count - number of hipArrayMapInfo in mapInfoList.
  * @param [in] stream - stream identifier for the stream to use for map or unmap operations.
  * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
- * @warning This API is marked as Beta. While this feature is complete, it can
- *          change and might have outstanding issues.
- *
- * @note  This API is implemented on Linux and is under development on Microsoft Windows.
+ * @warning This API is under development. Currently it is not supported on AMD
+ *          GPUs and returns #hipErrorNotSupported.
  */
 hipError_t hipMemMapArrayAsync(hipArrayMapInfo* mapInfoList, unsigned int  count, hipStream_t stream);
 
