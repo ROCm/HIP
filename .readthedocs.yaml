@@ -24,8 +24,8 @@ build:
      post_checkout:
        - if [ -d ../clr ]; then rm -rf ../clr; fi
        - if [ -d ../ROCR-Runtime ]; then rm -rf ../ROCR-Runtime; fi
-       - git clone --depth=1 --single-branch --branch docs/develop    https://github.com/ROCm/clr.git ../clr
-       - git clone --depth=1 --single-branch --branch master     https://github.com/ROCm/ROCR-Runtime.git ../ROCR-Runtime
+       - git clone --depth=1 --single-branch --branch docs/develop https://github.com/ROCm/clr.git ../clr
+       - git clone --depth=1 --single-branch --branch master       https://github.com/ROCm/ROCR-Runtime.git ../ROCR-Runtime
      post_build:
        - rm -rf ../clr
        - rm -rf ../ROCR-Runtime
