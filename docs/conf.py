@@ -46,3 +46,9 @@ cpp_paren_attributes = ["__declspec"]
 suppress_warnings = ["etoc.toctree"]
 
 numfig = False
+
+
+exclude_patterns = [
+    "doxygen/mainpage.md",
+    "understand/glossary.md"
+]

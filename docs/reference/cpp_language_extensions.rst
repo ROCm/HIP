@@ -292,8 +292,7 @@ dimensions to 1.
 Memory fence instructions
 ====================================================
 
-HIP supports ``__threadfence()`` and ``__threadfence_block()``. If you're using ``threadfence_system()`` in
-the HIP-Clang path, you can use the following workaround:
+HIP supports ``__threadfence()`` and ``__threadfence_block()``. If you're using ``threadfence_system()`` in the HIP-Clang path, you can use the following workaround:
 
 #. Build HIP with the ``HIP_COHERENT_HOST_ALLOC`` environment variable enabled.
 #. Modify kernels that use ``__threadfence_system()`` as follows:
@@ -306,8 +305,13 @@ the HIP-Clang path, you can use the following workaround:
 
 Synchronization functions
 ====================================================
+
+Synchronization functions causes all threads in the group to wait at this synchronization point, and for all shared and global memory accesses by the threads to complete, before running synchronization. This guarantees the visibility of accessed data for all threads in the group.
+
 The ``__syncthreads()`` built-in function is supported in HIP. The ``__syncthreads_count(int)``,
 ``__syncthreads_and(int)``, and ``__syncthreads_or(int)`` functions are under development.
+
+The Cooperative Groups API offer options to do synchronization on a developer defined set of thread groups. For further information, check :ref:`Cooperative Groups API <cooperative_groups_reference>` or :ref:`Cooperative Groups how to <cooperative_groups_how-to>`.
 
 Math functions
 ====================================================
@@ -971,6 +975,8 @@ HIP supports the following kernel language cooperative groups types and function
     * - ``dim3 thread_block.thread_index()``
       - ✓
       - ✓
+
+For further information, check :ref:`Cooperative Groups API <cooperative_groups_reference>` or :ref:`Cooperative Groups how to <cooperative_groups_how-to>`.
 
 Warp matrix functions
 ============================================================

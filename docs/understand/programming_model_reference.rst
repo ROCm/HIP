@@ -87,47 +87,13 @@ of. It relaxes some restrictions of the :ref:`inherent_thread_model`
 imposed by the strict 1:1 mapping of architectural details to the programming
 model.
 
-The rich set of APIs introduced by Cooperative Groups allow the programmer to
-define their own set of thread groups which may fit their user-cases better than
-those defined by the hardware. The set of implicit groups by kernel launch
-parameters are still available.
-
-The thread hierarchy abstraction of Cooperative Groups manifest as depicted in
-:numref:`coop_thread_hierarchy`.
-
-.. _coop_thread_hierarchy:
-
-.. figure:: ../data/understand/programming_model_reference/thread_hierarchy_coop.svg
-  :alt: Diagram depicting nested rectangles of varying color. The outermost one
-        titled "Grid", inside sets of different sized rectangles layered on
-        one another titled "Block". Each "Block" containing sets of uniform
-        rectangles layered on one another titled "Warp". Each of the "Warp"
-        titled rectangles filled with downward pointing arrows inside.
-
-  Cooperative group thread hierarchy.
-
-Multi Grid
-  An abstraction of potentially multiple simultaneous launches of
-  the same kernel over multiple devices. Grids inside a multi device kernel
-  launch need not be of uniform size, thus allowing taking into account
-  different device capabilities and preferences.
-
-  .. deprecated:: 5.0
-
-Grid
-  Same as the :ref:`inherent_thread_model` Grid entity. The ability to
-  synchronize over a grid requires the kernel to be launched using the
-  Cooperative Groups API.
-
-Block
-  Same as the :ref:`inherent_thread_model` Block entity.
+The Cooperative Groups API lets you define your own thread groups which may fit your use-case better than those defined by the default thread model.
 
 .. note::
 
-  Explicit warp-level thread handling is absent from the Cooperative Groups API.
-  In order to exploit the known hardware SIMD width on which built-in
-  functionality translates to simpler logic, one may use the group partitioning
-  part of the API, such as ``tiled_partition``.
+  The default thread groups defined by kernel launch parameters are still available. See the :ref:inherent thread model <inherent_thread_model> for more information.
+
+For further information, check the :ref:`inherent thread model <coop_thread_hierarchy>`. 
 
 Memory Model
 ============

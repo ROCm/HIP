@@ -29,6 +29,7 @@ subtrees:
   - file: how-to/performance_guidelines
   - file: how-to/debugging
   - file: how-to/logging
+  - file: how-to/cooperative_groups
   - file: how-to/unified_memory
     title: Unified Memory
   - file: how-to/faq
@@ -43,6 +44,8 @@ subtrees:
   - file: reference/math_api
   - file: reference/terms
     title: Comparing Syntax for different APIs
+  - file: reference/cooperative_groups_reference
+    title: HIP Cooperative Groups API
   - file: reference/virtual_rocr
   - file: reference/unified_memory_reference
     title: HIP Managed Memory Allocation API
@@ -61,6 +64,7 @@ subtrees:
     title: HIP test samples
   - file: tutorial/saxpy
   - file: tutorial/reduction
+  - file: tutorial/cooperative_groups_tutorial
 
 - caption: About
   entries:

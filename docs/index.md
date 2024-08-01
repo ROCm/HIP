@@ -46,6 +46,7 @@ On non-AMD platforms, like NVIDIA, HIP provides header files required to support
 * [Debugging with HIP](./how-to/debugging)
 * {doc}`./how-to/logging`
 * [Unified Memory](./how-to/unified_memory)
+* [Cooperative Groups](./how-to/cooperative_groups)
 * {doc}`./how-to/faq`
 
 :::
@@ -59,6 +60,7 @@ On non-AMD platforms, like NVIDIA, HIP provides header files required to support
 * [Comparing Syntax for Different APIs](./reference/terms)
 * [HSA Runtime API for ROCm](./reference/virtual_rocr)
 * [HIP Managed Memory Allocation API](./reference/unified_memory_reference)
+* [HIP Cooperative Groups API](./reference/cooperative_groups)
 * [List of deprecated APIs](./reference/deprecated_api_list)
 * [FP8 numbers in HIP](./reference/fp8_numbers)
 
@@ -71,6 +73,7 @@ On non-AMD platforms, like NVIDIA, HIP provides header files required to support
 * [HIP test samples](https://github.com/ROCm/hip-tests/tree/develop/samples)
 * [SAXPY tutorial](./tutorial/saxpy)
 * [Reduction tutorial](./tutorial/reduction)
+* [Cooperative groups tutorial](./tutorial/cooperative_groups_tutorial)
 
 :::
 
