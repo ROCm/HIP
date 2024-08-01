@@ -19,6 +19,7 @@ cuCtx
 cuDNN
 dataflow
 deallocate
+decompositions
 denormal
 Dereferencing
 dll
@@ -107,6 +108,7 @@ structs
 SYCL
 syntaxes
 tradeoffs
+templated
 typedefs
 UMM
 variadic
