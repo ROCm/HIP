@@ -1061,8 +1061,8 @@ typedef struct dim3 {
  */
 typedef struct hipLaunchParams_t {
     void* func;             ///< Device function symbol
-    dim3 gridDim;           ///< Grid dimentions
-    dim3 blockDim;          ///< Block dimentions
+    dim3 gridDim;           ///< Grid dimensions
+    dim3 blockDim;          ///< Block dimensions
     void **args;            ///< Arguments
     size_t sharedMem;       ///< Shared memory
     hipStream_t stream;     ///< Stream identifier
@@ -5585,7 +5585,7 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f, unsigned int gridDimX, unsigne
  * @param [in] kernelParams   A list of kernel arguments.
  *
  * Please note, HIP does not support kernel launch with total work items defined in dimension with
- * size gridDim x blockDim >= 2^32.
+ * size \f$ gridDim \cdot blockDim \geq 2^{32} \f$.
  *
  * @returns #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
  * #hipErrorInvalidHandle, #hipErrorInvalidImage, #hipErrorInvalidValue,
@@ -5615,8 +5615,8 @@ hipError_t hipModuleLaunchCooperativeKernelMultiDevice(hipFunctionLaunchParams* 
                                                        unsigned int numDevices,
                                                        unsigned int flags);
 /**
- * @brief launches kernel f with launch parameters and shared memory on stream with arguments passed
- * to kernelparams or extra, where thread blocks can cooperate and synchronize as they execute
+ * @brief Launches kernel f with launch parameters and shared memory on stream with arguments passed
+ * to kernelparams or extra, where thread blocks can cooperate and synchronize as they execute.
  *
  * @param [in] f         Kernel to launch.
  * @param [in] gridDim   Grid dimensions specified as multiple of blockDim.
@@ -5628,7 +5628,7 @@ hipError_t hipModuleLaunchCooperativeKernelMultiDevice(hipFunctionLaunchParams* 
  * default stream is used with associated synchronization rules.
  *
  * Please note, HIP does not support kernel launch with total work items defined in dimension with
- * size gridDim x blockDim >= 2^32.
+ * size \f$ gridDim \cdot blockDim \geq 2^{32} \f$.
  *
  * @returns #hipSuccess, #hipErrorNotInitialized, #hipErrorInvalidValue, #hipErrorCooperativeLaunchTooLarge
  */
@@ -8541,7 +8541,7 @@ hipError_t hipDestroySurfaceObject(hipSurfaceObject_t surfaceObject);
 #ifdef __cplusplus
 #if defined(__clang__) && defined(__HIP__)
 template <typename T>
-static hipError_t __host__ inline hipOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize,
+static hipError_t __host__ inline hipOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize,template <typename T>
     T f, size_t dynSharedMemPerBlk = 0, int blockSizeLimit = 0) {
     return hipOccupancyMaxPotentialBlockSize(gridSize, blockSize, reinterpret_cast<const void*>(f),dynSharedMemPerBlk,blockSizeLimit);
 }
@@ -8836,12 +8836,16 @@ return hipOccupancyMaxPotentialBlockSize(gridSize, blockSize,(hipFunction_t)kern
  *
  * @ingroup Execution
  *
- * @param [in] f  device function symbol
- * @param [in] gridDim    grid dimentions
- * @param [in]  blockDim  block dimentions
- * @param [in]  kernelParams  kernel parameters
- * @param [in]  sharedMemBytes  shared memory in bytes
- * @param [in]  stream  stream on which kernel launched
+ * \tparam T                  The type of the kernel function.
+ * 
+ * @param [in] f              Kernel function to launch.
+ * @param [in] gridDim        Grid dimensions specified as multiple of blockDim.
+ * @param [in] blockDim       Block dimensions specified in work-items.
+ * @param [in] kernelParams   A list of kernel arguments.
+ * @param [in] sharedMemBytes Amount of dynamic shared memory to allocate for
+ *                            this kernel. The HIP-Clang compiler provides
+ *                            support for extern shared declarations.
+ * @param [in] stream         Stream which on the kernel launched.
  *
  * @return #hipSuccess, #hipErrorLaunchFailure, #hipErrorInvalidValue,
  * #hipErrorInvalidResourceHandle
@@ -8854,14 +8858,14 @@ inline hipError_t hipLaunchCooperativeKernel(T f, dim3 gridDim, dim3 blockDim,
                                       blockDim, kernelParams, sharedMemBytes, stream);
 }
 /**
- * @brief Launches device function on multiple devices where thread blocks can cooperate and
- * synchronize on execution.
+ * @brief Launches kernel function on multiple devices, where thread blocks can
+ *        cooperate and synchronize on execution.
  *
  * @ingroup Execution
  *
- * @param [in] launchParamsList  list of kernel launch parameters, one per device
- * @param [in] numDevices  size of launchParamsList array
- * @param [in]  flags  flag to handle launch behavior
+ * @param [in] launchParamsList List of kernel launch parameters, one per device.
+ * @param [in] numDevices       Size of launchParamsList array.
+ * @param [in] flags            Flag to handle launch behavior.
  *
  * @return #hipSuccess, #hipErrorLaunchFailure, #hipErrorInvalidValue,
  * #hipErrorInvalidResourceHandle
