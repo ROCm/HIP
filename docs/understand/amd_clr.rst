@@ -5,7 +5,7 @@
 .. _AMD_Compute_Language_Runtimes:
 
 *******************************************************************************
-AMD Common Language Runtimes (CLR)
+AMD common language runtimes (CLR)
 *******************************************************************************
 
 CLR contains source codes for AMD's compute languages runtimes: ``HIP`` and ``OpenCL™``.
@@ -14,7 +14,7 @@ For developers and users, CLR implements HIP runtime APIs including streams, eve
 The source codes for all headers and the library implementation are available on GitHub in the `CLR repository <https://github.com/ROCm/clr>`_.
 
 
-Project Organization
+Project organization
 ====================
 
 CLR includes the following source code,

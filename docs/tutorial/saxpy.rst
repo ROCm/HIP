@@ -3,7 +3,7 @@
   :keywords: AMD, ROCm, HIP, SAXPY, tutorial
 
 *******************************************************************************
-Tutorial: SAXPY - Hello, HIP
+SAXPY - Hello, HIP
 *******************************************************************************
 
 This tutorial explains the basic concepts of the single-source

@@ -5,13 +5,13 @@
 .. _hardware_implementation:
 
 *******************************************************************************
-Hardware Implementation
+Hardware implementation
 *******************************************************************************
 
 This chapter describes the typical hardware implementation of GPUs supported by
 HIP, and how the :ref:`inherent_thread_model` maps to the hardware.
 
-Compute Units
+Compute units
 =============
 
 The basic building block of a GPU is a compute unit (CU), also known
@@ -79,7 +79,7 @@ instructions of the other branch have to be executed in the same way. The best
 performance can therefore be achieved when thread divergence is kept to a warp
 level, i.e. when all threads in a warp take the same execution path.
 
-Vector Cache
+Vector cache
 ------------
 
 The usage of cache on a GPU differs from that on a CPU, as there is less cache
@@ -88,7 +88,7 @@ warps in order to reduce the amount of accesses to device memory, and make that
 memory available for other warps that currently reside on the compute unit, that
 also need to load those values.
 
-Local Data Share
+Local data share
 ----------------
 
 The local data share is memory that is accessible to all threads within a block.
@@ -103,7 +103,7 @@ The scalar unit performs instructions that are uniform within a warp. It
 thereby improves efficiency and reduces the pressure on the vector ALUs and the
 vector register file.
 
-CDNA Architecture
+CDNA architecture
 =================
 
 The general structure of CUs stays mostly as it is in GCN
@@ -122,7 +122,7 @@ multiply-accumulate operations for
 
   Block Diagram of a CDNA3 Compute Unit.
 
-RDNA Architecture
+RDNA architecture
 =================
 
 RDNA makes a fundamental change to CU design, by changing the
@@ -145,7 +145,7 @@ an L0 cache.
 
   Block Diagram of an RDNA3 work group processor.
 
-Shader Engines
+Shader engines
 ==============
 
 For hardware implementation's sake, multiple CUs are grouped

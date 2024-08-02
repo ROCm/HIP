@@ -3,7 +3,7 @@
   :keywords: AMD, ROCm, HIP, CUDA, performance, guidelines
 
 *******************************************************************************
-Performance Guidelines
+Performance guidelines
 *******************************************************************************
 
 The AMD HIP Performance Guidelines are a set of best practices designed to help
