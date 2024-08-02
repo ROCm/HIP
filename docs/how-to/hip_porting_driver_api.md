@@ -1,4 +1,4 @@
-# Porting CUDA Driver API
+# Porting CUDA driver API
 
 ## Introduction to the CUDA Driver and Runtime APIs
 

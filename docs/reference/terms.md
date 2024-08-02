@@ -1,4 +1,4 @@
-# Table Comparing Syntax for Different Compute APIs
+# Table comparing syntax for different compute APIs
 
 |Term|CUDA|HIP|OpenCL|
 |---|---|---|---|

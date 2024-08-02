@@ -13,7 +13,7 @@ onto various architectures, primarily GPUs. While the model may be expressed
 in most imperative languages, (for example Python via PyHIP) this document will focus on
 the original C/C++ API of HIP.
 
-Threading Model
+Threading model
 ===============
 
 The SIMT nature of HIP is captured by the ability to execute user-provided
@@ -26,7 +26,7 @@ The set of integers identifying a thread relate to the hierarchy in which thread
 
 .. _inherent_thread_model:
 
-Inherent Thread Model
+Inherent thread Model
 ---------------------
 
 The thread hierarchy inherent to how AMD GPUs operate is depicted in
