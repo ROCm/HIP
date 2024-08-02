@@ -274,7 +274,7 @@ elseif("${HIP_COMPILER}" STREQUAL "clang")
     if("x${HIP_CLANG_PATH}" STREQUAL "x")
       # IF HIP_CLANG_INSTALL_DIR is Found
       if( HIP_CLANG_INSTALL_DIR )
-        set(HIP_CLANG_PATH ${HIP_CLANG_INSTALL_DIR})
+        set(HIP_CLANG_PATH ${HIP_CLANG_INSTALL_DIR}/bin)
       else() # IF HIP_CLANG_INSTALL_DIR is not found
         if(DEFINED ENV{HIP_CLANG_PATH})
             set(HIP_CLANG_PATH $ENV{HIP_CLANG_PATH})
