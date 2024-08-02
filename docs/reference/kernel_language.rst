@@ -1844,7 +1844,7 @@ Warp vote and ballot functions
 
   int __all_sync(unsigned long long mask, int predicate)
   int __any_sync(unsigned long long mask, int predicate)
-  int __ballot(unsigned long long mask, int predicate)
+  unsigned long long __ballot_sync(unsigned long long mask, int predicate)
 
 You can use ``__any`` and ``__all`` to get a summary view of the predicates evaluated by the
 participating lanes.
