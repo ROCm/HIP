@@ -6,7 +6,7 @@
 .. _unified_memory_reference:
 
 *******************************************************************************
-HIP Managed Memory Allocation API
+HIP managed memory allocation API
 *******************************************************************************
 
 .. doxygengroup:: MemoryM

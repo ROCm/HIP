@@ -4,7 +4,7 @@
   :keywords: AMD, ROCm, HIP, CUDA, unified memory, unified, memory, UM, APU
 
 *******************************************************************************
-Unified Memory
+Unified memory
 *******************************************************************************
 
 In conventional architectures, CPUs and GPUs have dedicated memory like Random
