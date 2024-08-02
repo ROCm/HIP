@@ -42,3 +42,7 @@ extensions += ["sphinxcontrib.doxylink"]
 
 cpp_id_attributes = ["__global__", "__device__", "__host__", "__forceinline__", "static"]
 cpp_paren_attributes = ["__declspec"]
+
+suppress_warnings = ["etoc.toctree"]
+
+numfig = False
