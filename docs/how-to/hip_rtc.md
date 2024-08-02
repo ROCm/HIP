@@ -1,4 +1,4 @@
-# Programming for HIP Runtime Compiler (RTC)
+# Programming for HIP runtime compiler (RTC)
 
 HIP lets you compile kernels at runtime with the `hiprtc*` APIs.
 Kernels can be stored as a text string and can be passed to HIPRTC APIs alongside options to guide the compilation.
