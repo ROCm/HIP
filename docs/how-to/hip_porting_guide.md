@@ -1,4 +1,4 @@
-# HIP Porting Guide
+# HIP porting guide
 
 In addition to providing a portable C++ programming environment for GPUs, HIP is designed to ease
 the porting of existing CUDA code into the HIP environment.  This section describes the available tools

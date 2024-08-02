@@ -5,7 +5,7 @@
   :keywords: AMD, ROCm, HIP, CUDA, c++ language extensions, HIP functions
 
 ********************************************************************************
-C++ Language Extensions
+C++ language extensions
 ********************************************************************************
 
 HIP provides a C++ syntax that is suitable for compiling most code that commonly appears in
