@@ -5,7 +5,7 @@
   :keywords: AMD, ROCm, HIP, CUDA, API design
 
 *******************************************************************************
-Understanding the HIP programming model
+HIP programming model
 *******************************************************************************
 
 The HIP programming model makes it easy to map data-parallel C/C++ algorithms to
@@ -14,7 +14,7 @@ such as GPUs. A basic understanding of the underlying device architecture helps 
 make efficient use of HIP and general purpose graphics processing unit (GPGPU)
 programming in general.
 
-RDNA & CDNA Architecture Summary
+RDNA & CDNA architecture summary
 ================================
 
 Most GPU architectures, like RDNA and CDNA, have a hierarchical structure.
@@ -68,7 +68,7 @@ memory subsystem resources.
 
 .. _programming_model_simt:
 
-Single Instruction Multiple Threads
+Single instruction multiple threads
 ===================================
 
 The single instruction, multiple threads (SIMT) programming model behind the
@@ -117,7 +117,7 @@ usually isn't exploited from the width of the built-in vector types, but via the
 thread id constants ``threadIdx.x``, ``blockIdx.x``, etc. For more details,
 refer to :ref:`inherent_thread_model`.
 
-Heterogeneous Programming
+Heterogeneous programming
 =========================
 
 The HIP programming model assumes two execution contexts. One is referred to as

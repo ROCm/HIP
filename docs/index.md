@@ -11,7 +11,7 @@ For HIP supported AMD GPUs on multiple operating systems, see:
 
 The CUDA enabled NVIDIA GPUs are supported by HIP. For more information, see [GPU Compute Capability](https://developer.nvidia.com/cuda-gpus).
 
-On the AMD ROCm platform, HIP provides header files and runtime library built on top of HIP-Clang compiler in the repository [Common Language Runtime (CLR)](./understand/amd_clr), which contains source codes for AMD's compute languages runtimes as follows,
+On the AMD ROCm platform, HIP provides header files and runtime library built on top of HIP-Clang compiler in the repository [Common Language Runtimes (CLR)](./understand/amd_clr), which contains source codes for AMD's compute languages runtimes as follows,
 
 On non-AMD platforms, like NVIDIA, HIP provides header files required to support non-AMD specific back-end implementation in the repository ['hipother'](https://github.com/ROCm/hipother), which translates from the HIP runtime APIs to CUDA runtime APIs.
 
@@ -38,14 +38,14 @@ On non-AMD platforms, like NVIDIA, HIP provides header files required to support
 
 :::{grid-item-card} How to
 
-* [Programming Manual](./how-to/programming_manual)
-* [HIP Porting Guide](./how-to/hip_porting_guide)
-* [HIP Porting: Driver API Guide](./how-to/hip_porting_driver_api)
+* [Programming manual](./how-to/programming_manual)
+* [HIP porting guide](./how-to/hip_porting_guide)
+* [HIP porting: driver API guide](./how-to/hip_porting_driver_api)
 * {doc}`./how-to/hip_rtc`
 * {doc}`./how-to/performance_guidelines`
 * [Debugging with HIP](./how-to/debugging)
 * {doc}`./how-to/logging`
-* [Unified Memory](./how-to/unified_memory)
+* [Unified memory](./how-to/unified_memory)
 * [Cooperative Groups](./how-to/cooperative_groups)
 * {doc}`./how-to/faq`
 
@@ -54,12 +54,12 @@ On non-AMD platforms, like NVIDIA, HIP provides header files required to support
 :::{grid-item-card} Reference
 
 * {doc}`/doxygen/html/index`
-* [C++ Language Extensions](./reference/cpp_language_extensions)
-* [C++ Language Support](./reference/cpp_support)
+* [C++ language extensions](./reference/cpp_language_extensions)
+* [C++ language support](./reference/cpp_language_support)
 * [HIP math API](./reference/math_api)
-* [Comparing Syntax for Different APIs](./reference/terms)
-* [HSA Runtime API for ROCm](./reference/virtual_rocr)
-* [HIP Managed Memory Allocation API](./reference/unified_memory_reference)
+* [Comparing syntax for different APIs](./reference/terms)
+* [HSA runtime API for ROCm](./reference/virtual_rocr)
+* [HIP managed memory allocation API](./reference/unified_memory_reference)
 * [HIP Cooperative Groups API](./reference/cooperative_groups)
 * [List of deprecated APIs](./reference/deprecated_api_list)
 * [FP8 numbers in HIP](./reference/fp8_numbers)
