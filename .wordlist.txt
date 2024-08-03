@@ -36,6 +36,7 @@ fatbinary
 frontends
 gedit
 GPGPU
+GWS
 hardcoded
 HC
 HIP's
