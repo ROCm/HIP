@@ -36,7 +36,7 @@ Function-type qualifiers
 ``__device__``
 -----------------------------------------------------------------------
 
-Supported  ``__device__`` functions are:
+Supported ``__device__`` functions are:
 
   * Run on the device
   * Called from the device only
@@ -91,18 +91,18 @@ configuration to the kernel. However, you can also use the CUDA ``<<< >>>`` synt
 
 When using ``hipLaunchKernelGGL``, your first five parameters must be:
 
-  * **symbol kernelName**: The name of the kernel you want to launch. To support template kernels
+  * ``symbol kernelName``: The name of the kernel you want to launch. To support template kernels
     that contain ``","``, use the ``HIP_KERNEL_NAME`` macro (HIPIFY tools insert this automatically).
-  * **dim3 gridDim**: 3D-grid dimensions that specify the number of blocks to launch.
-  * **dim3 blockDim**: 3D-block dimensions that specify the number of threads in each block.
-  * **size_t dynamicShared**: The amount of additional shared memory that you want to allocate
+  * ``dim3 gridDim``: 3D-grid dimensions that specify the number of blocks to launch.
+  * ``dim3 blockDim``: 3D-block dimensions that specify the number of threads in each block.
+  * ``size_t dynamicShared``: The amount of additional shared memory that you want to allocate
     when launching the kernel (see :ref:`shared-variable-type`).
-  * **hipStream_t**: The stream where you want to run the kernel. A value of ``0`` corresponds to the
+  * ``hipStream_t``: The stream where you want to run the kernel. A value of ``0`` corresponds to the
     NULL stream (see :ref:`synchronization functions`).
 
 You can include your kernel arguments after these parameters.
 
-.. code:: cpp
+.. code-block:: cpp
 
   // Example hipLaunchKernelGGL pseudocode:
   __global__ MyKernel(hipLaunchParm lp, float *A, float *B, float *C, size_t N)
@@ -128,7 +128,7 @@ parameters.
 Kernel launch example
 ==========================================================
 
-.. code:: cpp
+.. code-block:: cpp
 
   // Example showing device function, __device__ __host__
   // <- compile for both device and host
@@ -221,7 +221,7 @@ Coordinate variable definitions for built-ins are the same for HIP and CUDA. For
 Coordinate built-ins are implemented as structures for improved performance. When used with
 ``printf``, they must be explicitly cast to integer types.
 
-warpSize
+``warpSize``
 -----------------------------------------------------------------------------
 The ``warpSize`` variable type is ``int``. It contains the warp size (in threads) for the target device.
 ``warpSize`` should only be used in device functions that develop portable wave-aware code.
@@ -279,7 +279,7 @@ dimensions.
 The dim3 constructor accepts between zero and three arguments. By default, it initializes unspecified
 dimensions to 1.
 
-.. code:: cpp
+.. code-block:: cpp
 
   typedef struct dim3 {
     uint32_t x;
@@ -310,15 +310,15 @@ Synchronization functions
 The ``__syncthreads()`` built-in function is supported in HIP. The ``__syncthreads_count(int)``,
 ``__syncthreads_and(int)``, and ``__syncthreads_or(int)`` functions are under development.
 
-
 Math functions
 ====================================================
 
-HIP-Clang supports a set of math operations that are callable from the device. HIP supports most of the device functions supported by CUDA. 
+HIP-Clang supports a set of math operations that are callable from the device. HIP supports most of the device functions supported by CUDA.
 These are described in the following sections.
 
 Single precision mathematical functions
 --------------------------------------------------------------------------------------------
+
 Following is the list of supported single precision mathematical functions.
 
 .. list-table:: Single precision mathematical functions
@@ -327,979 +327,1104 @@ Following is the list of supported single precision mathematical functions.
       - **Supported on Host**
       - **Supported on Device**
 
-    * - | float acosf ( float  x ) 
-        | Calculate the arc cosine of the input argument.  
+    * - | ``float abs(float x)``
+        | Returns the absolute value of :math:`x`
       - ✓
       - ✓
 
-    * - | float acoshf ( float  x ) 
-        | Calculate the nonnegative arc hyperbolic cosine of the input argument.
+    * - | ``float acosf(float x)``
+        | Returns the arc cosine of :math:`x`.
       - ✓
       - ✓
 
-    * - | float asinf ( float  x )
-        | Calculate the arc sine of the input argument
+    * - | ``float acoshf(float x)``
+        | Returns the nonnegative arc hyperbolic cosine of :math:`x`.
       - ✓
       - ✓
 
-    * - | float asinhf ( float  x )
-        | Calculate the arc hyperbolic sine of the input argument.
+    * - | ``float asinf(float x)``
+        | Returns the arc sine of :math:`x`.
       - ✓
       - ✓
 
-    * - | float atan2f ( float  y, float  x ) 
-        | Calculate the arc tangent of the ratio of first and second input arguments.
+    * - | ``float asinhf(float x)``
+        | Returns the arc hyperbolic sine of :math:`x`.
       - ✓
       - ✓
 
-    * - | float atanf ( float  x )
-        | Calculate the arc tangent of the input argument.
+    * - | ``float atanf(float x)``
+        | Returns the arc tangent of :math:`x`.
       - ✓
       - ✓
 
-    * - | float atanhf ( float  x )
-        | Calculate the arc hyperbolic tangent of the input argument.
+    * - | ``float atan2f(float x, float y)``
+        | Returns the arc tangent of the ratio of :math:`x` and :math:`y`.
       - ✓
       - ✓
 
-    * - | float cbrtf ( float  x )
-        | Calculate the cube root of the input argument.
+    * - | ``float atanhf(float x)``
+        | Returns the arc hyperbolic tangent of :math:`x`.
       - ✓
       - ✓
 
-    * - | float ceilf ( float  x )
-        | Calculate ceiling of the input argument.
+    * - | ``float cbrtf(float x)``
+        | Returns the cube root of :math:`x`.
       - ✓
       - ✓
 
-    * - | float copysignf ( float  x, float  y )
+    * - | ``float ceilf(float x)``
+        | Returns ceiling of :math:`x`.
+      - ✓
+      - ✓
+
+    * - | ``float copysignf(float x, float y)``
         | Create value with given magnitude, copying sign of second value.
       - ✓
       - ✓
 
-    * - | float copysignf ( float  x, float  y ) 
-        | Create value with given magnitude, copying sign of second value.
+    * - | ``float cosf(float x)``
+        | Returns the cosine of :math:`x`.
       - ✓
       - ✓
 
-    * - | float cosf ( float  x )
-        | Calculate the cosine of the input argument.
+    * - | ``float coshf(float x)``
+        | Returns the hyperbolic cosine of :math:`x`.
       - ✓
       - ✓
 
-    * - | float coshf ( float  x )
-        | Calculate the hyperbolic cosine of the input argument.
-      - ✓
-      - ✓
-    * - | float erfcf ( float  x )
-        | Calculate the complementary error function of the input argument.
+    * - | ``float cospif(float x)``
+        | Returns the cosine of :math:`\pi \cdot x`.
       - ✓
       - ✓
 
-    * - | float erff ( float  x )
-        | Calculate the error function of the input argument.
-      - ✓
-      - ✓
-
-    * - | float exp10f ( float  x ) 
-        | Calculate the base 10 exponential of the input argument.
-      - ✓
-      - ✓
-
-    * - | float exp2f ( float  x ) 
-        | Calculate the base 2 exponential of the input argument.
-      - ✓
-      - ✓
-  
-    * - | float expf ( float  x ) 
-        | Calculate the base e exponential of the input argument.
-      - ✓
-      - ✓
-
-    * - | float expm1f ( float  x )
-        | Calculate the base e exponential of the input argument, minus 1.
-      - ✓
-      - ✓
-
-    * - | float fabsf ( float  x ) 
-        | Calculate the absolute value of its argument. 
-      - ✓
-      - ✓
- 
-    * - | float fdimf ( float  x, float  y )
-        | Compute the positive difference between `x` and `y`.
-      - ✓
-      - ✓
-
-    * - | float floorf ( float  x )
-        | Calculate the largest integer less than or equal to `x`.
-      - ✓
-      - ✓
-
-    * - | float fmaf ( float  x, float  y, float  z )
-        | Compute `x × y + z` as a single operation.
-      - ✓
-      - ✓
-
-    * - | float fmaxf ( float  x, float  y )
-        | Determine the maximum numeric value of the arguments.
-      - ✓
-      - ✓
-
-    * - | float fminf ( float  x, float  y )
-        | Determine the minimum numeric value of the arguments.
-      - ✓
-      - ✓
-    
-    * - | float fmodf ( float  x, float  y )
-        | Calculate the floating-point remainder of `x / y`.
-      - ✓
-      - ✓
-
-    * - | float frexpf ( float  x, int* nptr )
-        | Extract mantissa and exponent of a floating-point value.
-      - ✓
+    * - | ``float cyl_bessel_i0f(float x)``
+        | Returns the value of the regular modified cylindrical Bessel function of order 0 for :math:`x`.
+      - ✗
       - ✗
 
-    * - | float hypotf ( float  x, float  y )
-        | Calculate the square root of the sum of squares of two arguments.
+    * - | ``float cyl_bessel_i1f(float x)``
+        | Returns the value of the regular modified cylindrical Bessel function of order 1 for :math:`x`.
+      - ✗
+      - ✗
+
+    * - | ``float erff(float x)``
+        | Returns the error function of :math:`x`.
       - ✓
       - ✓
 
-    * - | int ilogbf ( float  x )
-        | Compute the unbiased integer exponent of the argument.
+    * - | ``float erfcf(float x)``
+        | Returns the complementary error function of :math:`x`.
       - ✓
       - ✓
 
-    * - | __RETURN_TYPE isfinite ( float  a )
-        | Determine whether argument is finite.
+    * - | ``float erfcinvf(float x)``
+        | Returns the inverse complementary function of :math:`x`.
       - ✓
       - ✓
 
-    * - | __RETURN_TYPE isinf ( float  a )
-        | Determine whether argument is infinite.
+    * - | ``float erfcxf(float x)``
+        | Returns the scaled complementary error function of :math:`x`.
       - ✓
       - ✓
 
-    * - | __RETURN_TYPE isnan ( float  a )
-        | Determine whether argument is a NaN.
+    * - | ``float erfinvf(float x)``
+        | Returns the inverse error function of :math:`x`.
       - ✓
       - ✓
 
-    * - | float ldexpf ( float  x, int  exp )
-        | Calculate the value of x ⋅ 2 of the exponent of the input argument.
+    * - | ``float expf(float x)``
+        | Returns :math:`e^x`.
       - ✓
       - ✓
 
-    * - | loat log10f ( float  x )
-        | Calculate the base 10 logarithm of the input argument.
+    * - | ``float exp10f(float x)``
+        | Returns :math:`10^x`.
       - ✓
       - ✓
 
-    * - | float log1pf ( float  x )
-        | Calculate the value of the exponent of the input argument
+    * - | ``float exp2f( float x)``
+        | Returns :math:`2^x`.
       - ✓
       - ✓
 
-    * - | float logbf ( float  x )
-        | Calculate the floating point representation of the exponent of the input argument.
-      - ✓
-      - ✓
-    
-    * - | float log2f ( float  x )
-        | Calculate the base 2 logarithm of the input argument.
+    * - | ``float expm1f(float x)``
+        | Returns :math:`ln(x - 1)`
       - ✓
       - ✓
 
-    * - | float logf ( float  x )
-        | Calculate the natural logarithm of the input argument.
+    * - | ``float fabsf(float x)``
+        | Returns the absolute value of `x`
       - ✓
       - ✓
 
-    * - | float modff ( float  x, float* iptr )
-        | Break down the input argument into fractional and integral parts.
-      - ✓
-      - ✗ 
-
-    * - | float nanf ( const char* tagp )
-        | Returns "Not a Number" value.
-      - ✗ 
-      - ✓
-
-    * - | float nearbyintf ( float  x )
-        | Round the input argument to the nearest integer.
+    * - | ``float fdimf(float x, float y)``
+        | Returns the positive difference between :math:`x` and :math:`y`.
       - ✓
       - ✓
 
-    * - | float powf ( float  x, float  y )
-        | Calculate the value of first argument to the power of second argument.
-      - ✓
-      - ✓
-
-    * - | float remainderf ( float  x, float  y )
-        | Compute single-precision floating-point remainder.
-      - ✓
-      - ✓
-
-    * - | float remquof ( float  x, float  y, int* quo )
-        | Compute single-precision floating-point remainder and part of quotient.
-      - ✓
-      - ✗ 
-
-    * - | float roundf ( float  x )
-        | Round to nearest integer value in floating-point.
-      - ✓
-      - ✓
-
-    * - | float scalbnf ( float  x, int  n )
-        | Scale floating-point input by integer power of two.
-      - ✓
-      - ✓
-
-    * - | __RETURN_TYPE signbit ( float  a )
-        | Return the sign bit of the input.
-      - ✓
-      - ✓
-
-    * - | void sincosf ( float  x, float* sptr, float* cptr )
-        | Calculate the sine and cosine of the first input argument.
-      - ✓
-      - ✗ 
-
-    * - | float sinf ( float  x )
-        | Calculate the sine of the input argument.
-      - ✓
-      - ✓
-
-    * - | float sinhf ( float  x )
-        | Calculate the hyperbolic sine of the input argument.
-      - ✓
-      - ✓
-
-    * - | float sqrtf ( float  x )
-        | Calculate the square root of the input argument.
-      - ✓
-      - ✓
-
-    * - | float tanf ( float  x )
-        | Calculate the tangent of the input argument.
-      - ✓
-      - ✓
-
-    * - | float tanhf ( float  x )
-        | Calculate the hyperbolic tangent of the input argument.
-      - ✓
-      - ✓
-
-    * - | float truncf ( float  x )
-        | Truncate input argument to the integral part.
-      - ✓
-      - ✓
-
-    * - | float tgammaf ( float  x )
-        | Calculate the gamma function of the input argument.
-      - ✓
-      - ✓
-
-    * - | float erfcinvf ( float  y )
-        | Calculate the inverse complementary function of the input argument.
-      - ✓
-      - ✓
-
-    * - | float erfcxf ( float  x )
-        | Calculate the scaled complementary error function of the input argument.
-      - ✓
-      - ✓
-
-    * - | float erfinvf ( float  y )
-        | Calculate the inverse error function of the input argument.
-      - ✓
-      - ✓
- 
-    * - | float fdividef ( float x, float  y )
+    * - | ``float fdividef(float x, float y)``
         | Divide two floating point values.
       - ✓
       - ✓
 
-    * - | float frexpf ( float  x, `int *nptr` )
-        | Extract mantissa and exponent of a floating-point value. 
+    * - | ``float floorf(float x)``
+        | Returns the largest integer less than or equal to :math:`x`.
       - ✓
       - ✓
 
-    * - | float j0f ( float  x )
-        | Calculate the value of the Bessel function of the first kind of order 0 for the input argument.
+    * - | ``float fmaf(float x, float y, float z)``
+        | Returns :math:`x \cdot y + z` as a single operation.
       - ✓
       - ✓
 
-    * - | float j1f ( float  x )
-        | Calculate the value of the Bessel function of the first kind of order 1 for the input argument.
+    * - | ``float fmaxf(float x, float y)``
+        | Determine the maximum numeric value of :math:`x` and :math:`y`.
       - ✓
       - ✓
 
-    * - | float jnf ( int n, float  x )
-        | Calculate the value of the Bessel function of the first kind of order n for the input argument.
+    * - | ``float fminf(float x, float y)``
+        | Determine the minimum numeric value of :math:`x` and :math:`y`.
       - ✓
       - ✓
 
-    * - | float lgammaf ( float  x )
-        | Calculate the natural logarithm of the absolute value of the gamma function of the input argument.
+    * - | ``float fmodf(float x, float y)``
+        | Returns the floating-point remainder of :math:`x / y`.
       - ✓
       - ✓
 
-    * - | long long int llrintf ( float  x )
-        | Round input to nearest integer value.
+    * - | ``float modff(float x, float* iptr)``
+        | Break down :math:`x` into fractional and integral parts.
+      - ✓
+      - ✗
+
+    * - | ``float frexpf(float x, int* nptr)``
+        | Extract mantissa and exponent of :math:`x`.
+      - ✓
+      - ✗
+
+    * - | ``float hypotf(float x, float y)``
+        | Returns the square root of the sum of squares of :math:`x` and :math:`y`.
       - ✓
       - ✓
 
-    * - | long long int llroundf ( float  x )
+    * - | ``int ilogbf(float x)``
+        | Returns the unbiased integer exponent of :math:`x`.
+      - ✓
+      - ✓
+
+    * - | ``bool isfinite(float x)``
+        | Determine whether :math:`x` is finite.
+      - ✓
+      - ✓
+
+    * - | ``bool isinf(float x)``
+        | Determine whether :math:`x` is infinite.
+      - ✓
+      - ✓
+
+    * - | ``bool isnan(float x)``
+        | Determine whether :math:`x` is a ``NAN``.
+      - ✓
+      - ✓
+
+    * - | ``float j0f(float x)``
+        | Returns the value of the Bessel function of the first kind of order 0 for :math:`x`.
+      - ✓
+      - ✓
+
+    * - | ``float j1f(float x)``
+        | Returns the value of the Bessel function of the first kind of order 1 for :math:`x`.
+      - ✓
+      - ✓
+
+    * - | ``float jnf(int n, float x)``
+        | Returns the value of the Bessel function of the first kind of order n for :math:`x`.
+      - ✓
+      - ✓
+
+    * - | ``float ldexpf(float x, int exp)``
+        | Returns the natural logarithm of the absolute value of the gamma function of :math:`x`.
+      - ✓
+      - ✓
+
+    * - | ``float lgammaf(float x)``
+        | Returns the natural logarithm of the absolute value of the gamma function of :math:`x`.
+      - ✓
+      - ✗
+
+    * - | ``long int lrintf(float x)``
+        | Round :math:`x` to nearest integer value.
+      - ✓
+      - ✓
+
+    * - | ``long long int llrintf(float x)``
+        | Round :math:`x` to nearest integer value.
+      - ✓
+      - ✓
+
+    * - | ``long int lroundf(float x)``
         | Round to nearest integer value.
       - ✓
       - ✓
 
-    * - | long int lrintf ( float  x )
-        | Round input to nearest integer value.
-      - ✓
-      - ✓
-
-    * - | long int lroundf ( float  x )
+    * - | ``long long int llroundf(float x)``
         | Round to nearest integer value.
       - ✓
       - ✓
 
-    * - | float modff ( float  x, `float *iptr` )
-        | Break down the input argument into fractional and integral parts.
+    * - | ``float log10f(float x)``
+        | Returns the base 10 logarithm of :math:`x`.
       - ✓
       - ✓
 
-    * - | float nextafterf ( float  x, float y )
+    * - | ``float log1pf(float x)``
+        | Returns the natural logarithm of :math:`x + 1`.
+      - ✓
+      - ✓
+
+    * - | ``float log2f(float x)``
+        | Returns the base 2 logarithm of :math:`x`.
+      - ✓
+      - ✓
+
+    * - | ``float logf(float x)``
+        | Returns the natural logarithm of :math:`x`.
+      - ✓
+      - ✓
+
+    * - | ``float logbf(float x)``
+        | Returns the floating point representation of the exponent of :math:`x`.
+      - ✓
+      - ✓
+
+    * - | ``float nanf(const char* tagp)``
+        | Returns "Not a Number" value.
+      - ✗
+      - ✓
+
+    * - | ``float nearbyintf(float x)``
+        | Round :math:`x` to the nearest integer.
+      - ✓
+      - ✓
+
+    * - | ``float nextafterf(float x, float y)``
         | Returns next representable single-precision floating-point value after argument.
       - ✓
-      - ✓
+      - ✗
 
-    * - | float norm3df ( float  a, float b, float c )
-        | Calculate the square root of the sum of squares of three coordinates of the argument.
-      - ✓
-      - ✓
-
-    * - | float norm4df ( float  a, float b, float c, float d )
-        | Calculate the square root of the sum of squares of four coordinates of the argument.
+    * - | ``float norm3df(float x, float y, float z)``
+        | Returns the square root of the sum of squares of :math:`x`, :math:`y` and :math:`z`.
       - ✓
       - ✓
 
-    * - | loat normcdff ( float  y )
-        | Calculate the standard normal cumulative distribution function.
+    * - | ``float norm4df(float x, float y, float z, float w)``
+        | Returns the square root of the sum of squares of :math:`x`, :math:`y`, :math:`z` and :math:`w`.
       - ✓
       - ✓
 
-    * - | float normcdfinvf ( float  y )
-        | Calculate the inverse of the standard normal cumulative distribution function.
+    * - | ``float normcdff(float y)``
+        | Returns the standard normal cumulative distribution function.
       - ✓
       - ✓
 
-    * - | float normf ( int dim, `const float *a` )
-        | Calculate the square root of the sum of squares of any number of coordinates.
+    * - | ``float normcdfinvf(float y)``
+        | Returns the inverse of the standard normal cumulative distribution function.
       - ✓
       - ✓
 
-    * - | float rcbrtf ( float x )
-        | Calculate the reciprocal cube root function.
+    * - | ``float normf(int dim, const float *a)``
+        | Returns the square root of the sum of squares of any number of coordinates.
       - ✓
       - ✓
 
-    * - | float remquof ( float x, float y, `int *quo` )
-        | Compute single-precision floating-point remainder and part of quotient.
+    * - | ``float powf(float x, float y)``
+        | Returns :math:`x^y`.
       - ✓
       - ✓
 
-    * - | float rhypotf ( float x, float y )
-        | Calculate one over the square root of the sum of squares of two arguments.
+    * - | ``float powif(float base, int iexp)``
+        | Returns the value of first argument to the power of second argument.
       - ✓
       - ✓
 
-    * - | float rintf ( float x )
+    * - | ``float remainderf(float x, float y)``
+        | Returns single-precision floating-point remainder.
+      - ✓
+      - ✓
+
+    * - | ``float remquof(float x, float y, int* quo)``
+        | Returns single-precision floating-point remainder and part of quotient.
+      - ✓
+      - ✓
+
+    * - | ``float roundf(float x)``
+        | Round to nearest integer value in floating-point.
+      - ✓
+      - ✓
+
+    * - | ``float rcbrtf(float x)``
+        | Returns the reciprocal cube root function.
+      - ✓
+      - ✓
+
+    * - | ``float rhypotf(float x, float y)``
+        | Returns one over the square root of the sum of squares of two arguments.
+      - ✓
+      - ✓
+
+    * - | ``float rintf(float x)``
         | Round input to nearest integer value in floating-point.
       - ✓
       - ✓
- 
-    * - | float rnorm3df ( float  a, float b, float c )
-        | Calculate one over the square root of the sum of squares of three coordinates of the argument.
+
+    * - | ``float rnorm3df(float x, float y, float z)``
+        | Returns one over the square root of the sum of squares of three coordinates of the argument.
       - ✓
       - ✓
 
-    * - | float rnorm4df ( float  a, float b, float c, float d )
-        | Calculate one over the square root of the sum of squares of four coordinates of the argument.
+    * - | ``float rnorm4df(float x, float y, float z, float w)``
+        | Returns one over the square root of the sum of squares of four coordinates of the argument.
       - ✓
       - ✓
 
-    * - | float rnormf ( int dim, `const float *a` )
-        | Calculate the reciprocal of square root of the sum of squares of any number of coordinates.
+    * - | ``float rnormf(int dim, const float *a)``
+        | Returns the reciprocal of square root of the sum of squares of any number of coordinates.
       - ✓
       - ✓
 
-    * - | float scalblnf ( float x, long int n )
-        | Scale floating-point input by integer power of two.
-      - ✓
-      - ✓
-  
-    * - | void sincosf ( float x, `float *sptr`, `float *cptr`)
-        | Calculate the sine and cosine of the first input argument.
+    * - | ``float scalblnf(float x, long int n)``
+        | Scale :math:`x` by :math:`2^n`.
       - ✓
       - ✓
 
-    * - | void sincospif ( float x, `float *sptr`, `float *cptr`)
-        | Calculate the sine and cosine of the first input argument multiplied by PI.
-      - ✓
-      - ✓
-    
-    * - | float y0f ( float  x )
-        | Calculate the value of the Bessel function of the second kind of order 0 for the input argument.
+    * - | ``float scalbnf(float x, int n)``
+        | Scale :math:`x` by :math:`2^n`.
       - ✓
       - ✓
 
-    * - | float y1f ( float  x )
-        | Calculate the value of the Bessel function of the second kind of order 1 for the input argument.
+    * - | ``bool signbit(float x)``
+        | Return the sign bit of :math:`x`.
       - ✓
       - ✓
 
-    * - | float ynf ( int n, float  x )
-        | Calculate the value of the Bessel function of the second kind of order n for the input argument.
+    * - | ``float sinf(float x)``
+        | Returns the sine of :math:`x`.
+      - ✓
+      - ✓
+
+    * - | ``float sinhf(float x)``
+        | Returns the hyperbolic sine of :math:`x`.
+      - ✓
+      - ✓
+
+    * - | ``float sinpif(float x)``
+        | Returns the hyperbolic sine of :math:`\pi \cdot x`.
+      - ✓
+      - ✓
+
+    * - | ``void sincosf(float x, float *sptr, float *cptr)``
+        | Returns the sine and cosine of :math:`x`.
+      - ✓
+      - ✓
+
+    * - | ``void sincospif(float x, float *sptr, float *cptr)``
+        | Returns the sine and cosine of :math:`\pi \cdot x`.
+      - ✓
+      - ✓
+
+    * - | ``float sqrtf(float x)``
+        | Returns the square root of :math:`x`.
+      - ✓
+      - ✓
+
+    * - | ``float rsqrtf(float x)``
+        | Returns the reciprocal of the square root of :math:`x`.
+      - ✗
+      - ✓
+
+    * - | ``float tanf(float x)``
+        | Returns the tangent of :math:`x`.
+      - ✓
+      - ✓
+
+    * - | ``float tanhf(float x)``
+        | Returns the hyperbolic tangent of :math:`x`.
+      - ✓
+      - ✓
+
+    * - | ``float tgammaf(float x)``
+        | Returns the gamma function of :math:`x`.
+      - ✓
+      - ✓
+
+    * - | ``float truncf(float x)``
+        | Truncate :math:`x` to the integral part.
+      - ✓
+      - ✓
+
+    * - | ``float y0f(float x)``
+        | Returns the value of the Bessel function of the second kind of order 0 for :math:`x`.
+      - ✓
+      - ✓
+
+    * - | ``float y1f(float x)``
+        | Returns the value of the Bessel function of the second kind of order 1 for :math:`x`.
+      - ✓
+      - ✓
+
+    * - | ``float ynf(int n, float x)``
+        | Returns the value of the Bessel function of the second kind of order n for :math:`x`.
       - ✓
       - ✓
 
 Double precision mathematical functions
 --------------------------------------------------------------------------------------------
-Following is the list of supported  double precision mathematical functions.
 
-.. list-table:: Single precision mathematical functions
+Following is the list of supported double precision mathematical functions.
+
+.. list-table:: Double precision mathematical functions
 
     * - **Function**
       - **Supported on Host**
       - **Supported on Device**
 
-    * - | double acos ( double  x )
-        | Calculate the arc cosine of the input argument.
+    * - | ``double abs(double x)``
+        | Returns the absolute value of :math:`x`
       - ✓
       - ✓
 
-    * - | double acosh ( double  x )
-        | Calculate the nonnegative arc hyperbolic cosine of the input argument.
+    * - | ``double acos(double x)``
+        | Returns the arc cosine of :math:`x`.
       - ✓
       - ✓
 
-    * - | double asin ( double  x )
-        | Calculate the arc sine of the input argument.
+    * - | ``double acosh(double x)``
+        | Returns the nonnegative arc hyperbolic cosine of :math:`x`.
       - ✓
       - ✓
 
-    * - | double asinh ( double  x )
-        | Calculate the arc hyperbolic sine of the input argument.
+    * - | ``double asin(double x)``
+        | Returns the arc sine of :math:`x`.
       - ✓
       - ✓
 
-    * - | double atan ( double  x )
-        | Calculate the arc tangent of the input argument.
+    * - | ``double asinh(double x)``
+        | Returns the arc hyperbolic sine of :math:`x`.
       - ✓
       - ✓
 
-    * - | double atan2 ( double  y, double  x )
-        | Calculate the arc tangent of the ratio of first and second input arguments.
+    * - | ``double atan(double x)``
+        | Returns the arc tangent of :math:`x`.
       - ✓
       - ✓
 
-    * - | double atanh ( double  x )
-        | Calculate the arc hyperbolic tangent of the input argument.
+    * - | ``double atan2(double x, double y)``
+        | Returns the arc tangent of the ratio of :math:`x` and :math:`y`.
       - ✓
       - ✓
 
-    * - | double cbrt ( double  x )
-        | Calculate the cube root of the input argument.
+    * - | ``double atanh(double x)``
+        | Returns the arc hyperbolic tangent of :math:`x`.
       - ✓
       - ✓
 
-    * - | double ceil ( double  x )
-        | Calculate ceiling of the input argument.
+    * - | ``double cbrt(double x)``
+        | Returns the cube root of :math:`x`.
       - ✓
       - ✓
 
-    * - | double copysign ( double  x, double  y )
+    * - | ``double ceil(double x)``
+        | Returns ceiling of :math:`x`.
+      - ✓
+      - ✓
+
+    * - | ``double copysign(double x, double y)``
         | Create value with given magnitude, copying sign of second value.
       - ✓
       - ✓
 
-    * - | double cos ( double  x )
-        | Calculate the cosine of the input argument.
+    * - | ``double cos(double x)``
+        | Returns the cosine of :math:`x`.
       - ✓
       - ✓
 
-    * - | double cosh ( double  x )
-        | Calculate the hyperbolic cosine of the input argument.
+    * - | ``double cosh(double x)``
+        | Returns the hyperbolic cosine of :math:`x`.
       - ✓
       - ✓
 
-    * - | double erf ( double  x )
-        | Calculate the error function of the input argument.
+    * - | ``double cospi(double x)``
+        | Returns the cosine of :math:`\pi \cdot x`.
       - ✓
       - ✓
 
-    * - | double erfc ( double  x )
-        | Calculate the complementary error function of the input argument.
+    * - | ``double cyl_bessel_i0(double x)``
+        | Returns the value of the regular modified cylindrical Bessel function of order 0 for :math:`x`.
+      - ✗
+      - ✗
+
+    * - | ``double cyl_bessel_i1(double x)``
+        | Returns the value of the regular modified cylindrical Bessel function of order 1 for :math:`x`.
+      - ✗
+      - ✗
+
+    * - | ``double erf(double x)``
+        | Returns the error function of :math:`x`.
       - ✓
       - ✓
 
-    * - | double exp ( double  x )
-        | Calculate the base e exponential of the input argument.
+    * - | ``double erfc(double x)``
+        | Returns the complementary error function of :math:`x`.
       - ✓
       - ✓
 
-    * - | double exp10 ( double  x )
-        | Calculate the base 10 exponential of the input argument.
+    * - | ``double erfcinv(double x)``
+        | Returns the inverse complementary function of :math:`x`.
       - ✓
       - ✓
 
-    * - | double exp2 ( double  x )
-        | Calculate the base 2 exponential of the input argument.
+    * - | ``double erfcx(double x)``
+        | Returns the scaled complementary error function of :math:`x`.
       - ✓
       - ✓
 
-    * - | double expm1 ( double  x )
-        | Calculate the base e exponential of the input argument, minus 1.
+    * - | ``double erfinv(double x)``
+        | Returns the inverse error function of :math:`x`.
       - ✓
       - ✓
 
-    * - | double fabs ( double  x )
-        | Calculate the absolute value of the input argument.
+    * - | ``double exp(double x)``
+        | Returns :math:`e^x`.
       - ✓
       - ✓
 
-    * - | double fdim ( double  x, double  y )
-        | Compute the positive difference between `x` and `y`.
+    * - | ``double exp10(double x)``
+        | Returns :math:`10^x`.
       - ✓
       - ✓
 
-    * - | double floor ( double  x )
-        | Calculate the largest integer less than or equal to `x`.
+    * - | ``double exp2( double x)``
+        | Returns :math:`2^x`.
       - ✓
       - ✓
 
-    * - | double fma ( double  x, double  y, double  z )
-        | Compute `x × y + z` as a single operation.
+    * - | ``double expm1(double x)``
+        | Returns :math:`ln(x - 1)`
       - ✓
       - ✓
 
-    * - | double fmax ( double , double )
-        | Determine the maximum numeric value of the arguments.
+    * - | ``double fabs(double x)``
+        | Returns the absolute value of `x`
       - ✓
       - ✓
 
-    * - | double fmin ( double  x, double  y )
-        | Determine the minimum numeric value of the arguments.
+    * - | ``double fdim(double x, double y)``
+        | Returns the positive difference between :math:`x` and :math:`y`.
       - ✓
       - ✓
 
-    * - | double fmod ( double  x, double  y )
-        | Calculate the floating-point remainder of `x / y`.
+    * - | ``double floor(double x)``
+        | Returns the largest integer less than or equal to :math:`x`.
       - ✓
       - ✓
 
-    * - | double frexp ( double  x, int* nptr )
-        | Extract mantissa and exponent of a floating-point value.
+    * - | ``double fma(double x, double y, double z)``
+        | Returns :math:`x \cdot y + z` as a single operation.
+      - ✓
+      - ✓
+
+    * - | ``double fmax(double x, double y)``
+        | Determine the maximum numeric value of :math:`x` and :math:`y`.
+      - ✓
+      - ✓
+
+    * - | ``double fmin(double x, double y)``
+        | Determine the minimum numeric value of :math:`x` and :math:`y`.
+      - ✓
+      - ✓
+
+    * - | ``double fmod(double x, double y)``
+        | Returns the floating-point remainder of :math:`x / y`.
+      - ✓
+      - ✓
+
+    * - | ``double modf(double x, double* iptr)``
+        | Break down :math:`x` into fractional and integral parts.
       - ✓
       - ✗
 
-    * - | double hypot ( double  x, double  y )
-        | Calculate the square root of the sum of squares of two arguments.
-      - ✓
-      - ✓
-
-    * - | int ilogb ( double  x )
-        | Compute the unbiased integer exponent of the argument.
-      - ✓
-      - ✓
-
-    * - | __RETURN_TYPE isfinite ( double  a )
-        | Determine whether argument is finite.
-      - ✓
-      - ✓
-
-    * - | __RETURN_TYPE isinf ( double  a )
-        | Determine whether argument is infinite.
-      - ✓
-      - ✓
-
-    * - | __RETURN_TYPE isnan ( double  a )
-        | Determine whether argument is a NaN.
-      - ✓
-      - ✓
-
-    * - | double ldexp ( double  x, int  exp )
-        | Calculate the value of x ⋅ 2 exp.
-      - ✓
-      - ✓
-
-    * - | double log ( double  x )
-        | Calculate the base e logarithm of the input argument.
-      - ✓
-      - ✓
-
-    * - | double log10 ( double  x )
-        | Calculate the base 10 logarithm of the input argument.
-      - ✓
-      - ✓
-
-    * - | double log1p ( double  x )
-        | Calculate the value of logarithm of exp ( 1 + x ).
-      - ✓
-      - ✓
-
-    * - | double log2 ( double  x )
-        | Calculate the base 2 logarithm of the input argument.
-      - ✓
-      - ✓
-
-    * - | double logb ( double  x )
-        | Calculate the floating point representation of the exponent of the input argument.
-      - ✓
-      - ✓
-
-    * - | double modf ( double  x, `double* iptr` )
-        | Break down the input argument into fractional and integral parts.
+    * - | ``double frexp(double x, int* nptr)``
+        | Extract mantissa and exponent of :math:`x`.
       - ✓
       - ✗
- 
-    * - | double nan ( const `char* tagp`)
-        | Returns ``Not a Number`` value.
+
+    * - | ``double hypot(double x, double y)``
+        | Returns the square root of the sum of squares of :math:`x` and :math:`y`.
+      - ✓
+      - ✓
+
+    * - | ``int ilogb(double x)``
+        | Returns the unbiased integer exponent of :math:`x`.
+      - ✓
+      - ✓
+
+    * - | ``bool isfinite(double x)``
+        | Determine whether :math:`x` is finite.
+      - ✓
+      - ✓
+
+    * - | ``bool isin(double x)``
+        | Determine whether :math:`x` is infinite.
+      - ✓
+      - ✓
+
+    * - | ``bool isnan(double x)``
+        | Determine whether :math:`x` is a ``NAN``.
+      - ✓
+      - ✓
+
+    * - | ``double j0(double x)``
+        | Returns the value of the Bessel function of the first kind of order 0 for :math:`x`.
+      - ✓
+      - ✓
+
+    * - | ``double j1(double x)``
+        | Returns the value of the Bessel function of the first kind of order 1 for :math:`x`.
+      - ✓
+      - ✓
+
+    * - | ``double jn(int n, double x)``
+        | Returns the value of the Bessel function of the first kind of order n for :math:`x`.
+      - ✓
+      - ✓
+
+    * - | ``double ldexp(double x, int exp)``
+        | Returns the natural logarithm of the absolute value of the gamma function of :math:`x`.
+      - ✓
+      - ✓
+
+    * - | ``double lgamma(double x)``
+        | Returns the natural logarithm of the absolute value of the gamma function of :math:`x`.
+      - ✓
+      - ✗
+
+    * - | ``long int lrint(double x)``
+        | Round :math:`x` to nearest integer value.
+      - ✓
+      - ✓
+
+    * - | ``long long int llrint(double x)``
+        | Round :math:`x` to nearest integer value.
+      - ✓
+      - ✓
+
+    * - | ``long int lround(double x)``
+        | Round to nearest integer value.
+      - ✓
+      - ✓
+
+    * - | ``long long int llround(double x)``
+        | Round to nearest integer value.
+      - ✓
+      - ✓
+
+    * - | ``double log10(double x)``
+        | Returns the base 10 logarithm of :math:`x`.
+      - ✓
+      - ✓
+
+    * - | ``double log1p(double x)``
+        | Returns the natural logarithm of :math:`x + 1`.
+      - ✓
+      - ✓
+
+    * - | ``double log2(double x)``
+        | Returns the base 2 logarithm of :math:`x`.
+      - ✓
+      - ✓
+
+    * - | ``double log(double x)``
+        | Returns the natural logarithm of :math:`x`.
+      - ✓
+      - ✓
+
+    * - | ``double logb(double x)``
+        | Returns the floating point representation of the exponent of :math:`x`.
+      - ✓
+      - ✓
+
+    * - | ``double nan(const char* tagp)``
+        | Returns "Not a Number" value.
       - ✗
       - ✓
 
-    * - | double nearbyint ( double  x )
-        | Round the input argument to the nearest integer.
+    * - | ``double nearbyint(double x)``
+        | Round :math:`x` to the nearest integer.
       - ✓
       - ✓
 
-    * - | double pow ( double  x, double  y )
-        | Calculate the value of first argument to the power of second argument.
+    * - | ``double nextafter(double x, double y)``
+        | Returns next representable double-precision floating-point value after argument.
       - ✓
       - ✓
 
-    * - | double remainder ( double  x, double  y )
-        | Compute double-precision floating-point remainder.
+    * - | ``double norm3d(double x, double y, double z)``
+        | Returns the square root of the sum of squares of :math:`x`, :math:`y` and :math:`z`.
       - ✓
       - ✓
 
-    * - | double remquo ( double  x, double  y, `int* quo` )
-        | Compute double-precision floating-point remainder and part of quotient.
+    * - | ``double norm4d(double x, double y, double z, double w)``
+        | Returns the square root of the sum of squares of :math:`x`, :math:`y`, :math:`z` and :math:`w`.
+      - ✓
+      - ✓
+
+    * - | ``double normcdf(double y)``
+        | Returns the standard normal cumulative distribution function.
+      - ✓
+      - ✓
+
+    * - | ``double normcdfinv(double y)``
+        | Returns the inverse of the standard normal cumulative distribution function.
+      - ✓
+      - ✓
+
+    * - | ``double norm(int dim, const double *a)``
+        | Returns the square root of the sum of squares of any number of coordinates.
+      - ✓
+      - ✓
+
+    * - | ``double pow(double x, double y)``
+        | Returns :math:`x^y`.
+      - ✓
+      - ✓
+
+    * - | ``double powi(double base, int iexp)``
+        | Returns the value of first argument to the power of second argument.
+      - ✓
+      - ✓
+
+    * - | ``double remainder(double x, double y)``
+        | Returns double-precision floating-point remainder.
+      - ✓
+      - ✓
+
+    * - | ``double remquo(double x, double y, int* quo)``
+        | Returns double-precision floating-point remainder and part of quotient.
       - ✓
       - ✗
- 
-    * - | double round ( double  x )
+
+    * - | ``double round(double x)``
         | Round to nearest integer value in floating-point.
       - ✓
       - ✓
 
-    * - | double scalbn ( double  x, int  n )
-        | Scale floating-point input by integer power of two.
-      - ✓
-      - ✓
- 
-    * - | __RETURN_TYPE signbit ( double  a )
-        | Return the sign bit of the input.
+    * - | ``double rcbrt(double x)``
+        | Returns the reciprocal cube root function.
       - ✓
       - ✓
 
-    * - | double sin ( double  x )
-        | Calculate the sine of the input argument.
+    * - | ``double rhypot(double x, double y)``
+        | Returns one over the square root of the sum of squares of two arguments.
       - ✓
       - ✓
 
-    * - | void sincos ( double  x, `double* sptr`, `double* cptr` )
-        | Calculate the sine and cosine of the first input argument.
-      - ✓
-      - ✗
- 
-    * - | double sinh ( double  x )
-        | Calculate the hyperbolic sine of the input argument.
-      - ✓
-      - ✓
-
-    * - | double sqrt ( double  x )
-        | Calculate the square root of the input argument.
-      - ✓
-      - ✓
-
-    * - | double tan ( double  x )
-        | Calculate the tangent of the input argument.
-      - ✓
-      - ✓
-
-    * - | double tanh ( double  x )
-        | Calculate the hyperbolic tangent of the input argument.
-      - ✓
-      - ✓
-
-    * - | double tgamma ( double  x )
-        | Calculate the gamma function of the input argument.
-      - ✓
-      - ✓
-
-    * - | double trunc ( double  x )
-        | Truncate input argument to the integral part.
-      - ✓
-      - ✓
-
-    * - | double erfcinv ( double  y )
-        | Calculate the inverse complementary function of the input argument.
-      - ✓
-      - ✓
-
-    * - | double erfcx ( double  x )
-        | Calculate the scaled complementary error function of the input argument.
-      - ✓
-      - ✓
-
-    * - | double erfinv ( double  y )
-        | Calculate the inverse error function of the input argument.
-      - ✓
-      - ✓
-      
-    * - | double frexp ( float  x, `int *nptr` )
-        | Extract mantissa and exponent of a floating-point value.
-      - ✓
-      - ✓
-
-    * - | double j0 ( double  x )
-        | Calculate the value of the Bessel function of the first kind of order 0 for the input argument.
-      - ✓
-      - ✓
-
-    * - | double j1 ( double  x )
-        | Calculate the value of the Bessel function of the first kind of order 1 for the input argument.
-      - ✓
-      - ✓
-
-    * - | double jn ( int n, double  x )
-        | Calculate the value of the Bessel function of the first kind of order n for the input argument.
-      - ✓
-      - ✓
-
-    * - | double lgamma ( double  x )
-        | Calculate the natural logarithm of the absolute value of the gamma function of the input argument.
-      - ✓
-      - ✓
-
-    * - | long long int llrint ( double  x )
-        | Round input to nearest integer value.
-      - ✓
-      - ✓
-
-
-    * - | long long int llround ( double  x )
-        | Round to nearest integer value.
-      - ✓
-      - ✓
-
-    * - | long int lrint ( double  x )
-        | Round input to nearest integer value.
-      - ✓
-      - ✓
-
-    * - | long int lround ( double  x )
-        | Round to nearest integer value.
-      - ✓
-      - ✓
-
-    * - | double modf ( double  x, `double *iptr` )
-        | Break down the input argument into fractional and integral parts.
-      - ✓
-      - ✓
-
-    * - | double nextafter ( double  x, double y )
-        | Returns next representable single-precision floating-point value after argument.
-      - ✓
-      - ✓
-
-    * - | double norm3d ( double  a, double b, double c )
-        | Calculate the square root of the sum of squares of three coordinates of the argument.
-      - ✓
-      - ✓
-
-    * - | float norm4d ( double  a, double b, double c, double d )
-        | Calculate the square root of the sum of squares of four coordinates of the argument.
-      - ✓
-      - ✓
-
-    * - | double normcdf ( double  y )
-        | Calculate the standard normal cumulative distribution function.
-      - ✓
-      - ✓
-
-    * - | double normcdfinv ( double  y )
-        | Calculate the inverse of the standard normal cumulative distribution function.
-      - ✓
-      - ✓
-
-    * - | double rcbrt ( double x )
-        | Calculate the reciprocal cube root function.
-      - ✓
-      - ✓
-
-    * - | double remquo ( double x, `double y`, `int *quo` )
-        | Compute single-precision floating-point remainder and part of quotient.
-      - ✓
-      - ✓
-
-    * - | double rhypot ( double x, double y )
-        | Calculate one over the square root of the sum of squares of two arguments.
-      - ✓
-      - ✓
-
-    * - | double rint ( double x )
+    * - | ``double rint(double x)``
         | Round input to nearest integer value in floating-point.
       - ✓
       - ✓
 
-    * - | double rnorm3d ( double a, double b, double c )
-        | Calculate one over the square root of the sum of squares of three coordinates of the argument.
+    * - | ``double rnorm3d(double x, double y, double z)``
+        | Returns one over the square root of the sum of squares of three coordinates of the argument.
       - ✓
       - ✓
 
-    * - | double rnorm4d ( double a, double b, double c, double d )
-        | Calculate one over the square root of the sum of squares of four coordinates of the argument.
+    * - | ``double rnorm4d(double x, double y, double z, double w)``
+        | Returns one over the square root of the sum of squares of four coordinates of the argument.
       - ✓
       - ✓
 
-    * - | double rnorm ( int dim, `const double *a` )
-        | Calculate the reciprocal of square root of the sum of squares of any number of coordinates.
+    * - | ``double rnorm(int dim, const double *a)``
+        | Returns the reciprocal of square root of the sum of squares of any number of coordinates.
       - ✓
       - ✓
 
-    * - | double scalbln ( double x, long int n )
-        | Scale floating-point input by integer power of two.
+    * - | ``double scalbln(double x, long int n)``
+        | Scale :math:`x` by :math:`2^n`.
       - ✓
       - ✓
 
-    * - | void sincos ( double x, `double *sptr`, `double *cptr` )
-        | Calculate the sine and cosine of the first input argument.
+    * - | ``double scalbn(double x, int n)``
+        | Scale :math:`x` by :math:`2^n`.
       - ✓
       - ✓
 
-    * - | void sincospi ( double x, `double *sptr`, `double *cptr` )
-        | Calculate the sine and cosine of the first input argument multiplied by PI.
+    * - | ``bool signbit(double x)``
+        | Return the sign bit of :math:`x`.
       - ✓
       - ✓
 
-    * - | double y0f ( double  x )
-        | Calculate the value of the Bessel function of the second kind of order 0 for the input argument.
+    * - | ``double sin(double x)``
+        | Returns the sine of :math:`x`.
       - ✓
       - ✓
 
-    * - | double y1 ( double  x )
-        | Calculate the value of the Bessel function of the second kind of order 1 for the input argument.
+    * - | ``double sinh(double x)``
+        | Returns the hyperbolic sine of :math:`x`.
       - ✓
       - ✓
 
-    * - | double yn ( int n, double  x )
-        | Calculate the value of the Bessel function of the second kind of order n for the input argument.
+    * - | ``double sinpi(double x)``
+        | Returns the hyperbolic sine of :math:`\pi \cdot x`.
+      - ✓
+      - ✓
+
+    * - | ``void sincos(double x, double *sptr, double *cptr)``
+        | Returns the sine and cosine of :math:`x`.
+      - ✓
+      - ✓
+
+    * - | ``void sincospi(double x, double *sptr, double *cptr)``
+        | Returns the sine and cosine of :math:`\pi \cdot x`.
+      - ✓
+      - ✓
+
+    * - | ``double sqrt(double x)``
+        | Returns the square root of :math:`x`.
+      - ✓
+      - ✓
+
+    * - | ``double rsqrt(double x)``
+        | Returns the reciprocal of the square root of :math:`x`.
+      - ✗
+      - ✓
+
+    * - | ``double tan(double x)``
+        | Returns the tangent of :math:`x`.
+      - ✓
+      - ✓
+
+    * - | ``double tanh(double x)``
+        | Returns the hyperbolic tangent of :math:`x`.
+      - ✓
+      - ✓
+
+    * - | ``double tgamma(double x)``
+        | Returns the gamma function of :math:`x`.
+      - ✓
+      - ✓
+
+    * - | ``double trunc(double x)``
+        | Truncate :math:`x` to the integral part.
+      - ✓
+      - ✓
+
+    * - | ``double y0(double x)``
+        | Returns the value of the Bessel function of the second kind of order 0 for :math:`x`.
+      - ✓
+      - ✓
+
+    * - | ``double y1(double x)``
+        | Returns the value of the Bessel function of the second kind of order 1 for :math:`x`.
+      - ✓
+      - ✓
+
+    * - | ``double yn(int n, double x)``
+        | Returns the value of the Bessel function of the second kind of order n for :math:`x`.
       - ✓
       - ✓
 
 Integer intrinsics
 --------------------------------------------------------------------------------------------
+
 Following is the list of supported integer intrinsics. Note that intrinsics are supported on device only.
 
-.. list-table:: Single precision mathematical functions
+.. list-table:: Integer intrinsics mathematical functions
 
     * - **Function**
 
-    * - | double acos ( double  x )
-        | Calculate the arc cosine of the input argument.
-
-    * - | unsigned int __brev ( unsigned int x )
+    * - | ``unsigned int __brev(unsigned int x)``
         | Reverse the bit order of a 32 bit unsigned integer.
 
-    * - | unsigned long long int __brevll ( unsigned long long int x )
-        | Reverse the bit order of a 64 bit unsigned integer. 
+    * - | ``unsigned long long int __brevll(unsigned long long int x)``
+        | Reverse the bit order of a 64 bit unsigned integer.
 
-    * - | int __clz ( int  x )
-        | Return the number of consecutive high-order zero bits in a 32 bit integer.
+    * - | ``unsigned int __byte_perm(unsigned int x, unsigned int y, unsigned int z)``
+        | Return selected bytes from two 32-bit unsigned integers.
 
-    * - | unsigned int __clz(unsigned int x)
-        | Return the number of consecutive high-order zero bits in 32 bit unsigned integer.
+    * - | ``unsigned int __clz(int x)``
+        | Return the number of consecutive high-order zero bits in 32 bit integer.
 
-    * - | int __clzll ( long long int x )
-        | Count the number of consecutive high-order zero bits in a 64 bit integer.
+    * - | ``unsigned int __clzll(long long int x)``
+        | Return the number of consecutive high-order zero bits in 64 bit integer.
 
-    * - | unsigned int __clzll(long long int x)
-        | Return the number of consecutive high-order zero bits in 64 bit signed integer.
+    * - | ``unsigned int __ffs(int x)``
+        | Find the position of least significant bit set to 1 in a 32 bit integer.
 
-    * - |  unsigned int __ffs(unsigned int x)
-        | Find the position of least signigicant bit set to 1 in a 32 bit unsigned integer.
+    * - | ``unsigned int __ffsll(long long int x)``
+        | Find the position of least significant bit set to 1 in a 64 bit signed integer.
 
-    * - | unsigned int __ffs(int x)
-        | Find the position of least signigicant bit set to 1 in a 32 bit signed integer.
+    * - | ``unsigned int __fns32(unsigned long long mask, unsigned int base, int offset)``
+        | Find the position of the n-th set to 1 bit in a 32-bit integer.
 
-    * - | unsigned int __ffsll(unsigned long long int x)
-        | Find the position of least signigicant bit set to 1 in a 64 bit unsigned integer.
+    * - | ``unsigned int __fns64(unsigned long long int mask, unsigned int base, int offset)``
+        | Find the position of the n-th set to 1 bit in a 64-bit integer.
 
-    * - | unsigned int __ffsll(long long int x)
-        | Find the position of least signigicant bit set to 1 in a 64 bit signed integer.
+    * - | ``unsigned int __funnelshift_l(unsigned int lo, unsigned int hi, unsigned int shift)``
+        | Concatenate :math:`hi` and :math:`lo`, shift left by shift & 31 bits, return the most significant 32 bits.
 
-    * - | unsigned int __popc ( unsigned int x )
+    * - | ``unsigned int __funnelshift_lc(unsigned int lo, unsigned int hi, unsigned int shift)``
+        | Concatenate :math:`hi` and :math:`lo`, shift left by min(shift, 32) bits, return the most significant 32 bits.
+
+    * - | ``unsigned int __funnelshift_r(unsigned int lo, unsigned int hi, unsigned int shift)``
+        | Concatenate :math:`hi` and :math:`lo`, shift right by shift & 31 bits, return the least significant 32 bits.
+
+    * - | ``unsigned int __funnelshift_rc(unsigned int lo, unsigned int hi, unsigned int shift)``
+        | Concatenate :math:`hi` and :math:`lo`, shift right by min(shift, 32) bits, return the least significant 32 bits.
+
+    * - | ``unsigned int __hadd(int x, int y)``
+        | Compute average of signed input arguments, avoiding overflow in the intermediate sum.
+
+    * - | ``unsigned int __rhadd(int x, int y)``
+        | Compute rounded average of signed input arguments, avoiding overflow in the intermediate sum.
+
+    * - | ``unsigned int __uhadd(int x, int y)``
+        | Compute average of unsigned input arguments, avoiding overflow in the intermediate sum.
+
+    * - | ``unsigned int __urhadd (unsigned int x, unsigned int y)``
+        | Compute rounded average of unsigned input arguments, avoiding overflow in the intermediate sum.
+
+    * - | ``int __sad(int x, int y, int z)``
+        | Returns :math:`|x - y| + z`, the sum of absolute difference.
+
+    * - | ``unsigned int __usad(unsigned int x, unsigned int y, unsigned int z)``
+        | Returns :math:`|x - y| + z`, the sum of absolute difference.
+
+    * - | ``unsigned int __popc(unsigned int x)``
         | Count the number of bits that are set to 1 in a 32 bit integer.
 
-    * - | unsigned int __popcll ( unsigned long long int x )
+    * - | ``unsigned int __popcll(unsigned long long int x)``
         | Count the number of bits that are set to 1 in a 64 bit integer.
 
-    * - | int __mul24 ( int x, int y )
+    * - | ``int __mul24(int x, int y)``
         | Multiply two 24bit integers.
 
-    * - | unsigned int __umul24 ( unsigned int x, unsigned int y )
+    * - | ``unsigned int __umul24(unsigned int x, unsigned int y)``
         | Multiply two 24bit unsigned integers.
 
-The HIP-Clang implementation of ``__ffs()`` and ``__ffsll()`` contains code to add a constant +1 to produce the ffs result format.
+    * - | ``int __mulhi(int x, int y)``
+        | Returns the most significant 32 bits of the product of the two 32-bit integers.
+
+    * - | ``unsigned int __umulhi(unsigned int x, unsigned int y)``
+        | Returns the most significant 32 bits of the product of the two 32-bit unsigned integers.
+
+    * - | ``long long int __mul64hi(long long int x, long long int y)``
+        | Returns the most significant 64 bits of the product of the two 64-bit integers.
+
+    * - | ``unsigned long long int __umul64hi(unsigned long long int x, unsigned long long int y)``
+        | Returns the most significant 64 bits of the product of the two 64 unsigned bit integers.
+
+The HIP-Clang implementation of ``__ffs()`` and ``__ffsll()`` contains code to add a constant +1 to produce the ``ffs`` result format.
 For the cases where this overhead is not acceptable and programmer is willing to specialize for the platform,
-HIP-Clang provides `__lastbit_u32_u32(unsigned int input)` and `__lastbit_u32_u64(unsigned long long int input)`.
-The index returned by ``__lastbit_`` instructions starts at -1, while for ffs the index starts at 0.
+HIP-Clang provides ``__lastbit_u32_u32(unsigned int input)`` and ``__lastbit_u32_u64(unsigned long long int input)``.
+The index returned by ``__lastbit_`` instructions starts at -1, while for ``ffs`` the index starts at 0.
 
 Floating-point Intrinsics
 --------------------------------------------------------------------------------------------
+
 Following is the list of supported floating-point intrinsics. Note that intrinsics are supported on device only.
 
-.. list-table:: Single precision mathematical functions
+.. note::
+
+  Only the nearest even rounding mode supported on AMD GPUs by defaults. The ``_rz``, ``_ru`` and
+  ``_rd`` suffixed intrinsic functions are existing in HIP AMD backend, if the
+  ``OCML_BASIC_ROUNDED_OPERATIONS`` macro is defined.
+
+.. list-table:: Single precision intrinsics mathematical functions
 
     * - **Function**
 
-    * - | float __cosf ( float  x )
-        | Calculate the fast approximate cosine of the input argument.
+    * - | ``float __cosf(float x)``
+        | Returns the fast approximate cosine of :math:`x`.
 
-    * - | float __expf ( float  x )
-        | Calculate the fast approximate base e exponential of the input argument.
+    * - | ``float __exp10f(float x)``
+        | Returns the fast approximate for 10 :sup:`x`.
 
-    * - | float __frsqrt_rn ( float  x )
-        | Compute `1 / √x` in round-to-nearest-even mode.
+    * - | ``float __expf(float x)``
+        | Returns the fast approximate for e :sup:`x`.
 
-    * - | float __fsqrt_rn ( float  x )
-        | Compute `√x` in round-to-nearest-even mode.
+    * - | ``float __fadd_rn(float x, float y)``
+        | Add two floating-point values in round-to-nearest-even mode.
 
-    * - | float __log10f ( float  x )
-        | Calculate the fast approximate base 10 logarithm of the input argument.
+    * - | ``float __fdiv_rn(float x, float y)``
+        | Divide two floating point values in round-to-nearest-even mode.
 
-    * - | float __log2f ( float  x )
-        | Calculate the fast approximate base 2 logarithm of the input argument.
+    * - | ``float __fmaf_rn(float x, float y, float z)``
+        | Returns ``x × y + z`` as a single operation in round-to-nearest-even mode.
 
-    * - | float __logf ( float  x )
-        | Calculate the fast approximate base e logarithm of the input argument.
+    * - | ``float __fmul_rn(float x, float y)``
+        | Multiply two floating-point values in round-to-nearest-even mode.
 
-    * - | float __powf ( float  x, float  y )
-        | Calculate the fast approximate of x<sup>y</sup>.
+    * - | ``float __frcp_rn(float x, float y)``
+        | Returns ``1 / x`` in round-to-nearest-even mode.
 
-    * - | float __sinf ( float  x )
-        | Calculate the fast approximate sine of the input argument.
+    * - | ``float __frsqrt_rn(float x)``
+        | Returns ``1 / √x`` in round-to-nearest-even mode.
 
-    * - | float __tanf ( float  x )
-        | Calculate the fast approximate tangent of the input argument.
+    * - | ``float __fsqrt_rn(float x)``
+        | Returns ``√x`` in round-to-nearest-even mode.
 
-    * - | double __dsqrt_rn ( double  x )
-        | Compute `√x` in round-to-nearest-even mode.
+    * - | ``float __fsub_rn(float x, float y)``
+        | Subtract two floating-point values in round-to-nearest-even mode.
+
+    * - | ``float __log10f(float x)``
+        | Returns the fast approximate for base 10 logarithm of :math:`x`.
+
+    * - | ``float __log2f(float x)``
+        | Returns the fast approximate for base 2 logarithm of :math:`x`.
+
+    * - | ``float __logf(float x)``
+        | Returns the fast approximate for natural logarithm of :math:`x`.
+
+    * - | ``float __powf(float x, float y)``
+        | Returns the fast approximate of x :sup:`y`.
+
+    * - | ``float __saturatef(float x)``
+        | Clamp :math:`x` to [+0.0, 1.0].
+
+    * - | ``float __sincosf(float x, float* sinptr, float* cosptr)``
+        | Returns the fast approximate of sine and cosine of :math:`x`.
+
+    * - | ``float __sinf(float x)``
+        | Returns the fast approximate sine of :math:`x`.
+
+    * - | ``float __tanf(float x)``
+        | Returns the fast approximate tangent of :math:`x`.
+
+.. list-table:: Double precision intrinsics mathematical functions
+
+    * - **Function**
+
+    * - | ``double __dadd_rn(double x, double y)``
+        | Add two floating-point values in round-to-nearest-even mode.
+
+    * - | ``double __ddiv_rn(double x, double y)``
+        | Divide two floating-point values in round-to-nearest-even mode.
+
+    * - | ``double __dmul_rn(double x, double y)``
+        | Multiply two floating-point values in round-to-nearest-even mode.
+
+    * - | ``double __drcp_rn(double x, double y)``
+        | Returns ``1 / x`` in round-to-nearest-even mode.
+
+    * - | ``double __dsqrt_rn(double x)``
+        | Returns ``√x`` in round-to-nearest-even mode.
+
+    * - | ``double __dsub_rn(double x, double y)``
+        | Subtract two floating-point values in round-to-nearest-even mode.
+
+    * - | ``double __fma_rn(double x, double y, double z)``
+        | Returns ``x × y + z`` as a single operation in round-to-nearest-even mode.
+
 
 Texture functions
 ===============================================
@@ -1325,7 +1450,7 @@ To read a high-resolution timer from the device, HIP provides the following buil
 
 * Returning the incremental counter value for every clock cycle on a device:
 
-  .. code:: cpp
+  .. code-block:: cpp
 
     clock_t clock()
     long long int clock64()
@@ -1334,14 +1459,14 @@ To read a high-resolution timer from the device, HIP provides the following buil
 
 * Returning the wall clock count at a constant frequency on the device:
 
-  .. code:: cpp
+  .. code-block:: cpp
 
     long long int wall_clock64()
 
   This can be queried using the HIP API with the ``hipDeviceAttributeWallClockRate`` attribute of the
   device in HIP application code. For example:
 
-  .. code:: cpp
+  .. code-block:: cpp
 
     int wallClkRate = 0; //in kilohertz
     HIPCHECK(hipDeviceGetAttribute(&wallClkRate, hipDeviceAttributeWallClockRate, deviceId));
@@ -1372,255 +1497,255 @@ HIP supports the following atomic operations.
       - **Supported in HIP**
       - **Supported in CUDA**
 
-    * - int atomicAdd(int* address, int val)
+    * - ``int atomicAdd(int* address, int val)``
       - ✓
       - ✓
 
-    * - int atomicAdd_system(int* address, int val)
+    * - ``int atomicAdd_system(int* address, int val)``
       - ✓
       - ✓
 
-    * - unsigned int atomicAdd(unsigned int* address,unsigned int val)
+    * - ``unsigned int atomicAdd(unsigned int* address,unsigned int val)``
       - ✓
       - ✓
 
-    * - unsigned int atomicAdd_system(unsigned int* address, unsigned int val)
+    * - ``unsigned int atomicAdd_system(unsigned int* address, unsigned int val)``
       - ✓
       - ✓
 
-    * - unsigned long long atomicAdd(unsigned long long* address,unsigned long long val)
+    * - ``unsigned long long atomicAdd(unsigned long long* address,unsigned long long val)``
       - ✓
       - ✓
 
-    * - unsigned long long atomicAdd_system(unsigned long long* address, unsigned long long val)
+    * - ``unsigned long long atomicAdd_system(unsigned long long* address, unsigned long long val)``
       - ✓
       - ✓
 
-    * - float atomicAdd(float* address, float val)
+    * - ``float atomicAdd(float* address, float val)``
       - ✓
       - ✓
 
-    * - float atomicAdd_system(float* address, float val)
+    * - ``float atomicAdd_system(float* address, float val)``
       - ✓
       - ✓
 
-    * - double atomicAdd(double* address, double val)
+    * - ``double atomicAdd(double* address, double val)``
       - ✓
       - ✓
 
-    * - double atomicAdd_system(double* address, double val)
+    * - ``double atomicAdd_system(double* address, double val)``
       - ✓
       - ✓
 
-    * - float unsafeAtomicAdd(float* address, float val)
+    * - ``float unsafeAtomicAdd(float* address, float val)``
       - ✓
       - ✗
 
-    * - float safeAtomicAdd(float* address, float val)
+    * - ``float safeAtomicAdd(float* address, float val)``
       - ✓
       - ✗
 
-    * - double unsafeAtomicAdd(double* address, double val)
+    * - ``double unsafeAtomicAdd(double* address, double val)``
       - ✓
       - ✗
 
-    * - double safeAtomicAdd(double* address, double val)
+    * - ``double safeAtomicAdd(double* address, double val)``
       - ✓
       - ✗
 
-    * - int atomicSub(int* address, int val)
+    * - ``int atomicSub(int* address, int val)``
       - ✓
       - ✓
 
-    * - int atomicSub_system(int* address, int val)
+    * - ``int atomicSub_system(int* address, int val)``
       - ✓
       - ✓
 
-    * - unsigned int atomicSub(unsigned int* address,unsigned int val)
+    * - ``unsigned int atomicSub(unsigned int* address,unsigned int val)``
       - ✓
       - ✓
 
-    * - unsigned int atomicSub_system(unsigned int* address, unsigned int val)
+    * - ``unsigned int atomicSub_system(unsigned int* address, unsigned int val)``
       - ✓
       - ✓
 
-    * - int atomicExch(int* address, int val)
+    * - ``int atomicExch(int* address, int val)``
       - ✓
       - ✓
 
-    * - int atomicExch_system(int* address, int val)
+    * - ``int atomicExch_system(int* address, int val)``
       - ✓
       - ✓
 
-    * - unsigned int atomicExch(unsigned int* address,unsigned int val)
+    * - ``unsigned int atomicExch(unsigned int* address,unsigned int val)``
       - ✓
       - ✓
 
-    * - unsigned int atomicExch_system(unsigned int* address, unsigned int val)
+    * - ``unsigned int atomicExch_system(unsigned int* address, unsigned int val)``
       - ✓
       - ✓
 
-    * - unsigned long long atomicExch(unsigned long long int* address,unsigned long long int val)
+    * - ``unsigned long long atomicExch(unsigned long long int* address,unsigned long long int val)``
       - ✓
       - ✓
 
-    * - unsigned long long atomicExch_system(unsigned long long* address, unsigned long long val)
+    * - ``unsigned long long atomicExch_system(unsigned long long* address, unsigned long long val)``
       - ✓
       - ✓
 
-    * - unsigned long long atomicExch_system(unsigned long long* address, unsigned long long val)
+    * - ``unsigned long long atomicExch_system(unsigned long long* address, unsigned long long val)``
       - ✓
       - ✓
 
-    * - float atomicExch(float* address, float val)
+    * - ``float atomicExch(float* address, float val)``
       - ✓
       - ✓
 
-    * - int atomicMin(int* address, int val)
+    * - ``int atomicMin(int* address, int val)``
       - ✓
       - ✓
 
-    * - int atomicMin_system(int* address, int val)
+    * - ``int atomicMin_system(int* address, int val)``
       - ✓
       - ✓
 
-    * - unsigned int atomicMin(unsigned int* address,unsigned int val)
+    * - ``unsigned int atomicMin(unsigned int* address,unsigned int val)``
       - ✓
       - ✓
 
-    * - unsigned int atomicMin_system(unsigned int* address, unsigned int val)
+    * - ``unsigned int atomicMin_system(unsigned int* address, unsigned int val)``
       - ✓
       - ✓
 
-    * - unsigned long long atomicMin(unsigned long long* address,unsigned long long val)
+    * - ``unsigned long long atomicMin(unsigned long long* address,unsigned long long val)``
       - ✓
       - ✓
 
-    * - int atomicMax(int* address, int val)
+    * - ``int atomicMax(int* address, int val)``
       - ✓
       - ✓
 
-    * - int atomicMax_system(int* address, int val)
+    * - ``int atomicMax_system(int* address, int val)``
       - ✓
       - ✓
 
-    * - unsigned int atomicMax(unsigned int* address,unsigned int val)
+    * - ``unsigned int atomicMax(unsigned int* address,unsigned int val)``
       - ✓
       - ✓
 
-    * - unsigned int atomicMax_system(unsigned int* address, unsigned int val)
+    * - ``unsigned int atomicMax_system(unsigned int* address, unsigned int val)``
       - ✓
       - ✓
 
-    * - unsigned long long atomicMax(unsigned long long* address,unsigned long long val)
+    * - ``unsigned long long atomicMax(unsigned long long* address,unsigned long long val)``
       - ✓
       - ✓
 
-    * - unsigned int atomicInc(unsigned int* address)
+    * - ``unsigned int atomicInc(unsigned int* address)``
       - ✗
       - ✓
 
-    * - unsigned int atomicDec(unsigned int* address)
+    * - ``unsigned int atomicDec(unsigned int* address)``
       - ✗
       - ✓
 
-    * - int atomicCAS(int* address, int compare, int val)
+    * - ``int atomicCAS(int* address, int compare, int val)``
       - ✓
       - ✓
 
-    * - int atomicCAS_system(int* address, int compare, int val)
+    * - ``int atomicCAS_system(int* address, int compare, int val)``
       - ✓
       - ✓
 
-    * - unsigned int atomicCAS(unsigned int* address,unsigned int compare,unsigned int val)
+    * - ``unsigned int atomicCAS(unsigned int* address,unsigned int compare,unsigned int val)``
       - ✓
       - ✓
 
-    * - unsigned int atomicCAS_system(unsigned int* address, unsigned int compare, unsigned int val)
+    * - ``unsigned int atomicCAS_system(unsigned int* address, unsigned int compare, unsigned int val)``
       - ✓
       - ✓
 
-    * - unsigned long long atomicCAS(unsigned long long* address,unsigned long long compare,unsigned long long val)
+    * - ``unsigned long long atomicCAS(unsigned long long* address,unsigned long long compare,unsigned long long val)``
       - ✓
       - ✓
 
-    * - unsigned long long atomicCAS_system(unsigned long long* address, unsigned long long compare, unsigned long long val)
+    * - ``unsigned long long atomicCAS_system(unsigned long long* address, unsigned long long compare, unsigned long long val)``
       - ✓
       - ✓
 
-    * - int atomicAnd(int* address, int val)
+    * - ``int atomicAnd(int* address, int val)``
       - ✓
       - ✓
 
-    * - int atomicAnd_system(int* address, int val)
+    * - ``int atomicAnd_system(int* address, int val)``
       - ✓
       - ✓
 
-    * - unsigned int atomicAnd(unsigned int* address,unsigned int val)
+    * - ``unsigned int atomicAnd(unsigned int* address,unsigned int val)``
       - ✓
       - ✓
 
-    * - unsigned int atomicAnd_system(unsigned int* address, unsigned int val)
+    * - ``unsigned int atomicAnd_system(unsigned int* address, unsigned int val)``
       - ✓
       - ✓
 
-    * - unsigned long long atomicAnd(unsigned long long* address,unsigned long long val)
+    * - ``unsigned long long atomicAnd(unsigned long long* address,unsigned long long val)``
       - ✓
       - ✓
 
-    * - unsigned long long atomicAnd_system(unsigned long long* address, unsigned long long val)
+    * - ``unsigned long long atomicAnd_system(unsigned long long* address, unsigned long long val)``
       - ✓
       - ✓
 
-    * - int atomicOr(int* address, int val)
+    * - ``int atomicOr(int* address, int val)``
       - ✓
       - ✓
 
-    * - int atomicOr_system(int* address, int val)
+    * - ``int atomicOr_system(int* address, int val)``
       - ✓
       - ✓
 
-    * - unsigned int atomicOr(unsigned int* address,unsigned int val)
+    * - ``unsigned int atomicOr(unsigned int* address,unsigned int val)``
       - ✓
       - ✓
 
-    * - unsigned int atomicOr_system(unsigned int* address, unsigned int val)
+    * - ``unsigned int atomicOr_system(unsigned int* address, unsigned int val)``
       - ✓
       - ✓
 
-    * - unsigned int atomicOr_system(unsigned int* address, unsigned int val)
+    * - ``unsigned int atomicOr_system(unsigned int* address, unsigned int val)``
       - ✓
       - ✓
 
-    * - unsigned long long atomicOr(unsigned long long int* address,unsigned long long val)
+    * - ``unsigned long long atomicOr(unsigned long long int* address,unsigned long long val)``
       - ✓
       - ✓
 
-    * - unsigned long long atomicOr_system(unsigned long long* address, unsigned long long val)
+    * - ``unsigned long long atomicOr_system(unsigned long long* address, unsigned long long val)``
       - ✓
       - ✓
 
-    * - int atomicXor(int* address, int val)
+    * - ``int atomicXor(int* address, int val)``
       - ✓
       - ✓
 
-    * - int atomicXor_system(int* address, int val)
+    * - ``int atomicXor_system(int* address, int val)``
       - ✓
       - ✓
 
-    * - unsigned int atomicXor(unsigned int* address,unsigned int val)
+    * - ``unsigned int atomicXor(unsigned int* address,unsigned int val)``
       - ✓
       - ✓
 
-    * - unsigned int atomicXor_system(unsigned int* address, unsigned int val)
+    * - ``unsigned int atomicXor_system(unsigned int* address, unsigned int val)``
       - ✓
       - ✓
 
-    * - unsigned long long atomicXor(unsigned long long* address,unsigned long long val)
+    * - ``unsigned long long atomicXor(unsigned long long* address,unsigned long long val)``
       - ✓
       - ✓
 
-    * - unsigned long long atomicXor_system(unsigned long long* address, unsigned long long val)
+    * - ``unsigned long long atomicXor_system(unsigned long long* address, unsigned long long val)``
       - ✓
       - ✓
 
@@ -1669,7 +1794,7 @@ RMW functions produce unsafe atomic RMW instructions:
 Warp cross-lane functions
 ========================================================
 
-Threads in a warp are referred to as `lanes` and are numbered from 0 to warpSize - 1.
+Threads in a warp are referred to as ``lanes`` and are numbered from ``0`` to ``warpSize - 1``.
 Warp cross-lane functions operate across all lanes in a warp. The hardware guarantees that all warp
 lanes will execute in lockstep, so additional synchronization is unnecessary, and the instructions
 use no shared memory.
@@ -1684,7 +1809,7 @@ portable code to query the warp size.
 
 To get the default warp size of a GPU device, use ``hipGetDeviceProperties`` in you host functions.
 
-.. code:: cpp
+.. code-block:: cpp
 
   cudaDeviceProp props;
   cudaGetDeviceProperties(&props, deviceID);
@@ -1710,7 +1835,7 @@ the correct type for the mask.
 Warp vote and ballot functions
 -------------------------------------------------------------------------------------------------------------
 
-.. code:: cpp
+.. code-block:: cpp
 
   int __all(int predicate)
   int __any(int predicate)
@@ -1724,7 +1849,7 @@ Warp vote and ballot functions
 You can use ``__any`` and ``__all`` to get a summary view of the predicates evaluated by the
 participating lanes.
 
-* ``__any()``: Returns 1 if the predicate is non-zero for any participating lane,  otherwise it returns 0.
+* ``__any()``: Returns 1 if the predicate is non-zero for any participating lane, otherwise it returns 0.
 
 * ``__all()``: Returns 1 if the predicate is non-zero for all participating lanes, otherwise it returns 0.
 
@@ -1758,13 +1883,13 @@ undefined.
 Warp match functions
 -------------------------------------------------------------------------------------------------------------
 
-.. code:: cpp
+.. code-block:: cpp
 
   unsigned long long __match_any(T value)
   unsigned long long __match_all(T value, int *pred)
 
   unsigned long long __match_any_sync(unsigned long long mask, T value)
-  unsigned long long __match_all_sync(unsigned long long mask, T value, int *pred) 
+  unsigned long long __match_all_sync(unsigned long long mask, T value, int *pred)
 
 ``T`` can be a 32-bit integer type, 64-bit integer type or a single precision or
 double precision floating point type.
@@ -1790,17 +1915,17 @@ Warp shuffle functions
 
 The default width is ``warpSize`` (see :ref:`warp-cross-lane`). Half-float shuffles are not supported.
 
-.. code:: cpp
+.. code-block:: cpp
 
-  int   __shfl      (T var,   int srcLane, int width=warpSize);
-  int   __shfl_up   (T var,   unsigned int delta, int width=warpSize);
-  int   __shfl_down (T var,   unsigned int delta, int width=warpSize);
-  int   __shfl_xor  (T var,   int laneMask, int width=warpSize);
+  T __shfl      (T var, int srcLane, int width=warpSize);
+  T __shfl_up   (T var, unsigned int delta, int width=warpSize);
+  T __shfl_down (T var, unsigned int delta, int width=warpSize);
+  T __shfl_xor  (T var, int laneMask, int width=warpSize);
 
-  int   __shfl_sync      (unsigned long long mask, T var,   int srcLane, int width=warpSize);
-  int   __shfl_up_sync   (unsigned long long mask, T var,   unsigned int delta, int width=warpSize);
-  int   __shfl_down_sync (unsigned long long mask, T var,   unsigned int delta, int width=warpSize);
-  int   __shfl_xor_sync  (unsigned long long mask, T var,   int laneMask, int width=warpSize);
+  T __shfl_sync      (unsigned long long mask, T var, int srcLane, int width=warpSize);
+  T __shfl_up_sync   (unsigned long long mask, T var, unsigned int delta, int width=warpSize);
+  T __shfl_down_sync (unsigned long long mask, T var, unsigned int delta, int width=warpSize);
+  T __shfl_xor_sync  (unsigned long long mask, T var, int laneMask, int width=warpSize);
 
 ``T`` can be a 32-bit integer type, 64-bit integer type or a single precision or
 double precision floating point type.
@@ -1826,103 +1951,103 @@ HIP supports the following kernel language cooperative groups types and function
       - **Supported in HIP**
       - **Supported in CUDA**
 
-    * - void thread_group.sync();
+    * - ``void thread_group.sync();``
       - ✓
       - ✓
 
-    * - unsigned thread_group.size();
+    * - ``unsigned thread_group.size();``
       - ✓
       - ✓
 
-    * - unsigned thread_group.thread_rank()
+    * - ``unsigned thread_group.thread_rank()``
       - ✓
       - ✓
 
-    * - bool thread_group.is_valid();
+    * - ``bool thread_group.is_valid();``
       - ✓
       - ✓
 
-    * - grid_group this_grid()
+    * - ``grid_group this_grid()``
       - ✓
       - ✓
 
-    * - void grid_group.sync()
+    * - ``void grid_group.sync()``
       - ✓
       - ✓
 
-    * - unsigned grid_group.size()
+    * - ``unsigned grid_group.size()``
       - ✓
       - ✓
 
-    * - unsigned grid_group.thread_rank()
+    * - ``unsigned grid_group.thread_rank()``
       - ✓
       - ✓
 
-    * - bool grid_group.is_valid()
+    * - ``bool grid_group.is_valid()``
       - ✓
       - ✓
 
-    * - multi_grid_group this_multi_grid()
+    * - ``multi_grid_group this_multi_grid()``
       - ✓
       - ✓
 
-    * - void multi_grid_group.sync()
+    * - ``void multi_grid_group.sync()``
       - ✓
       - ✓
 
-    * - unsigned multi_grid_group.size()
+    * - ``unsigned multi_grid_group.size()``
       - ✓
       - ✓
 
-    * - unsigned multi_grid_group.thread_rank()
+    * - ``unsigned multi_grid_group.thread_rank()``
       - ✓
       - ✓
 
-    * - bool multi_grid_group.is_valid()
+    * - ``bool multi_grid_group.is_valid()``
       - ✓
       - ✓
 
-    * - unsigned multi_grid_group.num_grids()
+    * - ``unsigned multi_grid_group.num_grids()``
       - ✓
       - ✓
 
-    * - unsigned multi_grid_group.grid_rank()
+    * - ``unsigned multi_grid_group.grid_rank()``
       - ✓
       - ✓
 
-    * - thread_block this_thread_block()
+    * - ``thread_block this_thread_block()``
       - ✓
       - ✓
 
-    * - multi_grid_group this_multi_grid()
+    * - ``multi_grid_group this_multi_grid()``
       - ✓
       - ✓
 
-    * - void multi_grid_group.sync()
+    * - ``void multi_grid_group.sync()``
       - ✓
       - ✓
 
-    * - void thread_block.sync()
+    * - ``void thread_block.sync()``
       - ✓
       - ✓
 
-    * - unsigned thread_block.size()
+    * - ``unsigned thread_block.size()``
       - ✓
       - ✓
 
-    * - unsigned thread_block.thread_rank()
+    * - ``unsigned thread_block.thread_rank()``
       - ✓
       - ✓
 
-    * - bool thread_block.is_valid()
+    * - ``bool thread_block.is_valid()``
       - ✓
       - ✓
 
-    * - dim3 thread_block.group_index()
+    * - ``dim3 thread_block.group_index()``
       - ✓
       - ✓
 
-    * - dim3 thread_block.thread_index()
+    * - ``dim3 thread_block.thread_index()``
       - ✓
       - ✓
 
@@ -1940,23 +2065,23 @@ HIP does not support kernel language warp matrix types or functions.
       - **Supported in HIP**
       - **Supported in CUDA**
 
-    * - void load_matrix_sync(fragment<...> &a, const T* mptr, unsigned lda)
+    * - ``void load_matrix_sync(fragment<...> &a, const T* mptr, unsigned lda)``
       - ✗
       - ✓
 
-    * - void load_matrix_sync(fragment<...> &a, const T* mptr, unsigned lda, layout_t layout)
+    * - ``void load_matrix_sync(fragment<...> &a, const T* mptr, unsigned lda, layout_t layout)``
       - ✗
       - ✓
 
-    * - void store_matrix_sync(T* mptr, fragment<...> &a,  unsigned lda, layout_t layout)
+    * - ``void store_matrix_sync(T* mptr, fragment<...> &a,  unsigned lda, layout_t layout)``
       - ✗
       - ✓
 
-    * - void fill_fragment(fragment<...> &a, const T &value)
+    * - ``void fill_fragment(fragment<...> &a, const T &value)``
       - ✗
       - ✓
 
-    * - void mma_sync(fragment<...> &d, const fragment<...> &a, const fragment<...> &b, const fragment<...> &c , bool sat)
+    * - ``void mma_sync(fragment<...> &d, const fragment<...> &a, const fragment<...> &b, const fragment<...> &c , bool sat)``
       - ✗
       - ✓
 
@@ -1971,14 +2096,15 @@ HIP does not support this type of scheduling.
 Profiler Counter Function
 ============================================================
 
-The CUDA `__prof_trigger()` instruction is not supported.
+The CUDA ``__prof_trigger()`` instruction is not supported.
 
 Assert
 ============================================================
 
 The assert function is supported in HIP.
 Assert function is used for debugging purpose, when the input expression equals to zero, the execution will be stopped.
-.. code:: cpp
+
+.. code-block:: cpp
 
   void assert(int input)
 
@@ -1987,7 +2113,7 @@ There are two kinds of implementations for assert functions depending on the use
 - Another is the device version of assert, which is implemented in ``hip/hip_runtime.h``.
 Users need to include ``assert.h`` to use ``assert``. For assert to work in both device and host functions, users need to include ``"hip/hip_runtime.h"``.
 
-HIP provides the function ``abort()`` which can be used to terminate the application when terminal failures are detected.  It is implemented using the ``__builtin_trap()`` function.
+HIP provides the function ``abort()`` which can be used to terminate the application when terminal failures are detected. It is implemented using the ``__builtin_trap()`` function.
 
 This function produces a similar effect of using ``asm("trap")`` in the CUDA code.
 
@@ -1996,13 +2122,13 @@ This function produces a similar effect of using ``asm("trap")`` in the CUDA cod
   In HIP, the function terminates the entire application, while in CUDA, ``asm("trap")`` only terminates the dispatch and the application continues to run.
 
 
-Printf
+``printf``
 ============================================================
 
-Printf function is supported in HIP.
+``printf`` function is supported in HIP.
 The following is a simple example to print information in the kernel.
 
-.. code:: cpp
+.. code-block:: cpp
 
   #include <hip/hip_runtime.h>
 
@@ -2016,29 +2142,29 @@ The following is a simple example to print information in the kernel.
 Device-Side Dynamic Global Memory Allocation
 ============================================================
 
-Device-side dynamic global memory allocation is under development.  HIP now includes a preliminary
+Device-side dynamic global memory allocation is under development. HIP now includes a preliminary
 implementation of malloc and free that can be called from device functions.
 
-`__launch_bounds__`
+``__launch_bounds__``
 ============================================================
 
-GPU multiprocessors have a fixed pool of resources (primarily registers and shared memory) which are shared by the actively running warps. Using more resources can increase IPC of the kernel but reduces the resources available for other warps and limits the number of warps that can be simulaneously running. Thus GPUs have a complex relationship between resource usage and performance.
+GPU multiprocessors have a fixed pool of resources (primarily registers and shared memory) which are shared by the actively running warps. Using more resources can increase IPC of the kernel but reduces the resources available for other warps and limits the number of warps that can be simultaneously running. Thus GPUs have a complex relationship between resource usage and performance.
 
-__launch_bounds__ allows the application to provide usage hints that influence the resources (primarily registers) used by the generated code.  It is a function attribute that must be attached to a __global__ function:
+``__launch_bounds__`` allows the application to provide usage hints that influence the resources (primarily registers) used by the generated code. It is a function attribute that must be attached to a __global__ function:
 
-.. code:: cpp
+.. code-block:: cpp
 
   __global__ void __launch_bounds__(MAX_THREADS_PER_BLOCK, MIN_WARPS_PER_EXECUTION_UNIT)
   MyKernel(hipGridLaunch lp, ...)
   ...
 
-__launch_bounds__ supports two parameters:
-- MAX_THREADS_PER_BLOCK - The programmers guarantees that kernel will be launched with threads less than MAX_THREADS_PER_BLOCK. (On NVCC this maps to the .maxntid PTX directive). If no launch_bounds is specified, MAX_THREADS_PER_BLOCK is the maximum block size supported by the device (typically 1024 or larger). Specifying MAX_THREADS_PER_BLOCK less than the maximum effectively allows the compiler to use more resources than a default unconstrained compilation that supports all possible block sizes at launch time.
-The threads-per-block is the product of (blockDim.x * blockDim.y * blockDim.z).
+``__launch_bounds__`` supports two parameters:
+- MAX_THREADS_PER_BLOCK - The programmers guarantees that kernel will be launched with threads less than MAX_THREADS_PER_BLOCK. (On NVCC this maps to the ``.maxntid`` PTX directive). If no launch_bounds is specified, MAX_THREADS_PER_BLOCK is the maximum block size supported by the device (typically 1024 or larger). Specifying MAX_THREADS_PER_BLOCK less than the maximum effectively allows the compiler to use more resources than a default unconstrained compilation that supports all possible block sizes at launch time.
+The threads-per-block is the product of (``blockDim.x * blockDim.y * blockDim.z``).
 - MIN_WARPS_PER_EXECUTION_UNIT - directs the compiler to minimize resource usage so that the requested number of warps can be simultaneously active on a multi-processor. Since active warps compete for the same fixed pool of resources, the compiler must reduce resources required by each warp(primarily registers). MIN_WARPS_PER_EXECUTION_UNIT is optional and defaults to 1 if not specified. Specifying a MIN_WARPS_PER_EXECUTION_UNIT greater than the default 1 effectively constrains the compiler's resource usage.
 
-When launch kernel with HIP APIs, for example, hipModuleLaunchKernel(), HIP will do validation to make sure input kernel dimension size is not larger than specified launch_bounds.
-In case exceeded, HIP would return launch failure, if AMD_LOG_LEVEL is set with proper value (for details, please refer to docs/markdown/hip_logging.md), detail information will be shown in the error log message, including
+When launch kernel with HIP APIs, for example, ``hipModuleLaunchKernel()``, HIP will do validation to make sure input kernel dimension size is not larger than specified launch_bounds.
+In case exceeded, HIP would return launch failure, if AMD_LOG_LEVEL is set with proper value (for details, please refer to ``docs/markdown/hip_logging.md``), detail information will be shown in the error log message, including
 launch parameters of kernel dim size, launch bounds, and the name of the faulting kernel. It's helpful to figure out which is the faulting kernel, besides, the kernel dim size and launch bounds values will also assist in debugging such failures.
 
 Compiler Impact
@@ -2048,44 +2174,44 @@ The compiler uses these parameters as follows:
 - The compiler uses the hints only to manage register usage, and does not automatically reduce shared memory or other resources.
 - Compilation fails if compiler cannot generate a kernel which meets the requirements of the specified launch bounds.
 - From MAX_THREADS_PER_BLOCK, the compiler derives the maximum number of warps/block that can be used at launch time.
-Values of MAX_THREADS_PER_BLOCK less than the default allows the compiler to use a larger pool of registers : each warp uses registers, and this hint constains the launch to a warps/block size which is less than maximum.
+Values of MAX_THREADS_PER_BLOCK less than the default allows the compiler to use a larger pool of registers : each warp uses registers, and this hint constrains the launch to a warps/block size which is less than maximum.
 - From MIN_WARPS_PER_EXECUTION_UNIT, the compiler derives a maximum number of registers that can be used by the kernel (to meet the required #simultaneous active blocks).
 If MIN_WARPS_PER_EXECUTION_UNIT is 1, then the kernel can use all registers supported by the multiprocessor.
 - The compiler ensures that the registers used in the kernel is less than both allowed maximums, typically by spilling registers (to shared or global memory), or by using more instructions.
-- The compiler may use hueristics to increase register usage, or may simply be able to avoid spilling. The MAX_THREADS_PER_BLOCK is particularly useful in this cases, since it allows the compiler to use more registers and avoid situations where the compiler constrains the register usage (potentially spilling) to meet the requirements of a large block size that is never used at launch time.
+- The compiler may use heuristics to increase register usage, or may simply be able to avoid spilling. The MAX_THREADS_PER_BLOCK is particularly useful in this cases, since it allows the compiler to use more registers and avoid situations where the compiler constrains the register usage (potentially spilling) to meet the requirements of a large block size that is never used at launch time.
 
 CU and EU Definitions
 --------------------------------------------------------------------------------------------
 
 A compute unit (CU) is responsible for executing the waves of a work-group. It is composed of one or more execution units (EU) which are responsible for executing waves. An EU can have enough resources to maintain the state of more than one executing wave. This allows an EU to hide latency by switching between waves in a similar way to symmetric multithreading on a CPU. In order to allow the state for multiple waves to fit on an EU, the resources used by a single wave have to be limited. Limiting such resources can allow greater latency hiding, but can result in having to spill some register state to memory. This attribute allows an advanced developer to tune the number of waves that are capable of fitting within the resources of an EU. It can be used to ensure at least a certain number will fit to help hide latency, and can also be used to ensure no more than a certain number will fit to limit cache thrashing.
 
-Porting from CUDA `__launch_bounds`
+Porting from CUDA ``__launch_bounds``
 --------------------------------------------------------------------------------------------
 
-CUDA defines a __launch_bounds which is also designed to control occupancy:
+CUDA defines a ``__launch_bounds`` which is also designed to control occupancy:
 
-.. code:: cpp
+.. code-block:: cpp
 
   __launch_bounds(MAX_THREADS_PER_BLOCK, MIN_BLOCKS_PER_MULTIPROCESSOR)
 
-- The second parameter __launch_bounds parameters must be converted to the format used __hip_launch_bounds, which uses warps and execution-units rather than blocks and multi-processors (this conversion is performed automatically by HIPIFY tools).
+- The second parameter ``__launch_bounds`` parameters must be converted to the format used __hip_launch_bounds, which uses warps and execution-units rather than blocks and multi-processors (this conversion is performed automatically by HIPIFY tools).
 
-.. code:: cpp
+.. code-block:: cpp
 
   MIN_WARPS_PER_EXECUTION_UNIT = (MIN_BLOCKS_PER_MULTIPROCESSOR * MAX_THREADS_PER_BLOCK) / 32
 
 The key differences in the interface are:
 - Warps (rather than blocks):
-The developer is trying to tell the compiler to control resource utilization to guarantee some amount of active Warps/EU for latency hiding.  Specifying active warps in terms of blocks appears to hide the micro-architectural details of the warp size, but makes the interface more confusing since the developer ultimately needs to compute the number of warps to obtain the desired level of control.
-- Execution Units  (rather than multiProcessor):
-The use of execution units rather than multiprocessors provides support for architectures with multiple execution units/multi-processor. For example, the AMD GCN architecture has 4 execution units per multiProcessor.  The hipDeviceProps has a field executionUnitsPerMultiprocessor.
-Platform-specific coding techniques such as #ifdef can be used to specify different launch_bounds for NVCC and HIP-Clang platforms, if desired.
+The developer is trying to tell the compiler to control resource utilization to guarantee some amount of active Warps/EU for latency hiding. Specifying active warps in terms of blocks appears to hide the micro-architectural details of the warp size, but makes the interface more confusing since the developer ultimately needs to compute the number of warps to obtain the desired level of control.
+- Execution Units (rather than multiprocessor):
+The use of execution units rather than multiprocessors provides support for architectures with multiple execution units/multi-processor. For example, the AMD GCN architecture has 4 execution units per multiprocessor. The ``hipDeviceProps`` has a field ``executionUnitsPerMultiprocessor``.
+Platform-specific coding techniques such as ``#ifdef`` can be used to specify different launch_bounds for NVCC and HIP-Clang platforms, if desired.
 
-maxregcount
+``maxregcount``
 --------------------------------------------------------------------------------------------
 
-Unlike nvcc, HIP-Clang does not support the "--maxregcount" option.  Instead, users are encouraged to use the hip_launch_bounds directive since the parameters are more intuitive and portable than
-micro-architecture details like registers, and also the directive allows per-kernel control rather than an entire file.  hip_launch_bounds works on both HIP-Clang and nvcc targets.
+Unlike NVCC, HIP-Clang does not support the ``--maxregcount`` option. Instead, users are encouraged to use the hip_launch_bounds directive since the parameters are more intuitive and portable than
+micro-architecture details like registers, and also the directive allows per-kernel control rather than an entire file. hip_launch_bounds works on both HIP-Clang and NVCC targets.
 
 Asynchronous Functions
 ============================================================
@@ -2120,24 +2246,24 @@ External Resource Interoperability
 Register Keyword
 ============================================================
 
-The register keyword is deprecated in C++, and is silently ignored by both nvcc and HIP-Clang.  You can pass the option `-Wdeprecated-register` the compiler warning message.
+The register keyword is deprecated in C++, and is silently ignored by both NVCC and HIP-Clang. You can pass the option ``-Wdeprecated-register`` the compiler warning message.
 
 Pragma Unroll
 ============================================================
 
-Unroll with a bounds that is known at compile-time is supported.  For example:
+Unroll with a bounds that is known at compile-time is supported. For example:
 
-.. code:: cpp
+.. code-block:: cpp
 
   #pragma unroll 16 /* hint to compiler to unroll next loop by 16 */
   for (int i=0; i<16; i++) ...
 
-.. code:: cpp
+.. code-block:: cpp
 
   #pragma unroll 1  /* tell compiler to never unroll the loop */
   for (int i=0; i<16; i++) ...
 
-.. code:: cpp
+.. code-block:: cpp
 
   #pragma unroll /* hint to compiler to completely unroll next loop. */
   for (int i=0; i<16; i++) ...
@@ -2147,16 +2273,16 @@ In-Line Assembly
 
 GCN ISA In-line assembly, is supported. For example:
 
-.. code:: cpp
+.. code-block:: cpp
 
   asm volatile ("v_mac_f32_e32 %0, %2, %3" : "=v" (out[i]) : "0"(out[i]), "v" (a), "v" (in[i]));
 
-We insert the GCN isa into the kernel using `asm()` Assembler statement.
-`volatile` keyword is used so that the optimizers must not change the number of volatile operations or change their order of execution relative to other volatile operations.
-`v_mac_f32_e32` is the GCN instruction, for more information please refer - [AMD GCN3 ISA architecture manual](http://gpuopen.com/compute-product/amd-gcn3-isa-architecture-manual/)
+We insert the GCN isa into the kernel using ``asm()`` Assembler statement.
+``volatile`` keyword is used so that the optimizers must not change the number of volatile operations or change their order of execution relative to other volatile operations.
+``v_mac_f32_e32`` is the GCN instruction, for more information please refer - [AMD GCN3 ISA architecture manual](http://gpuopen.com/compute-product/amd-gcn3-isa-architecture-manual/)
 Index for the respective operand in the ordered fashion is provided by `%` followed by position in the list of operands
 `"v"` is the constraint code (for target-specific AMDGPU) for 32-bit VGPR register, for more info please refer - [Supported Constraint Code List for AMDGPU](https://llvm.org/docs/LangRef.html#supported-constraint-code-list)
-Output Constraints are specified by an `"="` prefix as shown above ("=v"). This indicate that assemby will write to this operand, and the operand will then be made available as a return value of the asm expression. Input constraints do not have a prefix - just the constraint code. The constraint string of `"0"` says to use the assigned register for output as an input as well (it being the 0'th constraint).
+Output Constraints are specified by an `"="` prefix as shown above ("=v"). This indicate that assembly will write to this operand, and the operand will then be made available as a return value of the ``asm`` expression. Input constraints do not have a prefix - just the constraint code. The constraint string of `"0"` says to use the assigned register for output as an input as well (it being the 0'th constraint).
 
 ## C++ Support
 The following C++ features are not supported:
@@ -2167,10 +2293,11 @@ Virtual functions are not supported if objects containing virtual function table
 
 Kernel Compilation
 ============================================================
-hipcc now supports compiling C++/HIP kernels to binary code objects.
-The file format for binary is `.co` which means Code Object. The following command builds the code object using `hipcc`.
 
-.. code:: bash
+hipcc now supports compiling C++/HIP kernels to binary code objects.
+The file format for binary is ``.co`` which means Code Object. The following command builds the code object using ``hipcc``.
+
+.. code-block:: bash
 
   hipcc --genco --offload-arch=[TARGET GPU] [INPUT FILE] -o [OUTPUT FILE]
 
@@ -2184,4 +2311,5 @@ The file format for binary is `.co` which means Code Object. The following comma
 
 gfx-arch-specific-kernel
 ============================================================
-Clang defined '__gfx*__' macros can be used to execute gfx arch specific codes inside the kernel. Refer to the sample  in `HIP 14_gpu_arch sample <https://github.com/ROCm/hip-tests/tree/develop/samples/2_Cookbook/14_gpu_arch>`_.
+
+Clang defined '__gfx*__' macros can be used to execute gfx arch specific codes inside the kernel. Refer to the sample in `HIP 14_gpu_arch sample <https://github.com/ROCm/hip-tests/tree/develop/samples/2_Cookbook/14_gpu_arch>`_.

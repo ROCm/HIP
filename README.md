@@ -1,4 +1,4 @@
-## What is this repository for? ###
+## What is this repository for?
 
 **HIP is a C++ Runtime API and Kernel Language that allows developers to create portable applications for AMD and NVIDIA GPUs from single source code.**
 
@@ -18,7 +18,7 @@ The information presented in this document is for informational purposes only an
 
 © 2023 Advanced Micro Devices, Inc. All Rights Reserved.
 
-## Repository branches:
+## Repository branches
 
 The HIP repository maintains several branches. The branches that are of importance are:
 
@@ -26,27 +26,28 @@ The HIP repository maintains several branches. The branches that are of importan
 * Main branch: This is the stable branch. It is up to date with the latest release branch, for example, if the latest HIP release is rocm-4.3, main branch will be the repository based on this release.
 * Release branches. These are branches corresponding to each ROCM release, listed with release tags, such as rocm-4.2, rocm-4.3, etc.
 
-## Release tagging:
+## Release tagging
 
 HIP releases are typically naming convention for each ROCM release to help differentiate them.
 
 * rocm x.yy: These are the stable releases based on the ROCM release.
   This type of release is typically made once a month.*
 
-## More Info:
-- [Installation](docs/install/install.rst)
-- [HIP FAQ](docs/how-to/faq.md)
-- [HIP Kernel Language](docs/reference/kernel_language.rst)
-- [HIP Porting Guide](docs/how-to/hip_porting_guide.md)
-- [HIP Porting Driver Guide](docs/how-to/hip_porting_driver_api.md)
-- [HIP Programming Guide](docs/how-to/programming_manual.md)
-- [HIP Logging ](docs/how-to/logging.rst)
-- [Building HIP From Source](docs/install/build.rst)
-- [HIP Debugging ](docs/how-to/debugging.rst)
-- [HIP RTC](docs/how-to/hip_rtc.md)
-- [HIP Terminology](docs/reference/terms.md) (including Rosetta Stone of GPU computing terms across CUDA/HIP/OpenCL)
-- [HIPIFY](https://github.com/ROCm/HIPIFY/blob/amd-staging/README.md)
-- Supported CUDA APIs:
+## More Info
+
+* [Installation](docs/install/install.rst)
+* [HIP FAQ](docs/how-to/faq.md)
+* [HIP Kernel Language](docs/reference/kernel_language.rst)
+* [HIP Porting Guide](docs/how-to/hip_porting_guide.md)
+* [HIP Porting Driver Guide](docs/how-to/hip_porting_driver_api.md)
+* [HIP Programming Guide](docs/how-to/programming_manual.md)
+* [HIP Logging](docs/how-to/logging.rst)
+* [Building HIP From Source](docs/install/build.rst)
+* [HIP Debugging](docs/how-to/debugging.rst)
+* [HIP RTC](docs/how-to/hip_rtc.md)
+* [HIP Terminology](docs/reference/terms.md) (including Rosetta Stone of GPU computing terms across CUDA/HIP/OpenCL)
+* [HIPIFY](https://github.com/ROCm/HIPIFY/blob/amd-staging/README.md)
+* Supported CUDA APIs:
   * [Runtime API](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/tables/CUDA_Runtime_API_functions_supported_by_HIP.md)
   * [Driver API](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/tables/CUDA_Driver_API_functions_supported_by_HIP.md)
   * [cuComplex API](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/tables/cuComplex_API_supported_by_HIP.md)
@@ -56,20 +57,21 @@ HIP releases are typically naming convention for each ROCM release to help diffe
   * [cuDNN](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/tables/CUDNN_API_supported_by_HIP.md)
   * [cuFFT](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/tables/CUFFT_API_supported_by_HIP.md)
   * [cuSPARSE](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/tables/CUSPARSE_API_supported_by_HIP.md)
-- [Developer/CONTRIBUTING Info](CONTRIBUTING.md)
-- [Release Notes](RELEASE.md)
+* [Developer/CONTRIBUTING Info](CONTRIBUTING.md)
+* [Release Notes](RELEASE.md)
 
 ## How do I get set up?
 
 See the [Installation](docs/install/install.rst) notes.
 
 ## Simple Example
+
 The HIP API includes functions such as hipMalloc, hipMemcpy, and hipFree.
 Programmers familiar with CUDA will also be able to quickly learn and start coding with the HIP API.
 Compute kernels are launched with the "hipLaunchKernelGGL" macro call.
 Here is simple example showing a snippet of HIP API code:
 
-```
+```cpp
 hipMalloc(&A_d, Nbytes);
 hipMalloc(&C_d, Nbytes);
 
@@ -84,12 +86,10 @@ hipLaunchKernelGGL(vector_square,   /* compute kernel*/
 hipMemcpy(C_h, C_d, Nbytes, hipMemcpyDeviceToHost);
 ```
 
-
 The HIP kernel language defines builtins for determining grid and block coordinates, math functions, short vectors,
 atomics, and timer functions.
 It also specifies additional defines and keywords for function types, address spaces, and optimization controls (See the [HIP Kernel Language](docs/reference/kernel_language.rst) for a full description).
 Here's an example of defining a simple 'vector_square' kernel.
-
 
 ```cpp
 template <typename T>
@@ -108,49 +108,50 @@ vector_square(T *C_d, const T *A_d, size_t N)
 The HIP Runtime API code and compute kernel definition can exist in the same source file - HIP takes care of generating host and device code appropriately.
 
 ## HIP Portability and Compiler Technology
+
 HIP C++ code can be compiled with either,
-- On the NVIDIA CUDA platform, HIP provides header file which translate from the HIP runtime APIs to CUDA runtime APIs.  The header file contains mostly inlined
+
+* On the NVIDIA CUDA platform, HIP provides header file in the repository [hipother](https://github.com/ROCm/hipother) which translate from the HIP runtime APIs to CUDA runtime APIs.  The header file contains mostly inlined
   functions and thus has very low overhead - developers coding in HIP should expect the same performance as coding in native CUDA.  The code is then
   compiled with nvcc, the standard C++ compiler provided with the CUDA SDK.  Developers can use any tools supported by the CUDA SDK including the CUDA
   profiler and debugger.
-- On the AMD ROCm platform, HIP provides a header and runtime library built on top of HIP-Clang compiler.  The HIP runtime implements HIP streams, events, and memory APIs,
+* On the AMD ROCm platform, HIP provides a header and runtime library built on top of HIP-Clang compiler in the repository [Common Language Runtime (CLR)](https://github.com/ROCm/clr).  The HIP runtime implements HIP streams, events, and memory APIs,
   and is a object library that is linked with the application.  The source code for all headers and the library implementation is available on GitHub.
-  HIP developers on ROCm can use AMD's ROCgdb (https://github.com/ROCm/ROCgdb) for debugging and profiling.
+  HIP developers on ROCm can use AMD's [ROCgdb](https://github.com/ROCm/ROCgdb) for debugging and profiling.
 
 Thus HIP source code can be compiled to run on either platform.  Platform-specific features can be isolated to a specific platform using conditional compilation.  Thus HIP
 provides source portability to either platform.   HIP provides the _hipcc_ compiler driver which will call the appropriate toolchain depending on the desired platform.
 
-
-## Examples and Getting Started:
+## Examples and Getting Started
 
 * A sample and [blog](https://github.com/ROCm/hip-tests/tree/develop/samples/0_Intro/square) that uses any of [HIPIFY](https://github.com/ROCm/HIPIFY/blob/amd-staging/README.md) tools to convert a simple app from CUDA to HIP:
 
-
-```shell
-cd samples/01_Intro/square
-# follow README / blog steps to hipify the application.
-```
+  ```shell
+  cd samples/01_Intro/square
+  # follow README / blog steps to hipify the application.
+  ```
 
 * Guide to [Porting a New Cuda Project](https://rocm.docs.amd.com/projects/HIP/en/latest/how-to/hip_porting_guide.html#porting-a-new-cuda-project)
 
-
 ## More Examples
+
 The GitHub repository [HIP-Examples](https://github.com/ROCm/HIP-Examples) contains a hipified version of benchmark suite.
 Besides, there are more samples in Github [HIP samples](https://github.com/ROCm/hip-tests/tree/develop/samples), showing how to program with different features, build and run.
 
 ## Tour of the HIP Directories
+
 * **include**:
-    * **hip_runtime_api.h** : Defines HIP runtime APIs and can be compiled with many standard Linux compilers (GCC, ICC, CLANG, etc), in either C or C++ mode.
-    * **hip_runtime.h** : Includes everything in hip_runtime_api.h PLUS hipLaunchKernelGGL and syntax for writing device kernels and device functions.  hip_runtime.h can be compiled using a standard C++ compiler but will expose a subset of the available functions.
-    * **amd_detail/**** , **nvidia_detail/**** : Implementation details for specific platforms. HIP applications should not include these files directly.
+  * **hip_runtime_api.h** : Defines HIP runtime APIs and can be compiled with many standard Linux compilers (GCC, ICC, CLANG, etc), in either C or C++ mode.
+  * **hip_runtime.h** : Includes everything in hip_runtime_api.h PLUS hipLaunchKernelGGL and syntax for writing device kernels and device functions.  hip_runtime.h can be compiled using a standard C++ compiler but will expose a subset of the available functions.
+  * **amd_detail/**** , **nvidia_detail/**** : Implementation details for specific platforms. HIP applications should not include these files directly.
 
 * **bin**: Tools and scripts to help with hip porting
-    * **hipcc** : Compiler driver that can be used to replace nvcc in existing CUDA code. hipcc will call nvcc or HIP-Clang depending on platform and include appropriate platform-specific headers and libraries.
-    * **hipconfig** : Print HIP configuration (HIP_PATH, HIP_PLATFORM, HIP_COMPILER, HIP_RUNTIME, CXX config flags, etc.)
+  * **hipcc** : Compiler driver that can be used to replace nvcc in existing CUDA code. hipcc will call nvcc or HIP-Clang depending on platform and include appropriate platform-specific headers and libraries.
+  * **hipconfig** : Print HIP configuration (HIP_PATH, HIP_PLATFORM, HIP_COMPILER, HIP_RUNTIME, CXX config flags, etc.)
 
 * **docs**: Documentation - markdown and doxygen info.
 
 ## Reporting an issue
+
 Use the [GitHub issue tracker](https://github.com/ROCm/HIP/issues).
 If reporting a bug, include the output of "hipconfig --full" and samples/1_hipInfo/hipInfo (if possible).
-
