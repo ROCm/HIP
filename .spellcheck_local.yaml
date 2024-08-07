@@ -1,0 +1,4 @@
+matrix:
+- name: Markdown
+  sources:
+  - 'docs/**/*.md'
