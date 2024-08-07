@@ -8,12 +8,12 @@ resources:
     type: github
     endpoint: ROCm
     name: ROCm/clr
-    ref: develop
+    ref: amd-staging
   - repository: hipother_repo
     type: github
     endpoint: ROCm
     name: ROCm/hipother
-    ref: develop
+    ref: amd-staging
   pipelines:
   - pipeline: rocr-runtime_pipeline
     source: \ROCR-Runtime
@@ -26,6 +26,7 @@ resources:
     trigger:
       branches:
         include:
+        - amd-staging
         - amd-mainline
 
 variables:
@@ -36,7 +37,8 @@ trigger:
   batch: true
   branches:
     include:
-    - develop
+    - amd-staging
+    - amd-mainline
   paths:
     exclude:
     - docs
@@ -53,7 +55,8 @@ pr:
   autoCancel: true
   branches:
     include:
-    - develop
+    - amd-staging
+    - amd-mainline
   paths:
     exclude:
     - docs
