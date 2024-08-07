@@ -16,7 +16,6 @@ subtrees:
 - caption: Conceptual
   entries:
   - file: understand/programming_model
-  - file: understand/programming_model_reference
   - file: understand/hardware_implementation
   - file: understand/amd_clr
 
