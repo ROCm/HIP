@@ -2,6 +2,7 @@ ALU
 ALUs
 AmgX
 APU
+APUs
 AQL
 AXPY
 Asynchrony
@@ -74,6 +75,7 @@ malloc
 multicore
 multigrid
 multithreading
+MALU
 NCCL
 NDRange
 nonnegative
