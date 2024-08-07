@@ -160,7 +160,7 @@ example follow.
     :sync: linux-amd
 
     While distro maintainers might package ROCm so that it installs to
-    system-default locations, AMD's packages don't install that way. They need
+    system-default locations, AMD's packages aren't installed that way. They need
     to be added to the PATH by the user.
 
     .. code-block:: bash
