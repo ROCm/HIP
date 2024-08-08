@@ -8322,7 +8322,7 @@ hipError_t hipDrvGraphExecMemsetNodeSetParams(hipGraphExec_t hGraphExec, hipGrap
  *
  *  @note  Please note, the virtual memory management functions of HIP runtime
  *         API are implemented on Linux, under development on Windows. The
- *         following Virtual Virtual Memory Management APIs are not (yet)
+ *         following Virtual Memory Management APIs are not (yet)
  *         supported in HIP:
  *          - hipMemMapArrayAsync
  */
