@@ -77,17 +77,17 @@ Grid
   is 3-dimensional, as provided by the API and is queryable by every thread
   within the block.
 
-Cooperative Groups Thread Model
+Cooperative groups Thread Model
 -------------------------------
 
-The Cooperative Groups API introduces new APIs to launch, group, subdivide,
+The Cooperative groups API introduces new APIs to launch, group, subdivide,
 synchronize and identify threads, as well as some predefined group-collective
 algorithms, but most importantly a matching threading model to think in terms
 of. It relaxes some restrictions of the :ref:`inherent_thread_model`
 imposed by the strict 1:1 mapping of architectural details to the programming
 model.
 
-The Cooperative Groups API lets you define your own thread groups which may fit your use-case better than those defined by the default thread model.
+The Cooperative groups API lets you define your own thread groups which may fit your use-case better than those defined by the default thread model.
 
 .. note::
 
