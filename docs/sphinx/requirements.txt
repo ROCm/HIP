@@ -6,9 +6,9 @@
 #
 accessible-pygments==0.0.5
     # via pydata-sphinx-theme
-alabaster==0.7.16
+alabaster==1.0.0
     # via sphinx
-babel==2.15.0
+babel==2.16.0
     # via
     #   pydata-sphinx-theme
     #   sphinx
@@ -16,9 +16,9 @@ beautifulsoup4==4.12.3
     # via pydata-sphinx-theme
 breathe==4.35.0
     # via rocm-docs-core
-certifi==2024.6.2
+certifi==2024.7.4
     # via requests
-cffi==1.16.0
+cffi==1.17.0
     # via
     #   cryptography
     #   pynacl
@@ -31,7 +31,7 @@ click==8.1.7
     #   sphinx-external-toc
 click-log==0.4.0
     # via doxysphinx
-cryptography==42.0.8
+cryptography==43.0.0
     # via pyjwt
 deprecated==1.2.14
     # via pygithub
@@ -41,9 +41,9 @@ docutils==0.21.2
     #   myst-parser
     #   pydata-sphinx-theme
     #   sphinx
-doxysphinx==3.3.8
+doxysphinx==3.3.10
     # via rocm-docs-core
-fastjsonschema==2.19.1
+fastjsonschema==2.20.0
     # via rocm-docs-core
 gitdb==4.0.11
     # via gitpython
@@ -73,17 +73,17 @@ mdurl==0.1.2
     # via markdown-it-py
 mpire==2.10.2
     # via doxysphinx
-myst-parser==3.0.1
+myst-parser==4.0.0
     # via rocm-docs-core
 numpy==1.26.4
     # via doxysphinx
-packaging==24.0
+packaging==24.1
     # via
     #   pydata-sphinx-theme
     #   sphinx
 pycparser==2.22
     # via cffi
-pydata-sphinx-theme==0.15.3
+pydata-sphinx-theme==0.15.4
     # via
     #   rocm-docs-core
     #   sphinx-book-theme
@@ -97,7 +97,7 @@ pygments==2.18.0
     #   sphinx
 pyjson5==1.6.6
     # via doxysphinx
-pyjwt[crypto]==2.8.0
+pyjwt[crypto]==2.9.0
     # via pygithub
 pynacl==1.5.0
     # via pygithub
@@ -107,7 +107,7 @@ pyparsing==3.1.2
     #   sphinxcontrib-doxylink
 python-dateutil==2.9.0.post0
     # via sphinxcontrib-doxylink
-pyyaml==6.0.1
+pyyaml==6.0.2
     # via
     #   myst-parser
     #   rocm-docs-core
@@ -116,7 +116,7 @@ requests==2.32.3
     # via
     #   pygithub
     #   sphinx
-rocm-docs-core[api-reference]==1.4.0
+rocm-docs-core[api-reference]==1.6.2
     # via -r requirements.in
 six==1.16.0
     # via python-dateutil
@@ -126,7 +126,7 @@ snowballstemmer==2.2.0
     # via sphinx
 soupsieve==2.5
     # via beautifulsoup4
-sphinx==7.3.7
+sphinx==8.0.2
     # via
     #   breathe
     #   myst-parser
@@ -138,39 +138,39 @@ sphinx==7.3.7
     #   sphinx-external-toc
     #   sphinx-notfound-page
     #   sphinxcontrib-doxylink
-sphinx-book-theme==1.1.2
+sphinx-book-theme==1.1.3
     # via rocm-docs-core
 sphinx-copybutton==0.5.2
     # via rocm-docs-core
-sphinx-design==0.6.0
+sphinx-design==0.6.1
     # via rocm-docs-core
 sphinx-external-toc==1.0.1
     # via rocm-docs-core
-sphinx-notfound-page==1.0.2
+sphinx-notfound-page==1.0.4
     # via rocm-docs-core
-sphinxcontrib-applehelp==1.0.8
+sphinxcontrib-applehelp==2.0.0
     # via sphinx
-sphinxcontrib-devhelp==1.0.6
+sphinxcontrib-devhelp==2.0.0
     # via sphinx
 sphinxcontrib-doxylink==1.12.3
     # via -r requirements.in
-sphinxcontrib-htmlhelp==2.0.5
+sphinxcontrib-htmlhelp==2.1.0
     # via sphinx
 sphinxcontrib-jsmath==1.0.1
     # via sphinx
-sphinxcontrib-qthelp==1.0.7
+sphinxcontrib-qthelp==2.0.0
     # via sphinx
-sphinxcontrib-serializinghtml==1.1.10
+sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
 tomli==2.0.1
     # via sphinx
-tqdm==4.66.4
+tqdm==4.66.5
     # via mpire
-typing-extensions==4.12.1
+typing-extensions==4.12.2
     # via
     #   pydata-sphinx-theme
     #   pygithub
-urllib3==2.2.1
+urllib3==2.2.2
     # via
     #   pygithub
     #   requests
