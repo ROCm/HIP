@@ -5,7 +5,7 @@
 .. _cooperative_groups_reference:
 
 *******************************************************************************
-HIP Cooperative Groups API
+HIP Cooperative groups API
 *******************************************************************************
 
 Cooperative kernel launches

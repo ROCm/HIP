@@ -3,7 +3,7 @@
   :keywords: AMD, ROCm, HIP, cooperative groups, tutorial
 
 *******************************************************************************
-Cooperative Groups
+Cooperative groups
 *******************************************************************************
 
 This tutorial demonstrates the basic concepts of cooperative groups in the HIP (Heterogeneous-computing Interface for Portability) programming model and the most essential tooling supporting it. This topic also reviews the commonalities of heterogeneous APIs. Familiarity with the C/C++ compilation model and the language is assumed.
