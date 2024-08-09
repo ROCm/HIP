@@ -5,10 +5,10 @@
 .. _cooperative_groups_how-to:
 
 *******************************************************************************
-Cooperative Groups
+Cooperative groups
 *******************************************************************************
 
-Cooperative groups API is an extension to the HIP programming model, which provides developers with a flexible, dynamic grouping mechanism for the communicating threads. Cooperative Groups let you define your own set of thread groups which may fit your user-cases better than those defined by the hardware. This lets you specify the level of granularity for thread communication which can lead to more efficient parallel decompositions.
+Cooperative groups API is an extension to the HIP programming model, which provides developers with a flexible, dynamic grouping mechanism for the communicating threads. Cooperative groups let you define your own set of thread groups which may fit your user-cases better than those defined by the hardware. This lets you specify the level of granularity for thread communication which can lead to more efficient parallel decompositions.
 
 The API is accessible in the ``cooperative_groups`` namespace after the  ``hip_cooperative_groups.h`` is included. The header contains the following  elements:
 
@@ -44,7 +44,7 @@ The **block** is the same as the :ref:`inherent_thread_model` block entity.
 
 .. note::
 
-  Explicit warp-level thread handling is absent from the Cooperative Groups API. In order to exploit the known hardware SIMD width on which built-in functionality translates to simpler logic, you can use the group partitioning part of the API, such as ``tiled_partition``.
+  Explicit warp-level thread handling is absent from the Cooperative groups API. In order to exploit the known hardware SIMD width on which built-in functionality translates to simpler logic, you can use the group partitioning part of the API, such as ``tiled_partition``.
 
 .. _coop_thread_bottom_hierarchy:
 
@@ -216,7 +216,7 @@ The difference to the original block model in the ``reduce_sum`` device function
           // ...
       }
 
-  .. tab-item:: Cooperative Groups
+  .. tab-item:: Cooperative groups
     :sync: cooperative-groups
 
     .. code-block:: cuda
@@ -271,7 +271,7 @@ The ``reduce_sum()`` function call and input data initialization difference to t
           // ...
       }
 
-  .. tab-item:: Cooperative Groups
+  .. tab-item:: Cooperative groups
     :sync: cooperative-groups
 
     .. code-block:: cuda
