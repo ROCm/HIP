@@ -699,21 +699,25 @@ enum hipLimit_t {
  * non-coherent host memory visible to the host. The flag is a no-op on CUDA platforms.*/
 #define hipEventReleaseToSystem  0x80000000
 
-//Flags that can be used with hipHostMalloc.
+//Flags that can be used with hipHostMalloc/hipHostAlloc.
 /** Default pinned memory allocation on the host.*/
 #define hipHostMallocDefault 0x0
+#define hipHostAllocDefault 0x0
 
 /** Memory is considered allocated by all contexts.*/
 #define hipHostMallocPortable 0x1
+#define hipHostAllocPortable 0x1
 
 /** Map the allocation into the address space for the current device. The device pointer
  * can be obtained with #hipHostGetDevicePointer.*/
 #define hipHostMallocMapped  0x2
+#define hipHostAllocMapped  0x2
 
 /** Allocates the memory as write-combined. On some system configurations, write-combined allocation
  * may be transferred faster across the PCI Express bus, however, could have low read efficiency by
  * most CPUs. It's a good option for data tranfer from host to device via mapped pinned memory.*/
 #define hipHostMallocWriteCombined 0x4
+#define hipHostAllocWriteCombined 0x4
 
 /**
 * Host memory allocation will follow numa policy set by user.
@@ -3768,9 +3772,15 @@ hipError_t hipMemPoolImportPointer(
  *
  *  @param[out] ptr Pointer to the allocated host pinned memory
  *  @param[in]  size Requested memory size in bytes
- *  @param[in]  flags Type of host memory allocation
+ *  @param[in]  flags Type of host memory allocation see below
  *
  *  If size is 0, no memory is allocated, *ptr returns nullptr, and hipSuccess is returned.
+ *
+ *  Flags:
+ *  - #hipHostAllocDefault   Default pinned memory allocation on the host.
+ *  - #hipHostAllocPortable  Memory is considered allocated by all contexts.
+ *  - #hipHostAllocMapped    Map the allocation into the address space for the current device.
+ *  - #hipHostAllocWriteCombined  Allocates the memory as write-combined.
  *
  *  @return #hipSuccess, #hipErrorOutOfMemory, #hipErrorInvalidValue
  */
@@ -3901,16 +3911,14 @@ hipError_t hipMemAllocPitch(hipDeviceptr_t* dptr, size_t* pitch, size_t widthInB
  */
 hipError_t hipFree(void* ptr);
 /**
- *  @brief Free memory allocated by the hcc hip host memory allocation API [Deprecated]
+ *  @brief Frees page-locked memory
  *
  *  @param[in] ptr Pointer to memory to be freed
  *  @return #hipSuccess,
  *          #hipErrorInvalidValue (if pointer is invalid, including device pointers allocated
  *  with hipMalloc)
  *
- *  @warning  This API is deprecated, use hipHostFree() instead
  */
-DEPRECATED("use hipHostFree instead")
 hipError_t hipFreeHost(void* ptr);
 /**
  *  @brief Free memory allocated by the hcc hip host memory allocation API
@@ -9338,6 +9346,23 @@ template <class T>
 static inline hipError_t hipHostMalloc(T** ptr, size_t size,
                                        unsigned int flags = hipHostMallocDefault) {
     return hipHostMalloc((void**)ptr, size, flags);
+}
+/**
+ * @brief: C++ wrapper for hipHostAlloc
+ * @ingroup Memory
+ * Provide an override to automatically typecast the pointer type from void**, and also provide a
+ * default for the flags.
+ *
+ * __HIP_DISABLE_CPP_FUNCTIONS__ macro can be defined to suppress these
+ * wrappers. It is useful for applications which need to obtain decltypes of
+ * HIP runtime APIs.
+ *
+ * @see hipHostAlloc
+ */
+template <class T>
+static inline hipError_t hipHostAlloc(T** ptr, size_t size,
+                                       unsigned int flags = hipHostAllocDefault) {
+    return hipHostAlloc((void**)ptr, size, flags);
 }
 /**
  * @brief: C++ wrapper for hipMallocManaged

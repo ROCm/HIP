@@ -104,8 +104,10 @@ syn keyword hipFunctionName hipEventRecord
 syn keyword hipFunctionName hipEventSynchronize 
 syn keyword hipFunctionName hipFree 
 syn keyword hipFunctionName hipFreeArray 
-syn keyword hipFunctionName hipHostMalloc  
-syn keyword hipFunctionName hipHostFree  
+syn keyword hipFunctionName hipHostMalloc
+syn keyword hipFunctionName hipHostAlloc
+syn keyword hipFunctionName hipHostFree
+syn keyword hipFunctionName hipFreeHost
 syn keyword hipFunctionName hipHostGetDevicePointer  
 syn keyword hipFunctionName hipHostGetFlags  
 syn keyword hipFunctionName hipHostRegister  
