@@ -45,7 +45,6 @@ Memory management
 
 * ``hipMallocHost`` (replaced with ``hipHostMalloc``)
 * ``hipMemAllocHost`` (replaced with ``hipHostMalloc``)
-* ``hipFreeHost`` (replaced with ``hipHostFree``)
 * ``hipMemcpyToArray``
 * ``hipMemcpyFromArray``
 
