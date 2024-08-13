@@ -17,6 +17,7 @@ subtrees:
   entries:
   - file: understand/programming_model
   - file: understand/hardware_implementation
+  - file: understand/hipgraph
   - file: understand/amd_clr
 
 - caption: How to

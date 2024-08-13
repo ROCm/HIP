@@ -31,6 +31,7 @@ On non-AMD platforms, like NVIDIA, HIP provides header files required to support
 
 * {doc}`./understand/programming_model`
 * {doc}`./understand/hardware_implementation`
+* {doc}`./understand/hipgraph`
 * {doc}`./understand/amd_clr`
 
 :::
