@@ -87,6 +87,7 @@ ltrace
 makefile
 Malloc
 malloc
+memset
 multicore
 multigrid
 multithreading
@@ -105,7 +106,9 @@ overindexing
 oversubscription
 pixelated
 pragmas
+preallocated
 preconditioners
+predefining
 prefetched
 preprocessor
 PTX

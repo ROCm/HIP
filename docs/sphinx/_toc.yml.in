@@ -36,6 +36,8 @@ subtrees:
   - file: how-to/virtual_memory
     title: Virtual memory
   - file: how-to/stream_ordered_allocator
+  - file: how-to/hipgraph
+    title: HIP graphs
   - file: how-to/faq
 
 - caption: Reference
