@@ -49,6 +49,7 @@ On non-AMD platforms, like NVIDIA, HIP provides header files required to support
 * [Virtual memory](./how-to/virtual_memory)
 * {doc}`./how-to/stream_ordered_allocator`
 * [Cooperative groups](./how-to/cooperative_groups)
+* [HIP graphs](./how-to/hipgraph)
 * {doc}`./how-to/faq`
 
 :::
