@@ -44,6 +44,7 @@ hardcoded
 HC
 HIP's
 hipcc
+hipDeviceSynchronize
 hipexamine
 hipified
 hipother
@@ -72,6 +73,7 @@ ltrace
 makefile
 Malloc
 malloc
+memset
 multicore
 multigrid
 multithreading
@@ -87,7 +89,9 @@ overindexing
 oversubscription
 pixelated
 pragmas
+preallocated
 preconditioners
+predefining
 prefetched
 preprocessor
 PTX

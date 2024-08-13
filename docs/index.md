@@ -48,6 +48,7 @@ On non-AMD platforms, like NVIDIA, HIP provides header files required to support
 * [Unified memory](./how-to/unified_memory)
 * [Virtual memory](./how-to/virtual_memory)
 * [Cooperative groups](./how-to/cooperative_groups)
+* [HIP graphs](./how-to/hipgraph)
 * {doc}`./how-to/faq`
 
 :::
