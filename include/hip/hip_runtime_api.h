@@ -3141,6 +3141,18 @@ hipError_t hipMalloc(void** ptr, size_t size);
  * hipHostFree, hipHostMalloc
  */
 hipError_t hipExtMallocWithFlags(void** ptr, size_t sizeBytes, unsigned int flags);
+
+
+/**
+ *-------------------------------------------------------------------------------------------------
+ *-------------------------------------------------------------------------------------------------
+ *  @defgroup MemoryD Memory Management [Deprecated]
+ *  @ingroup Memory
+ *  @{
+ *  This section describes the deprecated memory management functions of HIP runtime API.
+ *
+ */
+
 /**
  *  @brief Allocate pinned host memory [Deprecated]
  *
@@ -3169,6 +3181,11 @@ hipError_t hipMallocHost(void** ptr, size_t size);
  */
 DEPRECATED("use hipHostMalloc instead")
 hipError_t hipMemAllocHost(void** ptr, size_t size);
+// end doxygen deprecated management memory
+/**
+ * @}
+ */
+
 /**
  *  @brief Allocates device accessible page locked (pinned) host memory
  *
@@ -3904,6 +3921,8 @@ hipError_t hipMemAllocPitch(hipDeviceptr_t* dptr, size_t* pitch, size_t widthInB
 hipError_t hipFree(void* ptr);
 /**
  *  @brief Free memory allocated by the hcc hip host memory allocation API [Deprecated]
+ *
+ *  @ingroup MemoryD
  *
  *  @param[in] ptr Pointer to memory to be freed
  *  @return #hipSuccess,
@@ -4784,7 +4803,9 @@ hipError_t hipMemcpy2DArrayToArray(hipArray_t dst, size_t wOffsetDst, size_t hOf
                                    hipArray_const_t src, size_t wOffsetSrc, size_t hOffsetSrc,
                                    size_t width, size_t height, hipMemcpyKind kind);
 /**
- *  @brief Copies data between host and device.
+ *  @brief Copies data between host and device [Deprecated]
+ *
+ *  @ingroup MemoryD
  *
  *  @param[in]   dst     Destination memory address
  *  @param[in]   wOffset Destination starting X offset
@@ -4803,7 +4824,9 @@ DEPRECATED(DEPRECATED_MSG)
 hipError_t hipMemcpyToArray(hipArray_t dst, size_t wOffset, size_t hOffset, const void* src,
                             size_t count, hipMemcpyKind kind);
 /**
- *  @brief Copies data between host and device.
+ *  @brief Copies data between host and device [Deprecated]
+ *
+ *  @ingroup MemoryD
  *
  *  @param[in]   dst       Destination memory address
  *  @param[in]   srcArray  Source memory address
@@ -5079,7 +5102,7 @@ hipError_t hipMemcpyPeerAsync(void* dst, int dstDeviceId, const void* src, int s
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxCreate(hipCtx_t* ctx, unsigned int flags, hipDevice_t device);
 /**
- * @brief Destroy a HIP context.
+ * @brief Destroy a HIP context [Deprecated]
  *
  * @param [in] ctx Context to destroy
  *
@@ -5094,7 +5117,7 @@ hipError_t hipCtxCreate(hipCtx_t* ctx, unsigned int flags, hipDevice_t device);
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxDestroy(hipCtx_t ctx);
 /**
- * @brief Pop the current/default context and return the popped context.
+ * @brief Pop the current/default context and return the popped context [Deprecated]
  *
  * @param [out] ctx  The current context to pop
  *
@@ -5109,7 +5132,7 @@ hipError_t hipCtxDestroy(hipCtx_t ctx);
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxPopCurrent(hipCtx_t* ctx);
 /**
- * @brief Push the context to be set as current/ default context
+ * @brief Push the context to be set as current/ default context [Deprecated]
  *
  * @param [in] ctx  The current context to push
  *
@@ -5124,7 +5147,7 @@ hipError_t hipCtxPopCurrent(hipCtx_t* ctx);
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxPushCurrent(hipCtx_t ctx);
 /**
- * @brief Set the passed context as current/default
+ * @brief Set the passed context as current/default [Deprecated]
  *
  * @param [in] ctx The context to set as current
  *
@@ -5139,7 +5162,7 @@ hipError_t hipCtxPushCurrent(hipCtx_t ctx);
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxSetCurrent(hipCtx_t ctx);
 /**
- * @brief Get the handle of the current/ default context
+ * @brief Get the handle of the current/ default context [Deprecated]
  *
  * @param [out] ctx  The context to get as current
  *
@@ -5154,7 +5177,7 @@ hipError_t hipCtxSetCurrent(hipCtx_t ctx);
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxGetCurrent(hipCtx_t* ctx);
 /**
- * @brief Get the handle of the device associated with current/default context
+ * @brief Get the handle of the device associated with current/default context [Deprecated]
  *
  * @param [out] device The device from the current context
  *
@@ -5171,7 +5194,7 @@ hipError_t hipCtxGetDevice(hipDevice_t* device);
 /**
  * @brief Returns the approximate HIP api version.
  *
- * @param [in]  ctx Context to check
+ * @param [in]  ctx Context to check [Deprecated]
  * @param [out] apiVersion API version to get
  *
  * @return #hipSuccess
@@ -5191,7 +5214,7 @@ hipError_t hipCtxGetDevice(hipDevice_t* device);
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxGetApiVersion(hipCtx_t ctx, int* apiVersion);
 /**
- * @brief Get Cache configuration for a specific function
+ * @brief Get Cache configuration for a specific function [Deprecated]
  *
  * @param [out] cacheConfig  Cache configuration
  *
@@ -5209,7 +5232,7 @@ hipError_t hipCtxGetApiVersion(hipCtx_t ctx, int* apiVersion);
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxGetCacheConfig(hipFuncCache_t* cacheConfig);
 /**
- * @brief Set L1/Shared cache partition.
+ * @brief Set L1/Shared cache partition [Deprecated]
  *
  * @param [in] cacheConfig  Cache configuration to set
  *
@@ -5227,7 +5250,7 @@ hipError_t hipCtxGetCacheConfig(hipFuncCache_t* cacheConfig);
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxSetCacheConfig(hipFuncCache_t cacheConfig);
 /**
- * @brief Set Shared memory bank configuration.
+ * @brief Set Shared memory bank configuration  [Deprecated]
  *
  * @param [in] config  Shared memory configuration to set
  *
@@ -5245,7 +5268,7 @@ hipError_t hipCtxSetCacheConfig(hipFuncCache_t cacheConfig);
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxSetSharedMemConfig(hipSharedMemConfig config);
 /**
- * @brief Get Shared memory bank configuration.
+ * @brief Get Shared memory bank configuration [Deprecated]
  *
  * @param [out] pConfig  Pointer of shared memory configuration
  *
@@ -5263,7 +5286,7 @@ hipError_t hipCtxSetSharedMemConfig(hipSharedMemConfig config);
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxGetSharedMemConfig(hipSharedMemConfig* pConfig);
 /**
- * @brief Blocks until the default context has completed all preceding requested tasks.
+ * @brief Blocks until the default context has completed all preceding requested tasks [Deprecated]
  *
  * @return #hipSuccess
  *
@@ -5279,7 +5302,7 @@ hipError_t hipCtxGetSharedMemConfig(hipSharedMemConfig* pConfig);
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxSynchronize(void);
 /**
- * @brief Return flags used for creating default context.
+ * @brief Return flags used for creating default context [Deprecated]
  *
  * @param [out] flags  Pointer of flags
  *
@@ -5294,7 +5317,7 @@ hipError_t hipCtxSynchronize(void);
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxGetFlags(unsigned int* flags);
 /**
- * @brief Enables direct access to memory allocations in a peer context.
+ * @brief Enables direct access to memory allocations in a peer context [Deprecated]
  *
  * Memory which already allocated on peer device will be mapped into the address space of the
  * current device.  In addition, all future memory allocations on peerDeviceId will be mapped into
@@ -5320,7 +5343,7 @@ hipError_t hipCtxEnablePeerAccess(hipCtx_t peerCtx, unsigned int flags);
 /**
  * @brief Disable direct access from current context's virtual address space to memory allocations
  * physically located on a peer context.Disables direct access to memory allocations in a peer
- * context and unregisters any registered allocations.
+ * context and unregisters any registered allocations [Deprecated]
  *
  * Returns #hipErrorPeerAccessNotEnabled if direct access to memory on peerDevice has not yet been
  * enabled from the current device.
@@ -5340,7 +5363,7 @@ DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxDisablePeerAccess(hipCtx_t peerCtx);
 
 /**
- * @brief Get the state of the primary context.
+ * @brief Get the state of the primary context [Deprecated]
  *
  * @param [in] dev  Device to get primary context flags for
  * @param [out] flags  Pointer to store flags
@@ -5359,7 +5382,7 @@ hipError_t hipDevicePrimaryCtxGetState(hipDevice_t dev, unsigned int* flags, int
 /**
  * @brief Release the primary context on the GPU.
  *
- * @param [in] dev  Device which primary context is released
+ * @param [in] dev  Device which primary context is released [Deprecated]
  *
  * @returns #hipSuccess
  *
@@ -5374,7 +5397,7 @@ hipError_t hipDevicePrimaryCtxGetState(hipDevice_t dev, unsigned int* flags, int
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipDevicePrimaryCtxRelease(hipDevice_t dev);
 /**
- * @brief Retain the primary context on the GPU.
+ * @brief Retain the primary context on the GPU [Deprecated]
  *
  * @param [out] pctx  Returned context handle of the new context
  * @param [in] dev  Device which primary context is released
@@ -5390,7 +5413,7 @@ hipError_t hipDevicePrimaryCtxRelease(hipDevice_t dev);
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipDevicePrimaryCtxRetain(hipCtx_t* pctx, hipDevice_t dev);
 /**
- * @brief Resets the primary context on the GPU.
+ * @brief Resets the primary context on the GPU [Deprecated]
  *
  * @param [in] dev  Device which primary context is reset
  *
@@ -5405,7 +5428,7 @@ hipError_t hipDevicePrimaryCtxRetain(hipCtx_t* pctx, hipDevice_t dev);
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipDevicePrimaryCtxReset(hipDevice_t dev);
 /**
- * @brief Set flags for the primary context.
+ * @brief Set flags for the primary context [Deprecated]
  *
  * @param [in] dev  Device for which the primary context flags are set
  * @param [in] flags  New flags for the device
@@ -5779,7 +5802,7 @@ hipError_t hipOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize,
 /**
  *-------------------------------------------------------------------------------------------------
  *-------------------------------------------------------------------------------------------------
- *  @defgroup Profiler Profiler Control[Deprecated]
+ *  @defgroup Profiler Profiler Control [Deprecated]
  *  @{
  *  This section describes the profiler control functions of HIP runtime API.
  *
@@ -5788,7 +5811,7 @@ hipError_t hipOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize,
  */
 // TODO - expand descriptions:
 /**
- * @brief Start recording of profiling information
+ * @brief Start recording of profiling information [Deprecated]
  * When using this API, start the profiler with profiling disabled.  (--startdisabled)
  * @returns  #hipErrorNotSupported
  * @warning : hipProfilerStart API is deprecated, use roctracer/rocTX instead.
@@ -5796,7 +5819,7 @@ hipError_t hipOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize,
 DEPRECATED("use roctracer/rocTX instead")
 hipError_t hipProfilerStart();
 /**
- * @brief Stop recording of profiling information.
+ * @brief Stop recording of profiling information [Deprecated]
  * When using this API, start the profiler with profiling disabled.  (--startdisabled)
  * @returns  #hipErrorNotSupported
  * @warning  hipProfilerStart API is deprecated, use roctracer/rocTX instead.
@@ -6240,7 +6263,7 @@ hipError_t hipMipmappedArrayGetLevel(
  */
 
 /**
- * @brief  Binds a mipmapped array to a texture.
+ * @brief  Binds a mipmapped array to a texture [Deprecated]
  *
  * @param [in] tex  pointer to the texture reference to bind
  * @param [in] mipmappedArray memory mipmapped array on the device
@@ -6256,7 +6279,7 @@ hipError_t hipBindTextureToMipmappedArray(
     const hipChannelFormatDesc* desc);
 
 /**
- * @brief Gets the texture reference related with the symbol.
+ * @brief Gets the texture reference related with the symbol [Deprecated]
  *
  * @param [out] texref  texture reference
  * @param [in] symbol  pointer to the symbol related with the texture for the reference
@@ -6271,7 +6294,7 @@ hipError_t hipGetTextureReference(
     const void* symbol);
 
 /**
- * @brief Gets the border color used by a texture reference.
+ * @brief Gets the border color used by a texture reference [Deprecated]
  *
  * @param [out] pBorderColor  Returned Type and Value of RGBA color.
  * @param [in] texRef  Texture reference.
@@ -6284,7 +6307,7 @@ DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefGetBorderColor(float* pBorderColor, const textureReference* texRef);
 
 /**
- * @brief Gets the array bound to a texture reference.
+ * @brief Gets the array bound to a texture reference [Deprecated]
 
  *
  * @param [in] pArray  Returned array.
@@ -6298,7 +6321,7 @@ DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefGetArray(hipArray_t* pArray, const textureReference* texRef);
 
 /**
- * @brief Sets address mode for a texture reference.
+ * @brief Sets address mode for a texture reference [Deprecated]
  *
  * @param [in] texRef  texture reference.
  * @param [in] dim  Dimension of the texture.
@@ -6314,7 +6337,7 @@ hipError_t hipTexRefSetAddressMode(
     int dim,
     enum hipTextureAddressMode am);
 /**
- * @brief Binds an array as a texture reference.
+ * @brief Binds an array as a texture reference [Deprecated]
  *
  * @param [in] tex  Pointer texture reference.
  * @param [in] array  Array to bind.
@@ -6331,7 +6354,7 @@ hipError_t hipTexRefSetArray(
     hipArray_const_t array,
     unsigned int flags);
 /**
- * @brief Set filter mode for a texture reference.
+ * @brief Set filter mode for a texture reference [Deprecated]
  *
  * @param [in] texRef  Pointer texture reference.
  * @param [in] fm  Value of texture filter mode.
@@ -6346,7 +6369,7 @@ hipError_t hipTexRefSetFilterMode(
     textureReference* texRef,
     enum hipTextureFilterMode fm);
 /**
- * @brief Set flags for a texture reference.
+ * @brief Set flags for a texture reference [Deprecated]
  *
  * @param [in] texRef  Pointer texture reference.
  * @param [in] Flags  Value of flags.
@@ -6361,7 +6384,7 @@ hipError_t hipTexRefSetFlags(
     textureReference* texRef,
     unsigned int Flags);
 /**
- * @brief Set format for a texture reference.
+ * @brief Set format for a texture reference [Deprecated]
  *
  * @param [in] texRef  Pointer texture reference.
  * @param [in] fmt  Value of format.
@@ -6378,7 +6401,7 @@ hipError_t hipTexRefSetFormat(
     hipArray_Format fmt,
     int NumPackedComponents);
 /**
- * @brief Binds a memory area to a texture.
+ * @brief Binds a memory area to a texture [Deprecated]
  *
  * @param [in] offset  Offset in bytes.
  * @param [in] tex  Texture to bind.
@@ -6399,7 +6422,7 @@ hipError_t hipBindTexture(
     const hipChannelFormatDesc* desc,
     size_t size __dparm(UINT_MAX));
 /**
- * @brief Binds a 2D memory area to a texture.
+ * @brief Binds a 2D memory area to a texture [Deprecated]
  *
  * @param [in] offset  Offset in bytes.
  * @param [in] tex  Texture to bind.
@@ -6424,7 +6447,7 @@ hipError_t hipBindTexture2D(
     size_t height,
     size_t pitch);
 /**
- * @brief Binds a memory area to a texture.
+ * @brief Binds a memory area to a texture [Deprecated]
  *
  * @param [in] tex  Pointer of texture reference.
  * @param [in] array  Array to bind.
@@ -6441,7 +6464,7 @@ hipError_t hipBindTextureToArray(
     hipArray_const_t array,
     const hipChannelFormatDesc* desc);
 /**
- * @brief Get the offset of the alignment in a texture.
+ * @brief Get the offset of the alignment in a texture [Deprecated]
  *
  * @param [in] offset  Offset in bytes.
  * @param [in] texref  Pointer of texture reference.
@@ -6456,7 +6479,7 @@ hipError_t hipGetTextureAlignmentOffset(
     size_t* offset,
     const textureReference* texref);
 /**
- * @brief Unbinds a texture.
+ * @brief Unbinds a texture [Deprecated]
  *
  * @param [in] tex  Texture to unbind.
  *
@@ -6468,7 +6491,7 @@ hipError_t hipGetTextureAlignmentOffset(
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipUnbindTexture(const textureReference* tex);
 /**
- * @brief Gets the address for a texture reference.
+ * @brief Gets the address for a texture reference [Deprecated]
  *
  * @param [out] dev_ptr  Pointer of device address.
  * @param [in] texRef  Pointer of texture reference.
@@ -6483,7 +6506,7 @@ hipError_t hipTexRefGetAddress(
     hipDeviceptr_t* dev_ptr,
     const textureReference* texRef);
 /**
- * @brief Gets the address mode for a texture reference.
+ * @brief Gets the address mode for a texture reference [Deprecated]
  *
  * @param [out] pam  Pointer of address mode.
  * @param [in] texRef  Pointer of texture reference.
@@ -6500,7 +6523,7 @@ hipError_t hipTexRefGetAddressMode(
     const textureReference* texRef,
     int dim);
 /**
- * @brief Gets filter mode for a texture reference.
+ * @brief Gets filter mode for a texture reference [Deprecated]
  *
  * @param [out] pfm  Pointer of filter mode.
  * @param [in] texRef  Pointer of texture reference.
@@ -6515,7 +6538,7 @@ hipError_t hipTexRefGetFilterMode(
     enum hipTextureFilterMode* pfm,
     const textureReference* texRef);
 /**
- * @brief Gets flags for a texture reference.
+ * @brief Gets flags for a texture reference [Deprecated]
  *
  * @param [out] pFlags  Pointer of flags.
  * @param [in] texRef  Pointer of texture reference.
@@ -6530,7 +6553,7 @@ hipError_t hipTexRefGetFlags(
     unsigned int* pFlags,
     const textureReference* texRef);
 /**
- * @brief Gets texture format for a texture reference.
+ * @brief Gets texture format for a texture reference [Deprecated]
  *
  * @param [out] pFormat  Pointer of the format.
  * @param [out] pNumChannels  Pointer of number of channels.
@@ -6547,7 +6570,7 @@ hipError_t hipTexRefGetFormat(
     int* pNumChannels,
     const textureReference* texRef);
 /**
- * @brief Gets the maximum anisotropy for a texture reference.
+ * @brief Gets the maximum anisotropy for a texture reference [Deprecated]
  *
  * @param [out] pmaxAnsio  Pointer of the maximum anisotropy.
  * @param [in] texRef  Pointer of texture reference.
@@ -6562,7 +6585,7 @@ hipError_t hipTexRefGetMaxAnisotropy(
     int* pmaxAnsio,
     const textureReference* texRef);
 /**
- * @brief Gets the mipmap filter mode for a texture reference.
+ * @brief Gets the mipmap filter mode for a texture reference [Deprecated]
  *
  * @param [out] pfm  Pointer of the mipmap filter mode.
  * @param [in] texRef  Pointer of texture reference.
@@ -6577,7 +6600,7 @@ hipError_t hipTexRefGetMipmapFilterMode(
     enum hipTextureFilterMode* pfm,
     const textureReference* texRef);
 /**
- * @brief Gets the mipmap level bias for a texture reference.
+ * @brief Gets the mipmap level bias for a texture reference [Deprecated]
  *
  * @param [out] pbias  Pointer of the mipmap level bias.
  * @param [in] texRef  Pointer of texture reference.
@@ -6592,7 +6615,7 @@ hipError_t hipTexRefGetMipmapLevelBias(
     float* pbias,
     const textureReference* texRef);
 /**
- * @brief Gets the minimum and maximum mipmap level clamps for a texture reference.
+ * @brief Gets the minimum and maximum mipmap level clamps for a texture reference [Deprecated]
  *
  * @param [out] pminMipmapLevelClamp  Pointer of the minimum mipmap level clamp.
  * @param [out] pmaxMipmapLevelClamp  Pointer of the maximum mipmap level clamp.
@@ -6609,7 +6632,7 @@ hipError_t hipTexRefGetMipmapLevelClamp(
     float* pmaxMipmapLevelClamp,
     const textureReference* texRef);
 /**
- * @brief Gets the mipmapped array bound to a texture reference.
+ * @brief Gets the mipmapped array bound to a texture reference [Deprecated]
  *
  * @param [out] pArray  Pointer of the mipmapped array.
  * @param [in] texRef  Pointer of texture reference.
@@ -6624,7 +6647,7 @@ hipError_t hipTexRefGetMipMappedArray(
     hipMipmappedArray_t* pArray,
     const textureReference* texRef);
 /**
- * @brief Sets an bound address for a texture reference.
+ * @brief Sets an bound address for a texture reference [Deprecated]
  *
  * @param [out] ByteOffset  Pointer of the offset in bytes.
  * @param [in] texRef  Pointer of texture reference.
@@ -6643,7 +6666,7 @@ hipError_t hipTexRefSetAddress(
     hipDeviceptr_t dptr,
     size_t bytes);
 /**
- * @brief Set a bind an address as a 2D texture reference.
+ * @brief Set a bind an address as a 2D texture reference [Deprecated]
  *
  * @param [in] texRef  Pointer of texture reference.
  * @param [in] desc  Pointer of array descriptor.
@@ -6662,7 +6685,7 @@ hipError_t hipTexRefSetAddress2D(
     hipDeviceptr_t dptr,
     size_t Pitch);
 /**
- * @brief Sets the maximum anisotropy for a texture reference.
+ * @brief Sets the maximum anisotropy for a texture reference [Deprecated]
  *
  * @param [in] texRef  Pointer of texture reference.
  * @param [out] maxAniso  Value of the maximum anisotropy.
@@ -6677,7 +6700,7 @@ hipError_t hipTexRefSetMaxAnisotropy(
     textureReference* texRef,
     unsigned int maxAniso);
 /**
- * @brief Sets border color for a texture reference.
+ * @brief Sets border color for a texture reference [Deprecated]
  *
  * @param [in] texRef  Pointer of texture reference.
  * @param [in] pBorderColor  Pointer of border color.
@@ -6692,7 +6715,7 @@ hipError_t hipTexRefSetBorderColor(
     textureReference* texRef,
     float* pBorderColor);
 /**
- * @brief Sets mipmap filter mode for a texture reference.
+ * @brief Sets mipmap filter mode for a texture reference [Deprecated]
  *
  * @param [in] texRef  Pointer of texture reference.
  * @param [in] fm  Value of filter mode.
@@ -6707,7 +6730,7 @@ hipError_t hipTexRefSetMipmapFilterMode(
     textureReference* texRef,
     enum hipTextureFilterMode fm);
 /**
- * @brief Sets mipmap level bias for a texture reference.
+ * @brief Sets mipmap level bias for a texture reference [Deprecated]
  *
  * @param [in] texRef  Pointer of texture reference.
  * @param [in] bias  Value of mipmap bias.
@@ -6722,7 +6745,7 @@ hipError_t hipTexRefSetMipmapLevelBias(
     textureReference* texRef,
     float bias);
 /**
- * @brief Sets mipmap level clamp for a texture reference.
+ * @brief Sets mipmap level clamp for a texture reference [Deprecated]
  *
  * @param [in] texRef  Pointer of texture reference.
  * @param [in] minMipMapLevelClamp  Value of minimum mipmap level clamp.
@@ -6739,7 +6762,7 @@ hipError_t hipTexRefSetMipmapLevelClamp(
     float minMipMapLevelClamp,
     float maxMipMapLevelClamp);
 /**
- * @brief Binds mipmapped array to a texture reference.
+ * @brief Binds mipmapped array to a texture reference [Deprecated]
  *
  * @param [in] texRef  Pointer of texture reference to bind.
  * @param [in] mipmappedArray  Pointer of mipmapped array to bind.
@@ -8990,7 +9013,7 @@ inline hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchPara
     return hipExtLaunchMultiKernelMultiDevice(launchParamsList, numDevices, flags);
 }
 /**
- * @brief Binds a memory area to a texture.
+ * @brief Binds a memory area to a texture [Deprecated]
  *
  * @ingroup TextureD
  *
@@ -9009,7 +9032,7 @@ static inline hipError_t hipBindTexture(size_t* offset, const struct texture<T, 
     return hipBindTexture(offset, &tex, devPtr, &tex.channelDesc, size);
 }
 /**
- * @brief Binds a memory area to a texture.
+ * @brief Binds a memory area to a texture [Deprecated]
  *
  * @ingroup TextureD
  *
@@ -9030,7 +9053,7 @@ static inline hipError_t
     return hipBindTexture(offset, &tex, devPtr, &desc, size);
 }
 /**
- * @brief Binds a 2D memory area to a texture.
+ * @brief Binds a 2D memory area to a texture [Deprecated]
  *
  * @ingroup TextureD
  *
@@ -9057,7 +9080,7 @@ static inline hipError_t hipBindTexture2D(
     return hipBindTexture2D(offset, &tex, devPtr, &tex.channelDesc, width, height, pitch);
 }
 /**
- * @brief Binds a 2D memory area to a texture.
+ * @brief Binds a 2D memory area to a texture [Deprecated]
  *
  * @ingroup TextureD
  *
@@ -9086,7 +9109,7 @@ static inline hipError_t hipBindTexture2D(
   return hipBindTexture2D(offset, &tex, devPtr, &desc, width, height, pitch);
 }
 /**
- * @brief Binds an array to a texture.
+ * @brief Binds an array to a texture [Deprecated]
  *
  * @ingroup TextureD
  *
@@ -9107,7 +9130,7 @@ static inline hipError_t hipBindTextureToArray(
     return (err == hipSuccess) ? hipBindTextureToArray(&tex, array, &desc) : err;
 }
 /**
- * @brief Binds an array to a texture.
+ * @brief Binds an array to a texture [Deprecated]
  *
  * @ingroup TextureD
  *
@@ -9128,7 +9151,7 @@ static inline hipError_t hipBindTextureToArray(
     return hipBindTextureToArray(&tex, array, &desc);
 }
 /**
- * @brief Binds a mipmapped array to a texture.
+ * @brief Binds a mipmapped array to a texture [Deprecated]
  *
  * @ingroup TextureD
  *
@@ -9154,7 +9177,7 @@ static inline hipError_t hipBindTextureToMipmappedArray(
     return (err == hipSuccess) ? hipBindTextureToMipmappedArray(&tex, mipmappedArray, &desc) : err;
 }
 /**
- * @brief Binds a mipmapped array to a texture.
+ * @brief Binds a mipmapped array to a texture [Deprecated]
  *
  * @ingroup TextureD
  *
@@ -9175,7 +9198,7 @@ static inline hipError_t hipBindTextureToMipmappedArray(
     return hipBindTextureToMipmappedArray(&tex, mipmappedArray, &desc);
 }
 /**
- * @brief Unbinds a texture.
+ * @brief Unbinds a texture [Depreacated]
  *
  * @ingroup TextureD
  *

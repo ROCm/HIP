@@ -17,6 +17,7 @@ This is the full HIP Runtime API reference. The API is organized into
   - @ref External
   - @ref MemoryM
   - @ref StreamO
+  - @ref MemoryD
 - @ref PeerToPeer
 - @ref Context
 - @ref Module
