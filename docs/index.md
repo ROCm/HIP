@@ -57,6 +57,7 @@ The HIP documentation is organized into the following categories:
 * [Comparing syntax for different APIs](./reference/terms)
 * [List of deprecated APIs](./reference/deprecated_api_list)
 * [FP8 numbers in HIP](./reference/fp8_numbers)
+* {doc}`./understand/hardware_features`
 
 :::
 
