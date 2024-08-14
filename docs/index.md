@@ -66,6 +66,7 @@ On non-AMD platforms, like NVIDIA, HIP provides header files required to support
 * [Comparing syntax for different APIs](./reference/terms)
 * [List of deprecated APIs](./reference/deprecated_api_list)
 * [FP8 numbers in HIP](./reference/fp8_numbers)
+* {doc}`./understand/hardware_features`
 
 :::
 
