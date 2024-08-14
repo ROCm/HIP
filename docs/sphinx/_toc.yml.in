@@ -31,6 +31,8 @@ subtrees:
   - file: how-to/cooperative_groups
   - file: how-to/unified_memory
     title: Unified memory
+  - file: how-to/virtual_memory
+    title: Virtual memory
   - file: how-to/faq
 
 - caption: Reference
@@ -48,6 +50,8 @@ subtrees:
   - file: reference/virtual_rocr
   - file: reference/unified_memory_reference
     title: HIP managed memory allocation API
+  - file: reference/virtual_memory_reference
+    title: HIP virtual memory management API
   - file: reference/deprecated_api_list
     title: List of deprecated APIs
   - file: reference/fp8_numbers
