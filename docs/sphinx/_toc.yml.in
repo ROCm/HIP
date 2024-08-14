@@ -114,6 +114,7 @@ subtrees:
     title: List of deprecated APIs
   - file: reference/fp8_numbers
     title: FP8 numbers in HIP
+  - file: reference/hardware_features
 
 - caption: Tutorials
   entries:
