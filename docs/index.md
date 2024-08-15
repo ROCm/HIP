@@ -1,24 +1,22 @@
 # HIP documentation
 
-The Heterogeneous-computing Interface for Portability (HIP) API is a C++ runtime
-API and kernel language that lets developers create portable applications running
-in heterogeneous systems, using CPUs and AMD GPUs and NVIDIA GPUs from a single source code.
-HIP provides a simple marshalling language to access either the AMD ROCM back-end,
-or NVIDIA CUDA back-end, to build and run application kernels. For more information,
-see [Introduction to HIP](./understand/introduction_to_hip).
+The Heterogeneous-computing Interface for Portability (HIP) is a C++ runtime API and kernel language that lets you create portable applications for AMD and NVIDIA GPUs from a single source code. For more information, see [What is HIP?](./what_is_hip)
 
-The HIP documentation is organized as follows:
+Installation instructions are available from:
 
-::::{grid} 1 1 2 2
-:gutter: 3
-
-:::{grid-item-card} Install
-
-* [Linux system requirements](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html#supported-gpus)
 * [Installing HIP](./install/install)
 * [Building HIP from source](./install/build)
 
-:::
+HIP enabled GPUs:  
+
+* [Supported AMD GPUs on Linux](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html#supported-gpus)
+* [Supported AMD GPUs on Windows](https://rocm.docs.amd.com/projects/install-on-windows/en/latest/reference/system-requirements.html#windows-supported-gpus)
+* [Supported NVIDIA GPUs](https://developer.nvidia.com/cuda-gpus)
+
+The HIP documentation is organized into the following categories:
+
+::::{grid} 1 2 2 2
+:gutter: 3
 
 :::{grid-item-card} Conceptual
 
