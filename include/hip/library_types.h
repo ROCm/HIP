@@ -58,6 +58,8 @@ typedef enum hipDataType {
   HIP_C_64I   = 25,
   HIP_R_64U   = 26,
   HIP_C_64U   = 27,
+  HIP_R_8F_E4M3 = 28,
+  HIP_R_8F_E5M2 = 29,
   // HIP specific Data Types
   HIP_R_8F_E4M3_FNUZ = 1000,
   HIP_R_8F_E5M2_FNUZ = 1001
