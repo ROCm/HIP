@@ -6,12 +6,10 @@ defaults:
 root: index
 subtrees:
 - entries:
-  - file: understand/introduction_to_hip
+  - file: what_is_hip
 
 - caption: Install
   entries:
-  - url: https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements
-    title: Linux system requirements
   - file: install/install
     title: Installing HIP
   - file: install/build
