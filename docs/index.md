@@ -61,7 +61,7 @@ On non-AMD platforms, like NVIDIA, HIP provides header files required to support
 * [HSA runtime API for ROCm](./reference/virtual_rocr)
 * [HIP managed memory allocation API](./reference/unified_memory_reference)
 * [HIP virtual memory management API](./reference/virtual_memory_reference)
-* [HIP Cooperative groups API](./reference/cooperative_groups)
+* [HIP Cooperative groups API](./reference/cooperative_groups_reference)
 * [List of deprecated APIs](./reference/deprecated_api_list)
 * [FP8 numbers in HIP](./reference/fp8_numbers)
 

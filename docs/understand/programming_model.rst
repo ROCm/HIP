@@ -288,7 +288,7 @@ HIP programs consist of two distinct scopes:
     towards implementing abstractions atop, such as the runtime API itself.
     Offers two additional pieces of functionality not provided by the Runtime
     API: ``hipModule`` and ``hipCtx`` APIs. For further details, check 
-    :doc:`HIP driver API </how-to/driver_api>`.
+    :doc:`HIP driver API </how-to/hip_porting_driver_api>`.
 
 * The device-side kernels running on GPUs. Both the host and the device-side
   APIs have synchronous and asynchronous functions in them.
