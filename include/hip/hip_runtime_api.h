@@ -5929,19 +5929,21 @@ hipError_t hipModuleLaunchCooperativeKernelMultiDevice(hipFunctionLaunchParams* 
  * @brief launches kernel f with launch parameters and shared memory on stream with arguments passed
  * to kernelparams or extra, where thread blocks can cooperate and synchronize as they execute
  *
- * @param [in] f         Kernel to launch.
- * @param [in] gridDim   Grid dimensions specified as multiple of blockDim.
- * @param [in] blockDimX  Block dimensions specified in work-items
- * @param [in] kernelParams A list of kernel arguments
- * @param [in] sharedMemBytes Amount of dynamic shared memory to allocate for this kernel. The
+ * @param [in] f - Kernel to launch.
+ * @param [in] gridDim - Grid dimensions specified as multiple of blockDim.
+ * @param [in] blockDimX - Block dimensions specified in work-items
+ * @param [in] kernelParams - Pointer of arguments passed to the kernel. If the kernel has multiple
+ * parameters, 'kernelParams' should be array of pointers, each points the corresponding argument.
+ * @param [in] sharedMemBytes - Amount of dynamic shared memory to allocate for this kernel. The
  * HIP-Clang compiler provides support for extern shared declarations.
- * @param [in] stream    Stream where the kernel should be dispatched.  May be 0, in which case th
+ * @param [in] stream - Stream where the kernel should be dispatched.  May be 0, in which case th
  * default stream is used with associated synchronization rules.
  *
  * Please note, HIP does not support kernel launch with total work items defined in dimension with
  * size gridDim x blockDim >= 2^32.
  *
- * @returns #hipSuccess, #hipErrorNotInitialized, #hipErrorInvalidValue, #hipErrorCooperativeLaunchTooLarge
+ * @returns #hipSuccess, #hipErrorNotInitialized, #hipErrorInvalidValue,
+ * #hipErrorCooperativeLaunchTooLarge
  */
 hipError_t hipLaunchCooperativeKernel(const void* f, dim3 gridDim, dim3 blockDimX,
                                       void** kernelParams, unsigned int sharedMemBytes,
@@ -6210,10 +6212,11 @@ hipError_t __hipPopCallConfiguration(dim3 *gridDim,
 /**
  * @brief C compliant kernel launch API
  *
- * @param [in] function_address - kernel stub function pointer.
- * @param [in] numBlocks - number of blocks
- * @param [in] dimBlocks - dimension of a block
- * @param [in] args - kernel arguments
+ * @param [in] function_address - Kernel stub function pointer.
+ * @param [in] numBlocks - Number of blocks.
+ * @param [in] dimBlocks - Dimension of a block
+ * @param [in] args - Pointer of arguments passed to the kernel. If the kernel has multiple
+ * parameters, 'args' should be array of pointers, each points the corresponding argument.
  * @param [in] sharedMemBytes - Amount of dynamic shared memory to allocate for this kernel. The
  * HIP-Clang compiler provides support for extern shared declarations.
  * @param [in] stream - Stream where the kernel should be dispatched.  May be 0, in which case th
@@ -6268,19 +6271,20 @@ hipError_t hipDrvMemcpy2DUnaligned(const hip_Memcpy2D* pCopy);
 /**
  * @brief Launches kernel from the pointer address, with arguments and shared memory on stream.
  *
- * @param [in] function_address pointer to the Kernel to launch.
- * @param [in] numBlocks number of blocks.
- * @param [in] dimBlocks dimension of a block.
- * @param [in] args pointer to kernel arguments.
- * @param [in] sharedMemBytes  Amount of dynamic shared memory to allocate for this kernel.
+ * @param [in] function_address - Pointer to the Kernel to launch.
+ * @param [in] numBlocks -  Number of blocks.
+ * @param [in] dimBlocks - Dimension of a block.
+ * @param [in] args - Pointer of arguments passed to the kernel. If the kernel has multiple
+ * parameters, 'args' should be array of pointers, each points the corresponding argument.
+ * @param [in] sharedMemBytes - Amount of dynamic shared memory to allocate for this kernel.
  * HIP-Clang compiler provides support for extern shared declarations.
- * @param [in] stream  Stream where the kernel should be dispatched.
+ * @param [in] stream - Stream where the kernel should be dispatched.
  * May be 0, in which case the default stream is used with associated synchronization rules.
- * @param [in] startEvent  If non-null, specified event will be updated to track the start time of
+ * @param [in] startEvent - If non-null, specified event will be updated to track the start time of
  * the kernel launch. The event must be created before calling this API.
- * @param [in] stopEvent  If non-null, specified event will be updated to track the stop time of
+ * @param [in] stopEvent - If non-null, specified event will be updated to track the stop time of
  * the kernel launch. The event must be created before calling this API.
- * @param [in] flags  The value of hipExtAnyOrderLaunch, signifies if kernel can be
+ * @param [in] flags - The value of hipExtAnyOrderLaunch, signifies if kernel can be
  * launched in any order.
  * @returns #hipSuccess, #hipErrorNotInitialized, #hipErrorInvalidValue.
  *
