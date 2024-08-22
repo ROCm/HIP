@@ -25,12 +25,7 @@ cffi==1.16.0
 charset-normalizer==3.3.2
     # via requests
 click==8.1.7
-    # via
-    #   click-log
-    #   doxysphinx
-    #   sphinx-external-toc
-click-log==0.4.0
-    # via doxysphinx
+    # via sphinx-external-toc
 cryptography==42.0.5
     # via pyjwt
 deprecated==1.2.14
@@ -41,8 +36,6 @@ docutils==0.21.2
     #   myst-parser
     #   pydata-sphinx-theme
     #   sphinx
-doxysphinx==3.3.7
-    # via rocm-docs-core
 fastjsonschema==2.19.1
     # via rocm-docs-core
 gitdb==4.0.11
@@ -57,10 +50,6 @@ jinja2==3.1.3
     # via
     #   myst-parser
     #   sphinx
-libsass==0.22.0
-    # via doxysphinx
-lxml==4.9.4
-    # via doxysphinx
 markdown-it-py==3.0.0
     # via
     #   mdit-py-plugins
@@ -71,8 +60,6 @@ mdit-py-plugins==0.4.0
     # via myst-parser
 mdurl==0.1.2
     # via markdown-it-py
-mpire==2.10.1
-    # via doxysphinx
 myst-parser==3.0.0
     # via rocm-docs-core
 packaging==24.0
@@ -90,19 +77,14 @@ pygithub==2.3.0
 pygments==2.17.2
     # via
     #   accessible-pygments
-    #   mpire
     #   pydata-sphinx-theme
     #   sphinx
-pyjson5==1.6.6
-    # via doxysphinx
 pyjwt[crypto]==2.8.0
     # via pygithub
 pynacl==1.5.0
     # via pygithub
 pyparsing==3.1.2
-    # via
-    #   doxysphinx
-    #   sphinxcontrib-doxylink
+    # via sphinxcontrib-doxylink
 python-dateutil==2.9.0.post0
     # via sphinxcontrib-doxylink
 pyyaml==6.0.1
@@ -114,7 +96,7 @@ requests==2.31.0
     # via
     #   pygithub
     #   sphinx
-rocm-docs-core[api-reference]==1.1.1
+rocm-docs-core[api-reference]==1.7.2
     # via -r requirements.in
 six==1.16.0
     # via python-dateutil
@@ -162,8 +144,6 @@ sphinxcontrib-serializinghtml==1.1.10
     # via sphinx
 tomli==2.0.1
     # via sphinx
-tqdm==4.66.2
-    # via mpire
 typing-extensions==4.11.0
     # via
     #   pydata-sphinx-theme
