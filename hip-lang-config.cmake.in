@@ -60,6 +60,23 @@ endif()
 set(HIP_COMPILER "@HIP_COMPILER@")
 set(HIP_RUNTIME "@HIP_RUNTIME@")
 
+if (NOT @BUILD_SHARED_LIBS@)
+  list(APPEND CMAKE_PREFIX_PATH "${PACKAGE_PREFIX_DIR}" "${PACKAGE_PREFIX_DIR}/lib/llvm")
+
+  # Setting CMAKE_SIZEOF_VOID_P is a workaround to force cmake
+  # include searching in lib64 directories for dependencies.
+  set(CMAKE_SIZEOF_VOID_P_OLD ${CMAKE_SIZEOF_VOID_P})
+  set(CMAKE_SIZEOF_VOID_P 8)
+
+  find_dependency(hsa-runtime64)
+  find_dependency(amd_comgr)
+
+  # Restore the original CMAKE_PREFIX_PATH and CMAKE_SIZEOF_VOID_P
+  # to avoid leaking the settings back to the project.
+  set(CMAKE_SIZEOF_VOID_P ${CMAKE_SIZEOF_VOID_P_OLD})
+  list(REMOVE_AT CMAKE_PREFIX_PATH -2 -1)
+endif()
+
 include( "${CMAKE_CURRENT_LIST_DIR}/hip-lang-targets.cmake" )
 
 # Find the hip-lang config file path with symlinks resolved
