@@ -2191,26 +2191,33 @@ hipError_t hipGetDeviceFlags(unsigned int* flags);
  */
 hipError_t hipDeviceSetSharedMemConfig(hipSharedMemConfig config);
 /**
- * @brief The current device behavior is changed according the flags passed.
+ * @brief The current device behavior is changed according to the flags passed.
  *
  * @param [in] flags Flag to set on the current device
  *
  * The schedule flags impact how HIP waits for the completion of a command running on a device.
- * hipDeviceScheduleSpin         : HIP runtime will actively spin in the thread which submitted the
- * work until the command completes.  This offers the lowest latency, but will consume a CPU core
- * and may increase power. hipDeviceScheduleYield        : The HIP runtime will yield the CPU to
- * system so that other tasks can use it.  This may increase latency to detect the completion but
- * will consume less power and is friendlier to other tasks in the system.
- * hipDeviceScheduleBlockingSync : On ROCm platform, this is a synonym for hipDeviceScheduleYield.
- * hipDeviceScheduleAuto         : Use a hueristic to select between Spin and Yield modes.  If the
- * number of HIP contexts is greater than the number of logical processors in the system, use Spin
- * scheduling.  Else use Yield scheduling.
  *
+ * #hipDeviceScheduleSpin         : HIP runtime will actively spin in the thread which submitted
+ * the work until the command completes.  This offers the lowest latency, but will consume a CPU
+ * core and may increase power.
  *
- * hipDeviceMapHost              : Allow mapping host memory.  On ROCM, this is always allowed and
- * the flag is ignored. hipDeviceLmemResizeToMax      : @warning ROCm silently ignores this flag.
+ * #hipDeviceScheduleYield        : The HIP runtime will yield the CPU to system so that other
+ * tasks can use it. This may increase latency to detect the completion but will consume less
+ * power and is friendlier to other tasks in the system.
  *
- * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorSetOnActiveProcess
+ * #hipDeviceScheduleBlockingSync : On ROCm platform, this is a synonym for hipDeviceScheduleYield.
+ *
+ * #hipDeviceScheduleAuto         : This is the default value if the input 'flags' is zero.
+ * Uses a heuristic to select between Spin and Yield modes. If the number of HIP contexts is
+ * greater than the number of logical processors in the system, uses Spin scheduling, otherwise
+ * uses Yield scheduling.
+ *
+ * #hipDeviceMapHost              : Allows mapping host memory. On ROCm, this is always allowed and
+ * the flag is ignored.
+ *
+ * #hipDeviceLmemResizeToMax      : This flag is silently ignored on ROCm.
+ *
+ * @returns #hipSuccess, #hipErrorNoDevice, #hipErrorInvalidDevice, #hipErrorSetOnActiveProcess
  *
  *
  */
@@ -2755,10 +2762,10 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
  * @brief Enqueues a wait command to the stream.[BETA]
  *
  * @param [in] stream - Stream identifier
- * @param [in] ptr    - Pointer to memory object allocated using 'hipMallocSignalMemory' flag
+ * @param [in] ptr    - Pointer to memory object allocated using #hipMallocSignalMemory flag
  * @param [in] value  - Value to be used in compare operation
- * @param [in] flags  - Defines the compare operation, supported values are hipStreamWaitValueGte
- * hipStreamWaitValueEq, hipStreamWaitValueAnd and hipStreamWaitValueNor
+ * @param [in] flags  - Defines the compare operation, supported values are #hipStreamWaitValueGte
+ * #hipStreamWaitValueEq, #hipStreamWaitValueAnd and #hipStreamWaitValueNor
  * @param [in] mask   - Mask to be applied on value at memory before it is compared with value,
  * default value is set to enable every bit
  *
@@ -2767,14 +2774,17 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
  * Enqueues a wait command to the stream, all operations enqueued  on this stream after this, will
  * not execute until the defined wait condition is true.
  *
- * hipStreamWaitValueGte: waits until *ptr&mask >= value
- * hipStreamWaitValueEq : waits until *ptr&mask == value
- * hipStreamWaitValueAnd: waits until ((*ptr&mask) & value) != 0
- * hipStreamWaitValueNor: waits until ~((*ptr&mask) | (value&mask)) != 0
+ * #hipStreamWaitValueGte: waits until *ptr&mask >= value
  *
- * @note when using 'hipStreamWaitValueNor', mask is applied on both 'value' and '*ptr'.
+ * #hipStreamWaitValueEq : waits until *ptr&mask == value
  *
- * @note Support for hipStreamWaitValue32 can be queried using 'hipDeviceGetAttribute()' and
+ * #hipStreamWaitValueAnd: waits until ((*ptr&mask) & value) != 0
+ *
+ * #hipStreamWaitValueNor: waits until ~((*ptr&mask) | (value&mask)) != 0
+ *
+ * @note when using #hipStreamWaitValueNor, mask is applied on both 'value' and '*ptr'.
+ *
+ * @note Support for #hipStreamWaitValue32 can be queried using 'hipDeviceGetAttribute()' and
  * 'hipDeviceAttributeCanUseStreamWaitValue' flag.
  *
  * @warning This API is marked as beta, meaning, while this is feature complete,
@@ -2793,8 +2803,8 @@ hipError_t hipStreamWaitValue32(hipStream_t stream, void* ptr, uint32_t value, u
  * @param [in] stream - Stream identifier
  * @param [in] ptr    - Pointer to memory object allocated using 'hipMallocSignalMemory' flag
  * @param [in] value  - Value to be used in compare operation
- * @param [in] flags  - Defines the compare operation, supported values are hipStreamWaitValueGte
- * hipStreamWaitValueEq, hipStreamWaitValueAnd and hipStreamWaitValueNor.
+ * @param [in] flags  - Defines the compare operation, supported values are #hipStreamWaitValueGte
+ * #hipStreamWaitValueEq, #hipStreamWaitValueAnd and #hipStreamWaitValueNor.
  * @param [in] mask   - Mask to be applied on value at memory before it is compared with value
  * default value is set to enable every bit
  *
@@ -2803,12 +2813,15 @@ hipError_t hipStreamWaitValue32(hipStream_t stream, void* ptr, uint32_t value, u
  * Enqueues a wait command to the stream, all operations enqueued  on this stream after this, will
  * not execute until the defined wait condition is true.
  *
- * hipStreamWaitValueGte: waits until *ptr&mask >= value
- * hipStreamWaitValueEq : waits until *ptr&mask == value
- * hipStreamWaitValueAnd: waits until ((*ptr&mask) & value) != 0
- * hipStreamWaitValueNor: waits until ~((*ptr&mask) | (value&mask)) != 0
+ * #hipStreamWaitValueGte: waits until *ptr&mask >= value
  *
- * @note when using 'hipStreamWaitValueNor', mask is applied on both 'value' and '*ptr'.
+ * #hipStreamWaitValueEq : waits until *ptr&mask == value
+ *
+ * #hipStreamWaitValueAnd: waits until ((*ptr&mask) & value) != 0
+ *
+ * #hipStreamWaitValueNor: waits until ~((*ptr&mask) | (value&mask)) != 0
+ *
+ * @note when using #hipStreamWaitValueNor, mask is applied on both 'value' and '*ptr'.
  *
  * @note Support for hipStreamWaitValue64 can be queried using 'hipDeviceGetAttribute()' and
  * 'hipDeviceAttributeCanUseStreamWaitValue' flag.
