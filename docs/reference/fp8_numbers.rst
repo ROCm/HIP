@@ -81,7 +81,7 @@ The same can be done in kernels as well.
     return __hip_cvt_float_to_fp8(in, sat, interpret);
   }
 
-An important thing to note here is if you use this on MI300 GPU, it will be fnuz number but on any other GPU it will be an OCP number.
+An important thing to note here is if you use this on gfx94x GPU, it will be fnuz number but on any other GPU it will be an OCP number.
 
 The following code example does roundtrip FP8 conversions on both the CPU and GPU and compares the results.
 
@@ -227,4 +227,4 @@ There is support of vector of FP8 types.
 - __hip_fp8x2_e5m2_fnuz: holds 2 values of FP8 fnuz e5m2 numbers
 - __hip_fp8x4_e5m2_fnuz: holds 4 values of FP8 fnuz e5m2 numbers
 
-FNUZ extensions will be available on MI300 only.
+FNUZ extensions will be available on gfx94x only.
