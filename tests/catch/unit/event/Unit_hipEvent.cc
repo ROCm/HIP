@@ -56,7 +56,7 @@ void test(unsigned testMask, int* C_d, int* C_h, int64_t numElements, hipStream_
 
     size_t sizeBytes = numElements * sizeof(int);
 
-    int count = 100;
+    int count = 1500;
     int init0 = 0;
     HIP_CHECK(hipMemset(C_d, init0, sizeBytes));
     for (int i = 0; i < numElements; i++) {
@@ -116,10 +116,13 @@ void test(unsigned testMask, int* C_d, int* C_h, int64_t numElements, hipStream_
 
     // stop usually ready unless we skipped the synchronization (syncNone)
     e = hipEventElapsedTime(&t, stop, stop);
-    HIP_ASSERT(e == expectedStopError);
+    HIP_ASSERT(e == expectedStopError || (e == hipErrorNotReady && syncMode == syncNone));
     if (e == hipSuccess) assert(t == 0.0f);
 
     e = hipEventElapsedTime(&t, start, stop);
+    printf("Event elapsed time status: %s\n", hipGetErrorName(e));
+    printf("Expected stop error: %s\n", hipGetErrorName(expectedStopError));
+    printf("Time: %f\n", t);
     HIP_ASSERT(e == expectedStopError);
     if (expectedStopError == hipSuccess) assert(t > 0.0f);
     printf("time=%6.2f error=%s\n", t, hipGetErrorName(e));

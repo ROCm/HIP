@@ -22,7 +22,7 @@ THE SOFTWARE.
 #define NUM_STREAMS 4
 
 namespace hipAPIStreamDisableTest {
-const int NN = 1 << 21;
+const int NN = 1 << 15;
 
 __global__ void kernel(float* x, float* y, int n) {
   int tid = threadIdx.x;

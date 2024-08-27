@@ -110,6 +110,7 @@ bool testStreamCallbackFunctionality(bool isDefault) {
     while (!gcbDone) std::this_thread::sleep_for(std::chrono::microseconds(100000));  // Sleep for 100 ms
     HIP_CHECK(hipStreamDestroy(mystream));
   }
+  HIP_CHECK(hipDeviceSynchronize());
   HIP_CHECK(hipFree(reinterpret_cast<void*>(C_d)));
   HIP_CHECK(hipFree(reinterpret_cast<void*>(A_d)));
   free(C_h);

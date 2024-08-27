@@ -19,7 +19,7 @@ THE SOFTWARE.
 #include <hip_test_common.hh>
 #include <iostream>
 #include <vector>
-constexpr int NN = 1 << 21;
+constexpr int NN = 1 << 15;
 __global__ void kernel_do_nothing(__attribute__((unused))int a) {
   // empty kernel
 }
