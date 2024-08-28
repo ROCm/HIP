@@ -80,7 +80,7 @@ HIP_PUBLIC_API
  * @brief This HIP API is deprecated, please use hipExtModuleLaunchKernel() instead.
  *
  */
-DEPRECATED("use hipExtModuleLaunchKernel instead")
+HIP_DEPRECATED("use hipExtModuleLaunchKernel instead")
 HIP_PUBLIC_API
 extern "C" hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
                                     uint32_t globalWorkSizeY, uint32_t globalWorkSizeZ,
