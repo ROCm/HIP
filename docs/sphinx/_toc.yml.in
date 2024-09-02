@@ -38,7 +38,7 @@ subtrees:
   - file: how-to/stream_ordered_allocator
   - file: how-to/hipgraph
     title: HIP graphs
-  - file: how-to/faq
+  - file: faq
 
 - caption: Reference
   entries:
