@@ -2093,7 +2093,7 @@ hipError_t hipDeviceGetMemPool(hipMemPool_t* mem_pool, int device);
  * @param [out] prop written with device properties
  * @param [in]  deviceId which device to query for information
  *
- * @return #hipSuccess, #hipErrorInvalidDevice
+ * @returns #hipSuccess, #hipErrorInvalidDevice
  * @bug HCC always returns 0 for maxThreadsPerMultiProcessor
  * @bug HCC always returns 0 for regsPerBlock
  * @bug HCC always returns 0 for l2CacheSize
@@ -2451,7 +2451,7 @@ hipError_t hipExtGetLastError(void);
 /**
  * @brief Return last error returned by any HIP runtime API call.
  *
- * @return #hipSuccess
+ * @returns #hipSuccess
  *
  * Returns the last error that has been returned by any of the runtime calls in the same host
  * thread. Unlike hipGetLastError, this function does not reset the saved error code.
@@ -2463,7 +2463,7 @@ hipError_t hipPeekAtLastError(void);
  * @brief Return hip error as text string form.
  *
  * @param hip_error Error code to convert to name.
- * @return const char pointer to the NULL-terminated error name
+ * @returns const char pointer to the NULL-terminated error name
  *
  * @see hipGetErrorString, hipGetLastError, hipPeakAtLastError, hipError_t
  */
@@ -2472,7 +2472,7 @@ const char* hipGetErrorName(hipError_t hip_error);
  * @brief Return handy text string message to explain the error which occurred
  *
  * @param hipError Error code to convert to string.
- * @return const char pointer to the NULL-terminated error string
+ * @returns const char pointer to the NULL-terminated error string
  *
  * @see hipGetErrorName, hipGetLastError, hipPeakAtLastError, hipError_t
  */
@@ -2482,7 +2482,7 @@ const char* hipGetErrorString(hipError_t hipError);
  *
  * @param [in] hipError Error code to convert to string.
  * @param [out] errorString char pointer to the NULL-terminated error string
- * @return #hipSuccess, #hipErrorInvalidValue
+ * @returns #hipSuccess, #hipErrorInvalidValue
  *
  * @see hipGetErrorName, hipGetLastError, hipPeakAtLastError, hipError_t
  */
@@ -2492,7 +2492,7 @@ hipError_t hipDrvGetErrorName(hipError_t hipError, const char** errorString);
  *
  * @param [in] hipError Error code to convert to string.
  * @param [out] errorString char pointer to the NULL-terminated error string
- * @return #hipSuccess, #hipErrorInvalidValue
+ * @returns #hipSuccess, #hipErrorInvalidValue
  *
  * @see hipGetErrorName, hipGetLastError, hipPeakAtLastError, hipError_t
  */
@@ -2516,14 +2516,14 @@ hipError_t hipDrvGetErrorString(hipError_t hipError, const char** errorString);
  *
  * @param[in, out] stream Valid pointer to hipStream_t.  This function writes the memory with the
  * newly created stream.
- * @return #hipSuccess, #hipErrorInvalidValue
+ * @returns #hipSuccess, #hipErrorInvalidValue
  *
  * Create a new asynchronous stream.  @p stream returns an opaque handle that can be used to
  * reference the newly created stream in subsequent hipStream* commands.  The stream is allocated on
  * the heap and will remain allocated even if the handle goes out-of-scope.  To release the memory
  * used by the stream, application must call hipStreamDestroy.
  *
- * @return #hipSuccess, #hipErrorInvalidValue
+ * @returns #hipSuccess, #hipErrorInvalidValue
  *
  * @see hipStreamCreateWithFlags, hipStreamCreateWithPriority, hipStreamSynchronize, hipStreamWaitEvent, hipStreamDestroy
  */
@@ -2533,7 +2533,7 @@ hipError_t hipStreamCreate(hipStream_t* stream);
  *
  * @param[in, out] stream Pointer to new stream
  * @param[in ] flags to control stream creation.
- * @return #hipSuccess, #hipErrorInvalidValue
+ * @returns #hipSuccess, #hipErrorInvalidValue
  *
  * Create a new asynchronous stream.  @p stream returns an opaque handle that can be used to
  * reference the newly created stream in subsequent hipStream* commands.  The stream is allocated on
@@ -2551,7 +2551,7 @@ hipError_t hipStreamCreateWithFlags(hipStream_t* stream, unsigned int flags);
  * @param[in, out] stream Pointer to new stream
  * @param[in ] flags to control stream creation.
  * @param[in ] priority of the stream. Lower numbers represent higher priorities.
- * @return #hipSuccess, #hipErrorInvalidValue
+ * @returns #hipSuccess, #hipErrorInvalidValue
  *
  * Create a new asynchronous stream with the specified priority.  @p stream returns an opaque handle
  * that can be used to reference the newly created stream in subsequent hipStream* commands.  The
@@ -2582,7 +2582,7 @@ hipError_t hipDeviceGetStreamPriorityRange(int* leastPriority, int* greatestPrio
  * @brief Destroys the specified stream.
  *
  * @param[in] stream stream identifier.
- * @return #hipSuccess #hipErrorInvalidHandle
+ * @returns #hipSuccess #hipErrorInvalidHandle
  *
  * Destroys the specified stream.
  *
@@ -2602,7 +2602,7 @@ hipError_t hipStreamDestroy(hipStream_t stream);
  *
  * @param[in] stream stream to query
  *
- * @return #hipSuccess, #hipErrorNotReady, #hipErrorInvalidHandle
+ * @returns #hipSuccess, #hipErrorNotReady, #hipErrorInvalidHandle
  *
  * This is thread-safe and returns a snapshot of the current state of the queue.  However, if other
  * host threads are sending work to the stream, the status may change immediately after the function
@@ -2617,7 +2617,7 @@ hipError_t hipStreamQuery(hipStream_t stream);
  *
  * @param[in] stream stream identifier.
  *
- * @return #hipSuccess, #hipErrorInvalidHandle
+ * @returns #hipSuccess, #hipErrorInvalidHandle
  *
  * This command is host-synchronous : the host will block until the specified stream is empty.
  *
@@ -2640,7 +2640,7 @@ hipError_t hipStreamSynchronize(hipStream_t stream);
  * @param[in] event event to wait on
  * @param[in] flags control operation [must be 0]
  *
- * @return #hipSuccess, #hipErrorInvalidHandle
+ * @returns #hipSuccess, #hipErrorInvalidHandle
  *
  * This function inserts a wait operation into the specified stream.
  * All future work submitted to @p stream will wait until @p event reports completion before
@@ -2658,7 +2658,7 @@ hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int
  *
  * @param[in] stream stream to be queried
  * @param[in,out] flags Pointer to an unsigned integer in which the stream's flags are returned
- * @return #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidHandle
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidHandle
  *
  * @returns #hipSuccess #hipErrorInvalidValue #hipErrorInvalidHandle
  *
@@ -2672,7 +2672,7 @@ hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int* flags);
  *
  * @param[in] stream stream to be queried
  * @param[in,out] priority Pointer to an unsigned integer in which the stream's priority is returned
- * @return #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidHandle
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidHandle
  *
  * @returns #hipSuccess #hipErrorInvalidValue #hipErrorInvalidHandle
  *
@@ -2686,7 +2686,7 @@ hipError_t hipStreamGetPriority(hipStream_t stream, int* priority);
  *
  * @param[in] stream stream to be queried
  * @param[out] device device associated with the stream
- * @return #hipSuccess, #hipErrorInvalidValue, #hipErrorContextIsDestroyed, #hipErrorInvalidHandle,
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorContextIsDestroyed, #hipErrorInvalidHandle,
  * #hipErrorNotInitialized, #hipErrorDeinitialized, #hipErrorInvalidContext
  *
  * @see hipStreamCreate, hipStreamDestroy, hipDeviceGetStreamPriorityRange
@@ -2701,7 +2701,7 @@ hipError_t hipStreamGetDevice(hipStream_t stream, hipDevice_t* device);
  * The first 32 bits represent the first 32 CUs, and so on. If its size is greater than physical
  * CU number (i.e., multiProcessorCount member of hipDeviceProp_t), the extra elements are ignored.
  * It is user's responsibility to make sure the input is meaningful.
- * @return #hipSuccess, #hipErrorInvalidHandle, #hipErrorInvalidValue
+ * @returns #hipSuccess, #hipErrorInvalidHandle, #hipErrorInvalidValue
  *
  * Create a new asynchronous stream with the specified CU mask.  @p stream returns an opaque handle
  * that can be used to reference the newly created stream in subsequent hipStream* commands.  The
@@ -2720,7 +2720,7 @@ hipError_t hipExtStreamCreateWithCUMask(hipStream_t* stream, uint32_t cuMaskSize
  * @param[out] cuMask Pointer to a pre-allocated block of memories (uint32_t *) in which
  * the stream's CU mask is returned. The CU mask is returned in a chunck of 32 bits where
  * each active bit represents one active CU
- * @return #hipSuccess, #hipErrorInvalidHandle, #hipErrorInvalidValue
+ * @returns #hipSuccess, #hipErrorInvalidHandle, #hipErrorInvalidValue
  *
  * @see hipStreamCreate, hipStreamSynchronize, hipStreamWaitEvent, hipStreamDestroy
  */
@@ -2738,7 +2738,7 @@ typedef void (*hipStreamCallback_t)(hipStream_t stream, hipError_t status, void*
  * @param[in] callback - The function to call once preceding stream operations are complete
  * @param[in] userData - User specified data to be passed to the callback function
  * @param[in] flags    - Reserved for future use, must be 0
- * @return #hipSuccess, #hipErrorInvalidHandle, #hipErrorNotSupported
+ * @returns #hipSuccess, #hipErrorInvalidHandle, #hipErrorNotSupported
  *
  * @see hipStreamCreate, hipStreamCreateWithFlags, hipStreamQuery, hipStreamSynchronize,
  * hipStreamWaitEvent, hipStreamDestroy, hipStreamCreateWithPriority
@@ -3178,7 +3178,7 @@ hipError_t hipEventQuery(hipEvent_t event);
  *  @param [in]      attribute  Attribute to set
  *  @param [in]      ptr      Pointer to set attributes for
  *
- *  @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
+ *  @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
  *
  *  @warning This API is marked as beta, meaning, while this is feature complete,
  *  it is still open to changes and may have outstanding issues.
@@ -3201,7 +3201,7 @@ hipError_t hipPointerSetAttribute(const void* value, hipPointer_attribute attrib
  *  @note  The unrecognized memory type is unsupported to keep the HIP functionality backward
  *  compatibility due to #hipMemoryType enum values.
  *
- *  @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
+ *  @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
  *
  *  @note  The current behavior of this HIP API corresponds to the CUDA API before version 11.0.
  *
@@ -3215,7 +3215,7 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, const void
  *  @param [in]      attribute  Attribute to query for
  *  @param [in]      ptr      Pointer to get attributes for
  *
- *  @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
+ *  @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
  *
  *  @warning This API is marked as beta, meaning, while this is feature complete,
  *  it is still open to changes and may have outstanding issues.
@@ -3233,7 +3233,7 @@ hipError_t hipPointerGetAttribute(void* data, hipPointer_attribute attribute,
  *                               where the result of each attribute query will be written to
  *  @param [in]  ptr             pointer to get attributes for
  *
- *  @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
+ *  @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
  *
  *  @warning This API is marked as beta, meaning, while this is feature complete,
  *  it is still open to changes and may have outstanding issues.
@@ -3258,7 +3258,7 @@ hipError_t hipDrvPointerGetAttributes(unsigned int numAttributes, hipPointer_att
  *  @param[out] extSem_out  External semaphores to be waited on
  *  @param[in] semHandleDesc Semaphore import handle descriptor
  *
- *  @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
+ *  @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
  *
  *  @see
  */
@@ -3272,7 +3272,7 @@ hipError_t hipImportExternalSemaphore(hipExternalSemaphore_t* extSem_out,
  *  @param[in] numExtSems Number of semaphores to wait on
  *  @param[in] stream Stream to enqueue the wait operations in
  *
- *  @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
+ *  @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
  *
  *  @see
  */
@@ -3287,7 +3287,7 @@ hipError_t hipSignalExternalSemaphoresAsync(const hipExternalSemaphore_t* extSem
  *  @param[in] numExtSems Number of semaphores to wait on
  *  @param[in] stream Stream to enqueue the wait operations in
  *
- *  @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
+ *  @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
  *
  *  @see
  */
@@ -3299,7 +3299,7 @@ hipError_t hipWaitExternalSemaphoresAsync(const hipExternalSemaphore_t* extSemAr
  *
  *  @param[in] extSem handle to an external memory object
  *
- *  @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
+ *  @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
  *
  *  @see
  */
@@ -3311,7 +3311,7 @@ hipError_t hipDestroyExternalSemaphore(hipExternalSemaphore_t extSem);
 *  @param[out] extMem_out  Returned handle to an external memory object
 *  @param[in]  memHandleDesc Memory import handle descriptor
 *
-*  @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
+*  @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
 *
 *  @see
 */
@@ -3323,7 +3323,7 @@ hipError_t hipImportExternalMemory(hipExternalMemory_t* extMem_out, const hipExt
 *  @param[in]  extMem  Handle to external memory object
 *  @param[in]  bufferDesc  Buffer descriptor
 *
-*  @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
+*  @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
 *
 *  @see
 */
@@ -3347,7 +3347,7 @@ hipError_t hipDestroyExternalMemory(hipExternalMemory_t extMem);
  *
  *  Returned mipmapped array must be freed using hipFreeMipmappedArray.
  *
- *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidResourceHandle
+ *  @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidResourceHandle
  *
  *  @see hipImportExternalMemory, hipDestroyExternalMemory, hipExternalMemoryGetMappedBuffer, hipFreeMipmappedArray
  */
@@ -3365,7 +3365,7 @@ hipError_t hipExternalMemoryGetMappedMipmappedArray(hipMipmappedArray_t* mipmap,
  *
  *  If size is 0, no memory is allocated, *ptr returns nullptr, and hipSuccess is returned.
  *
- *  @return #hipSuccess, #hipErrorOutOfMemory, #hipErrorInvalidValue (bad context, null *ptr)
+ *  @returns #hipSuccess, #hipErrorOutOfMemory, #hipErrorInvalidValue (bad context, null *ptr)
  *
  *  @see hipMallocPitch, hipFree, hipMallocArray, hipFreeArray, hipMalloc3D, hipMalloc3DArray,
  * hipFreeHost, hipHostAlloc
@@ -3385,7 +3385,7 @@ hipError_t hipMalloc(void** ptr, size_t size);
  *  #hipDeviceMallocFinegrained, #hipDeviceMallocUncached, or #hipMallocSignalMemory.
  *  If the flag is any other value, the API returns #hipErrorInvalidValue.
  *
- *  @return #hipSuccess, #hipErrorOutOfMemory, #hipErrorInvalidValue (bad context, null *ptr)
+ *  @returns #hipSuccess, #hipErrorOutOfMemory, #hipErrorInvalidValue (bad context, null *ptr)
  *
  *  @see hipMallocPitch, hipFree, hipMallocArray, hipFreeArray, hipMalloc3D, hipMalloc3DArray,
  * hipFreeHost, hipExtHostMalloc
@@ -3411,7 +3411,7 @@ hipError_t hipExtMallocWithFlags(void** ptr, size_t sizeBytes, unsigned int flag
  *
  *  If size is 0, no memory is allocated, *ptr returns nullptr, and hipSuccess is returned.
  *
- *  @return #hipSuccess, #hipErrorOutOfMemory
+ *  @returns #hipSuccess, #hipErrorOutOfMemory
  *
  *  @warning  This API is deprecated, use hipHostAlloc() instead
  */
@@ -3425,7 +3425,7 @@ hipError_t hipMallocHost(void** ptr, size_t size);
  *
  *  If size is 0, no memory is allocated, *ptr returns nullptr, and hipSuccess is returned.
  *
- *  @return #hipSuccess, #hipErrorOutOfMemory
+ *  @returns #hipSuccess, #hipErrorOutOfMemory
  *
  *  @warning  This API is deprecated, use hipHostAlloc() instead
  */
@@ -3463,7 +3463,7 @@ hipError_t hipMemAllocHost(void** ptr, size_t size);
  *
  *  If no input for flags, it will be the default pinned memory allocation on the host.
  *
- *  @return #hipSuccess, #hipErrorOutOfMemory
+ *  @returns #hipSuccess, #hipErrorOutOfMemory
  *
  *
  *  @see hipSetDeviceFlags, hiptFreeHost
@@ -3684,7 +3684,7 @@ hipError_t hipStreamAttachMemAsync(hipStream_t stream,
  * @param [in] stream    The stream establishing the stream ordering contract and
  *                       the memory pool to allocate from
  *
- * @return #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported, #hipErrorOutOfMemory
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported, #hipErrorOutOfMemory
  *
  * @see hipMallocFromPoolAsync, hipFreeAsync, hipMemPoolTrimTo, hipMemPoolGetAttribute,
  * hipDeviceSetMemPool, hipMemPoolSetAttribute, hipMemPoolSetAccess, hipMemPoolGetAccess
@@ -4090,7 +4090,7 @@ hipError_t hipHostAlloc(void** ptr, size_t size, unsigned int flags);
  *  @param[in]  hstPtr Host Pointer allocated through hipHostAlloc
  *  @param[in]  flags Flags to be passed for extension
  *
- *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorOutOfMemory
+ *  @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorOutOfMemory
  *
  *  @see hipSetDeviceFlags, hipHostAlloc
  */
@@ -4100,7 +4100,7 @@ hipError_t hipHostGetDevicePointer(void** devPtr, void* hstPtr, unsigned int fla
  *
  *  @param[out] flagsPtr Memory location to store flags
  *  @param[in]  hostPtr Host Pointer allocated through hipHostAlloc
- *  @return #hipSuccess, #hipErrorInvalidValue
+ *  @returns #hipSuccess, #hipErrorInvalidValue
  *
  *  @see hipHostAlloc
  */
@@ -4137,7 +4137,7 @@ hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr);
  * typically one of the writes will "win" and overwrite data from the other registered memory
  * region.
  *
- *  @return #hipSuccess, #hipErrorOutOfMemory
+ *  @returns #hipSuccess, #hipErrorOutOfMemory
  *
  *  @see hipHostUnregister, hipHostGetFlags, hipHostGetDevicePointer
  */
@@ -4146,7 +4146,7 @@ hipError_t hipHostRegister(void* hostPtr, size_t sizeBytes, unsigned int flags);
  *  @brief Un-register host pointer
  *
  *  @param[in] hostPtr Host pointer previously registered with #hipHostRegister
- *  @return Error code
+ *  @returns Error code
  *
  *  @see hipHostRegister
  */
@@ -4164,7 +4164,7 @@ hipError_t hipHostUnregister(void* hostPtr);
  *
  *  If size is 0, no memory is allocated, *ptr returns nullptr, and hipSuccess is returned.
  *
- *  @return Error code
+ *  @returns Error code
  *
  *  @see hipMalloc, hipFree, hipMallocArray, hipFreeArray, hipFreeHost, hipMalloc3D,
  * hipMalloc3DArray, hipHostAlloc
@@ -4187,7 +4187,7 @@ hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height
  *  Given the row and column of an array element of type T, the address is computed as:
  *  T* pElement = (T*)((char*)BaseAddress + Row * Pitch) + Column;
  *
- *  @return Error code
+ *  @returns Error code
  *
  *  @see hipMalloc, hipFree, hipMallocArray, hipFreeArray, hiptFreeHost, hipMalloc3D,
  * hipMalloc3DArray, hipHostAlloc
@@ -4200,8 +4200,8 @@ hipError_t hipMemAllocPitch(hipDeviceptr_t* dptr, size_t* pitch, size_t widthInB
  *  If pointer is NULL, the hip runtime is initialized and hipSuccess is returned.
  *
  *  @param[in] ptr Pointer to memory to be freed
- *  @return #hipSuccess
- *  @return #hipErrorInvalidDevicePointer (if pointer is invalid, including host pointers allocated
+ *  @returns #hipSuccess
+ *  @returns #hipErrorInvalidDevicePointer (if pointer is invalid, including host pointers allocated
  * with hipHostAlloc)
  *
  *  @see hipMalloc, hipMallocPitch, hipMallocArray, hipFreeArray, hipFreeHost, hipMalloc3D,
@@ -4216,7 +4216,7 @@ hipError_t hipFree(void* ptr);
  *  @ingroup MemoryD
  *
  *  @param[in] ptr Pointer to memory to be freed
- *  @return #hipSuccess,
+ *  @returns #hipSuccess,
  *          #hipErrorInvalidValue (if pointer is invalid, including device pointers allocated
  *  with hipMalloc)
  *
@@ -4228,13 +4228,13 @@ hipError_t hipFreeHost(void* ptr);
  *  If pointer is NULL, the hip runtime is initialized and hipSuccess is returned.
  *
  *  @param[in] ptr Pointer to memory to be freed
- *  @return #hipSuccess,
+ *  @returns #hipSuccess,
  *          #hipErrorInvalidValue (if pointer is invalid, including device pointers allocated with
  * hipMalloc)
  *
  *  @see hipMalloc, hipMallocPitch, hipFree, hipMallocArray, hipFreeArray, hipMalloc3D,
  * hipMalloc3DArray, hipHostAlloc
- * 
+ *
  */
 hipError_t hipHostFree(void* ptr);
 /**
@@ -4257,7 +4257,7 @@ hipError_t hipHostFree(void* ptr);
  *  @param[in]  src Data being copy from
  *  @param[in]  sizeBytes Data size in bytes
  *  @param[in]  kind Kind of transfer
- *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorUnknown
+ *  @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorUnknown
  *
  *  @see hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc, hipMemAllocHost,
  * hipMemAllocPitch, hipMemcpy2D, hipMemcpy2DAsync, hipMemcpy2DUnaligned, hipMemcpyAtoA,
@@ -4276,7 +4276,7 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
  *  @param[in]  sizeBytes Data size in bytes
  *  @param[in]  kind Kind of transfer
  *  @param[in]  stream Valid stream
- *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorUnknown, #hipErrorContextIsDestroyed
+ *  @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorUnknown, #hipErrorContextIsDestroyed
  *
  *  @see hipMemcpy, hipStreamCreate, hipStreamSynchronize, hipStreamDestroy, hipSetDevice, hipLaunchKernelGGL
  *
@@ -4290,7 +4290,7 @@ hipError_t hipMemcpyWithStream(void* dst, const void* src, size_t sizeBytes,
  *  @param[in]   src Data being copy from
  *  @param[in]   sizeBytes Data size in bytes
  *
- *  @return #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ *  @returns #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
  * #hipErrorInvalidValue
  *
  *  @see hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc, hipMemAllocHost,
@@ -4308,7 +4308,7 @@ hipError_t hipMemcpyHtoD(hipDeviceptr_t dst, void* src, size_t sizeBytes);
  *  @param[in]   src Data being copy from
  *  @param[in]   sizeBytes Data size in bytes
  *
- *  @return #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ *  @returns #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
  * #hipErrorInvalidValue
  *
  *  @see hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc, hipMemAllocHost,
@@ -4326,7 +4326,7 @@ hipError_t hipMemcpyDtoH(void* dst, hipDeviceptr_t src, size_t sizeBytes);
  *  @param[in]   src Data being copy from
  *  @param[in]   sizeBytes Data size in bytes
  *
- *  @return #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ *  @returns #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
  * #hipErrorInvalidValue
  *
  *  @see hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc, hipMemAllocHost,
@@ -4345,7 +4345,7 @@ hipError_t hipMemcpyDtoD(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeByte
  *  @param[in]   srcOffset Offset in bytes of source array
  *  @param[in]   ByteCount Size of memory copy in bytes
  *
- *  @return #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ *  @returns #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
  * #hipErrorInvalidValue
  *
  *  @see hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc, hipMemAllocHost,
@@ -4365,7 +4365,7 @@ hipError_t hipMemcpyAtoD(hipDeviceptr_t dstDevice, hipArray_t srcArray, size_t s
  *  @param[in]   srcDevice Source device pointer
  *  @param[in]   ByteCount Size of memory copy in bytes
  *
- *  @return #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ *  @returns #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
  * #hipErrorInvalidValue
  *
  *  @see hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc, hipMemAllocHost,
@@ -4387,7 +4387,7 @@ hipError_t hipMemcpyDtoA(hipArray_t dstArray, size_t dstOffset, hipDeviceptr_t s
  *  @param[in]   srcOffset Offset in bytes of source array
  *  @param[in]   ByteCount Size of memory copy in bytes
  *
- *  @return #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ *  @returns #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
  * #hipErrorInvalidValue
  *
  *  @see hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc, hipMemAllocHost,
@@ -4407,7 +4407,7 @@ hipError_t hipMemcpyAtoA(hipArray_t dstArray, size_t dstOffset, hipArray_t srcAr
  *  @param[in]   sizeBytes  Data size in bytes
  *  @param[in]   stream  Stream identifier
  *
- *  @return #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ *  @returns #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
  * #hipErrorInvalidValue
  *
  *  @see hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc, hipMemAllocHost,
@@ -4426,7 +4426,7 @@ hipError_t hipMemcpyHtoDAsync(hipDeviceptr_t dst, void* src, size_t sizeBytes, h
  *  @param[in]   sizeBytes Data size in bytes
  *  @param[in]   stream  Stream identifier
  *
- *  @return #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ *  @returns #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
  * #hipErrorInvalidValue
  *
  *  @see hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc, hipMemAllocHost,
@@ -4445,7 +4445,7 @@ hipError_t hipMemcpyDtoHAsync(void* dst, hipDeviceptr_t src, size_t sizeBytes, h
  *  @param[in]   sizeBytes  Data size in bytes
  *  @param[in]   stream  Stream identifier
  *
- *  @return #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ *  @returns #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
  * #hipErrorInvalidValue
  *
  *  @see hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc, hipMemAllocHost,
@@ -4466,7 +4466,7 @@ hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst, hipDeviceptr_t src, size_t siz
  *  @param[in]   ByteCount Size of memory copy in bytes
  *  @param[in]   stream Stream identifier
  *
- *  @return #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ *  @returns #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
  * #hipErrorInvalidValue
  *
  *  @see hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc, hipMemAllocHost,
@@ -4487,7 +4487,7 @@ hipError_t hipMemcpyAtoHAsync(void* dstHost, hipArray_t srcArray, size_t srcOffs
  *  @param[in]   ByteCount Size of memory copy in bytes
  *  @param[in]   stream Stream identifier
  *
- *  @return #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ *  @returns #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
  * #hipErrorInvalidValue
  *
  *  @see hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc, hipMemAllocHost,
@@ -4510,7 +4510,7 @@ hipError_t hipMemcpyHtoAAsync(hipArray_t dstArray, size_t dstOffset, const void*
  *  @param[in]   hmod  Module to retrieve global from
  *  @param[in]   name  Name of global to retrieve
  *
- *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorNotFound, #hipErrorInvalidContext
+ *  @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotFound, #hipErrorInvalidContext
  *
  */
 hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes,
@@ -4522,7 +4522,7 @@ hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes,
  *  @param[out]  devPtr  pointer to the device associated the symbole
  *  @param[in]   symbol  pointer to the symbole of the device
  *
- *  @return #hipSuccess, #hipErrorInvalidValue
+ *  @returns #hipSuccess, #hipErrorInvalidValue
  *
  */
 hipError_t hipGetSymbolAddress(void** devPtr, const void* symbol);
@@ -4535,7 +4535,7 @@ hipError_t hipGetSymbolAddress(void** devPtr, const void* symbol);
  *  @param[in]   symbol  pointer to the device symbole
  *  @param[out]  size  pointer to the size
  *
- *  @return #hipSuccess, #hipErrorInvalidValue
+ *  @returns #hipSuccess, #hipErrorInvalidValue
  *
  */
 hipError_t hipGetSymbolSize(size_t* size, const void* symbol);
@@ -4557,7 +4557,7 @@ hipError_t hipGetSymbolSize(size_t* size, const void* symbol);
  *
  * Returns hipSuccess if the returned pfn is addressed to the pointer of found driver function.
  *
- * @return #hipSuccess, #hipErrorInvalidValue.
+ * @returns #hipSuccess, #hipErrorInvalidValue.
  */
 hipError_t hipGetProcAddress(const char* symbol, void** pfn, int  hipVersion, uint64_t flags,
                              hipDriverProcAddressQueryResult* symbolStatus);
@@ -4579,7 +4579,7 @@ hipError_t hipGetProcAddress(const char* symbol, void** pfn, int  hipVersion, ui
  *  @param[in]   offset  offset in bytes from start of symbole
  *  @param[in]   kind  type of memory transfer
  *
- *  @return #hipSuccess, #hipErrorInvalidValue
+ *  @returns #hipSuccess, #hipErrorInvalidValue
  *
  */
 hipError_t hipMemcpyToSymbol(const void* symbol, const void* src,
@@ -4596,7 +4596,7 @@ hipError_t hipMemcpyToSymbol(const void* symbol, const void* src,
  *  @param[in]   kind  type of memory transfer
  *  @param[in]   stream  stream identifier
  *
- *  @return #hipSuccess, #hipErrorInvalidValue
+ *  @returns #hipSuccess, #hipErrorInvalidValue
  *
  */
 hipError_t hipMemcpyToSymbolAsync(const void* symbol, const void* src,
@@ -4612,7 +4612,7 @@ hipError_t hipMemcpyToSymbolAsync(const void* symbol, const void* src,
  *  @param[in]   offset  Offset in bytes from the start of symbole
  *  @param[in]   kind  Type of memory transfer
  *
- *  @return #hipSuccess, #hipErrorInvalidValue
+ *  @returns #hipSuccess, #hipErrorInvalidValue
  *
  */
 hipError_t hipMemcpyFromSymbol(void* dst, const void* symbol,
@@ -4629,7 +4629,7 @@ hipError_t hipMemcpyFromSymbol(void* dst, const void* symbol,
  *  @param[in]   kind  type of memory transfer
  *  @param[in]   stream  stream identifier
  *
- *  @return #hipSuccess, #hipErrorInvalidValue
+ *  @returns #hipSuccess, #hipErrorInvalidValue
  *
  */
 hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbol,
@@ -4657,7 +4657,7 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbol,
  *  @param[in]  sizeBytes Data size in bytes
  *  @param[in]  kind  Type of memory transfer
  *  @param[in]  stream  Stream identifier
- *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorUnknown
+ *  @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorUnknown
  *
  *  @see hipMemcpy, hipMemcpy2D, hipMemcpyToArray, hipMemcpy2DToArray, hipMemcpyFromArray,
  * hipMemcpy2DFromArray, hipMemcpyArrayToArray, hipMemcpy2DArrayToArray, hipMemcpyToSymbol,
@@ -4674,7 +4674,7 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcp
  *  @param[out] dst  Data being filled
  *  @param[in]  value  Value to be set
  *  @param[in]  sizeBytes  Data size in bytes
- *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized
+ *  @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized
  */
 hipError_t hipMemset(void* dst, int value, size_t sizeBytes);
 /**
@@ -4684,7 +4684,7 @@ hipError_t hipMemset(void* dst, int value, size_t sizeBytes);
  *  @param[out] dest  Data ptr to be filled
  *  @param[in]  value  Value to be set
  *  @param[in]  count  Number of values to be set
- *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized
+ *  @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized
  */
 hipError_t hipMemsetD8(hipDeviceptr_t dest, unsigned char value, size_t count);
 /**
@@ -4700,7 +4700,7 @@ hipError_t hipMemsetD8(hipDeviceptr_t dest, unsigned char value, size_t count);
  *  @param[in]  value  Constant value to be set
  *  @param[in]  count  Number of values to be set
  *  @param[in]  stream  Stream identifier
- *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized
+ *  @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized
  */
 hipError_t hipMemsetD8Async(hipDeviceptr_t dest, unsigned char value, size_t count, hipStream_t stream __dparm(0));
 /**
@@ -4710,7 +4710,7 @@ hipError_t hipMemsetD8Async(hipDeviceptr_t dest, unsigned char value, size_t cou
  *  @param[out] dest  Data ptr to be filled
  *  @param[in]  value  Constant value to be set
  *  @param[in]  count  Number of values to be set
- *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized
+ *  @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized
  */
 hipError_t hipMemsetD16(hipDeviceptr_t dest, unsigned short value, size_t count);
 /**
@@ -4726,7 +4726,7 @@ hipError_t hipMemsetD16(hipDeviceptr_t dest, unsigned short value, size_t count)
  *  @param[in]  value  Constant value to be set
  *  @param[in]  count  Number of values to be set
  *  @param[in]  stream  Stream identifier
- *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized
+ *  @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized
  */
 hipError_t hipMemsetD16Async(hipDeviceptr_t dest, unsigned short value, size_t count, hipStream_t stream __dparm(0));
 /**
@@ -4736,7 +4736,7 @@ hipError_t hipMemsetD16Async(hipDeviceptr_t dest, unsigned short value, size_t c
  *  @param[out] dest  Data being filled
  *  @param[in]  value  Constant value to be set
  *  @param[in]  count  Number of values to be set
- *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized
+ *  @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized
  */
 hipError_t hipMemsetD32(hipDeviceptr_t dest, int value, size_t count);
 /**
@@ -4780,7 +4780,7 @@ hipError_t hipMemsetD32Async(hipDeviceptr_t dst, int value, size_t count,
  *  @param[in]  value  Constant value to be set
  *  @param[in]  width
  *  @param[in]  height
- *  @return #hipSuccess, #hipErrorInvalidValue
+ *  @returns #hipSuccess, #hipErrorInvalidValue
  */
 hipError_t hipMemset2D(void* dst, size_t pitch, int value, size_t width, size_t height);
 /**
@@ -4792,7 +4792,7 @@ hipError_t hipMemset2D(void* dst, size_t pitch, int value, size_t width, size_t 
  *  @param[in]  width  Width of matrix set columns in bytes
  *  @param[in]  height  Height of matrix set rows in bytes
  *  @param[in]  stream  Stream identifier
- *  @return #hipSuccess, #hipErrorInvalidValue
+ *  @returns #hipSuccess, #hipErrorInvalidValue
  */
 hipError_t hipMemset2DAsync(void* dst, size_t pitch, int value, size_t width, size_t height,hipStream_t stream __dparm(0));
 /**
@@ -4801,7 +4801,7 @@ hipError_t hipMemset2DAsync(void* dst, size_t pitch, int value, size_t width, si
  *  @param[in] pitchedDevPtr  Pointer to pitched device memory
  *  @param[in]  value  Value to set for each byte of specified memory
  *  @param[in]  extent  Size parameters for width field in bytes in device memory
- *  @return #hipSuccess, #hipErrorInvalidValue
+ *  @returns #hipSuccess, #hipErrorInvalidValue
  */
 hipError_t hipMemset3D(hipPitchedPtr pitchedDevPtr, int  value, hipExtent extent );
 /**
@@ -4811,7 +4811,7 @@ hipError_t hipMemset3D(hipPitchedPtr pitchedDevPtr, int  value, hipExtent extent
  *  @param[in]  value  Value to set for each byte of specified memory
  *  @param[in]  extent  Size parameters for width field in bytes in device memory
  *  @param[in]  stream  Stream identifier
- *  @return #hipSuccess, #hipErrorInvalidValue
+ *  @returns #hipSuccess, #hipErrorInvalidValue
  */
 hipError_t hipMemset3DAsync(hipPitchedPtr pitchedDevPtr, int  value, hipExtent extent ,hipStream_t stream __dparm(0));
 /**
@@ -4827,7 +4827,7 @@ hipError_t hipMemset3DAsync(hipPitchedPtr pitchedDevPtr, int  value, hipExtent e
  * @param[out] free Returns free memory on the current device in bytes
  * @param[out] total Returns total allocatable memory on the current device in bytes
  *
- * @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
+ * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
  *
  **/
 hipError_t hipMemGetInfo(size_t* free, size_t* total);
@@ -4840,7 +4840,7 @@ hipError_t hipMemGetInfo(size_t* free, size_t* total);
  * @param[in] ptr Pointer to allocated memory
  * @param[out] size Returns the allocated memory size in bytes
  *
- * @return #hipSuccess, #hipErrorInvalidValue
+ * @returns #hipSuccess, #hipErrorInvalidValue
  *
  **/
 hipError_t hipMemPtrGetInfo(void* ptr, size_t* size);
@@ -4852,7 +4852,7 @@ hipError_t hipMemPtrGetInfo(void* ptr, size_t* size);
  *  @param[in]   width  Requested array allocation width
  *  @param[in]   height Requested array allocation height
  *  @param[in]   flags  Requested properties of allocated array
- *  @return      #hipSuccess, #hipErrorOutOfMemory
+ *  @returns     #hipSuccess, #hipErrorOutOfMemory
  *
  *  @see hipMalloc, hipMallocPitch, hipFree, hipFreeArray, hipHostAlloc, hipFreeHost
  */
@@ -4864,7 +4864,7 @@ hipError_t hipMallocArray(hipArray_t* array, const hipChannelFormatDesc* desc, s
  *  @param[out]  pHandle  Pointer to the array memory
  *  @param[in]   pAllocateArray   Requested array desciptor
  *
- *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ *  @returns     #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
  *
  *  @see hipMallocArray, hipArrayDestroy, hipFreeArray
  */
@@ -4874,7 +4874,7 @@ hipError_t hipArrayCreate(hipArray_t* pHandle, const HIP_ARRAY_DESCRIPTOR* pAllo
  *
  *  @param[in]  array  Pointer to the array memory
  *
- *  @return      #hipSuccess, #hipErrorInvalidValue
+ *  @returns     #hipSuccess, #hipErrorInvalidValue
  *
  *  @see hipArrayCreate, hipArrayDestroy, hipFreeArray
  */
@@ -4885,7 +4885,7 @@ hipError_t hipArrayDestroy(hipArray_t array);
  *  @param[out]  array  Pointer to the 3D array memory
  *  @param[in]   pAllocateArray   Requested array desciptor
  *
- *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ *  @returns     #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
  *
  *  @see hipMallocArray, hipArrayDestroy, hipFreeArray
  */
@@ -4896,7 +4896,7 @@ hipError_t hipArray3DCreate(hipArray_t* array, const HIP_ARRAY3D_DESCRIPTOR* pAl
  *  @param[out]  pitchedDevPtr  Pointer to the 3D memory
  *  @param[in]   extent   Requested extent
  *
- *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ *  @returns     #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
  *
  *  @see hipMallocPitch, hipMemGetInfo, hipFree
  */
@@ -4905,7 +4905,7 @@ hipError_t hipMalloc3D(hipPitchedPtr* pitchedDevPtr, hipExtent extent);
  *  @brief Frees an array on the device.
  *
  *  @param[in]  array  Pointer to array to free
- *  @return     #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized
+ *  @returns    #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized
  *
  *  @see hipMalloc, hipMallocPitch, hipFree, hipMallocArray, hipHostAlloc, hipFreeHost
  */
@@ -4917,7 +4917,7 @@ hipError_t hipFreeArray(hipArray_t array);
  *  @param[in]   desc   Requested channel format
  *  @param[in]   extent Requested array allocation width, height and depth
  *  @param[in]   flags  Requested properties of allocated array
- *  @return      #hipSuccess, #hipErrorOutOfMemory
+ *  @returns     #hipSuccess, #hipErrorOutOfMemory
  *
  *  @see hipMalloc, hipMallocPitch, hipFree, hipFreeArray, hipHostAlloc, hipFreeHost
  */
@@ -4931,7 +4931,7 @@ hipError_t hipMalloc3DArray(hipArray_t* array, const struct hipChannelFormatDesc
  * @param[out] flags  - Returned array flags
  * @param[in]  array  - The HIP array to get info for
  *
- * @return #hipSuccess, #hipErrorInvalidValue #hipErrorInvalidHandle
+ * @returns #hipSuccess, #hipErrorInvalidValue #hipErrorInvalidHandle
  *
  * @see hipArrayGetDescriptor, hipArray3DGetDescriptor
  */
@@ -4943,7 +4943,7 @@ hipError_t hipArrayGetInfo(hipChannelFormatDesc* desc, hipExtent* extent, unsign
  * @param[out] pArrayDescriptor - Returned array descriptor
  * @param[in]  array            - Array to get descriptor of
  *
- * @return #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ * @returns #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
  * #hipErrorInvalidValue #hipErrorInvalidHandle
  *
  * @see hipArray3DCreate, hipArray3DGetDescriptor, hipArrayCreate, hipArrayDestroy, hipMemAlloc,
@@ -4961,7 +4961,7 @@ hipError_t hipArrayGetDescriptor(HIP_ARRAY_DESCRIPTOR* pArrayDescriptor, hipArra
  * @param[out] pArrayDescriptor - Returned 3D array descriptor
  * @param[in]  array            - 3D array to get descriptor of
  *
- * @return #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
+ * @returns #hipSuccess, #hipErrorDeinitialized, #hipErrorNotInitialized, #hipErrorInvalidContext,
  * #hipErrorInvalidValue #hipErrorInvalidHandle, #hipErrorContextIsDestroyed
  *
  * @see hipArray3DCreate, hipArrayCreate, hipArrayDestroy, hipArrayGetDescriptor, hipMemAlloc,
@@ -4983,7 +4983,7 @@ hipError_t hipArray3DGetDescriptor(HIP_ARRAY3D_DESCRIPTOR* pArrayDescriptor, hip
  *  @param[in]   width  Width of matrix transfer (columns in bytes)
  *  @param[in]   height Height of matrix transfer (rows)
  *  @param[in]   kind   Type of transfer
- *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
+ *  @returns     #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
  * #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
  *
  *  @see hipMemcpy, hipMemcpyToArray, hipMemcpy2DToArray, hipMemcpyFromArray, hipMemcpyToSymbol,
@@ -4994,7 +4994,7 @@ hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch,
 /**
  *  @brief Copies memory for 2D arrays.
  *  @param[in]   pCopy Parameters for the memory copy
- *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
+ *  @returns     #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
  *  #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
  *
  *  @see hipMemcpy, hipMemcpy2D, hipMemcpyToArray, hipMemcpy2DToArray, hipMemcpyFromArray,
@@ -5005,7 +5005,7 @@ hipError_t hipMemcpyParam2D(const hip_Memcpy2D* pCopy);
  *  @brief Copies memory for 2D arrays.
  *  @param[in]   pCopy Parameters for the memory copy
  *  @param[in]   stream Stream to use
- *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
+ *  @returns     #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
  * #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
  *
  *  @see hipMemcpy, hipMemcpy2D, hipMemcpyToArray, hipMemcpy2DToArray, hipMemcpyFromArray,
@@ -5023,7 +5023,7 @@ hipError_t hipMemcpyParam2DAsync(const hip_Memcpy2D* pCopy, hipStream_t stream _
  *  @param[in]   height Height of matrix transfer (rows)
  *  @param[in]   kind   Type of transfer
  *  @param[in]   stream Stream to use
- *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
+ *  @returns     #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
  * #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
  *
  *  @see hipMemcpy, hipMemcpyToArray, hipMemcpy2DToArray, hipMemcpyFromArray, hipMemcpyToSymbol,
@@ -5042,7 +5042,7 @@ hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t sp
  *  @param[in]   width   Width of matrix transfer (columns in bytes)
  *  @param[in]   height  Height of matrix transfer (rows)
  *  @param[in]   kind    Type of transfer
- *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
+ *  @returns     #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
  * #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
  *
  *  @see hipMemcpy, hipMemcpyToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol,
@@ -5062,7 +5062,7 @@ hipError_t hipMemcpy2DToArray(hipArray_t dst, size_t wOffset, size_t hOffset, co
  *  @param[in]   height  Height of matrix transfer (rows)
  *  @param[in]   kind    Type of transfer
  *  @param[in]   stream    Accelerator view which the copy is being enqueued
- *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
+ *  @returns     #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
  * #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
  *
  *  @see hipMemcpy, hipMemcpyToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol,
@@ -5084,7 +5084,7 @@ hipError_t hipMemcpy2DToArrayAsync(hipArray_t dst, size_t wOffset, size_t hOffse
  *  @param[in]   height  Height of matrix transfer (rows)
  *  @param[in]   kind Type of transfer
  *
- *  @returns      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidMemcpyDirection
+ *  @returns     #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidMemcpyDirection
  *
  *  @see hipMemcpy, hipMemcpyToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol,
  * hipMemcpyAsync
@@ -5103,7 +5103,7 @@ hipError_t hipMemcpy2DArrayToArray(hipArray_t dst, size_t wOffsetDst, size_t hOf
  *  @param[in]   src     Source memory address
  *  @param[in]   count   size in bytes to copy
  *  @param[in]   kind    Type of transfer
- *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
+ *  @returns     #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
  * #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
  *
  *  @see hipMemcpy, hipMemcpy2DToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol,
@@ -5124,7 +5124,7 @@ hipError_t hipMemcpyToArray(hipArray_t dst, size_t wOffset, size_t hOffset, cons
  *  @param[in]   hOffset   Source starting Y offset
  *  @param[in]   count     Size in bytes to copy
  *  @param[in]   kind      Type of transfer
- *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
+ *  @returns     #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
  * #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
  *
  *  @see hipMemcpy, hipMemcpy2DToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol,
@@ -5145,7 +5145,7 @@ hipError_t hipMemcpyFromArray(void* dst, hipArray_const_t srcArray, size_t wOffs
  *  @param[in]   width     Width of matrix transfer (columns in bytes)
  *  @param[in]   height    Height of matrix transfer (rows)
  *  @param[in]   kind      Type of transfer
- *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
+ *  @returns     #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
  * #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
  *
  *  @see hipMemcpy, hipMemcpy2DToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol,
@@ -5164,7 +5164,7 @@ hipError_t hipMemcpy2DFromArray( void* dst, size_t dpitch, hipArray_const_t src,
  *  @param[in]   height    Height of matrix transfer (rows)
  *  @param[in]   kind      Type of transfer
  *  @param[in]   stream    Accelerator view which the copy is being enqueued
- *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
+ *  @returns     #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
  * #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
  *
  *  @see hipMemcpy, hipMemcpy2DToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol,
@@ -5178,7 +5178,7 @@ hipError_t hipMemcpy2DFromArrayAsync( void* dst, size_t dpitch, hipArray_const_t
  *  @param[in]   srcArray  Source array
  *  @param[in]   srcOffset Offset in bytes of source array
  *  @param[in]   count     Size of memory copy in bytes
- *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
+ *  @returns     #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
  * #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
  *
  *  @see hipMemcpy, hipMemcpy2DToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol,
@@ -5192,7 +5192,7 @@ hipError_t hipMemcpyAtoH(void* dst, hipArray_t srcArray, size_t srcOffset, size_
  *  @param[in]   dstOffset  Offset in bytes of destination array
  *  @param[in]   srcHost    Source host pointer
  *  @param[in]   count      Size of memory copy in bytes
- *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
+ *  @returns     #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
  * #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
  *
  *  @see hipMemcpy, hipMemcpy2DToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol,
@@ -5203,7 +5203,7 @@ hipError_t hipMemcpyHtoA(hipArray_t dstArray, size_t dstOffset, const void* srcH
  *  @brief Copies data between host and device.
  *
  *  @param[in]   p   3D memory copy parameters
- *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
+ *  @returns     #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
  * #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
  *
  *  @see hipMemcpy, hipMemcpy2DToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol,
@@ -5215,7 +5215,7 @@ hipError_t hipMemcpy3D(const struct hipMemcpy3DParms* p);
  *
  *  @param[in]   p        3D memory copy parameters
  *  @param[in]   stream   Stream to use
- *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
+ *  @returns     #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
  * #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
  *
  *  @see hipMemcpy, hipMemcpy2DToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol,
@@ -5226,7 +5226,7 @@ hipError_t hipMemcpy3DAsync(const struct hipMemcpy3DParms* p, hipStream_t stream
  *  @brief Copies data between host and device.
  *
  *  @param[in]   pCopy   3D memory copy parameters
- *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
+ *  @returns     #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
  *  #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
  *
  *  @see hipMemcpy, hipMemcpy2DToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol,
@@ -5238,7 +5238,7 @@ hipError_t hipDrvMemcpy3D(const HIP_MEMCPY3D* pCopy);
  *
  *  @param[in]   pCopy    3D memory copy parameters
  *  @param[in]   stream   Stream to use
- *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
+ *  @returns     #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
  *  #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
  *
  *  @see hipMemcpy, hipMemcpy2DToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol,
@@ -5380,7 +5380,7 @@ hipError_t hipMemcpyPeerAsync(void* dst, int dstDeviceId, const void* src, int s
  * @param [in] flags  Context creation flags
  * @param [in] device  device handle
  *
- * @return #hipSuccess
+ * @returns #hipSuccess
  *
  * @see hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxPushCurrent,
  * hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
@@ -5487,7 +5487,7 @@ hipError_t hipCtxGetDevice(hipDevice_t* device);
  * @param [in]  ctx Context to check [Deprecated]
  * @param [out] apiVersion API version to get
  *
- * @return #hipSuccess
+ * @returns #hipSuccess
  *
  * @warning The HIP feature set does not correspond to an exact CUDA SDK api revision.
  * This function always set *apiVersion to 4 as an approximation though HIP supports
@@ -5508,7 +5508,7 @@ hipError_t hipCtxGetApiVersion(hipCtx_t ctx, int* apiVersion);
  *
  * @param [out] cacheConfig  Cache configuration
  *
- * @return #hipSuccess
+ * @returns #hipSuccess
  *
  * @warning AMD devices and some Nvidia GPUS do not support reconfigurable cache.  This hint is
  * ignored on those architectures.
