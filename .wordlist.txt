@@ -96,6 +96,7 @@ memset
 multicore
 multigrid
 multithreading
+multitenant
 MALU
 NaN
 NCCL
