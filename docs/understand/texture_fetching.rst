@@ -7,9 +7,9 @@
 Texture fetching
 *******************************************************************************
 
-`Textures <../doxygen/html/group___texture.html>`_ are more than just a buffer interpreted as a 1D, 2D, or 3D array. 
+`Textures <../doxygen/html/group___texture.html>`_ are more than just a buffer interpreted as a 1D, 2D, or 3D array.
 
-As textures are associated with graphics, they are indexed using floating-point values. The index can be in the range of [0 to size-1] or in [0 to 1].
+As textures are associated with graphics, they are indexed using floating-point values. The index can be in the range of [0 to size-1] or [0 to 1].
 
 Depending on the index, texture sampling or texture addressing is performed, which decides the return value.
 
@@ -23,7 +23,7 @@ Here is the sample texture used in this document for demonstration purposes. It 
 
 .. figure:: ../data/understand/textures/original.png
   :width: 150
-  :alt: Texture used as example
+  :alt: Sample texture
   :align: center
 
   Texture used as example
@@ -39,9 +39,9 @@ The various texture sampling methods are discussed in the following sections.
 Nearest point sampling
 -------------------------------------------------------------------------------
 
-In this method:
+In this method, the modulo of index is calculated as:
 
-``tex(x) = T[floor(x+0.5)]`` 
+``tex(x) = T[floor(x+0.5)]``
 
 This is also applicable for 2D and 3D variants.
 
@@ -99,13 +99,15 @@ The following image shows the texture on a 4x4 pixel quad, indexed in the [0 to 
   :alt: Texture with yellow border color
   :align: center
 
-  The purple lines are not part of the texture, only denote the edge, where the addressing begins.
+  Texture with yellow border color.
+
+The purple lines are not part of the texture. They only denote the edge, where the addressing begins.
 
 .. _texture_fetching_wrap:
 Address mode wrap
 -------------------------------------------------------------------------------
 
-In this addressing mode, the modulo of the index is calculated:
+In this addressing mode, the modulo of the index is calculated as:
 
 ``tex(x) = T[x mod (size-1)]``
 
@@ -118,7 +120,9 @@ The following image shows the texture on a 4x4 pixel quad, indexed in the [0 to 
   :alt: Texture with wrap addressing
   :align: center
 
-  The purple lines are not part of the texture, only denote the edge, where the addressing begins.
+  Texture with wrap addressing.
+
+The purple lines are not part of the texture. They only denote the edge, where the addressing begins.
 
 .. _texture_fetching_mirror:
 Address mode mirror
@@ -133,7 +137,9 @@ The following image shows the texture on a 4x4 pixel quad, indexed in the [0 to 
   :alt: Texture with mirror addressing
   :align: center
 
-  The purple lines are not part of the texture, only denote the edge, where the addressing begins.
+  Texture with mirror addressing
+
+The purple lines are not part of the texture. They only denote the edge, where the addressing begins.
 
 .. _texture_fetching_clamp:
 Address mode clamp
@@ -148,4 +154,6 @@ The following image shows the texture on a 4x4 pixel quad, indexed in the [0 to 
   :alt: Texture with clamp addressing
   :align: center
 
-  The purple lines are not part of the texture, only denote the edge, where the addressing begins.
+  Texture with clamp addressing
+
+The purple lines are not part of the texture. They only denote the edge, where the addressing begins.
