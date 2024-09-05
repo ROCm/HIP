@@ -60,6 +60,7 @@ On non-AMD platforms, like NVIDIA, HIP provides header files required to support
 * [C++ language extensions](./reference/cpp_language_extensions)
 * [C++ language support](./reference/cpp_language_support)
 * [HIP math API](./reference/math_api)
+* [HIP environment variables](./reference/env_variables)
 * [Comparing syntax for different APIs](./reference/terms)
 * [List of deprecated APIs](./reference/deprecated_api_list)
 * [FP8 numbers in HIP](./reference/fp8_numbers)
