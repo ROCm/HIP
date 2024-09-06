@@ -45,9 +45,6 @@ Supported Devices
     * - gfx940/gfx941/gfx942
       - Yes
       - No
-    * - gfx1200/gfx1201
-      - No
-      - Yes
 
 Usage
 =====
