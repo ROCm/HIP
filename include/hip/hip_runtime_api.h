@@ -3478,9 +3478,11 @@ hipError_t hipMemAllocHost(void** ptr, size_t size);
  *
  *  @returns #hipSuccess, #hipErrorOutOfMemory
  *
+ *  @warning  This API is deprecated, use hipExtHostAlloc() instead
  *
  *  @see hipSetDeviceFlags, hiptFreeHost
  */
+HIP_DEPRECATED("use hipExtHostAlloc instead")
 hipError_t hipHostMalloc(void** ptr, size_t size, unsigned int flags);
 /**
  *  @brief Allocates device accessible page locked (pinned) host memory
@@ -4236,7 +4238,7 @@ hipError_t hipFree(void* ptr);
  */
 hipError_t hipFreeHost(void* ptr);
 /**
- *  @brief Free memory allocated by the hcc hip host memory allocation API
+ *  @brief Free memory allocated by the hcc hip host memory allocation API [Deprecated]
  *  This API performs an implicit hipDeviceSynchronize() call.
  *  If pointer is NULL, the hip runtime is initialized and hipSuccess is returned.
  *
@@ -4248,7 +4250,9 @@ hipError_t hipFreeHost(void* ptr);
  *  @see hipMalloc, hipMallocPitch, hipFree, hipMallocArray, hipFreeArray, hipMalloc3D,
  * hipMalloc3DArray, hipHostAlloc
  *
+ *  @warning  This API is deprecated, use hipFreeHost() instead
  */
+HIP_DEPRECATED("use hipFreeHost instead")
 hipError_t hipHostFree(void* ptr);
 /**
  *  @brief Copy data from src to dst.
@@ -9604,6 +9608,43 @@ static inline hipError_t hipMallocFromPoolAsync(
   hipStream_t   stream) {
   return hipMallocFromPoolAsync(reinterpret_cast<void**>(dev_ptr), size, mem_pool, stream);
 }
+#if !defined(__HIP_DISABLE_CPP_FUNCTIONS__)
+/**
+ * @brief: C++ wrapper for hipExtHostAlloc
+ * @ingroup Memory
+ * Provide an override to automatically typecast the pointer type from void**, and also provide a
+ * default for the flags.
+ *
+ * __HIP_DISABLE_CPP_FUNCTIONS__ macro can be defined to suppress these
+ * wrappers. It is useful for applications which need to obtain decltypes of
+ * HIP runtime APIs.
+ *
+ * @see hipExtHostAlloc
+ */
+template <class T>
+static inline hipError_t hipExtHostAlloc(T** ptr, size_t size,
+                                       unsigned int flags = hipHostAllocDefault) {
+    return hipExtHostAlloc((void**)ptr, size, flags);
+}
+/**
+ * @brief: C++ wrapper for hipHostMalloc
+ * @ingroup Memory
+ * Provide an override to automatically typecast the pointer type from void**, and also provide a
+ * default for the flags.
+ *
+ * __HIP_DISABLE_CPP_FUNCTIONS__ macro can be defined to suppress these
+ * wrappers. It is useful for applications which need to obtain decltypes of
+ * HIP runtime APIs.
+ *
+ * @see hipHostMalloc
+ */
+template <class T>
+HIP_DEPRECATED("use hipExtHostAlloc instead")
+static inline hipError_t hipHostMalloc(T** ptr, size_t size,
+                                       unsigned int flags = hipHostAllocDefault) {
+    return hipExtHostAlloc((void**)ptr, size, flags);
+}
+#endif //!defined(__HIP_DISABLE_CPP_FUNCTIONS__)
 /**
 * @}
 */
@@ -9618,6 +9659,13 @@ static inline hipError_t hipMallocFromPoolAsync(
 
 #elif !defined(__HIP_PLATFORM_AMD__) && defined(__HIP_PLATFORM_NVIDIA__)
 #include "hip/nvidia_detail/nvidia_hip_runtime_api.h"
+#if defined(__cplusplus) && !defined(__HIP_DISABLE_CPP_FUNCTIONS__)
+template <class T>
+static inline hipError_t hipHostMalloc(T** ptr, size_t size,
+                                       unsigned int flags = hipHostMallocDefault) {
+  return hipHostMalloc((void**)ptr, size, flags);
+}
+#endif
 #else
 #error("Must define exactly one of __HIP_PLATFORM_AMD__ or __HIP_PLATFORM_NVIDIA__");
 #endif
@@ -9654,41 +9702,6 @@ template <class T>
 static inline hipError_t hipMallocPitch(T** devPtr, size_t* pitch, size_t width, size_t height) {
     return hipMallocPitch((void**)devPtr, pitch, width, height);
 }
-/**
- * @brief: C++ wrapper for hipExtHostAlloc
- * @ingroup Memory
- * Provide an override to automatically typecast the pointer type from void**, and also provide a
- * default for the flags.
- *
- * __HIP_DISABLE_CPP_FUNCTIONS__ macro can be defined to suppress these
- * wrappers. It is useful for applications which need to obtain decltypes of
- * HIP runtime APIs.
- *
- * @see hipExtHostAlloc
- */
-template <class T>
-static inline hipError_t hipExtHostAlloc(T** ptr, size_t size,
-                                       unsigned int flags = hipHostAllocDefault) {
-    return hipExtHostAlloc((void**)ptr, size, flags);
-}
-/**
- * @brief: C++ wrapper for hipHostMalloc
- * @ingroup Memory
- * Provide an override to automatically typecast the pointer type from void**, and also provide a
- * default for the flags.
- *
- * __HIP_DISABLE_CPP_FUNCTIONS__ macro can be defined to suppress these
- * wrappers. It is useful for applications which need to obtain decltypes of
- * HIP runtime APIs.
- *
- * @see hipHostMalloc
- */
-template <class T>
-static inline hipError_t hipHostMalloc(T** ptr, size_t size,
-                                       unsigned int flags = hipHostAllocDefault) {
-    return hipHostMalloc((void**)ptr, size, flags);
-}
-
 /**
  * @brief: C++ wrapper for hipHostAlloc
  * @ingroup Memory
