@@ -16,9 +16,9 @@ beautifulsoup4==4.12.3
     # via pydata-sphinx-theme
 breathe==4.35.0
     # via rocm-docs-core
-certifi==2024.7.4
+certifi==2024.8.30
     # via requests
-cffi==1.17.0
+cffi==1.17.1
     # via
     #   cryptography
     #   pynacl
@@ -31,7 +31,7 @@ click==8.1.7
     #   sphinx-external-toc
 click-log==0.4.0
     # via doxysphinx
-cryptography==43.0.0
+cryptography==43.0.1
     # via pyjwt
 deprecated==1.2.14
     # via pygithub
@@ -49,7 +49,7 @@ gitdb==4.0.11
     # via gitpython
 gitpython==3.1.43
     # via rocm-docs-core
-idna==3.7
+idna==3.8
     # via requests
 imagesize==1.4.1
     # via sphinx
@@ -87,7 +87,7 @@ pydata-sphinx-theme==0.15.4
     # via
     #   rocm-docs-core
     #   sphinx-book-theme
-pygithub==2.3.0
+pygithub==2.4.0
     # via rocm-docs-core
 pygments==2.18.0
     # via
@@ -101,7 +101,7 @@ pyjwt[crypto]==2.9.0
     # via pygithub
 pynacl==1.5.0
     # via pygithub
-pyparsing==3.1.2
+pyparsing==3.1.4
     # via
     #   doxysphinx
     #   sphinxcontrib-doxylink
@@ -116,7 +116,7 @@ requests==2.32.3
     # via
     #   pygithub
     #   sphinx
-rocm-docs-core[api-reference]==1.6.2
+rocm-docs-core[api-reference]==1.7.2
     # via -r requirements.in
 six==1.16.0
     # via python-dateutil
@@ -124,7 +124,7 @@ smmap==5.0.1
     # via gitdb
 snowballstemmer==2.2.0
     # via sphinx
-soupsieve==2.5
+soupsieve==2.6
     # via beautifulsoup4
 sphinx==8.0.2
     # via
