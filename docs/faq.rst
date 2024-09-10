@@ -2,7 +2,8 @@
 Frequently asked questions
 *******************************************************************************
 
-## What APIs and features does HIP support?
+What APIs and features does HIP support?
+========================================
 
 HIP provides the following:
 
@@ -10,9 +11,9 @@ HIP provides the following:
 * Memory management (``hipMalloc()``, ``hipMemcpy()``, ``hipFree()``, etc.)
 * Streams (``hipStreamCreate()``, ``hipStreamSynchronize()``, ``hipStreamWaitEvent()``, etc.)
 * Events (``hipEventRecord()``, ``hipEventElapsedTime()``, etc.)
-* Kernel launching (``hipLaunchKernel``/``hipLaunchKernelGGL`` is the preferred way of launching kernels. ``hipLaunchKernelGGL`` is a standard C/C++ macro that can serve as an alternative way to launch kernels, replacing the CUDA triple-chevron (``<<< >>>``) syntax).
+* Kernel launching (CUDA triple-chevron (``<<< >>>``) syntax is the preferred way of launching kernels. ``hipLaunchKernel`` and ``hipLaunchKernelGGL`` are a standard C/C++ macro that can serve as an alternative way to launch kernels).
 * HIP Module API to control when and how code is loaded.
-* CUDA-style kernel coordinate functions (``threadIdx``, ``blockIdx``, ``blockDim``, ``gridDim``)
+* Kernel coordinate functions (``threadIdx``, ``blockIdx``, ``blockDim``, ``gridDim``)
 * Cross-lane instructions including ``shfl``, ``ballot``, ``any``, ``all``
 * Most device-side math built-ins
 * Error reporting (``hipGetLastError()``, ``hipGetErrorString()``)
@@ -40,7 +41,7 @@ Kernel language features
 ------------------------
 
 * C++-style device-side dynamic memory allocations (free, new, delete) (CUDA 4.0)
-* Virtual functions, indirect functions and try/catch (CUDA 4.0)
+* Try/catch (CUDA 4.0)
 * ``__prof_trigger``
 * PTX assembly (CUDA 4.0). HIP-Clang supports inline GCN assembly.
 * Several kernel features are under development. See the :doc:`/reference/cpp_language_extensions` for more information.
@@ -74,9 +75,17 @@ However, we can provide a rough summary of the features included in each CUDA SD
 * CUDA 7.5 :
   * float16 (supported)
 * CUDA 8.0 :
-  * Page Migration including ``cudaMemAdvise``, ``cudaMemPrefetch``, other ``cudaMem*`` APIs(not supported)
+  * Page Migration including ``cudaMemAdvise``, ``cudaMemPrefetch``, other ``cudaMem*`` APIs (not supported)
 * CUDA 9.0 :
   * Cooperative Launch, Surface Object Management, Version Management
+* CUDA 10.0 :
+  * CUDA graph equivalent HIP graph (supported)
+  * Vulkan and DirectX12 interoperability (not supported)
+  * LUID (supported)
+* CUDA 11.0 :
+* CUDA 12.0 :
+  * Virtual memory management (supported)
+  * Revamped Dynamic Parallelism APIs (not supported)
 
 What libraries does HIP support?
 ================================
@@ -85,18 +94,20 @@ HIP includes growing support for the four key math libraries using hipBLAS, hipF
 These offer pointer-based memory interfaces (as opposed to opaque buffers) and can be easily interfaced with other HIP applications.
 The hip interfaces support both ROCm and CUDA paths, with familiar library interfaces.
 
-* `hipBLAS <https://github.com/ROCmSoftwarePlatform/hipBLAS>`_, which utilizes `rocBlas <https://github.com/ROCmSoftwarePlatform/rocBLAS>`_.
-* `hipFFT <https://github.com/ROCmSoftwarePlatform/hipfft>`_
-* `hipsSPARSE <https://github.com/ROCmSoftwarePlatform/hipsparse>`_
-* `hipRAND <https://github.com/ROCmSoftwarePlatform/hipRAND>`_
-* `MIOpen <https://github.com/ROCmSoftwarePlatform/MIOpen>`_
+* `hipBLAS <https://github.com/ROCm/hipBLAS>`_, which utilizes `rocBlas <https://github.com/ROCm/rocBLAS>`_.
+* `hipCUB <https://github.com/ROCm/hipcub>`_, which utilizes `rocPRIM <https://github.com/ROCm/rocprim>`_.
+* `hipFFT <https://github.com/ROCm/hipfft>`_
+* `hipsSPARSE <https://github.com/ROCm/hipsparse>`_
+* `hipRAND <https://github.com/ROCm/hipRAND>`_
+* `MIOpen <https://github.com/ROCm/MIOpen>`_
+* `rocThrust <https://github.com/ROCm/rocthrust>`_, which utilizes `rocPRIM <https://github.com/ROCm/rocprim>`_.
 
 Additionally, some of the cuBLAS routines are automatically converted to hipblas equivalents by the HIPIFY tools. These APIs use cuBLAS or hcBLAS depending on the platform and replace the need to use conditional compilation.
 
 How does HIP compare with OpenCL?
 =================================
 
-Both AMD and NVIDIA support OpenCL 1.2 on their devices so that developers can write portable code.
+AMD supports OpenCL 2.2 and NVIDIA supports OpenCL 1.2 on their devices so that developers can write portable code.
 HIP offers several benefits over OpenCL:
 
 * Developers can code in C++ as well as mix host and device C++ code in their source files. HIP C++ code can use templates, lambdas, classes and so on.
@@ -123,7 +134,7 @@ The tools also struggle with more complex CUDA applications, in particular, thos
 What hardware does HIP support?
 ===============================
 
-* For AMD platforms, see the `ROCm documentation <https://github.com/RadeonOpenCompute/ROCm#supported-gpus>`_ for the list of supported platforms.
+* For AMD platforms, see the :doc:`ROCm documentation <rocm-install-on-linux:reference/system-requirements>`_ for the list of supported platforms.
 * For NVIDIA platforms, HIP requires unified memory and should run on any device supporting CUDA SDK 6.0 or newer. We have tested the NVIDIA Titan and Tesla K40.
 
 Do HIPIFY tools automatically convert all source code?
