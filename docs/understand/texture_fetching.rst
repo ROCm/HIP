@@ -41,7 +41,7 @@ Nearest point sampling
 
 In this method, the modulo of index is calculated as:
 
-``tex(x) = T[floor(x+0.5)]``
+``tex(x) = T[floor(x)]``
 
 This is also applicable for 2D and 3D variants.
 
@@ -103,13 +103,30 @@ The following image shows the texture on a 4x4 pixel quad, indexed in the [0 to 
 
 The purple lines are not part of the texture. They only denote the edge, where the addressing begins.
 
+.. _texture_fetching_clamp:
+Address mode clamp
+-------------------------------------------------------------------------------
+
+This mode clamps the index between [0 to size-1]. Due to this, when indexing out-of-bounds, the values on the edge of the texture repeat.
+
+The following image shows the texture on a 4x4 pixel quad, indexed in the [0 to 3] range. The out-of-bounds values are repeating the values at the edge of the texture.
+
+.. figure:: ../data/understand/textures/clamp.png
+  :width: 300
+  :alt: Texture with clamp addressing
+  :align: center
+
+  Texture with clamp addressing
+
+The purple lines are not part of the texture. They only denote the edge, where the addressing begins.
+
 .. _texture_fetching_wrap:
 Address mode wrap
 -------------------------------------------------------------------------------
 
-In this addressing mode, the modulo of the index is calculated as:
+Wrap mode addressing is only available for normalized texture coordinates. In this addressing mode, the fractional part of the index is used:
 
-``tex(x) = T[x mod (size-1)]``
+``tex(frac(x))``
 
 This creates a repeating image effect.
 
@@ -128,7 +145,13 @@ The purple lines are not part of the texture. They only denote the edge, where t
 Address mode mirror
 -------------------------------------------------------------------------------
 
-Similar to the wrap mode, this mode also creates a repeating image, but by mirroring the neighboring instances.
+Similar to the wrap mode the mirror mode is only available for normalized texture coordinates and also creates a repeating image, but mirroring the neighboring instances.
+
+The formula is the following:
+
+``tex(frac(x))``, if ``floor(x)`` is even, 
+
+``tex(1 - frac(x))``, if ``floor(x)`` is odd.
 
 The following image shows the texture on a 4x4 pixel quad, indexed in the [0 to 3] range. The out-of-bounds values are repeating the original texture, but mirrored.
 
@@ -138,22 +161,5 @@ The following image shows the texture on a 4x4 pixel quad, indexed in the [0 to 
   :align: center
 
   Texture with mirror addressing
-
-The purple lines are not part of the texture. They only denote the edge, where the addressing begins.
-
-.. _texture_fetching_clamp:
-Address mode clamp
--------------------------------------------------------------------------------
-
-This mode clamps the index between [0 to size-1]. Due to this, when indexing out-of-bounds, the values on the edge of the texture repeat.
-
-The following image shows the texture on a 4x4 pixel quad, indexed in the [0 to 3] range. The out-of-bounds values are repeating the values at the edge of the texture.
-
-.. figure:: ../data/understand/textures/clamp.png
-  :width: 300
-  :alt: Texture with clamp addressing
-  :align: center
-
-  Texture with clamp addressing
 
 The purple lines are not part of the texture. They only denote the edge, where the addressing begins.
