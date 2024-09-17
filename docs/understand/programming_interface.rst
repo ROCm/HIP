@@ -25,7 +25,7 @@ invoke ``amdclang++``.
 
 .. Need to update the link later.
 
-For AMD compiler options, check the :doc:`GPU compiler options page <llvm-project:reference/rocmcc>`.
+For AMD compiler options, see :doc:`ROCm compilers reference <llvm-project:reference/rocmcc>`.
 
 HIP compilation workflow
 --------------------------------------------------------------------------------
