@@ -23,8 +23,6 @@ details, check :doc:`llvm <llvm-project:index>`). On NVIDIA platform ``hipcc``
 invoke the locally installed ``NVCC`` compiler, while on AMD platform it's
 invoke ``amdclang++``.
 
-.. Need to update the link later.
-
 For AMD compiler options, see :doc:`ROCm compilers reference <llvm-project:reference/rocmcc>`.
 
 HIP compilation workflow
@@ -33,20 +31,23 @@ HIP compilation workflow
 Offline compilation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The compilation of HIP code is separated into a host- and a device-code compilation stage.
+The compilation of HIP code is separated into a host- and a device-code
+compilation stage.
 
-The compiled device code is embedded into the host object file. Depending on the platform,
-the device code can be compiled into assembly or binary. ``nvcc`` and 
+The compiled device code is embedded into the host object file. Depending on the
+platform, the device code can be compiled into assembly or binary. ``nvcc`` and 
 ``amdclang++`` target different architectures and use different code object
-formats: ``nvcc`` uses the binary ``cubin`` or the assembly ``PTX`` files, while the ``amdclang++`` path
-is the binary ``hsaco`` format. On NVIDIA platforms the driver takes care of compiling the PTX files to executable code during runtime.
+formats: ``nvcc`` uses the binary ``cubin`` or the assembly ``PTX`` files, while
+the ``amdclang++`` path is the binary ``hsaco`` format. On NVIDIA platforms the
+driver takes care of compiling the PTX files to executable code during runtime.
 
-On the host side ``nvcc`` only replaces the ``<<<...>>>``
-kernel launch syntax with the appropriate CUDA runtime function call and the modified host code is passed
-to the default host compiler. ``hipcc`` or ``amdclang++`` can compile the host
-code in one step without other C++ compilers.
+On the host side ``nvcc`` only replaces the ``<<<...>>>`` kernel launch syntax
+with the appropriate CUDA runtime function call and the modified host code is
+passed to the default host compiler. ``hipcc`` or ``amdclang++`` can compile the
+host code in one step without other C++ compilers.
 
-An example for how to compile HIP from the command line can be found in the :ref:`SAXPY tutorial<compiling_on_the_command_line>` .
+An example for how to compile HIP from the command line can be found in the
+:ref:`SAXPY tutorial<compiling_on_the_command_line>` .
 
 Runtime compilation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -55,7 +56,8 @@ HIP lets you compile kernels at runtime with the `hiprtc*` API. Kernels are
 stored as a text string that are then passed to HIPRTC alongside options to
 guide the compilation.
 
-For further details, check the :doc:`how-to section for the HIP runtime compilation<../how-to/hip_rtc>`.
+For further details, check the
+:doc:`how-to section for the HIP runtime compilation<../how-to/hip_rtc>`.
 
 HIP Runtime API 
 ================================================================================
@@ -65,20 +67,23 @@ stream and memory management. On AMD platforms the HIP runtime uses the
 :doc:`Common Language Runtime (CLR) <hip:understand/amd_clr>`, while on NVIDIA
 platforms it is only a thin layer over the CUDA runtime or Driver API.
 
-- **CLR** contains source code for AMD's compute language runtimes: ``HIP``
-  and ``OpenCL™``. CLR includes the implementation of the ``HIP`` language on the AMD
-  platform `hipamd <https://github.com/ROCm/clr/tree/develop/hipamd>`_ and the
-  Radeon Open Compute Common Language Runtime (rocclr). rocclr is a virtual device
-  interface, that enables the HIP runtime to interact with different backends such as ROCr on
-  Linux or PAL on Windows. (CLR also include the implementation of `OpenCL <https://github.com/ROCm/clr/tree/develop/opencl>`_,
+- **CLR** contains source code for AMD's compute language runtimes: ``HIP`` and
+  ``OpenCL™``. CLR includes the implementation of the ``HIP`` language on the
+  AMD platform `hipamd <https://github.com/ROCm/clr/tree/develop/hipamd>`_ and
+  the Radeon Open Compute Common Language Runtime (rocclr). rocclr is a virtual
+  device interface, that enables the HIP runtime to interact with different
+  backends such as ROCr on Linux or PAL on Windows. (CLR also include the
+  implementation of `OpenCL <https://github.com/ROCm/clr/tree/develop/opencl>`_,
   while it's interact with ROCr and PAL)
-- The **CUDA runtime** is built on top of the CUDA driver API, which is a C API with lower-level access to NVIDIA GPUs.
-  For further information about the CUDA driver and runtime API and its relation to HIP check the :doc:`CUDA driver API porting guide<hip:how-to/hip_porting_driver_api>`.
+- The **CUDA runtime** is built on top of the CUDA driver API, which is a C API
+  with lower-level access to NVIDIA GPUs. For further information about the CUDA
+  driver and runtime API and its relation to HIP check the :doc:`CUDA driver API porting guide<hip:how-to/hip_porting_driver_api>`.
   On non-AMD platform, HIP runtime determines, if CUDA is available and can be
   used. If available, HIP_PLATFORM is set to ``nvidia`` and underneath CUDA path
   is used.
 
-The relation between the different runtimes and their backends is presented in the following figure.
+The relation between the different runtimes and their backends is presented in
+the following figure.
 
 .. figure:: ../data/understand/hip_runtime_api/runtimes.svg
 
@@ -94,16 +99,18 @@ high-performance applications. Both allocating and copying
 memory can result in bottlenecks, which can significantly impact performance.
 
 For basic device memory management, HIP uses the C-style functions :cpp:func:`hipMalloc`
-for allocating and :cpp:func:`hipFree` for freeing memory. There are advanced features like
-managed memory, virtual memory or stream ordered memory allocator which are
-described in the following sections.
+for allocating and :cpp:func:`hipFree` for freeing memory. There are advanced
+features like managed memory, virtual memory or stream ordered memory allocator
+which are described in the following sections.
 
 Device memory
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Device memory exists on the device, e.g. on GPUs in the video random
-access memory (VRAM), and is accessible by the kernels operating on the device. It is usually orders of magnitude faster than the transfers between the host and the device. Device memory can be 
-allocated as global memory, constant, texture or surface memory.
+Device memory exists on the device, e.g. on GPUs in the video random access
+memory (VRAM), and is accessible by the kernels operating on the device. It is
+usually orders of magnitude faster than the transfers between the host and the
+device. Device memory can be allocated as global memory, constant, texture or
+surface memory.
 
 Global memory
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -196,14 +203,14 @@ Stream management
 
 Stream management refers to the mechanisms that allow developers to control the
 order and concurrency of kernel execution and memory transfers on the GPU.
-Streams are associated with a specific device and operations within a stream are executed sequentially.
-Different streams can execute operations concurrently on the same GPU, which can
-lead to better utilization of the device.
+Streams are associated with a specific device and operations within a stream are
+executed sequentially. Different streams can execute operations concurrently on
+the same GPU, which can lead to better utilization of the device.
 
 Stream management allows developers to optimize GPU workloads by enabling
 concurrent execution of tasks, overlapping computation with memory transfers,
-and controlling the order of operations. The priority of streams can also be set, which 
-provides additional control over task execution.
+and controlling the order of operations. The priority of streams can also be set,
+which provides additional control over task execution.
 
 The stream management concept is represented in the following figure.
 
