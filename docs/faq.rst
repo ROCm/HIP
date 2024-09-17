@@ -5,66 +5,17 @@ Frequently asked questions
 HIP Support
 ===========
 
-What APIs and features does HIP support?
+What CUDA features does HIP support?
 ----------------------------------------
 
-HIP provides the following:
+The :doc:`hipify:tables/CUDA_Runtime_API_functions_supported_by_HIP` and :doc:`hipify:tables/CUDA_Driver_API_functions_supported_by_HIP` pages detail what CUDA APIs are supported and what the equivalents are and the `HIP API documentation <doxygen/html/index.html>`_ describes each API and its limitations, if any, compared with the equivalent CUDA API.
 
-* Devices (``hipSetDevice()``, ``hipGetDeviceProperties()``, etc.)
-* Memory management (``hipMalloc()``, ``hipMemcpy()``, ``hipFree()``, etc.)
-* Streams (``hipStreamCreate()``, ``hipStreamSynchronize()``, ``hipStreamWaitEvent()``, etc.)
-* Events (``hipEventRecord()``, ``hipEventElapsedTime()``, etc.)
-* Kernel launching (CUDA triple-chevron (``<<< >>>``) syntax is the preferred way of launching kernels. ``hipLaunchKernel`` and ``hipLaunchKernelGGL`` are a standard C/C++ macro that can serve as an alternative way to launch kernels).
-* HIP Module API to control when and how code is loaded.
-* Kernel coordinate functions (``threadIdx``, ``blockIdx``, ``blockDim``, ``gridDim``)
-* Cross-lane instructions including ``shfl``, ``ballot``, ``any``, ``all``
-* Most device-side math built-ins
-* Error reporting (``hipGetLastError()``, ``hipGetErrorString()``)
+Kernel language features are documented in the :doc:`/reference/cpp_language_extensions` page.
 
-The `HIP API documentation <doxygen/html/index.html>`_ describes each API and its limitations, if any, compared with the equivalent CUDA API.
-
-What is not supported?
-----------------------
-
-Runtime/Driver API features
-```````````````````````````
-
-At a high-level, the following features are not supported:
-
-* Textures (partial support available)
-* Dynamic parallelism (CUDA 5.0)
-* Graphics interoperability with OpenGL or Direct3D
-* CUDA IPC Functions (Under Development)
-* CUDA array, ``mipmappedArray`` and pitched memory
-* Queue priority controls
-
-See the `API Support Table <https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/tables/CUDA_Runtime_API_functions_supported_by_HIP.md>`_ for more detailed information.
-
-Kernel language features
-````````````````````````
-
-* C++-style device-side dynamic memory allocations (free, new, delete) (CUDA 4.0)
-* Try/catch (CUDA 4.0)
-* ``__prof_trigger``
-* PTX assembly (CUDA 4.0). HIP-Clang supports inline GCN assembly.
-* Several kernel features are under development. See the :doc:`/reference/cpp_language_extensions` for more information.
-
-What libraries does HIP support?
+What libraries does HIP provide?
 --------------------------------
 
-HIP includes growing support for the four key math libraries using hipBLAS, hipFFT, hipRAND and hipSPARSE, as well as MIOpen for machine intelligence applications.
-These offer pointer-based memory interfaces (as opposed to opaque buffers) and can be easily interfaced with other HIP applications.
-The hip interfaces support both ROCm and CUDA paths, with familiar library interfaces.
-
-* `hipBLAS <https://github.com/ROCm/hipBLAS>`_, which utilizes `rocBlas <https://github.com/ROCm/rocBLAS>`_.
-* `hipCUB <https://github.com/ROCm/hipcub>`_, which utilizes `rocPRIM <https://github.com/ROCm/rocprim>`_.
-* `hipFFT <https://github.com/ROCm/hipfft>`_
-* `hipsSPARSE <https://github.com/ROCm/hipsparse>`_
-* `hipRAND <https://github.com/ROCm/hipRAND>`_
-* `MIOpen <https://github.com/ROCm/MIOpen>`_
-* `rocThrust <https://github.com/ROCm/rocthrust>`_, which utilizes `rocPRIM <https://github.com/ROCm/rocprim>`_.
-
-Additionally, some of the cuBLAS routines are automatically converted to hipblas equivalents by the HIPIFY tools. These APIs use cuBLAS or hcBLAS depending on the platform and replace the need to use conditional compilation.
+HIP also provides key math and AI libraries. The full list can be found here: :doc:`rocm:reference/api-libraries`
 
 On HIP-Clang, can I link HIP code with host code compiled with another compiler such as gcc, icc, or clang?
 -----------------------------------------------------------------------------------------------------------
@@ -145,53 +96,61 @@ HIP APIs and features do not map to a specific CUDA version. HIP provides a stro
 However, we can provide a rough summary of the features included in each CUDA SDK and the support level in HIP. Each bullet below lists the major new language features in each CUDA release and then indicate which are supported/not supported in HIP:
 
 * CUDA 4.0 and earlier :
+
   * HIP supports CUDA 4.0 except for the limitations described above.
+
 * CUDA 5.0 :
+
   * Dynamic Parallelism (not supported)
+
   * ``cuIpc`` functions (under development).
+
 * CUDA 6.0 :
+
   * Managed memory (under development)
+
 * CUDA 6.5 :
+
   * ``__shfl`` intrinsic (supported)
+
 * CUDA 7.0 :
+
   * Per-thread default streams (supported)
+
   * C++11 (Hip-Clang supports all of C++11, all of C++14 and some C++17 features)
+
 * CUDA 7.5 :
+
   * float16 (supported)
+
 * CUDA 8.0 :
+
   * Page Migration including ``cudaMemAdvise``, ``cudaMemPrefetch``, other ``cudaMem*`` APIs (not supported)
+
 * CUDA 9.0 :
+
   * Cooperative Launch, Surface Object Management, Version Management
+
 * CUDA 10.0 :
+
   * CUDA graph equivalent HIP graph (supported)
+
   * Vulkan and DirectX12 interoperability (not supported)
+
   * LUID (supported)
+
 * CUDA 11.0 :
+
 * CUDA 12.0 :
+
   * `Virtual memory management (supported) <how-to/virtual_memory>`_
+
   * Revamped Dynamic Parallelism APIs (not supported)
-
-What libraries does HIP support?
---------------------------------
-
-HIP includes growing support for the four key math libraries using hipBLAS, hipFFT, hipRAND and hipSPARSE, as well as MIOpen for machine intelligence applications.
-These offer pointer-based memory interfaces (as opposed to opaque buffers) and can be easily interfaced with other HIP applications.
-The hip interfaces support both ROCm and CUDA paths, with familiar library interfaces.
-
-* `hipBLAS <https://github.com/ROCm/hipBLAS>`_, which utilizes `rocBlas <https://github.com/ROCm/rocBLAS>`_.
-* `hipCUB <https://github.com/ROCm/hipcub>`_, which utilizes `rocPRIM <https://github.com/ROCm/rocprim>`_.
-* `hipFFT <https://github.com/ROCm/hipfft>`_
-* `hipsSPARSE <https://github.com/ROCm/hipsparse>`_
-* `hipRAND <https://github.com/ROCm/hipRAND>`_
-* `MIOpen <https://github.com/ROCm/MIOpen>`_
-* `rocThrust <https://github.com/ROCm/rocthrust>`_, which utilizes `rocPRIM <https://github.com/ROCm/rocprim>`_.
-
-Additionally, some of the cuBLAS routines are automatically converted to hipblas equivalents by the HIPIFY tools. These APIs use cuBLAS or hcBLAS depending on the platform and replace the need to use conditional compilation.
 
 How does HIP compare with OpenCL?
 ---------------------------------
 
-AMD supports OpenCL 2.2 and NVIDIA supports OpenCL 1.2 on their devices so that developers can write portable code.
+AMD supports OpenCL 2.2 and NVIDIA supports OpenCL 3.0 on their devices so that developers can write portable code.
 HIP offers several benefits over OpenCL:
 
 * Developers can code in C++ as well as mix host and device C++ code in their source files. HIP C++ code can use templates, lambdas, classes and so on.
@@ -229,7 +188,7 @@ Can I install both CUDA SDK and HIP-Clang on the same machine?
 
 Yes. You can use HIP_PLATFORM to choose which path hipcc targets. This configuration can be useful when using HIP to develop an application which is portable to both AMD and NVIDIA.
 
-HIP detected my platform (HIP-Clang vs NVCC) incorrectly * what should I do?
+HIP detected my platform (HIP-Clang vs NVCC) incorrectly. What should I do?
 ----------------------------------------------------------------------------
 
 HIP will set the platform to AMD and use HIP-Clang as compiler if it sees that the AMD graphics driver is installed and has detected an AMD GPU.
@@ -367,7 +326,7 @@ Are ``__shfl_*_sync`` functions supported on HIP platform?
 ``__shfl_*_sync`` is not supported on HIP but for NVCC path CUDA 9.0 and above all shuffle calls get redirected to it's sync version.
 
 How to create a guard for code that is specific to the host or the GPU?
-----------------------------------------------------------------------=
+-----------------------------------------------------------------------
 
 The compiler defines the ``__HIP_DEVICE_COMPILE__`` macro only when compiling the code for the GPU. It could be used to guard code that is specific to the host or the GPU.
 
