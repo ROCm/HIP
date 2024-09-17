@@ -16,7 +16,7 @@ subtrees:
 - caption: Conceptual
   entries:
   - file: understand/programming_model
-  - file: understand/hip_runtime_api
+  - file: understand/programming_interface
   - file: understand/hardware_implementation
   - file: understand/amd_clr
 
