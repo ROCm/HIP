@@ -12,8 +12,8 @@ Programming interface
 The HIP programming interface refers to the HIP compilers and HIP runtime API,
 that enable developers to write programs that execute on AMD or NVIDIA GPUs.
 
-This document introduces and describes the advantages of the different compilation
-workflows and different HIP runtime API modules.
+This document introduces and describes the advantages of the different
+compilation workflows and different HIP runtime API modules.
 
 HIP compilers
 ================================================================================
