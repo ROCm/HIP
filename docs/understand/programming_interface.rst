@@ -1,5 +1,6 @@
 .. meta::
-  :description: This chapter describes the HIP runtime API and the compilation workflow of the HIP compilers.
+  :description: This chapter describes the HIP runtime API and the compilation
+                workflow of the HIP compilers.
   :keywords: AMD, ROCm, HIP, CUDA, HIP runtime API
 
 .. _programming_interface:
@@ -72,9 +73,8 @@ platforms it is only a thin layer over the CUDA runtime or Driver API.
   AMD platform `hipamd <https://github.com/ROCm/clr/tree/develop/hipamd>`_ and
   the Radeon Open Compute Common Language Runtime (rocclr). rocclr is a virtual
   device interface, that enables the HIP runtime to interact with different
-  backends such as ROCr on Linux or PAL on Windows. (CLR also include the
-  implementation of `OpenCL <https://github.com/ROCm/clr/tree/develop/opencl>`_,
-  while it's interact with ROCr and PAL)
+  backends such as ROCr on Linux or PAL on Windows. CLR also include the
+  implementation of `OpenCL runtime <https://github.com/ROCm/clr/tree/develop/opencl>`_.
 - The **CUDA runtime** is built on top of the CUDA driver API, which is a C API
   with lower-level access to NVIDIA GPUs. For further information about the CUDA
   driver and runtime API and its relation to HIP check the :doc:`CUDA driver API porting guide<hip:how-to/hip_porting_driver_api>`.
@@ -152,24 +152,26 @@ Stream ordered memory allocator
 Stream Ordered Memory Allocator (SOMA) provides an asynchronous memory
 allocation mechanism with stream-ordering semantics. You can use SOMA to
 allocate and free memory in stream order, which ensures that all asynchronous
-accesses occur between the stream executions of allocation and deallocation, without the need for device-wide synchronization.
-Compliance with stream order prevents use-before-allocation or use-after-free
-errors, which helps to avoid undefined behavior.
+accesses occur between the stream executions of allocation and deallocation,
+without the need for device-wide synchronization. Compliance with stream order
+prevents use-before-allocation or use-after-free errors, which helps to avoid
+undefined behavior.
 
 Virtual memory management
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Global memory allocations in HIP use the C-style allocation functions.
-This works fine for simple cases but can cause problems if the memory needs
-to be reallocated. If you need to increase the size of your memory, you must allocate a
-second larger buffer and copy the data to it before you can free the original
-buffer. This temporarily requires a lot more memory and causes unnecessary ``hipMemcpy``
-calls. Another solution is to allocate a larger buffer than initially needed.
-However, this is not an efficient way to handle resources and doesn't solve the
-issue of reallocation when more memory than originally expected is needed.
+Global memory allocations in HIP use the C-style allocation functions. This
+works fine for simple cases but can cause problems if the memory needs to be
+reallocated. If you need to increase the size of your memory, you must allocate
+a second larger buffer and copy the data to it before you can free the original
+buffer. This temporarily requires a lot more memory and causes unnecessary
+``hipMemcpy`` calls. Another solution is to allocate a larger buffer than
+initially needed. However, this is not an efficient way to handle resources and
+doesn't solve the issue of reallocation when more memory than originally
+expected is needed.
 
-Virtual memory management solves these problems. It helps to
-limit memory usage to the actually needed amount and avoids unnecessary ``hipMemcpy`` calls.
+Virtual memory management solves these problems. It helps to limit memory usage
+to the actually needed amount and avoids unnecessary ``hipMemcpy`` calls.
 
 For further details, check `HIP Runtime API Reference <../doxygen/html/group___virtual.html>`_.
 
