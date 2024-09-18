@@ -18,17 +18,12 @@ workflows and different HIP runtime API modules.
 HIP compilers
 ================================================================================
 
-The HIP runtime API and HIP C++ extensions are available with HIP compilers. On
-AMD platform ROCm currently provides two compiler interfaces: ``hipcc`` and
-``amdclang++``. The ``hipcc`` command-line interface aims to provide a more
-familiar user interface to users who are experienced in CUDA but relatively new
-to the ROCm/HIP development environment. On the other hand, ``amdclang++``
-provides a user interface identical to the clang++ compiler. (For further
-details, check :doc:`llvm <llvm-project:index>`). On NVIDIA platform ``hipcc``
-invoke the locally installed ``NVCC`` compiler, while on AMD platform it's
-invoke ``amdclang++``.
-
-For AMD compiler options, see :doc:`ROCm compilers reference <llvm-project:reference/rocmcc>`.
+ROCm provides the compiler driver ``hipcc``, that can be used on AMD and NVIDIA
+platforms. ``hipcc`` takes care of setting the default library and include paths
+for HIP, as well as some environment variables, and takes care of invoking the
+appropriate compiler - ``amdclang++`` on AMD platforms and ``nvcc`` on NVIDIA
+platforms. ``amdclang++`` is based on the ``clang++`` compiler. For further 
+details, check :doc:`the llvm project<llvm-project:index>`.
 
 HIP compilation workflow
 --------------------------------------------------------------------------------
@@ -83,8 +78,7 @@ platforms it is only a thin layer over the CUDA runtime or Driver API.
   with lower-level access to NVIDIA GPUs. For further information about the CUDA
   driver and runtime API and its relation to HIP check the :doc:`CUDA driver API porting guide<hip:how-to/hip_porting_driver_api>`.
   On non-AMD platform, HIP runtime determines, if CUDA is available and can be
-  used. If available, HIP_PLATFORM is set to ``nvidia`` and underneath CUDA path
-  is used.
+  used.
 
 The relation between the different runtimes and their backends is presented in
 the following figure.
