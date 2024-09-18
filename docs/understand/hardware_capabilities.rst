@@ -6,7 +6,7 @@
 Hardware features
 *******************************************************************************
 
-This page gives an overview of the different hardware architectures and the features they implement. Hardware features do not imply performance, that depends on the specifications found in the `Accelerator and GPU hardware specifications`_ page.
+This page gives an overview of the different hardware architectures and the features they implement. Hardware features do not imply performance, that depends on the specifications found in the :doc:`rocm:reference/gpu-arch-specs` page.
 
   .. list-table::
       :header-rows: 1
@@ -21,7 +21,7 @@ This page gives an overview of the different hardware architectures and the feat
         - RDNA3
         - CDNA3
       *
-        - Atomic functions on 32-bit integer values in global memory
+        - :ref:`atomic functions` on 32-bit integer values in global memory
         - ✅
         - ✅
         - ✅
@@ -69,7 +69,7 @@ This page gives an overview of the different hardware architectures and the feat
         - ✅
         - ✅
       *
-        - Error correcting code for SRAMs IP core
+        - SRAM error correcting code
         - ✅
         - ✅
         - ✅
@@ -109,7 +109,7 @@ This page gives an overview of the different hardware architectures and the feat
         - ✅
         - ✅
       *
-        - Support for float8 bfloat8
+        - Support for float8 bfloat8 (see: :doc:`rocm:compatibility/precision-support`)
         - ❌
         - ❌
         - ❌
@@ -182,25 +182,25 @@ This page gives an overview of the different hardware architectures and the feat
         - ?
       *
         - Maximum number of resident blocks per compute unit
-        - ?
-        - ?
-        - ?
-        - ?
-        - ?
-        - ?
+        - 40
+        - 32
+        - 32
+        - 32
+        - 32
+        - 32
       *
         - Maximum number of resident wavefronts per compute unit
-        - ?
-        - ?
-        - ?
-        - ?
-        - ?
-        - ?
+        - 40
+        - 32
+        - 32
+        - 32
+        - 32
+        - 32
       *
         - Maximum number of resident threads per compute unit
-        - ?
-        - ?
-        - ?
-        - ?
-        - ?
-        - ?
+        - 1280
+        - 2048
+        - 1024
+        - 2048
+        - 1024
+        - 2048

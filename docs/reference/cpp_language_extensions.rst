@@ -371,6 +371,8 @@ To read a high-resolution timer from the device, HIP provides the following buil
 
   Note that ``clock()`` and ``clock64()`` do not work properly on AMD RDNA3 (GFX11) graphic processors.
 
+.. _atomic functions:
+
 Atomic functions
 ===============================================
 
