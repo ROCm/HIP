@@ -9,7 +9,11 @@
 Programming interface
 ********************************************************************************
 
-This document focuses on the HIP Runtime API, HIP compilation workflow and 
+The HIP programming interface refers to the HIP compilers and HIP runtime API,
+that enable developers to write programs that execute on AMD or NVIDIA GPUs.
+
+This document introduces and describes the advantages of the different compilation
+workflows and different HIP runtime API modules.
 
 HIP compilers
 ================================================================================
@@ -115,15 +119,17 @@ surface memory.
 Global memory
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-Read-write storage visible to all threads in a given grid. There are specialized
-versions of global memory with different usage semantics which are typically
-backed by the same hardware storing global.
+Read-write storage visible to all threads on a given device. There are
+specialized versions of global memory with different usage semantics which are
+typically backed by the same hardware, but can use different caching paths.
 
 Constant memory
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-Read-only storage visible to all threads in a given grid. It is a limited 
-segment of global with queryable size.
+Read-only storage visible to all threads on a given device. It is a limited
+segment backed by device memory with queryable size. It needs to be set by the
+host before kernel execution. Constant memory provides the best performance
+benefit when all threads within a warp access the same address.
 
 Texture memory
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -131,12 +137,19 @@ Texture memory
 Read-only storage visible to all threads on a given device and accessible
 through additional APIs. Its origins come from graphics APIs, and provides
 performance benefits when accessing memory in a pattern where the
-addresses are close to each other in a 2D representation of the memory.
+addresses are close to each other in a 2D representation of the memory. 
+
+The texture management module of HIP runtime API contains the functions of
+texture memory.
 
 Surface memory
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-A read-write version of texture memory.
+A read-write version of texture memory, which can be useful for applications
+that require direct manipulation of 1D, 2D, or 3D hipArray_t. 
+
+The surface objects module of HIP runtime API contains the functions for surface
+memory create, destroy, read and write.
 
 Managed memory (Unified memory)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -145,6 +158,10 @@ Unified Memory is a single memory address space accessible from any processor
 within a system. This setup simplifies memory management processes and enables
 applications to allocate data that can be read or written by code running on
 either CPUs or GPUs. The Unified memory model is shown in the following figure.
+
+.. TODO: We have to fix this image in a separate PR.
+
+.. figure:: ../data/unified_memory/um.svg
 
 Stream ordered memory allocator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -156,6 +173,8 @@ accesses occur between the stream executions of allocation and deallocation,
 without the need for device-wide synchronization. Compliance with stream order
 prevents use-before-allocation or use-after-free errors, which helps to avoid
 undefined behavior.
+
+.. TODO: Add image here
 
 Virtual memory management
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -175,27 +194,7 @@ to the actually needed amount and avoids unnecessary ``hipMemcpy`` calls.
 
 For further details, check `HIP Runtime API Reference <../doxygen/html/group___virtual.html>`_.
 
-Texture memory management
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Texture memory should be used when you need readonly random access to a 
-larger memory space that cannot be put into shared memory.
-
-For further details, check `HIP Runtime API Reference <doxygen/html/index.html>`_.
-
-Surface object
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-A Surface Object in GPU programming is a powerful tool that allows for
-read-write access to texture memory, making it particularly useful for
-applications that require direct manipulation of image or array data. By
-providing an API for accessing surface memory, Surface Objects enable complex
-operations like image filtering, simulation updates, and other tasks that
-involve both reading and writing to structured data stored on the GPU.
-Understanding how to effectively use surface objects is crucial for optimizing
-performance in GPU-accelerated applications that require data modification.
-
-For further details, check `HIP Runtime API Reference <../doxygen/html/group___surface.html>`_.
+.. TODO: Add image here
 
 Execution control
 --------------------------------------------------------------------------------
