@@ -96,10 +96,10 @@ Memory management is an important part of the HIP runtime API, when creating
 high-performance applications. Both allocating and copying
 memory can result in bottlenecks, which can significantly impact performance.
 
-For basic device memory management, HIP uses the C-style functions :cpp:func:`hipMalloc`
-for allocating and :cpp:func:`hipFree` for freeing memory. There are advanced
-features like managed memory, virtual memory or stream ordered memory allocator
-which are described in the following sections.
+For traditional device memory management, HIP uses the C-style functions
+:cpp:func:`hipMalloc` for allocating and :cpp:func:`hipFree` for freeing memory.
+There are advanced features like managed memory, virtual memory or stream
+ordered memory allocator which are described in the following sections.
 
 Device memory
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -157,6 +157,29 @@ either CPUs or GPUs. The Unified memory model is shown in the following figure.
 
 .. figure:: ../data/unified_memory/um.svg
 
+Advantages of unified memory:
+
+- Reduces the complexity of programming heterogeneous systems, do not need to
+  manually allocate, transfer and track memory between the CPU and GPUs.
+- Unified address space between the CPU and GPU. Data structure can use single
+  pointer for CPU and GPUs.
+- Allows portions of the data to reside in the CPU's memory and
+  only transfers relevant chunks to the GPU when required, leading to better
+  memory utilization.
+- Enables dynamic memory allocation at runtime.
+- Simplify memory management in multi-GPU systems, allowing data to be shared
+  across multiple GPUs without the need of data synchronization and transfer
+  logic.
+- Enables secure sharing of allocations between processes.
+- Allows driver to optimize based on its awareness of SOMA and other stream
+  management APIs.
+
+Disadvantages of unified memory:
+
+- May introduce additional latency due to the need for the GPU to
+  access host memory.
+- ...
+
 Stream ordered memory allocator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -169,6 +192,21 @@ prevents use-before-allocation or use-after-free errors, which helps to avoid
 undefined behavior.
 
 .. TODO: Add image here
+
+Advantages of SOMA:
+
+- Enables efficient memory reuse across streams, which reduces unnecessary
+  allocation overhead.
+- Allows to set attributes and control caching behavior for memory pools.
+- Enables secure sharing of allocations between processes.
+- Allows driver to optimize based on its awareness of SOMA and other stream
+  management APIs.
+
+Disadvantages of SOMA:
+
+- Requires to adhere strictly to stream order to avoid errors.
+- Involves memory management in stream order, which can be intricate.
+- Requires to put additional efforts to understand and utilize SOMA effectively.
 
 Virtual memory management
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
