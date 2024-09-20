@@ -85,6 +85,7 @@ Nsight
 overindex
 overindexing
 oversubscription
+pixelated
 pragmas
 preconditioners
 prefetched
@@ -93,6 +94,7 @@ PTX
 PyHIP
 queryable
 prefetching
+quad
 representable
 RMW
 ROCm's
@@ -109,11 +111,15 @@ SPMV
 structs
 SYCL
 syntaxes
+texel
+texels
 tradeoffs
 templated
 typedefs
+unintuitive
 UMM
 unmap
+upscaled
 variadic
 WinGDB
 zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
