@@ -1377,6 +1377,7 @@ typedef enum hipGraphNodeType {
   hipGraphNodeTypeMemFree = 11,           ///< Memory free node
   hipGraphNodeTypeMemcpyFromSymbol = 12,  ///< MemcpyFromSymbol node
   hipGraphNodeTypeMemcpyToSymbol = 13,    ///< MemcpyToSymbol node
+  hipGraphNodeTypeBatchMemOp = 14,        ///< BatchMemOp node
   hipGraphNodeTypeCount
 } hipGraphNodeType;
 
