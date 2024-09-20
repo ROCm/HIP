@@ -90,7 +90,7 @@ The following sections describe the various texture addressing methods.
 Address mode border
 -------------------------------------------------------------------------------
 
-In this method, the texture fetching returns a border value when indexing out of bounds. This must be set before texture fetching.
+In this method, the texture fetching returns a border value when indexing out of bounds. The border value must be set before texture fetching.
 
 The following image shows the texture on a 4x4 pixel quad, indexed in the [0 to 3] range. The out-of-bounds values are the border color, which is yellow.
 
@@ -107,7 +107,7 @@ The purple lines are not part of the texture. They only denote the edge, where t
 Address mode clamp
 -------------------------------------------------------------------------------
 
-This mode clamps the index between [0 to size-1]. Due to this, when indexing out-of-bounds, the values on the edge of the texture repeat.
+This mode clamps the index between [0 to size-1]. Due to this, when indexing out-of-bounds, the values on the edge of the texture repeat. The clamp mode is the default addressing mode.
 
 The following image shows the texture on a 4x4 pixel quad, indexed in the [0 to 3] range. The out-of-bounds values are repeating the values at the edge of the texture.
 
