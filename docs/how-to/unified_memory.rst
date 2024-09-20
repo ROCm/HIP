@@ -17,6 +17,7 @@ and promise increased efficiency and innovation.
 
 Unified memory
 ==============
+
 Unified Memory is a single memory address space accessible from any processor
 within a system. This setup simplifies memory management processes and enables
 applications to allocate data that can be read or written by code running on
@@ -35,6 +36,7 @@ throughput (data processed by unit time).
 
 System requirements
 ===================
+
 Unified memory is supported on Linux by all modern AMD GPUs from the Vega
 series onward. Unified memory management can be achieved with managed memory
 allocation and, for the latest GPUs, with a system allocator.
@@ -108,6 +110,7 @@ system requirements` and :ref:`checking unified memory management support`.
 
 Checking unified memory management support
 ------------------------------------------
+
 Some device attributes can offer information about which :ref:`unified memory
 programming models` are supported. The attribute value is 1 if the
 functionality is supported, and 0 if it is not supported.
