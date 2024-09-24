@@ -3009,6 +3009,9 @@ hipError_t hipDrvPointerGetAttributes(unsigned int numAttributes, hipPointer_att
  *  @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
  *
  *  @see
+ *
+ *  @note  This API is currently not supported on Linux.
+ *
  */
 hipError_t hipImportExternalSemaphore(hipExternalSemaphore_t* extSem_out,
                                       const hipExternalSemaphoreHandleDesc* semHandleDesc);
@@ -3023,6 +3026,9 @@ hipError_t hipImportExternalSemaphore(hipExternalSemaphore_t* extSem_out,
  *  @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
  *
  *  @see
+ *
+ *  @note  This API is currently not supported on Linux.
+ *
  */
 hipError_t hipSignalExternalSemaphoresAsync(const hipExternalSemaphore_t* extSemArray,
                                             const hipExternalSemaphoreSignalParams* paramsArray,
@@ -3038,6 +3044,9 @@ hipError_t hipSignalExternalSemaphoresAsync(const hipExternalSemaphore_t* extSem
  *  @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
  *
  *  @see
+ *
+ *  @note  This API is currently not supported on Linux.
+ *
  */
 hipError_t hipWaitExternalSemaphoresAsync(const hipExternalSemaphore_t* extSemArray,
                                               const hipExternalSemaphoreWaitParams* paramsArray,
@@ -3050,6 +3059,9 @@ hipError_t hipWaitExternalSemaphoresAsync(const hipExternalSemaphore_t* extSemAr
  *  @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
  *
  *  @see
+ *
+ *  @note  This API is currently not supported on Linux.
+ *
  */
 hipError_t hipDestroyExternalSemaphore(hipExternalSemaphore_t extSem);
 
@@ -3062,6 +3074,7 @@ hipError_t hipDestroyExternalSemaphore(hipExternalSemaphore_t extSem);
 *  @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
 *
 *  @see
+*
 */
 hipError_t hipImportExternalMemory(hipExternalMemory_t* extMem_out, const hipExternalMemoryHandleDesc* memHandleDesc);
 /**
