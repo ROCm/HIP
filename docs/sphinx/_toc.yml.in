@@ -5,6 +5,9 @@ defaults:
   maxdepth: 6
 root: index
 subtrees:
+- entries:
+  - file: faq
+    title: Frequently asked questions
 
   - file: faq
 
@@ -113,4 +116,3 @@ subtrees:
 - caption: About
   entries:
   - file: license.md
-  - file: faq

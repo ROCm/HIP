@@ -8,6 +8,8 @@ Note: The version definition for the HIP runtime is different from CUDA. On an A
 ``hipRuntimeGerVersion`` function returns the HIP runtime version; on an NVIDIA platform, this function
 returns the CUDA runtime version.
 
+.. _install_prerequisites:
+
 Prerequisites
 =======================================
 
@@ -24,8 +26,9 @@ Prerequisites
    .. tab-item:: NVIDIA
       :sync: nvidia
 
-      Check the system requirements in the
-      `NVIDIA CUDA Installation Guide <https://docs.nvidia.com/cuda/cuda-installation-guide-linux/>`_.
+      On NVIDIA GPUs HIP requires unified memory. All CUDA enabled NVIDIA
+      GPUs with compute capability 5.0 or later should be supported. For more
+      information, see `NVIDIA's list of CUDA enabled GPUs <https://developer.nvidia.com/cuda-gpus>`_.
 
 Installation
 =======================================
