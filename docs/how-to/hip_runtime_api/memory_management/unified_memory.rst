@@ -108,6 +108,62 @@ system requirements` and :ref:`checking unified memory management support`.
   offers an easy transition from a CPU written C++ code to a HIP code as the
   same system allocation API is used.
 
+To ensure the proper functioning of unified memory features on Heterogeneous Memory Management (HMM) supported graphics cards, it is essential to configure the environment variable ``XNACK=1``. Without this configuration, the behavior will be similar to that of systems without HMM support. For more details, visit `GPU memory <https://rocm.docs.amd.com/en/latest/conceptual/gpu-memory.html#xnack>`_.
+
+The chart below illustrates the expected behavior of managed and unified memory functions in ROCm and CUDA environments, both with and without HMM support:
+
+.. list-table:: Comparison of expected behavior of managed and unified memory functions in ROCm
+    :widths: 40, 25, 25
+    :header-rows: 2
+
+    * - call
+      - ROCm 5 or 6 without HMM or with ``XNACK=0``
+      - ROCm 5 or 6 with HMM and with ``XNACK=1``
+    * - OS support
+      - RHEL 8.4 or SLES 15 SP2
+      - RHEL 8.7+ or SLES 15 SP4
+    * - ``malloc()``, ``new``, system allocator
+      - host (not accessible on device)
+      - host, page-fault migration
+    * - ``hipMalloc()``
+      - device, zero copy
+      - device, zero copy
+    * - ``hipMallocManaged()``, ``__managed__``
+      - host, pinned, zero copy
+      - host, page-fault migration
+    * - ``hipHostRegister()``
+      - undefined behavior
+      - host, page-fault migration
+    * - ``hipHostMalloc()``
+      - host, pinned, zero copy
+      - host, pinned, zero copy
+
+.. list-table:: Comparison of expected behavior of managed and unified memory functions in CUDA
+    :widths: 40, 25, 25
+    :header-rows: 2
+
+    * - call
+      - CUDA 11 or 12 without HMM
+      - CUDA 11 or 12 with HMM
+    * - OS support
+      - RHEL 7.9 or SLES 15 SP2
+      - kernel 6.1.24+, 6.2.11+ or 6.3+, x64, CUDA 12.2+
+    * - ``malloc()``, ``new``, system allocator
+      - host (not accessible on device)
+      - first touch, page-fault migration
+    * - ``cudaMalloc()``
+      - device (not accessible on host)
+      - device, page-fault migration
+    * - ``cudaMallocManaged()``, ``__managed__``
+      - host, page-fault migration
+      - first touch, page-fault migration
+    * - ``cudaHostRegister()``
+      - host, page-fault migration
+      - host, page-fault migration
+    * - ``cudaMallocHost()``
+      - host, pinned, zero copy
+      - host, pinned, zero copy
+
 .. _checking unified memory management support:
 
 Checking unified memory management support
