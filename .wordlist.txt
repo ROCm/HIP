@@ -37,6 +37,9 @@ extern
 fatbinary
 foundationally
 frontends
+fnuz
+FNUZ
+fp
 gedit
 GPGPU
 GWS
@@ -76,12 +79,14 @@ multicore
 multigrid
 multithreading
 MALU
+NaN
 NCCL
 NDRange
 nonnegative
 NOP
 Numa
 Nsight
+ocp
 overindex
 overindexing
 oversubscription
@@ -99,6 +104,7 @@ representable
 RMW
 ROCm's
 rocTX
+roundtrip
 RTC
 RTTI
 rvalue

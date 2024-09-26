@@ -6,7 +6,7 @@ Kernels can be stored as a text string and can be passed to HIPRTC APIs alongsid
 NOTE:
 
 * This library can be used on systems without HIP installed nor AMD GPU driver installed at all (offline compilation). Therefore, it does not depend on any HIP runtime library.
-* But it does depend on COMGr. You may try to statically link COMGr into HIPRTC to avoid any ambiguity.
+* But it does depend on Code Object Manager (comgr). You may try to statically link comgr into HIPRTC to avoid any ambiguity.
 * Developers can decide to bundle this library with their application.
 
 ## Compilation APIs
