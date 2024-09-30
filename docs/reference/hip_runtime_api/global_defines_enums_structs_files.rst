@@ -10,5 +10,6 @@ Global defines, enums, structs and files
 The structs, define macros, enums and files in the HIP runtime API.
 
 * :ref:`global_enum_defines_reference`
+* :ref:`driver_types_reference`
 * :doc:`hip:doxygen/html/annotated`
 * :doc:`hip:doxygen/html/files`
