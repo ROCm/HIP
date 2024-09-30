@@ -32,6 +32,7 @@ enqueues
 entrypoint
 entrypoints
 enum
+enums
 embeded
 extern
 fatbinary

@@ -1,12 +1,11 @@
 .. meta::
-  :description: This chapter describes introduces Unified Memory (UM) and shows
-                how to use it in AMD HIP.
+  :description: The managed memory reference page.
   :keywords: AMD, ROCm, HIP, CUDA, unified memory, unified, memory, UM, APU
 
 .. _unified_memory_reference:
 
 *******************************************************************************
-HIP managed memory allocation API
+Managed memory
 *******************************************************************************
 
 .. doxygengroup:: MemoryM
