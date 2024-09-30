@@ -21,6 +21,12 @@ Check and install ``CppHeaderParser`` package using the command:
 
    pip3 install CppHeaderParser
 
+Install ``ROCm LLVM`` package using the command:
+
+.. code-block:: shell
+
+   apt-get install rocm-llvm-dev
+
 
 .. _Building the HIP runtime:
 
