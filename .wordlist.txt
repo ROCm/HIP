@@ -1,3 +1,4 @@
+.hip_fatbin
 ALU
 ALUs
 AmgX
@@ -15,9 +16,12 @@ Builtins
 CAS
 clr
 coroutines
+Ctx
 cuBLASLt
 cuCtx
+CUDA's
 cuDNN
+cuModule
 dataflow
 deallocate
 decompositions
@@ -35,6 +39,7 @@ enum
 enums
 embeded
 extern
+fatbin
 fatbinary
 foundationally
 frontends
@@ -46,13 +51,17 @@ GPGPU
 GWS
 hardcoded
 HC
+hcBLAS
+HIP-Clang
 HIP's
 hipcc
+hipCtx
 hipexamine
 hipified
+hipModule
+hipModuleLaunchKernel
 hipother
 HIPRTC
-hcBLAS
 icc
 IILE
 iGPU
@@ -122,6 +131,7 @@ texel
 texels
 tradeoffs
 templated
+toolkits
 typedefs
 unintuitive
 UMM
