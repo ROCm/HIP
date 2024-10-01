@@ -76,6 +76,8 @@ As a result, the OpenCL syntax is a lot different from HIP, and porting tools
 have to perform complex transformations, especially when it comes to templates
 or other C++ features in kernels.
 
+An overview over the different syntaxes can be seen `:doc:here<reference/terms>`.
+
 Can I install both CUDA and ROCm on the same machine?
 -----------------------------------------------------
 
@@ -84,8 +86,7 @@ Yes. Beware, that you still need a compatible GPU to actually run the compiled c
 HIP detected my platform (``amd`` vs ``nvidia``) incorrectly. What should I do?
 -------------------------------------------------------------------------------
 
-If HIP is unable to detect the correct platform, or you want to manually specify
-it, set the ``HIP_PLATFORM`` environment variable to either ``amd`` or ``nvidia``.
+See the `:doc:HIP porting guide<how-to/hip_porting_guide>` under the section "Identifying HIP Runtime".
 
 On NVIDIA platforms, can I mix HIP code with CUDA code?
 -------------------------------------------------------
@@ -111,7 +112,7 @@ What is HIP-Clang?
 ------------------
 
 HIP-Clang is a Clang/LLVM based compiler to compile HIP programs for AMD
-platforms. It's executable is ``amdclang++``.
+platforms. Its executable is called ``amdclang++`` on Linux and ``clang++`` on Windows.
 
 Can I link HIP device code with host code compiled with another compiler such as gcc, icc, or clang?
 -----------------------------------------------------------------------------------------------------------
@@ -139,7 +140,7 @@ The following is the HIP device code, assumed to be saved in ``device.hip``:
       const int x = threadIdx.x + blockIdx.x * blockDim.x;
       if(x < size){array[x] = x;}
   };
-  
+
   extern "C"{
       hipError_t callKernel(int blocks, int threadsPerBlock, double* array, size_t size){
           kernel<<<blocks, threadsPerBlock, 0, hipStreamDefault>>>(array, size);
@@ -154,7 +155,7 @@ The following is the host code, written in C, saved in ``host.c``:
   #include <hip/hip_runtime_api.h>
   #include <stdio.h>
   #include <stdlib.h>
-  
+
   #define HIP_CHECK(c) {                                \
      if (c != hipSuccess){                              \
         printf("HIP Error : %s", hipGetErrorString(c)); \
@@ -162,11 +163,11 @@ The following is the host code, written in C, saved in ``host.c``:
         exit(c);                                        \
      }                                                  \
   }
-  
+
   // Forward declaration - the implementation needs to be compiled with
   // a device compiler like hipcc or amdclang++
   hipError_t callKernel(int blocks, int threadsPerBlock, double* array, size_t size);
-  
+
   int main(int argc, char** argv) {
       int blocks = 1024;
       int threadsPerBlock = 256;
@@ -174,12 +175,12 @@ The following is the host code, written in C, saved in ``host.c``:
       double* d_array;
       double* h_array;
       h_array = (double*)malloc(arraySize * sizeof(double));
-  
+
       HIP_CHECK(hipMalloc((void**)&d_array, arraySize * sizeof(double)));
       HIP_CHECK(callKernel(blocks, threadsPerBlock, d_array, arraySize));
       HIP_CHECK(hipMemcpy(h_array, d_array, arraySize * sizeof(double), hipMemcpyDeviceToHost));
       HIP_CHECK(hipFree(d_array));
-  
+
       free(h_array);
       return 0;
   }
