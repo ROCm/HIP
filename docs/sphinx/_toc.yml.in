@@ -28,7 +28,6 @@ subtrees:
   - file: how-to/hip_porting_driver_api
   - file: how-to/hip_rtc
   - file: how-to/performance_guidelines
-  - file: how-to/stream_ordered_allocator
   - file: how-to/debugging
   - file: how-to/logging
   - file: how-to/cooperative_groups
@@ -36,6 +35,7 @@ subtrees:
     title: Unified memory
   - file: how-to/virtual_memory
     title: Virtual memory
+  - file: how-to/stream_ordered_allocator
   - file: how-to/faq
 
 - caption: Reference
