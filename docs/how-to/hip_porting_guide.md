@@ -403,7 +403,7 @@ Device Code:
 
 __constant__ int Value[LEN];
 
-__global__ void Get(hipLaunchParm lp, int *Ad)
+__global__ void Get(int *Ad)
 {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     Ad[tid] = Value[tid];
