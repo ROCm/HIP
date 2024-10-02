@@ -32,22 +32,21 @@ On non-AMD platforms, like NVIDIA, HIP provides header files required to support
 * {doc}`./understand/programming_model`
 * {doc}`./understand/hardware_implementation`
 * {doc}`./understand/amd_clr`
-* {doc}`./understand/texture_fetching`
+* {doc}`./understand/compilers`
 
 :::
 
 :::{grid-item-card} How to
 
-* [Programming manual](./how-to/programming_manual)
+* {doc}`./how-to/hip_runtime_api`
+  * {doc}`./how-to/hip_runtime_api/memory_management`
+  * {doc}`./how-to/hip_runtime_api/cooperative_groups`
 * [HIP porting guide](./how-to/hip_porting_guide)
 * [HIP porting: driver API guide](./how-to/hip_porting_driver_api)
 * {doc}`./how-to/hip_rtc`
 * {doc}`./how-to/performance_guidelines`
 * [Debugging with HIP](./how-to/debugging)
 * {doc}`./how-to/logging`
-* [Unified memory](./how-to/unified_memory)
-* [Virtual memory](./how-to/virtual_memory)
-* [Cooperative groups](./how-to/cooperative_groups)
 * {doc}`./how-to/faq`
 
 :::

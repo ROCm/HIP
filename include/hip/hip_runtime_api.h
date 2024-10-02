@@ -717,7 +717,7 @@ enum hipLimit_t {
 
 /** Allocates the memory as write-combined. On some system configurations, write-combined allocation
  * may be transferred faster across the PCI Express bus, however, could have low read efficiency by
- * most CPUs. It's a good option for data tranfer from host to device via mapped pinned memory.*/
+ * most CPUs. It's a good option for data transfer from host to device via mapped pinned memory.*/
 #define hipHostMallocWriteCombined 0x4
 #define hipHostAllocWriteCombined 0x4
 
@@ -728,11 +728,11 @@ enum hipLimit_t {
 #define hipHostMallocNumaUser  0x20000000
 #define hipExtHostAllocNumaUser  0x20000000
 
-/** Allocate coherent memory. Overrides HIP_COHERENT_HOST_ALLOC for specific allocation.*/
+/** Allocate coherent memory. Overrides HIP_HOST_COHERENT for specific allocation.*/
 #define hipHostMallocCoherent  0x40000000
 #define hipExtHostAllocCoherent  0x40000000
 
-/** Allocate non-coherent memory. Overrides HIP_COHERENT_HOST_ALLOC for specific allocation.*/
+/** Allocate non-coherent memory. Overrides HIP_HOST_COHERENT for specific allocation.*/
 #define hipHostMallocNonCoherent  0x80000000
 #define hipExtHostAllocNonCoherent  0x80000000
 
