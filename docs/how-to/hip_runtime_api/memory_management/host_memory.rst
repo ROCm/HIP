@@ -49,8 +49,6 @@ application. The following example shows the pageable host memory usage in HIP.
   #include <hip/hip_runtime.h>
   #include <iostream>
 
-  #define ELEMENT_NUMBER 100
-
   #define HIP_CHECK(expression)                  \
   {                                              \
       const hipError_t status = expression;      \
@@ -65,31 +63,33 @@ application. The following example shows the pageable host memory usage in HIP.
 
   int main()
   {
+      const int element_number = 100;
+
       int *host_input, *host_output;
       // Host allocation
-      host_input  = new int[ELEMENT_NUMBER];
-      host_output = new int[ELEMENT_NUMBER];
+      host_input  = new int[element_number];
+      host_output = new int[element_number];
 
       // Host data preparation
-      for (int i = 0; i < ELEMENT_NUMBER; i++) {
+      for (int i = 0; i < element_number; i++) {
           host_input[i] = i;
       }
-      memset(host_output, 0, ELEMENT_NUMBER * sizeof(int));
+      memset(host_output, 0, element_number * sizeof(int));
 
       int *device_input, *device_output;
 
       // Device allocation
-      HIP_CHECK(hipMalloc((int **)&device_input,  ELEMENT_NUMBER * sizeof(int)));
-      HIP_CHECK(hipMalloc((int **)&device_output, ELEMENT_NUMBER * sizeof(int)));
+      HIP_CHECK(hipMalloc((int **)&device_input,  element_number * sizeof(int)));
+      HIP_CHECK(hipMalloc((int **)&device_output, element_number * sizeof(int)));
 
       // Device data preparation
-      HIP_CHECK(hipMemcpy(device_input, host_input, ELEMENT_NUMBER * sizeof(int), hipMemcpyHostToDevice));
-      HIP_CHECK(hipMemset(device_output, 0, ELEMENT_NUMBER * sizeof(int)));
+      HIP_CHECK(hipMemcpy(device_input, host_input, element_number * sizeof(int), hipMemcpyHostToDevice));
+      HIP_CHECK(hipMemset(device_output, 0, element_number * sizeof(int)));
 
       // Run the kernel
       // ...
 
-      HIP_CHECK(hipMemcpy(device_input, host_input, ELEMENT_NUMBER * sizeof(int), hipMemcpyHostToDevice));
+      HIP_CHECK(hipMemcpy(device_input, host_input, element_number * sizeof(int), hipMemcpyHostToDevice));
 
       // Free host memory
       delete[] host_input;
@@ -104,8 +104,8 @@ application. The following example shows the pageable host memory usage in HIP.
 .. note::
 
   :cpp:func:`hipMalloc` and :cpp:func:`hipFree` are blocking calls, however, HIP
-  recently added non-blocking versions :cpp:func:`hipMallocAsync` and
-  :cpp:func:`hipFreeAsync` which take in a stream as an additional argument.
+  has non-blocking versions :cpp:func:`hipMallocAsync` and :cpp:func:`hipFreeAsync`
+  which take in a stream as an additional argument.
 
 Pinned memory
 ================================================================================
@@ -139,8 +139,6 @@ The example code how to use pinned memory in HIP showed at the following example
   #include <hip/hip_runtime.h>
   #include <iostream>
 
-  #define ELEMENT_NUMBER 100
-
   #define HIP_CHECK(expression)                  \
   {                                              \
       const hipError_t status = expression;      \
@@ -155,31 +153,33 @@ The example code how to use pinned memory in HIP showed at the following example
 
   int main()
   {
+      const int element_number = 100;
+      
       int *host_input, *host_output;
       // Host allocation
-      HIP_CHECK(hipHostMalloc((int **)&host_input, ELEMENT_NUMBER * sizeof(int)));
-      HIP_CHECK(hipHostMalloc((int **)&host_output, ELEMENT_NUMBER * sizeof(int)));
+      HIP_CHECK(hipHostMalloc((int **)&host_input, element_number * sizeof(int)));
+      HIP_CHECK(hipHostMalloc((int **)&host_output, element_number * sizeof(int)));
 
       // Host data preparation
-      for (int i = 0; i < ELEMENT_NUMBER; i++) {
+      for (int i = 0; i < element_number; i++) {
           host_input[i] = i;
       }
-      memset(host_output, 0, ELEMENT_NUMBER * sizeof(int));
+      memset(host_output, 0, element_number * sizeof(int));
 
       int *device_input, *device_output;
 
       // Device allocation
-      HIP_CHECK(hipMalloc((int **)&device_input,  ELEMENT_NUMBER * sizeof(int)));
-      HIP_CHECK(hipMalloc((int **)&device_output, ELEMENT_NUMBER * sizeof(int)));
+      HIP_CHECK(hipMalloc((int **)&device_input,  element_number * sizeof(int)));
+      HIP_CHECK(hipMalloc((int **)&device_output, element_number * sizeof(int)));
 
       // Device data preparation
-      HIP_CHECK(hipMemcpy(device_input, host_input, ELEMENT_NUMBER * sizeof(int), hipMemcpyHostToDevice));
-      HIP_CHECK(hipMemset(device_output, 0, ELEMENT_NUMBER * sizeof(int)));
+      HIP_CHECK(hipMemcpy(device_input, host_input, element_number * sizeof(int), hipMemcpyHostToDevice));
+      HIP_CHECK(hipMemset(device_output, 0, element_number * sizeof(int)));
 
       // Run the kernel
       // ...
 
-      HIP_CHECK(hipMemcpy(device_input, host_input, ELEMENT_NUMBER * sizeof(int), hipMemcpyHostToDevice));
+      HIP_CHECK(hipMemcpy(device_input, host_input, element_number * sizeof(int), hipMemcpyHostToDevice));
 
       // Free host memory
       delete[] host_input;
