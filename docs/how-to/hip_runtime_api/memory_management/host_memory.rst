@@ -27,12 +27,11 @@ represented in the next figure.
 
 .. figure:: ../../../data/how-to/hip_runtime_api/memory_management/pageable_pinned.svg
 
-The unified memory management and explicit memory management main difference
-highlighted at the following figure.
+The difference between memory transfers of explicit memory management and unified memory management are highlighted in the following figure.
 
 .. figure:: ../../../data/how-to/hip_runtime_api/memory_management/unified_memory/um.svg
 
-The unified memory management described at the :doc:`/how-to/hip_runtime_api/memory_management/unified_memory`.
+Unified memory management is described further in :doc:`/how-to/hip_runtime_api/memory_management/unified_memory`.
 
 Pageable memory
 ================================================================================
@@ -130,9 +129,8 @@ device. For transfer operations, such as :cpp:func:`hipMemcpy` or :cpp:func:`hip
 using pinned memory instead of pageable memory on host can lead to a ~3x
 improvement in bandwidth.
 
-Disadvantage of pinned memory that it reduces the available RAM for other
-operations, such as paging, which can negatively impact the overall performance
-of the host.
+The disadvantage of pinned memory is, that it reduces the available RAM for other
+processes, which can negatively impact the overall performance of the host.
 
 The example code how to use pinned memory in HIP showed at the following example.
 
