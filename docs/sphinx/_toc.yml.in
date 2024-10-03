@@ -43,6 +43,8 @@ subtrees:
   - file: how-to/performance_guidelines
   - file: how-to/debugging
   - file: how-to/logging
+  - file: how-to/hipgraph
+    title: HIP graphs
   - file: how-to/faq
 
 - caption: Reference

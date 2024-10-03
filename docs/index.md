@@ -47,6 +47,7 @@ On non-AMD platforms, like NVIDIA, HIP provides header files required to support
 * {doc}`./how-to/performance_guidelines`
 * [Debugging with HIP](./how-to/debugging)
 * {doc}`./how-to/logging`
+* [HIP graphs](./how-to/hipgraph)
 * {doc}`./how-to/faq`
 
 :::
