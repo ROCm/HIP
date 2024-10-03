@@ -2207,7 +2207,9 @@ PREDEFINED             = "__HIP_PLATFORM_AMD__" \
                          "__CG_STATIC_QUALIFIER__=static" \
                          "_CG_STATIC_CONST_DECL_=static constexpr" \
                          "HIP_PUBLIC_API" \
-                         "HIP_ENABLE_WARP_SYNC_BUILTINS"
+                         "HIP_ENABLE_WARP_SYNC_BUILTINS" \
+                         "__HOST_DEVICE__" \
+                         "__forceinline__"
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The

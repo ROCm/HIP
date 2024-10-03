@@ -316,7 +316,9 @@ The Cooperative Groups API offer options to do synchronization on a developer de
 Math functions
 ====================================================
 
-HIP-Clang supports a set of math operations that are callable from the device. HIP supports most of the device functions supported by CUDA. These are described on :ref:`Math API page <math_api_reference>`.
+HIP-Clang supports a set of math operations that are callable from the device. 
+HIP supports most of the device functions supported by CUDA. These are described
+on :ref:`Math API page <math_api_reference>`.
 
 Texture functions
 ===============================================
@@ -333,38 +335,8 @@ code.
 Surface functions
 ===============================================
 
-The following surface functions are supported in HIP:
-
-.. doxygengroup:: Surface
-   :content-only:
-
-.. doxygenfunction:: surf1Dread
-
-.. doxygenfunction:: surf1Dwrite
-
-.. doxygenfunction:: surf2Dread
-
-.. doxygenfunction:: surf2Dwrite
-
-.. doxygenfunction:: surf3Dread
-
-.. doxygenfunction:: surf3Dwrite
-
-.. doxygenfunction:: surf1DLayeredread
-
-.. doxygenfunction:: surf1DLayeredwrite
-
-.. doxygenfunction:: surf2DLayeredread
-
-.. doxygenfunction:: surf2DLayeredwrite
-
-.. doxygenfunction:: surfCubemapread
-
-.. doxygenfunction:: surfCubemapwrite
-
-.. doxygenfunction:: surfCubemapLayeredread
-
-.. doxygenfunction:: surfCubemapLayeredwrite
+The supported surface functions are located on :ref:`Surface object reference
+page <surface_object_reference>`.
 
 Timer functions
 ===============================================
@@ -1143,32 +1115,13 @@ micro-architecture details like registers, and also the directive allows per-ker
 Asynchronous Functions
 ============================================================
 
-Memory stream
---------------------------------------------------------------------------------------------
+The supported asynchronous functions reference are located on the following pages:
 
-.. doxygengroup:: Stream
-   :content-only:
-
-.. doxygengroup:: StreamO
-   :content-only:
-
-Peer to peer
---------------------------------------------------------------------------------------------
-
-.. doxygengroup:: PeerToPeer
-   :content-only:
-
-Memory management
---------------------------------------------------------------------------------------------
-
-.. doxygengroup:: Memory
-   :content-only:
-
-External Resource Interoperability
---------------------------------------------------------------------------------------------
-
-.. doxygengroup:: External
-   :content-only:
+* :ref:`stream_management_reference`
+* :ref:`stream_ordered_memory_allocator_reference`
+* :ref:`peer_to_peer_device_memory_access_reference`
+* :ref:`memory_management_reference`
+* :ref:`external_resource_interoperability_reference`
 
 Register Keyword
 ============================================================
