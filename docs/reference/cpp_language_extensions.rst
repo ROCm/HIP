@@ -104,7 +104,7 @@ You can include your kernel arguments after these parameters.
 .. code-block:: cpp
 
   // Example hipLaunchKernelGGL pseudocode:
-  __global__ MyKernel(float *A, float *B, float *C, size_t N)
+  __global__ void MyKernel(float *A, float *B, float *C, size_t N)
   {
   ...
   }
