@@ -15,15 +15,8 @@ Cooperative kernel launches
 
 The following host-side functions are used for cooperative kernel launches.
 
-.. doxygenfunction:: hipLaunchCooperativeKernel(const void* f, dim3 gridDim, dim3 blockDimX, void** kernelParams, unsigned int sharedMemBytes, hipStream_t stream)
-
-.. doxygenfunction:: hipLaunchCooperativeKernel(T f, dim3 gridDim, dim3 blockDim, void** kernelParams, unsigned int sharedMemBytes, hipStream_t stream)
-
-.. doxygenfunction:: hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsList, int  numDevices, unsigned int  flags)
-
-.. doxygenfunction:: hipModuleLaunchCooperativeKernel
-
-.. doxygenfunction:: hipModuleLaunchCooperativeKernelMultiDevice
+.. doxygengroup:: ModuleCooperativeG
+   :content-only:
 
 Cooperative groups classes
 ==========================
@@ -65,31 +58,13 @@ Cooperative groups construct functions
 
 The following functions are used to construct different group-type instances on the device side.
 
-.. doxygenfunction:: cooperative_groups::this_multi_grid
-
-.. doxygenfunction:: cooperative_groups::this_grid
-
-.. doxygenfunction:: cooperative_groups::this_thread_block
-
-.. doxygenfunction:: cooperative_groups::coalesced_threads
-
-.. doxygenfunction:: cooperative_groups::tiled_partition(const ParentCGTy &g)
-
-.. doxygenfunction:: cooperative_groups::tiled_partition(const thread_group &parent, unsigned int tile_size)
-
-.. doxygenfunction:: cooperative_groups::binary_partition(const coalesced_group& cgrp, bool pred)
-
-.. doxygenfunction:: cooperative_groups::binary_partition(const thread_block_tile<size, parent>& tgrp, bool pred)
+.. doxygengroup:: CooperativeGConstruct
+   :content-only:
 
 Cooperative groups exposed API functions
 ========================================
 
 The following functions are the exposed API for different group-type instances on the device side.
 
-.. doxygenfunction:: cooperative_groups::group_size
-
-.. doxygenfunction:: cooperative_groups::thread_rank
-
-.. doxygenfunction:: cooperative_groups::is_valid
-
-.. doxygenfunction:: cooperative_groups::sync
+.. doxygengroup:: CooperativeGAPI
+   :content-only:

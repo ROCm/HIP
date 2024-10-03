@@ -10,3 +10,6 @@ Surface object
 
 .. doxygengroup:: Surface
    :content-only:
+
+.. doxygengroup:: SurfaceAPI
+   :content-only:
