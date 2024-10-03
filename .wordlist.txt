@@ -48,6 +48,7 @@ FNUZ
 fp
 gedit
 GPGPU
+GROMACS
 GWS
 hardcoded
 HC
@@ -58,6 +59,7 @@ hipcc
 hipCtx
 hipexamine
 hipified
+HIPify
 hipModule
 hipModuleLaunchKernel
 hipother
@@ -65,9 +67,13 @@ HIPRTC
 icc
 IILE
 iGPU
+inlined
 inplace
+interop
 Interoperation
 interoperate
+Interprocess
+interprocess
 Intrinsics
 intrinsics
 IPC
@@ -85,9 +91,12 @@ ltrace
 makefile
 Malloc
 malloc
+MALU
+memset
 multicore
 multigrid
 multithreading
+multitenant
 MALU
 NaN
 NCCL
@@ -97,14 +106,18 @@ NOP
 Numa
 Nsight
 ocp
+omnitrace
 overindex
 overindexing
 oversubscription
 pixelated
 pragmas
+preallocated
 preconditioners
+predefining
 prefetched
 preprocessor
+profilers
 PTX
 PyHIP
 queryable
@@ -112,6 +125,7 @@ prefetching
 quad
 representable
 RMW
+rocgdb
 ROCm's
 rocTX
 roundtrip
@@ -123,6 +137,7 @@ scalarizing
 sceneries
 shaders
 SIMT
+SOMA
 SPMV
 structs
 SYCL
