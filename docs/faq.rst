@@ -1,4 +1,6 @@
-# Frequently asked questions
+*******************************************************************************
+Frequently asked questions
+*******************************************************************************
 
 ## What APIs and features does HIP support?
 
@@ -217,6 +219,7 @@ Some C style applications (and interfaces to other languages (FORTRAN, Python)) 
 They can be compiled with a C compiler and run correctly, however, small details must be considered in the code. For example, initialization, as shown in the simple application below, uses HIP structs dim3 with the file name "test.hip.cpp"
 
 .. code-block:: cpp
+
   #include "hip/hip_runtime_api.h"
   #include "stdio.h"
 
@@ -231,6 +234,7 @@ They can be compiled with a C compiler and run correctly, however, small details
 When using a C++ compiler,
 
 .. code-block:: shell
+
   $ gcc -x c++  $(hipconfig --cpp_config) test3.hip.cpp -o test
   $ ./test
   dim3 grid1; x=1, y=1, z=1
@@ -240,12 +244,14 @@ In which "dim3 grid1;" will yield a dim3 grid with all dimensional members x,y,z
 Further, if written:
 
 .. code-block:: cpp
+
   dim3 grid(2); // yields {2,1,1}
   dim3 grid(2,3); yields {2,3,1}
 
 In comparison, when using the C compiler,
 
 .. code-block:: shell
+
   $ gcc -x c $(hipconfig --cpp_config) test.hip.cpp -o test
   $ ./test
   dim3 grid1; x=646881376, y=21975, z=1517277280
@@ -255,6 +261,7 @@ In which "dim3 grid;" does not imply any initialization, no constructor is calle
 NOTE: To get the C++ default behavior, C programmers must additionally specify the right-hand side as shown below,
 
 .. code-block:: cpp
+
   dim3 grid = {1,1,1}; // initialized as in C++
 
 Can I install both CUDA SDK and HIP-Clang on the same machine?
@@ -269,6 +276,7 @@ HIP will set the platform to AMD and use HIP-Clang as compiler if it sees that t
 Sometimes this isn't what you want * you can force HIP to recognize the platform by setting the following,
 
 .. code-block:: shell
+
   export HIP_PLATFORM=amd
 
 HIP then set and use correct AMD compiler and runtime,
@@ -278,11 +286,13 @@ HIP_RUNTIME=rocclr
 To choose NVIDIA platform, you can set,
 
 .. code-block:: shell
+
   export HIP_PLATFORM=nvidia
 
 In this case, HIP will set and use the following,
 
 .. code-block:: shell
+
   HIP_COMPILER=cuda
   HIP_RUNTIME=nvcc
 
@@ -368,6 +378,7 @@ How to use complex multiplication and division operations?
 In HIP, ``hipFloatComplex`` and ``hipDoubleComplex`` are defined as complex data types,
 
 .. code-block:: cpp
+
   typedef float2 hipFloatComplex;
   typedef double2 hipDoubleComplex;
 
@@ -400,11 +411,13 @@ How can I know the version of HIP?
 HIP version definition has been updated since ROCm 4.2 release as the following:
 
 .. code-block:: cpp
+
   HIP_VERSION=HIP_VERSION_MAJOR * 10000000 + HIP_VERSION_MINOR * 100000 + HIP_VERSION_PATCH
 
 HIP version can be queried from HIP API call,
 
 .. code-block:: cpp
+
   hipRuntimeGetVersion(&runtimeVersion);
 
 The version returned will always be greater than the versions in previous ROCm releases.

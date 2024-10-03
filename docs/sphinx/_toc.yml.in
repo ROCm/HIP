@@ -54,7 +54,6 @@ subtrees:
   - file: how-to/hipgraph
     title: HIP graphs
   - file: how-to/stream_ordered_allocator
-  - file: faq
 
 - caption: Reference
   entries:
@@ -129,3 +128,4 @@ subtrees:
 - caption: About
   entries:
   - file: license.md
+  - file: faq
