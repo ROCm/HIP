@@ -1,11 +1,13 @@
 .. meta::
-  :description: This chapter lists types and device API wrappers related to the Cooperative Group feature. Programmers can directly use these API features in their kernels.
+  :description: This chapter lists types and device API wrappers related to the 
+                Cooperative Group feature. Programmers can directly use these 
+                API features in their kernels.
   :keywords: AMD, ROCm, HIP, cooperative groups
 
 .. _cooperative_groups_reference:
 
 *******************************************************************************
-HIP Cooperative groups API
+Cooperative groups
 *******************************************************************************
 
 Cooperative kernel launches

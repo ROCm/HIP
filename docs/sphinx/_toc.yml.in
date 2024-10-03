@@ -39,7 +39,48 @@ subtrees:
 
 - caption: Reference
   entries:
-  - file: doxygen/html/index
+  - file: reference/hip_runtime_api_reference
+    subtrees:
+    - entries:
+      - file: reference/hip_runtime_api/modules
+        subtrees:
+        - entries:
+          - file: reference/hip_runtime_api/modules/initialization_and_version
+          - file: reference/hip_runtime_api/modules/device_management
+          - file: reference/hip_runtime_api/modules/execution_control
+          - file: reference/hip_runtime_api/modules/error_handling
+          - file: reference/hip_runtime_api/modules/stream_management
+          - file: reference/hip_runtime_api/modules/stream_memory_operations
+          - file: reference/hip_runtime_api/modules/event_management
+          - file: reference/hip_runtime_api/modules/memory_management
+            subtrees:
+            - entries:
+              - file: reference/hip_runtime_api/modules/memory_management/memory_management_deprecated
+              - file: reference/hip_runtime_api/modules/memory_management/external_resource_interoperability
+              - file: reference/hip_runtime_api/modules/memory_management/stream_ordered_memory_allocator
+              - file: reference/hip_runtime_api/modules/memory_management/unified_memory_reference
+              - file: reference/hip_runtime_api/modules/memory_management/virtual_memory_reference
+              - file: reference/hip_runtime_api/modules/memory_management/texture_management
+              - file: reference/hip_runtime_api/modules/memory_management/texture_management_deprecated
+              - file: reference/hip_runtime_api/modules/memory_management/surface_object
+          - file: reference/hip_runtime_api/modules/peer_to_peer_device_memory_access
+          - file: reference/hip_runtime_api/modules/context_management
+          - file: reference/hip_runtime_api/modules/module_management
+          - file: reference/hip_runtime_api/modules/occupancy
+          - file: reference/hip_runtime_api/modules/profiler_control
+          - file: reference/hip_runtime_api/modules/launch_api
+          - file: reference/hip_runtime_api/modules/runtime_compilation
+          - file: reference/hip_runtime_api/modules/callback_activity_apis
+          - file: reference/hip_runtime_api/modules/graph_management
+          - file: reference/hip_runtime_api/modules/opengl_interoperability
+          - file: reference/hip_runtime_api/modules/cooperative_groups_reference
+      - file: reference/hip_runtime_api/global_defines_enums_structs_files
+        subtrees:
+        - entries:
+          - file: reference/hip_runtime_api/global_defines_enums_structs_files/global_enum_and_defines
+          - file: doxygen/html/annotated
+          - file: doxygen/html/files
+  - file: reference/virtual_rocr
   - file: reference/cpp_language_extensions
     title: C++ language extensions
   - file: reference/cpp_language_support
@@ -47,13 +88,6 @@ subtrees:
   - file: reference/math_api
   - file: reference/terms
     title: Comparing syntax for different APIs
-  - file: reference/cooperative_groups_reference
-    title: HIP Cooperative groups API
-  - file: reference/virtual_rocr
-  - file: reference/unified_memory_reference
-    title: HIP managed memory allocation API
-  - file: reference/virtual_memory_reference
-    title: HIP virtual memory management API
   - file: reference/deprecated_api_list
     title: List of deprecated APIs
   - file: reference/fp8_numbers

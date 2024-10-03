@@ -829,8 +829,7 @@ WARN_LOGFILE           =
 # spaces. See also FILE_PATTERNS and EXTENSION_MAPPING
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = mainpage.md \
-                         ../../include/hip \
+INPUT                  = ../../include/hip \
                          ../../../clr/hipamd/include/hip/amd_detail/amd_hip_gl_interop.h \
                          ../../../clr/hipamd/include/hip/amd_detail/amd_surface_functions.h \
                          ../../../clr/hipamd/include/hip/amd_detail/amd_hip_cooperative_groups.h \
@@ -2207,6 +2206,7 @@ PREDEFINED             = "__HIP_PLATFORM_AMD__" \
                          "__CG_QUALIFIER__=" \
                          "__CG_STATIC_QUALIFIER__=static" \
                          "_CG_STATIC_CONST_DECL_=static constexpr" \
+                         "HIP_PUBLIC_API" \
                          "HIP_ENABLE_WARP_SYNC_BUILTINS"
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
