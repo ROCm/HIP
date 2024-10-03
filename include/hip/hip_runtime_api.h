@@ -5880,6 +5880,9 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f, unsigned int gridDimX, unsigne
                                  unsigned int blockDimY, unsigned int blockDimZ,
                                  unsigned int sharedMemBytes, hipStream_t stream,
                                  void** kernelParams, void** extra);
+/** \addtogroup ModuleCooperativeG Cooperative groups kernel launch of Module management.
+  * \ingroup Module
+  *  @{ */
 /**
  * @brief launches kernel f with launch parameters and shared memory on stream with arguments passed
  * to kernelParams, where thread blocks can cooperate and synchronize as they execute
@@ -5963,6 +5966,10 @@ hipError_t hipLaunchCooperativeKernel(const void* f, dim3 gridDim, dim3 blockDim
  */
 hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsList,
                                                  int  numDevices, unsigned int  flags);
+
+// Doxygen end group ModuleCooperativeG
+/** @} */
+
 /**
  * @brief Launches kernels on multiple devices and guarantees all specified kernels are dispatched
  * on respective streams before enqueuing any other work on the specified streams from any other threads
