@@ -9260,6 +9260,7 @@ return hipOccupancyMaxPotentialBlockSize(gridSize, blockSize,(hipFunction_t)kern
  * @brief Launches a device function
  *
  * @ingroup Execution
+ * @ingroup ModuleCooperativeG
  *
  * \tparam T                  The type of the kernel function.
  * 
@@ -9287,6 +9288,7 @@ inline hipError_t hipLaunchCooperativeKernel(T f, dim3 gridDim, dim3 blockDim,
  *        cooperate and synchronize on execution.
  *
  * @ingroup Execution
+ * @ingroup ModuleCooperativeG
  *
  * @param [in] launchParamsList List of kernel launch parameters, one per device.
  * @param [in] numDevices       Size of launchParamsList array.
