@@ -131,30 +131,31 @@ Kernel launch example
 
   // Example showing device function, __device__ __host__
   // <- compile for both device and host
-  float PlusOne(float x)
+  #include <hip/hip_runtime.h>
+  // Example showing device function, __device__ __host__
+  __host__ __device__ float PlusOne(float x) // <- compile for both device and host
   {
     return x + 1.0;
   }
 
-  __global__
-  void
-  MyKernel (hipLaunchParm lp, /*lp parm for execution configuration */
-            const float *a, const float *b, float *c, unsigned N)
+  __global__ void MyKernel (const float *a, const float *b, float *c, unsigned N)
   {
-    unsigned gid = threadIdx.x; // <- coordinate index function
+    const int gid = threadIdx.x + blockIdx.x * blockDim.x; // <- coordinate index function
     if (gid < N) {
       c[gid] = a[gid] + PlusOne(b[gid]);
     }
   }
+
   void callMyKernel()
   {
     float *a, *b, *c; // initialization not shown...
     unsigned N = 1000000;
     const unsigned blockSize = 256;
+    const int gridSize = (N + blockSize - 1)/blockSize;
 
-    MyKernel<<<dim3(gridDim), dim3(groupDim), 0, 0>>> (a,b,c,n);
+    MyKernel<<<dim3(gridSize), dim3(blockSize), 0, 0>>> (a,b,c,N);
     // Alternatively, kernel can be launched by
-    // hipLaunchKernelGGL(MyKernel, dim3(N/blockSize), dim3(blockSize), 0, 0, a,b,c,N);
+    // hipLaunchKernelGGL(MyKernel, dim3(gridSize), dim3(blockSize), 0, 0, a,b,c,N);
   }
 
 Variable type qualifiers
