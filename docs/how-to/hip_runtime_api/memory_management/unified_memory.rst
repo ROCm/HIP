@@ -18,26 +18,19 @@ System Architectures (HSA) and Unified Memory (UM) help avoid these limitations
 and promise increased efficiency and innovation.
 
 Unified memory
-==============
+================================================================================
 
 Unified Memory is a single memory address space accessible from any processor
 within a system. This setup simplifies memory management processes and enables
 applications to allocate data that can be read or written by code running on
 either CPUs or GPUs. The Unified memory model is shown in the following figure.
 
-.. figure:: ../../../data/how-to/hip_runtime_api/memory_management/unified_memory/um_old.svg
-
-AMD Accelerated Processing Unit (APU) is a typical example of a Unified Memory
-Architecture. On a single die, a central processing unit (CPU) is combined
-with an integrated graphics processing unit (iGPU), and both have access to a
-high-bandwidth memory (HBM) module named Unified Memory. The CPU enables
-high-performance, low-latency operations, while the GPU is optimized for high
-throughput (data processed by unit time).
+.. figure:: ../../../data/how-to/hip_runtime_api/memory_management/unified_memory/um.svg
 
 .. _unified memory system requirements:
 
 System requirements
-===================
+================================================================================
 
 Unified memory is supported on Linux by all modern AMD GPUs from the Vega
 series onward. Unified memory management can be achieved with managed memory
@@ -83,7 +76,7 @@ page-fault. For more details, visit
 .. _unified memory programming models:
 
 Unified memory programming models
-=================================
+================================================================================
 
 Showcasing various unified memory programming models, the model availability
 depends on your architecture. For more information, see :ref:`unified memory
@@ -167,7 +160,7 @@ The chart below illustrates the expected behavior of managed and unified memory 
 .. _checking unified memory management support:
 
 Checking unified memory management support
-------------------------------------------
+--------------------------------------------------------------------------------
 
 Some device attributes can offer information about which :ref:`unified memory
 programming models` are supported. The attribute value is 1 if the
@@ -207,7 +200,7 @@ The following examples show how to use device attributes:
     }
 
 Example for unified memory management
--------------------------------------
+--------------------------------------------------------------------------------
 
 The following example shows how to use unified memory management with
 ``hipMallocManaged()``, function, with ``__managed__`` attribute for static
@@ -386,7 +379,7 @@ Memory Management example is presented in the last tab.
 .. _using unified memory management:
 
 Using unified memory management (UMM)
-=====================================
+================================================================================
 
 Unified memory management (UMM) is a feature that can simplify the complexities
 of memory management in GPU computing. It is particularly useful in
@@ -424,7 +417,7 @@ case.
 .. _unified memory runtime hints:
 
 Unified memory HIP runtime hints for the better performance
-===========================================================
+================================================================================
 
 Unified memory HIP runtime hints can help improve the performance of your code if
 you know your code's ability and infrastructure. Some hint techniques are
@@ -441,7 +434,7 @@ For the best performance, profile your application to optimize the
 utilization of HIP runtime hints.
 
 Data prefetching
-----------------
+--------------------------------------------------------------------------------
 
 Data prefetching is a technique used to improve the performance of your
 application by moving data closer to the processing unit before it's actually
@@ -501,7 +494,7 @@ Remember to check the return status of ``hipMemPrefetchAsync()`` to ensure that
 the prefetch operations are completed successfully.
 
 Memory advice
--------------
+--------------------------------------------------------------------------------
 
 The effectiveness of ``hipMemAdvise()`` comes from its ability to inform the
 runtime system of the developer's intentions regarding memory usage. When the
@@ -569,7 +562,7 @@ Here is the updated version of the example above with memory advice.
 
 
 Memory range attributes
------------------------
+--------------------------------------------------------------------------------
 
 Memory Range attributes allow you to query attributes of a given memory range.
 
@@ -631,8 +624,12 @@ For more details, visit the
     }
 
 Asynchronously attach memory to a stream
-----------------------------------------
+--------------------------------------------------------------------------------
 
-The ``hipStreamAttachMemAsync`` function would be able to asynchronously attach memory to a stream, which can help concurrent execution when using streams.
+The ``hipStreamAttachMemAsync`` function would be able to asynchronously attach
+memory to a stream, which can help concurrent execution when using streams.
 
-Currently, this function is a no-operation (NOP) function on AMD GPUs. It simply returns success after the runtime memory validation passed. This function is necessary on Microsoft Windows, and UMM is not supported on this operating system with AMD GPUs at the moment.
+Currently, this function is a no-operation (NOP) function on AMD GPUs. It simply
+returns success after the runtime memory validation passed. This function is
+necessary on Microsoft Windows, and UMM is not supported on this operating
+system with AMD GPUs at the moment.
