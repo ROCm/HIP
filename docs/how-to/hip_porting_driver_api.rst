@@ -353,7 +353,7 @@ Driver Entry Point Access provides several features:
 * Requesting the default stream version on a per-thread basis
 * Accessing new HIP features on older toolkits with a newer driver
 
-For driver entry point access reference, visit :ref:`driver_api_entry_point_reference`.
+For driver entry point access reference, visit :cpp:func:`hipGetProcAddress`.
 
 Address retrieval
 -----------------
