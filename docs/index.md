@@ -40,7 +40,7 @@ The HIP documentation is organized into the following categories:
 * {doc}`./how-to/logging`
 * {doc}`./how-to/stream_ordered_allocator`
 * [HIP graphs](./how-to/hipgraph)
-* {doc}`./how-to/faq`
+* {doc}`./faq`
 
 :::
 
