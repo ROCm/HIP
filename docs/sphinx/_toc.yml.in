@@ -26,9 +26,11 @@ subtrees:
 - caption: Conceptual
   entries:
   - file: understand/programming_model
-  - file: understand/hardware_implementation
   - file: understand/amd_clr
+  - file: understand/hardware_implementation
+  - file: understand/hardware_capabilities
   - file: understand/compilers
+  
 
 - caption: How to
   entries:

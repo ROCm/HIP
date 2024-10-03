@@ -21,9 +21,11 @@ The HIP documentation is organized into the following categories:
 :::{grid-item-card} Conceptual
 
 * {doc}`./understand/programming_model`
-* {doc}`./understand/hardware_implementation`
 * {doc}`./understand/amd_clr`
+* {doc}`./understand/hardware_implementation`
+* {doc}`./understand/hardware_capabilities`
 * {doc}`./understand/compilers`
+
 
 :::
 
