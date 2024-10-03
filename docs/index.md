@@ -33,13 +33,11 @@ The HIP documentation is organized into the following categories:
   * {doc}`./how-to/hip_runtime_api/memory_management`
   * {doc}`./how-to/hip_runtime_api/cooperative_groups`
 * [HIP porting guide](./how-to/hip_porting_guide)
-* [HIP porting: driver API guide](./how-to/hip_porting_driver_api)
+  * [HIP porting: driver API guide](./how-to/hip_porting_driver_api)
 * {doc}`./how-to/hip_rtc`
 * {doc}`./how-to/performance_guidelines`
 * [Debugging with HIP](./how-to/debugging)
 * {doc}`./how-to/logging`
-* {doc}`./how-to/stream_ordered_allocator`
-* [HIP graphs](./how-to/hipgraph)
 
 :::
 
@@ -48,7 +46,6 @@ The HIP documentation is organized into the following categories:
 * [HIP runtime API](./reference/hip_runtime_api_reference)
   * [Modules](./reference/hip_runtime_api/modules)
   * [Global defines, enums, structs and files](./reference/hip_runtime_api/global_defines_enums_structs_files)
-* [HSA runtime API for ROCm](./reference/virtual_rocr)
 * [C++ language extensions](./reference/cpp_language_extensions)
 * [C++ language support](./reference/cpp_language_support)
 * [HIP math API](./reference/math_api)

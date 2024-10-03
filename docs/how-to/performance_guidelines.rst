@@ -22,6 +22,7 @@ optimization potential:
 This document discusses the usage and benefits of these cornerstones in detail.
 
 .. _parallel execution:
+
 Parallel execution
 ====================
 
@@ -67,6 +68,7 @@ GPU resources, ranging from individual multiprocessors to the device as a
 whole.
 
 .. _memory optimization:
+
 Memory throughput optimization
 ===============================
 
@@ -94,6 +96,7 @@ impact on performance.
 The memory throughput optimization techniques are further discussed in detail in the following sections.
 
 .. _data transfer:
+
 Data transfer
 ---------------
 
@@ -112,6 +115,7 @@ memory accesses. The process where threads in a warp access sequential memory lo
 On integrated systems where device and host memory are physically the same, no copy operation between host and device memory is required and hence mapped page-locked memory should be used instead. To check if the device is integrated, applications can query the integrated device property.
 
 .. _device memory access:
+
 Device memory access
 ---------------------
 
@@ -158,6 +162,7 @@ Reading device memory through texture or surface fetching provides the following
 - Optional conversion of 8-bit and 16-bit integer input data to 32-bit floating-point values on the fly.
 
 .. _instruction optimization:
+
 Optimization for maximum instruction throughput
 =================================================
 
@@ -185,6 +190,7 @@ Leverage intrinsic functions: Intrinsic functions are predefined functions avail
 Optimize memory access: The memory access efficiency can impact the speed of arithmetic operations. See: :ref:`device memory access`.
 
 .. _control flow instructions:
+
 Control flow instructions
 ---------------------------
 

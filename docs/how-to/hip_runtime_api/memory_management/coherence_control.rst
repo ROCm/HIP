@@ -32,6 +32,7 @@ In HIP, host and device memory can be allocated with two different types of cohe
   them read-only.
 
 .. TODO: Is this still valid? What about Mi300?
+
 Developers should use coarse-grained coherence where they can to reduce
 host-device interconnect communication and also Mi200 accelerators hardware
 based floating point instructions are working on coarse grained memory regions.
