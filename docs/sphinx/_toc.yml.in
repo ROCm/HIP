@@ -7,6 +7,8 @@ root: index
 subtrees:
 - entries:
   - file: what_is_hip
+  - file: faq
+    title: Frequently asked questions
 
 - caption: Install
   entries:
@@ -128,4 +130,3 @@ subtrees:
 - caption: About
   entries:
   - file: license.md
-  - file: faq
