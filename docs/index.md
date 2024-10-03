@@ -45,9 +45,9 @@ On non-AMD platforms, like NVIDIA, HIP provides header files required to support
 * [HIP porting: driver API guide](./how-to/hip_porting_driver_api)
 * {doc}`./how-to/hip_rtc`
 * {doc}`./how-to/performance_guidelines`
-* {doc}`./how-to/stream_ordered_allocator`
 * [Debugging with HIP](./how-to/debugging)
 * {doc}`./how-to/logging`
+* {doc}`./how-to/stream_ordered_allocator`
 * [HIP graphs](./how-to/hipgraph)
 * {doc}`./how-to/faq`
 
