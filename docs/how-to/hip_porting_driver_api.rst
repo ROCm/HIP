@@ -128,7 +128,7 @@ Initialization and termination functions
 -----------------------------------------
 
 HIP-Clang generates initialization and termination functions for each translation unit for host code compilation. The initialization functions call ``__hipRegisterFatBinary`` to register the fat binary embedded in the ELF file. They also call ``__hipRegisterFunction`` and ``__hipRegisterVar`` to register kernel functions and device-side global variables. The termination functions call ``__hipUnregisterFatBinary``.
-HIP-Clang emits a global variable ``__hip_gpubin_handle`` of type ``void**`` with ``linkonce`` linkage and an initial value of 0 for each host translation unit. Each initialization function checks ``__hip_gpubin_handle`` and registers the fat binary only if ``__hip_gpubin_handle`` is 0. It saves the return value of ``__hip_gpubin_handle`` to ``__hip_gpubin_handle``. This is to guarantee that the fat binary is only registered once. A similar check is performed in the termination functions.
+HIP-Clang emits a global variable ``__hip_gpubin_handle`` of type ``void**`` with ``linkonce`` linkage and an initial value of 0 for each host translation unit. Each initialization function checks ``__hip_gpubin_handle`` and registers the fat binary only if ``__hip_gpubin_handle`` is 0. It saves the return value of ``__hip_gpubin_handle`` to ``__hip_gpubin_handle``. This ensures that the fat binary is registered once. A similar check is performed in the termination functions.
 
 Kernel launching
 ----------------
@@ -138,7 +138,7 @@ HIP-Clang supports kernel launching using either the CUDA ``<<<>>>`` syntax, ``h
 When the executable or shared library is loaded by the dynamic linker, the initialization functions are called. In the initialization functions, the code objects containing all kernels are loaded when ``__hipRegisterFatBinary`` is called. When ``__hipRegisterFunction`` is called, the stub functions are associated with the corresponding kernels in the code objects.
 
 HIP-Clang implements two sets of APIs for launching kernels.
-By default, when HIP-Clang encounters the ``<<<>>>`` statement in the host code, it first calls ``hipConfigureCall`` to set up the threads and grids. It then calls the stub function with the given arguments. The stub function calls ``hipSetupArgument`` for each kernel argument, then calls ``hipLaunchByPtr`` with a function pointer to the stub function. In ``hipLaunchByPtr``, the real kernel associated with the stub function is launched.
+By default, when HIP-Clang encounters the ``<<<>>>`` statement in the host code, it first calls ``hipConfigureCall`` to set up the threads and grids. It then calls the stub function with the given arguments. The stub function calls ``hipSetupArgument`` for each kernel argument, then calls ``hipLaunchByPtr`` with a function pointer to the stub function. In ``hipLaunchByPtr``, the actual kernel associated with the stub function is launched.
 
 NVCC implementation notes
 =========================
@@ -181,7 +181,7 @@ Compilation options
 
 The ``hipModule_t`` interface does not support the ``cuModuleLoadDataEx`` function, which is used to control PTX compilation options.
 HIP-Clang does not use PTX, so it does not support these compilation options.
-In fact, HIP-Clang code objects always contain fully compiled code for a device-specific instruction set and do not require additional compilation as a part of the load step.
+In fact, HIP-Clang code objects contain fully compiled code for a device-specific instruction set and don't require additional compilation as a part of the load step.
 The corresponding HIP function ``hipModuleLoadDataEx`` behaves like ``hipModuleLoadData`` on the HIP-Clang path (where compilation options are not used) and like ``cuModuleLoadDataEx`` on the NVCC path.
 
 For example:
