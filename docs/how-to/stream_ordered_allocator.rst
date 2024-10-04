@@ -24,7 +24,11 @@ Disadvantages of SOMA:
 Using SOMA
 =====================================
 
-You can allocate memory using ``hipMallocAsync()`` with stream-ordered semantics. This restricts the asynchronous accesses to the memory to occur between the stream executions of the allocation and deallocation. Accessing memory outside this promised stream order can lead to undefined behavior such as use-before-allocation or use-after-free errors. The allocator might reallocate memory as long as the compliant memory accesses are guaranteed not to overlap temporally. ``hipFreeAsync()`` frees memory from the pool with stream-ordered semantics.
+You can allocate memory using ``hipMallocAsync()`` with stream-ordered
+semantics. This restricts the asynchronous access to the memory between the stream executions of the allocation and deallocation. Accessing 
+memory if the compliant memory accesses won't overlap
+temporally. ``hipFreeAsync()`` frees memory from the pool with stream-ordered
+semantics.
 
 Here is how to use stream ordered memory allocation:
 
@@ -140,7 +144,7 @@ Set pools
 
 The ``hipMallocAsync()`` function uses the current memory pool and also provides the opportunity to create and access different pools using ``hipMemPoolCreate()`` and ``hipMallocFromPoolAsync()`` functions respectively.
 
-Unlike NVIDIA CUDA, where stream-ordered memory allocation can be implicit, in AMD HIP, it's always explicit. This requires you to manage memory allocation for each stream in HIP while ensuring precise control over memory usage and synchronization.
+Unlike NVIDIA CUDA, where stream-ordered memory allocation can be implicit, ROCm HIP is explicit. This requires managing memory allocation for each stream in HIP while ensuring precise control over memory usage and synchronization.
 
 .. code-block:: cpp
 
@@ -348,7 +352,7 @@ To reset these attributes to the current value, use ``hipMemPoolSetAttribute()``
 Memory reuse policies
 ---------------------
 
-The allocator might reallocate memory as long as the compliant memory accesses are guaranteed not to overlap temporally. To optimize the memory usage, disable or enable the following memory pool reuse policy attribute flags:
+The allocator might reallocate memory as long as the compliant memory accesses will not to overlap temporally. To optimize the memory usage, disable or enable the following memory pool reuse policy attribute flags:
 
 - ``hipMemPoolReuseFollowEventDependencies``: Checks event dependencies before allocating additional GPU memory.
 - ``hipMemPoolReuseAllowOpportunistic``: Checks freed allocations to determine if the stream order semantic indicated by the free operation has been met.
@@ -357,7 +361,7 @@ The allocator might reallocate memory as long as the compliant memory accesses a
 Device accessibility for multi-GPU support
 ------------------------------------------
 
-Allocations are initially accessible only from the device where they reside.
+Allocations are initially accessible from the device where they reside.
 
 Interprocess memory handling
 =============================
@@ -466,6 +470,7 @@ Here is how to read the pool exported in the preceding example:
     }
 
 .. _shareable-handle:
+
 Shareable handle
 ----------------
 
