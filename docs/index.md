@@ -11,7 +11,7 @@ For HIP supported AMD GPUs on multiple operating systems, see:
 
 The CUDA enabled NVIDIA GPUs are supported by HIP. For more information, see [GPU Compute Capability](https://developer.nvidia.com/cuda-gpus).
 
-On the AMD ROCm platform, HIP provides header files and runtime library built on top of HIP-Clang compiler in the repository [Common Language Runtime (CLR)](./understand/amd_clr), which contains source codes for AMD's compute languages runtimes as follows,
+On the AMD ROCm platform, HIP provides header files and runtime library built on top of HIP-Clang compiler in the repository [Common Language Runtimes (CLR)](./understand/amd_clr), which contains source codes for AMD's compute languages runtimes as follows,
 
 On non-AMD platforms, like NVIDIA, HIP provides header files required to support non-AMD specific back-end implementation in the repository ['hipother'](https://github.com/ROCm/hipother), which translates from the HIP runtime APIs to CUDA runtime APIs.
 
@@ -30,31 +30,40 @@ On non-AMD platforms, like NVIDIA, HIP provides header files required to support
 :::{grid-item-card} Conceptual
 
 * {doc}`./understand/programming_model`
-* {doc}`./understand/programming_model_reference`
 * {doc}`./understand/hardware_implementation`
 * {doc}`./understand/amd_clr`
+* {doc}`./understand/texture_fetching`
 
 :::
 
 :::{grid-item-card} How to
 
-* [Programming Manual](./how-to/programming_manual)
-* [HIP Porting Guide](./how-to/hip_porting_guide)
-* [HIP Porting: Driver API Guide](./how-to/hip_porting_driver_api)
+* [Programming manual](./how-to/programming_manual)
+* [HIP porting guide](./how-to/hip_porting_guide)
+* [HIP porting: driver API guide](./how-to/hip_porting_driver_api)
 * {doc}`./how-to/hip_rtc`
 * {doc}`./how-to/performance_guidelines`
 * [Debugging with HIP](./how-to/debugging)
 * {doc}`./how-to/logging`
+* [Unified memory](./how-to/unified_memory)
+* [Virtual memory](./how-to/virtual_memory)
+* {doc}`./how-to/stream_ordered_allocator`
+* [Cooperative groups](./how-to/cooperative_groups)
+* [HIP graphs](./how-to/hipgraph)
 * {doc}`./how-to/faq`
 
 :::
 
 :::{grid-item-card} Reference
 
-* {doc}`/doxygen/html/index`
-* [C++ language extensions](./reference/kernel_language)
-* [Comparing Syntax for different APIs](./reference/terms)
-* [HSA Runtime API for ROCm](./reference/virtual_rocr)
+* [HIP runtime API](./reference/hip_runtime_api_reference)
+  * [Modules](./reference/hip_runtime_api/modules)
+  * [Global defines, enums, structs and files](./reference/hip_runtime_api/global_defines_enums_structs_files)
+* [HSA runtime API for ROCm](./reference/virtual_rocr)
+* [C++ language extensions](./reference/cpp_language_extensions)
+* [C++ language support](./reference/cpp_language_support)
+* [HIP math API](./reference/math_api)
+* [Comparing syntax for different APIs](./reference/terms)
 * [List of deprecated APIs](./reference/deprecated_api_list)
 * [FP8 numbers in HIP](./reference/fp8_numbers)
 
@@ -62,8 +71,12 @@ On non-AMD platforms, like NVIDIA, HIP provides header files required to support
 
 :::{grid-item-card} Tutorial
 
+* [HIP basic examples](https://github.com/ROCm/rocm-examples/tree/develop/HIP-Basic)
 * [HIP examples](https://github.com/ROCm/HIP-Examples)
 * [HIP test samples](https://github.com/ROCm/hip-tests/tree/develop/samples)
+* [SAXPY tutorial](./tutorial/saxpy)
+* [Reduction tutorial](./tutorial/reduction)
+* [Cooperative groups tutorial](./tutorial/cooperative_groups_tutorial)
 
 :::
 
