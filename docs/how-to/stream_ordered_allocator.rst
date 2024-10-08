@@ -220,6 +220,7 @@ Trim pools
 The memory allocator allows you to allocate and free memory in stream order. To control memory usage, set the release threshold attribute using ``hipMemPoolAttrReleaseThreshold``.  This threshold specifies the amount of reserved memory in bytes to hold onto.
 
 .. code-block:: cpp
+
     uint64_t threshold = UINT64_MAX;
     hipMemPoolSetAttribute(memPool, hipMemPoolAttrReleaseThreshold, &threshold);
 
