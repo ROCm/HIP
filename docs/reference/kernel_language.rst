@@ -174,6 +174,10 @@ while the kernel is running. The functions for accessing constant memory are:
 * ``hipMemcpyFromSymbol()``
 * ``hipMemcpyFromSymbolAsync()``
 
+.. note::
+
+  Add ``__constant__`` to a template can lead to undefined behavior. Refer to `HIP Issue #3201 <https://github.com/ROCm/HIP/issues/3201>`_ for details.
+
 .. _shared-variable-type:
 
 ``__shared__``
