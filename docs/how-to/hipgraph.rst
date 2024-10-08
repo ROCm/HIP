@@ -31,7 +31,7 @@ The nodes can be one of the following:
 - signalling or waiting on external semaphores
 
 .. note::
-    The available node types are specified by :cpp:enumerator:`hipGraphNodeType`.
+    The available node types are specified by :cpp:enum:`hipGraphNodeType`.
 
 The following figure visualizes the concept of graphs, compared to using streams.
 
@@ -64,10 +64,8 @@ that are only possible when knowing the dependencies between the operations.
     when launched using HIP stream versus HIP graph. This does not include the
     time needed to set up the graph.
 
-
-********************************************************************************
 Using HIP graphs
-********************************************************************************
+================================================================================
 
 There are two different ways of creating graphs: Capturing kernel launches from
 a stream, or explicitly creating graphs. The difference between the two
@@ -102,7 +100,7 @@ that scheduling the operations within the graph encompasses less overhead and
 can enable some optimizations, but they still need to be associated with a stream for execution.
 
 Memory management
------------------
+--------------------------------------------------------------------------------
 
 Memory that is used by operations in graphs can either be pre-allocated or
 managed within the graph. Graphs can contain nodes that take care of allocating
@@ -189,6 +187,7 @@ The following code is an example of how to use the HIP graph API to capture a
 graph from a stream.
 
 .. code-block:: cpp
+
     #include <hip/hip_runtime.h>
     #include <vector>
     #include <iostream>

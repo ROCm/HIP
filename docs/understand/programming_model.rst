@@ -225,7 +225,7 @@ better than the defaults defined by the hardware.
   The implicit groups defined by kernel launch parameters are still available 
   when working with cooperative groups.
 
-For further information, see :doc:`Cooperative groups <hip:how-to/cooperative_groups>`. 
+For further information, see :doc:`Cooperative groups </how-to/cooperative_groups>`. 
 
 Memory model
 ============
