@@ -33,6 +33,7 @@ THE SOFTWARE.
 #include <string.h>  // for getDeviceProp
 #include <hip/hip_version.h>
 #include <hip/hip_common.h>
+#include <hip/linker_types.h>
 
 enum {
     HIP_SUCCESS = 0,
@@ -625,6 +626,7 @@ typedef struct hipIpcEventHandle_st {
 } hipIpcEventHandle_t;
 typedef struct ihipModule_t* hipModule_t;
 typedef struct ihipModuleSymbol_t* hipFunction_t;
+typedef struct ihipLinkState_t* hipLinkState_t;
 /**
  * HIP memory pool
  */
@@ -1137,29 +1139,6 @@ typedef struct hipMemPoolPtrExportData {
     unsigned char reserved[64];
 } hipMemPoolPtrExportData;
 
-/**
- * hipJitOption
- */
-typedef enum hipJitOption {
-    hipJitOptionMaxRegisters = 0,
-    hipJitOptionThreadsPerBlock,
-    hipJitOptionWallTime,
-    hipJitOptionInfoLogBuffer,
-    hipJitOptionInfoLogBufferSizeBytes,
-    hipJitOptionErrorLogBuffer,
-    hipJitOptionErrorLogBufferSizeBytes,
-    hipJitOptionOptimizationLevel,
-    hipJitOptionTargetFromContext,
-    hipJitOptionTarget,
-    hipJitOptionFallbackStrategy,
-    hipJitOptionGenerateDebugInfo,
-    hipJitOptionLogVerbose,
-    hipJitOptionGenerateLineInfo,
-    hipJitOptionCacheMode,
-    hipJitOptionSm3xOpt,
-    hipJitOptionFastCompile,
-    hipJitOptionNumOptions
-} hipJitOption;
 /**
  * @warning On AMD devices and some Nvidia devices, these hints and controls are ignored.
  */
@@ -5906,6 +5885,86 @@ hipError_t hipModuleLoadData(hipModule_t* module, const void* image);
  */
 hipError_t hipModuleLoadDataEx(hipModule_t* module, const void* image, unsigned int numOptions,
                                hipJitOption* options, void** optionValues);
+/**
+ * @brief Completes the linking of the given program.
+ * @param [in] state hip link state
+ * @param [in] type  Type of the input data or bitcode
+ * @param [in] data  Input data which is null terminated
+ * @param [in] size  Size of the input data
+ * @param [in] name  Optional name for this input
+ * @param [in] numOptions  Size of the options
+ * @param [in] options  Array of options applied to this input
+ * @param [in] optionValues  Array of option values cast to void*
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidHandle
+ *
+ * If adding the file fails, it will
+ * @return #hipErrorInvalidConfiguration
+ *
+ * @see hipError_t
+ */
+hipError_t hipLinkAddData(hipLinkState_t state, hipJitInputType type, void* data, size_t size,
+                                const char* name, unsigned int numOptions, hipJitOption* options,
+                                void** optionValues);
+
+/**
+ * @brief Adds a file with bit code to be linked with options
+ * @param [in] state hip link state
+ * @param [in] type  Type of the input data or bitcode
+ * @param [in] path  Path to the input file where bitcode is present
+ * @param [in] numOptions  Size of the options
+ * @param [in] options  Array of options applied to this input
+ * @param [in] optionValues  Array of option values cast to void*
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * If adding the file fails, it will
+ * @return #hipErrorInvalidConfiguration
+ *
+ * @see hipError_t
+ */
+hipError_t hipLinkAddFile(hipLinkState_t state, hipJitInputType type, const char* path, unsigned int numOptions,
+                            hipJitOption* options, void** optionValues);
+
+/**
+ * @brief Completes the linking of the given program.
+ * @param [in]   state hip link state
+ * @param [out]  hipBinOut  Upon success, points to the output binary
+ * @param [out]  sizeOut  Size of the binary is stored (optional)
+ *
+ * @returns #hipSuccess #hipErrorInvalidValue
+ *
+ * If adding the data fails, it will
+ * @return #hipErrorInvalidConfiguration
+ *
+ * @see hipError_t
+ */
+
+hipError_t hipLinkComplete(hipLinkState_t state, void** hipBinOut, size_t* sizeOut);
+
+/**
+ * @brief Creates the link instance via hip APIs.
+ * @param [in] numOptions  Number of options
+ * @param [in] option  Array of options
+ * @param [in] optionValues  Array of option values cast to void*
+ * @param [out] stateOut  hip link state created upon success
+ *
+ * @returns #hipSuccess #hipErrorInvalidValue #hipErrorInvalidConfiguration
+ *
+ * @see hipSuccess
+ */
+hipError_t hipLinkCreate(unsigned int numOptions, hipJitOption* options,
+                            void** optionValues, hipLinkState_t* stateOut);
+/**
+ * @brief Deletes the link instance via hip APIs.
+ * @param [in] state link state instance
+ *
+ * @returns #hipSuccess #hipErrorInvalidValue
+ *
+ * @see hipSuccess
+ */
+hipError_t hipLinkDestroy(hipLinkState_t state);
+
 /**
  * @brief launches kernel f with launch parameters and shared memory on stream with arguments passed
  * to kernelparams or extra

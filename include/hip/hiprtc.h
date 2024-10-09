@@ -22,6 +22,7 @@ THE SOFTWARE.
 #pragma once
 
 #include <hip/hip_common.h>
+#include <hip/linker_types.h>
 
 #if !defined(__HIP_PLATFORM_AMD__) && defined(__HIP_PLATFORM_NVIDIA__)
 #include <hip/nvidia_detail/nvidia_hiprtc.h>
@@ -41,7 +42,7 @@ extern "C" {
  *
  * @addtogroup GlobalDefs
  * @{
- *  
+ *
  */
  /**
  * hiprtc error code
@@ -56,66 +57,90 @@ typedef enum hiprtcResult {
     HIPRTC_ERROR_COMPILATION = 6,   ///< Compilation error
     HIPRTC_ERROR_BUILTIN_OPERATION_FAILURE = 7,   ///< Failed in builtin operation
     HIPRTC_ERROR_NO_NAME_EXPRESSIONS_AFTER_COMPILATION = 8,   ///< No name expression after compilation
-    HIPRTC_ERROR_NO_LOWERED_NAMES_BEFORE_COMPILATION = 9,   ///< No lowered names before compilation 
+    HIPRTC_ERROR_NO_LOWERED_NAMES_BEFORE_COMPILATION = 9,   ///< No lowered names before compilation
     HIPRTC_ERROR_NAME_EXPRESSION_NOT_VALID = 10,   ///< Invalid name expression
     HIPRTC_ERROR_INTERNAL_ERROR = 11,   ///< Internal error
     HIPRTC_ERROR_LINKING = 100   ///< Error in linking
 } hiprtcResult;
-
 /**
  * hiprtc JIT option
  */
-
-typedef enum hiprtcJIT_option {
-  HIPRTC_JIT_MAX_REGISTERS = 0,  ///< CUDA Only Maximum registers may be used in a thread, passed to compiler
-  HIPRTC_JIT_THREADS_PER_BLOCK,  ///< CUDA Only Number of thread per block
-  HIPRTC_JIT_WALL_TIME,  ///< CUDA Only Value for total wall clock time
-  HIPRTC_JIT_INFO_LOG_BUFFER,  ///< CUDA Only Pointer to the buffer with logged information
-  HIPRTC_JIT_INFO_LOG_BUFFER_SIZE_BYTES,  ///< CUDA Only Size of the buffer in bytes for logged info
-  HIPRTC_JIT_ERROR_LOG_BUFFER,  ///< CUDA Only Pointer to the buffer with logged error(s)
-  HIPRTC_JIT_ERROR_LOG_BUFFER_SIZE_BYTES,  ///< CUDA Only Size of the buffer in bytes for logged error(s)
-  HIPRTC_JIT_OPTIMIZATION_LEVEL,  ///< Value of optimization level for generated codes, acceptable options -O0, -O1, -O2, -O3
-  HIPRTC_JIT_TARGET_FROM_HIPCONTEXT,  ///< CUDA Only The target context, which is the default
-  HIPRTC_JIT_TARGET,  ///< CUDA Only JIT target
-  HIPRTC_JIT_FALLBACK_STRATEGY,  ///< CUDA Only Fallback strategy
-  HIPRTC_JIT_GENERATE_DEBUG_INFO,  ///< CUDA Only Generate debug information
-  HIPRTC_JIT_LOG_VERBOSE,  ///< CUDA Only Generate log verbose
-  HIPRTC_JIT_GENERATE_LINE_INFO,  ///< CUDA Only Generate line number information
-  HIPRTC_JIT_CACHE_MODE,  ///< CUDA Only Set cache mode
-  HIPRTC_JIT_NEW_SM3X_OPT,  ///< @deprecated CUDA Only New SM3X option.
-  HIPRTC_JIT_FAST_COMPILE,  ///< CUDA Only Set fast compile
-  HIPRTC_JIT_GLOBAL_SYMBOL_NAMES,  ///< CUDA Only Array of device symbol names to be relocated to the host
-  HIPRTC_JIT_GLOBAL_SYMBOL_ADDRESS,  ///< CUDA Only Array of host addresses to be relocated to the device
-  HIPRTC_JIT_GLOBAL_SYMBOL_COUNT,  ///< CUDA Only Number of symbol count.
-  HIPRTC_JIT_LTO,  ///< @deprecated CUDA Only Enable link-time optimization for device code
-  HIPRTC_JIT_FTZ,  ///< @deprecated CUDA Only Set single-precision denormals.
-  HIPRTC_JIT_PREC_DIV,  ///< @deprecated CUDA Only Set single-precision floating-point division and
-                        ///< reciprocals
-  HIPRTC_JIT_PREC_SQRT,  ///< @deprecated CUDA Only Set single-precision floating-point square root
-  HIPRTC_JIT_FMA,  ///< @deprecated CUDA Only Enable floating-point multiplies and adds/subtracts operations
-  HIPRTC_JIT_NUM_OPTIONS,  ///< Number of options
-  HIPRTC_JIT_IR_TO_ISA_OPT_EXT = 10000,  ///< Linker options to be passed on to compiler
-                                         /// @note  Only supported for the AMD platform.
-  HIPRTC_JIT_IR_TO_ISA_OPT_COUNT_EXT,    ///< Count of linker options to be passed on to
-                                         ///< compiler  @note  Only supported for the AMD platform
-} hiprtcJIT_option;
-
+#define hiprtcJIT_option hipJitOption
+#define HIPRTC_JIT_MAX_REGISTERS hipJitOptionMaxRegisters        ///< CUDA Only Maximum registers may be used in a
+                                                                 ///< thread, passed to compiler
+#define HIPRTC_JIT_THREADS_PER_BLOCK hipJitOptionThreadsPerBlock ///< CUDA Only Number of thread per block
+#define HIPRTC_JIT_WALL_TIME hipJitOptionWallTime                ///< CUDA Only Value for total wall clock time
+#define HIPRTC_JIT_INFO_LOG_BUFFER hipJitOptionInfoLogBuffer     ///< CUDA Only Pointer to the buffer with
+                                                                 ///< logged information
+#define HIPRTC_JIT_INFO_LOG_BUFFER_SIZE_BYTES hipJitOptionInfoLogBufferSizeBytes    ///< CUDA Only Size of the buffer
+                                                                                    ///< in bytes for logged info
+#define HIPRTC_JIT_ERROR_LOG_BUFFER hipJitOptionErrorLogBuffer                      ///< CUDA Only Pointer to the buffer
+                                                                                    ///< with logged error(s)
+#define HIPRTC_JIT_ERROR_LOG_BUFFER_SIZE_BYTES hipJitOptionErrorLogBufferSizeBytes  ///< CUDA Only Size of the buffer in
+                                                                                    ///< bytes for logged error(s)
+#define HIPRTC_JIT_OPTIMIZATION_LEVEL hipJitOptionOptimizationLevel                 ///< Value of optimization level for
+                                                                                    ///< generated codes, acceptable
+                                                                                    ///< options -O0, -O1, -O2, -O3
+#define HIPRTC_JIT_TARGET_FROM_HIPCONTEXT hipJitOptionTargetFromContext             ///< CUDA Only The target context,
+                                                                                    ///< which is the default
+#define HIPRTC_JIT_TARGET hipJitOptionTarget                          ///< CUDA Only JIT target
+#define HIPRTC_JIT_FALLBACK_STRATEGY hipJitOptionFallbackStrategy     ///< CUDA Only Fallback strategy
+#define HIPRTC_JIT_GENERATE_DEBUG_INFO hipJitOptionGenerateDebugInfo  ///< CUDA Only Generate debug information
+#define HIPRTC_JIT_LOG_VERBOSE hipJitOptionLogVerbose                 ///< CUDA Only Generate log verbose
+#define HIPRTC_JIT_GENERATE_LINE_INFO hipJitOptionGenerateLineInfo    ///< CUDA Only Generate line number information
+#define HIPRTC_JIT_CACHE_MODE hipJitOptionCacheMode                   ///< CUDA Only Set cache mode
+#define HIPRTC_JIT_NEW_SM3X_OPT hipJitOptionSm3xOpt                   ///< @deprecated CUDA Only New SM3X option.
+#define HIPRTC_JIT_FAST_COMPILE hipJitOptionFastCompile               ///< CUDA Only Set fast compile
+#define HIPRTC_JIT_GLOBAL_SYMBOL_NAMES hipJitOptionGlobalSymbolNames  ///< CUDA Only Array of device symbol names to be
+                                                                      ///< relocated to the host
+#define HIPRTC_JIT_GLOBAL_SYMBOL_ADDRESS hipJitOptionGlobalSymbolAddresses ///< CUDA Only Array of host addresses to be
+                                                                           ///< relocated to the device
+#define HIPRTC_JIT_GLOBAL_SYMBOL_COUNT hipJitOptionGlobalSymbolCount       ///< CUDA Only Number of symbol count.
+#define HIPRTC_JIT_LTO hipJitOptionLto                                     ///< @deprecated CUDA Only Enable link-time
+                                                                           ///< optimization for device code
+#define HIPRTC_JIT_FTZ hipJitOptionFtz                                     ///< @deprecated CUDA Only Set
+                                                                           ///< single-precision denormals.
+#define HIPRTC_JIT_PREC_DIV hipJitOptionPrecDiv                            ///< @deprecated CUDA Only Set
+                                                                           ///< single-precision floating-point division
+                                                                           ///< and reciprocals
+#define HIPRTC_JIT_PREC_SQRT hipJitOptionPrecSqrt                          ///< @deprecated CUDA Only Set
+                                                                           ///< single-precision floating-point
+                                                                           ///< square root
+#define HIPRTC_JIT_FMA hipJitOptionFma                                     ///< @deprecated CUDA Only Enable
+                                                                           ///< floating-point multiplies and
+                                                                           ///< adds/subtracts operations
+#define HIPRTC_JIT_POSITION_INDEPENDENT_CODE hipJitOptionPositionIndependentCode ///< CUDA Only Generates
+                                                                                 ///< Position Independent code
+#define HIPRTC_JIT_MIN_CTA_PER_SM hipJitOptionMinCTAPerSM                        ///< CUDA Only Hints to JIT compiler
+                                                                                 ///< the minimum number of CTAs frin
+                                                                                 ///< kernel's grid to be mapped to SM
+#define HIPRTC_JIT_MAX_THREADS_PER_BLOCK hipJitOptionMaxThreadsPerBlock          ///< CUDA only Maximum number of
+                                                                                 ///< threads in a thread block
+#define HIPRTC_JIT_OVERRIDE_DIRECT_VALUES hipJitOptionOverrideDirectiveValues    ///< CUDA only Override Directive
+                                                                                 ///< Values
+#define HIPRTC_JIT_NUM_OPTIONS hipJitOptionNumOptions                            ///< Number of options
+#define HIPRTC_JIT_IR_TO_ISA_OPT_EXT hipJitOptionIRtoISAOptExt                   ///< HIP Only Linker options to be
+                                                                                 ///< passed on to compiler
+#define HIPRTC_JIT_IR_TO_ISA_OPT_COUNT_EXT hipJitOptionIRtoISAOptCountExt        ///< HIP Only Count of linker options
+                                                                                 ///< to be passed on to
 /**
  * hiprtc JIT input type
  */
-typedef enum hiprtcJITInputType {
-  HIPRTC_JIT_INPUT_CUBIN = 0,  ///< Input cubin
-  HIPRTC_JIT_INPUT_PTX,  ///< Input PTX
-  HIPRTC_JIT_INPUT_FATBINARY,  ///< Input fat binary
-  HIPRTC_JIT_INPUT_OBJECT,  ///< Input object
-  HIPRTC_JIT_INPUT_LIBRARY,  ///< Input library
-  HIPRTC_JIT_INPUT_NVVM,  ///< Input NVVM
-  HIPRTC_JIT_NUM_LEGACY_INPUT_TYPES,  ///< Number of legacy input type
-  HIPRTC_JIT_INPUT_LLVM_BITCODE = 100,  ///< LLVM bitcode or IR assembly
-  HIPRTC_JIT_INPUT_LLVM_BUNDLED_BITCODE = 101,  ///< LLVM bundled bitcode
-  HIPRTC_JIT_INPUT_LLVM_ARCHIVES_OF_BUNDLED_BITCODE = 102,  ///< LLVM archives of boundled bitcode
-  HIPRTC_JIT_NUM_INPUT_TYPES = (HIPRTC_JIT_NUM_LEGACY_INPUT_TYPES + 3)
-} hiprtcJITInputType;
+#define hiprtcJITInputType hipJitInputType
+#define HIPRTC_JIT_INPUT_CUBIN hipJitInputCubin         ///< Cuda only Input Cubin
+#define HIPRTC_JIT_INPUT_PTX hipJitInputPtx             ///< Cuda only Input PTX
+#define HIPRTC_JIT_INPUT_FATBINARY hipJitInputFatBinary ///< Cuda Only Input FAT Binary
+#define HIPRTC_JIT_INPUT_OBJECT hipJitInputObject       ///< Cuda Only Host Object with embedded device code
+#define HIPRTC_JIT_INPUT_LIBRARY hipJitInputLibrary     ///< Cuda Only Archive of Host Objects with embedded device code
+#define HIPRTC_JIT_INPUT_NVVM hipJitInputNvvm           ///< @deprecated CUDA only High Level intermediate code for LTO
+#define HIPRTC_JIT_NUM_LEGACY_INPUT_TYPES hipJitNumLegacyInputTypes         ///< Count of Legacy Input Types
+#define HIPRTC_JIT_INPUT_LLVM_BITCODE hipJitInputLLVMBitcode                ///< HIP Only LLVM Bitcode or IR assembly
+#define HIPRTC_JIT_INPUT_LLVM_BUNDLED_BITCODE hipJitInputLLVMBundledBitcode ///< HIP Only LLVM Clang Bundled Code
+#define HIPRTC_JIT_INPUT_LLVM_ARCHIVES_OF_BUNDLED_BITCODE hipJitInputLLVMArchivesOfBundledBitcode  ///< HIP Only LLVM
+                                                                                                   ///< Archives of
+                                                                                                   ///< Bundled Bitcode
+#define HIPRTC_JIT_INPUT_SPIRV hipJitInputSpirv         ///< HIP Only SPIRV Code Object
+#define HIPRTC_JIT_NUM_INPUT_TYPES hipJitNumInputTypes  ///< Count of Input Types
 /**
 * @}
 */
