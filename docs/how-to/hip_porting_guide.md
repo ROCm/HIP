@@ -111,10 +111,10 @@ Most CUDA libraries have a corresponding ROCm library with similar functionality
 
 All HIP projects target either AMD or NVIDIA platform. The platform affects which headers are included and which libraries are used for linking.
 
-* `HIP_PLATFORM_AMD` is defined if the HIP platform targets AMD.
-Note, `HIP_PLATFORM_HCC` was previously defined if the HIP platform targeted AMD, it is deprecated.
-* `HIP_PLATFORM_NVDIA` is defined if the HIP platform targets NVIDIA.
-Note, `HIP_PLATFORM_NVCC` was previously defined if the HIP platform targeted NVIDIA, it is deprecated.
+* `__HIP_PLATFORM_AMD__` is defined if the HIP platform targets AMD.
+Note, `__HIP_PLATFORM_HCC__` was previously defined if the HIP platform targeted AMD, it is deprecated.
+* `__HIP_PLATFORM_NVDIA__` is defined if the HIP platform targets NVIDIA.
+Note, `__HIP_PLATFORM_NVCC__` was previously defined if the HIP platform targeted NVIDIA, it is deprecated.
 
 ### Identifying the Compiler: hip-clang or NVCC
 
