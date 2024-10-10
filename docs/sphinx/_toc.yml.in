@@ -7,9 +7,6 @@ root: index
 subtrees:
 - entries:
   - file: faq
-    title: Frequently asked questions
-
-  - file: faq
 
 - caption: Install
   entries:

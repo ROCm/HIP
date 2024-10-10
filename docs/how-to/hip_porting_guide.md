@@ -260,14 +260,13 @@ ROCclr is a virtual device interface that HIP runtimes interact with different b
 * NVIDIA platform
 On NVIDIA platform, HIP is just a thin layer on top of CUDA.
 
-The environment variable `HIP_PLATFORM` can be used to specify, what runtime
-should be used. The platform is detected automatically by HIP. When an AMD
-graphics driver and an AMD GPU is detected, `HIP_PLATFORM` is set to `amd`.
-If both runtimes are installed, and a specific one should be used, or HIP is
-unable to detect the runtime, setting the environment variable manually tells
-`hipcc` what compilation path to choose.
-To use the CUDA compilation path, set the environment variable
-to `HIP_PLATFORM=nvidia`.
+The environment variable `HIP_PLATFORM` specifies the runtime to use. The
+platform is detected automatically by HIP. When an AMD graphics driver and an
+AMD GPU is detected, `HIP_PLATFORM` is set to `amd`. If both runtimes are
+installed, and a specific one should be used, or HIP can't detect the runtime,
+setting the environment variable manually tells `hipcc` what compilation path to
+choose. To use the CUDA compilation path, set the environment variable to
+`HIP_PLATFORM=nvidia`.
 
 ## `hipLaunchKernelGGL`
 
