@@ -5,6 +5,8 @@ defaults:
   maxdepth: 6
 root: index
 subtrees:
+- entries:
+  - file: faq
 
 - caption: Install
   entries:
@@ -38,7 +40,6 @@ subtrees:
   - file: how-to/stream_ordered_allocator
   - file: how-to/hipgraph
     title: HIP graphs
-  - file: how-to/faq
 
 - caption: Reference
   entries:
