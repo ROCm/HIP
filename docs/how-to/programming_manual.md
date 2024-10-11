@@ -146,7 +146,7 @@ For Linux developers, the link [here](https://github.com/ROCm/hip-tests/blob/dev
 
 ## HIP Graph
 
-HIP graph is supported. For more details, refer to the HIP API Guide.
+HIP graphs are supported. For more details, refer to the [HIP API Guide](../doxygen/html/group___graph) or the [how-to section for HIP graphs](../how-to/hipgraph).
 
 ## Device-Side Malloc
 
