@@ -16,6 +16,7 @@ Global memory allocation in HIP uses the C language style allocation function. T
 Virtual memory management solves these memory management problems. It helps to reduce memory usage and unnecessary ``memcpy`` calls.
 
 .. _memory_allocation_virtual_memory:
+
 Memory allocation
 =================
 
@@ -75,6 +76,7 @@ To free the memory allocated in this manner, use the corresponding free function
     hipMemAddressFree(ptr, size);
 
 .. _usage_virtual_memory:
+
 Memory usage
 ============
 
