@@ -26,7 +26,7 @@ There are multiple variations of reduction that allow parallel processing. The a
 Reduction on GPUs
 =================
 
-Implementing reductions on GPUs requires a basic understanding of the :doc:`/understand/programming_model_reference`. The document explores aspects of low-level optimization best discussed through the :ref:`inherent_thread_model`, and refrains from using cooperative groups.
+Implementing reductions on GPUs requires a basic understanding of the :doc:`/understand/programming_model`. The document explores aspects of low-level optimization best discussed through the :ref:`inherent_thread_model`, and refrains from using cooperative groups.
 
 Synchronizing parallel threads of execution across a GPU is crucial for correctness as the partial results can't be synchronized before they manifest. Synchronizing all the threads running on a GPU at any given time is possible, however, it is a costly and intricate operation. If synchronization is not absolutely necessary, map the parallel algorithm so that multiprocessors and blocks can make independent progress and need not sync frequently.
 
@@ -602,7 +602,7 @@ This kernel variant utilizes another generally applicable utility known as ``hip
     template<uint32_t BlockSize, uint32_t WarpSize, uint32_t ItemsPerThread>
     __global__ static __launch_bounds__(BlockSize) void kernel(...)
 
-The kernel now has three compile-time configurable parameters. The only part of the kernel that changes depends on how you load data from global and perform the binary operation on those loaded values. So, the following step to read input from front buffer to global is now split into two steps: :ref:`reading ``ItemsPerThread`` <reading-items>`and :ref:`processing ``ItemsPerThread`` <processing-items>`.
+The kernel now has three compile-time configurable parameters. The only part of the kernel that changes depends on how you load data from global and perform the binary operation on those loaded values. So, the following step to read input from front buffer to global is now split into two steps: :ref:`reading-items` and :ref:`processing-items` .
 
 .. code-block:: C++
 

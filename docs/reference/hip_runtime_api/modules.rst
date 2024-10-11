@@ -19,7 +19,6 @@ The API is organized into modules based on functionality.
 * :ref:`event_management_reference`
 * :ref:`memory_management_reference`
 
-  * :ref:`memory_management_deprecated_reference`
   * :ref:`external_resource_interoperability_reference`
   * :ref:`stream_ordered_memory_allocator_reference`
   * :ref:`unified_memory_reference`
