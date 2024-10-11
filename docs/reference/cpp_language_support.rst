@@ -1,6 +1,6 @@
 .. meta::
   :description: This chapter describes the C++ support of the HIP ecosystem
-  ROCm software.
+                ROCm software.
   :keywords: AMD, ROCm, HIP, C++
 
 *******************************************************************************
@@ -20,6 +20,7 @@ code. This is due to the fact that by default a function is considered to run on
 except for ``constexpr`` functions, which can run on host and device as well.
 
 .. _language_modern_cpp_support:
+
 Modern C++ support
 ===============================================================================
 
@@ -69,6 +70,7 @@ The three-way comparison operator (spaceship operator ``<=>``) works with host a
 code.
 
 .. _language_restrictions:
+
 Extensions and restrictions
 ===============================================================================
 
