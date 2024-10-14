@@ -5,9 +5,9 @@
 
 .. _virtual_memory:
 
-*****************************
+********************************************************************************
 Virtual memory management
-*****************************
+********************************************************************************
 
 Memory management is important when creating high-performance applications in
 the HIP ecosystem. Both allocating and copying memory can result in bottlenecks,
@@ -28,14 +28,30 @@ reduce memory usage and unnecessary ``memcpy`` calls.
 .. _memory_allocation_virtual_memory:
 
 Memory allocation
-=================
+================================================================================
 
-Standard memory allocation uses the ``hipMalloc`` function to allocate a block of memory on the device. However, when using virtual memory, this process is separated into multiple steps using the ``hipMemCreate``, ``hipMemAddressReserve``, ``hipMemMap``, and ``hipMemSetAccess`` functions. This guide explains what these functions do and how you can use them for virtual memory management.
+Standard memory allocation uses the :cpp:func:`hipMalloc` function to allocate a
+block of memory on the device. However, when using virtual memory, this process
+is separated into multiple steps using the :cpp:func:`hipMemCreate`,
+:cpp:func:`hipMemAddressReserve`, :cpp:func:`hipMemMap`, and
+:cpp:func:`hipMemSetAccess` functions. This guide explains what these functions
+do and how you can use them for virtual memory management.
 
 Allocate physical memory
-------------------------
+--------------------------------------------------------------------------------
 
-The first step is to allocate the physical memory itself with the ``hipMemCreate`` function. This function accepts the size of the buffer, an ``unsigned long long`` variable for the flags, and a ``hipMemAllocationProp`` variable. ``hipMemAllocationProp`` contains the properties of the memory to be allocated, such as where the memory is physically located and what kind of shareable handles are available. If the allocation is successful, the function returns a value of ``hipSuccess``, with ``hipMemGenericAllocationHandle_t`` representing a valid physical memory allocation. The allocated memory size must be aligned with the granularity appropriate for the properties of the allocation. You can use the ``hipMemGetAllocationGranularity`` function to determine the correct granularity.
+The first step is to allocate the physical memory itself with the
+:cpp:func:`hipMemCreate` function. This function accepts the size of the buffer,
+an ``unsigned long long`` variable for the flags, and a
+:cpp:struct:`hipMemAllocationProp` variable. :cpp:struct:`hipMemAllocationProp`
+contains the properties of the memory to be allocated, such as where the memory
+is physically located and what kind of shareable handles are available. If the
+allocation is successful, the function returns a value of
+:cpp:enumerator:`hipSuccess`, with :cpp:type:`hipMemGenericAllocationHandle_t`
+representing a valid physical memory allocation. The allocated memory size must
+be aligned with the granularity appropriate for the properties of the
+allocation. You can use the :cpp:func:`hipMemGetAllocationGranularity` function
+to determine the correct granularity.
 
 .. code-block:: cpp
 
@@ -50,9 +66,16 @@ The first step is to allocate the physical memory itself with the ``hipMemCreate
     hipMemCreate(&allocHandle, padded_size, &prop, 0);
 
 Reserve virtual address range
------------------------------
+--------------------------------------------------------------------------------
 
-After you have acquired an allocation of physical memory, you must map it before you can use it. To do so, you need a virtual address to map it to.  Mapping means the physical memory allocation is available from the virtual address range it is mapped to. To reserve a virtual memory range, use the ``hipMemAddressReserve`` function. The size of the virtual memory must match the amount of physical memory previously allocated. You can then map the physical memory allocation to the newly-acquired virtual memory address range using the ``hipMemMap`` function.
+After you have acquired an allocation of physical memory, you must map it before
+you can use it. To do so, you need a virtual address to map it to.  Mapping
+means the physical memory allocation is available from the virtual address range
+it is mapped to. To reserve a virtual memory range, use the
+:cpp:func:`hipMemAddressReserve` function. The size of the virtual memory must
+match the amount of physical memory previously allocated. You can then map the
+physical memory allocation to the newly-acquired virtual memory address range
+using the :cpp:func:`hipMemMap` function.
 
 .. code-block:: cpp
 
@@ -60,9 +83,22 @@ After you have acquired an allocation of physical memory, you must map it before
     hipMemMap(ptr, padded_size, 0, allocHandle, 0);
 
 Set memory access
------------------
+--------------------------------------------------------------------------------
 
-Finally, use the ``hipMemSetAccess`` function to enable memory access. It accepts the pointer to the virtual memory, the size, and a ``hipMemAccessDesc`` descriptor as parameters. In a multi-GPU environment, you can map the device memory of one GPU to another. This feature also works with the traditional memory management system, but isn't as scalable as with virtual memory. When memory is allocated with ``hipMalloc``, ``hipDeviceEnablePeerAccess`` is used to enable peer access. This function enables access between two devices, but it means that every call to ``hipMalloc`` takes more time to perform the checks and the mapping between the devices. When using virtual memory management, peer access is enabled by ``hipMemSetAccess``, which provides a finer level of control over what is shared. This has no performance impact on memory allocation and gives you more control over what memory buffers are shared with which devices.
+Finally, use the :cpp:func:`hipMemSetAccess` function to enable memory access.
+It accepts the pointer to the virtual memory, the size, and a
+:cpp:struct:`hipMemAccessDesc` descriptor as parameters. In a multi-GPU
+environment, you can map the device memory of one GPU to another. This feature
+also works with the traditional memory management system, but isn't as scalable
+as with virtual memory. When memory is allocated with :cpp:func:`hipMalloc`,
+:cpp:func:`hipDeviceEnablePeerAccess` is used to enable peer access. This
+function enables access between two devices, but it means that every call to
+:cpp:func:`hipMalloc` takes more time to perform the checks and the mapping
+between the devices. When using virtual memory management, peer access is
+enabled by :cpp:func:`hipMemSetAccess`, which provides a finer level of
+control over what is shared. This has no performance impact on memory allocation
+and gives you more control over what memory buffers are shared with which
+devices.
 
 .. code-block:: cpp
 
@@ -72,12 +108,19 @@ Finally, use the ``hipMemSetAccess`` function to enable memory access. It accept
     accessDesc.flags = HIP_MEM_ACCESS_FLAGS_PROT_READWRITE;
     hipMemSetAccess(ptr, padded_size, &accessDesc, 1);
 
-At this point the memory is allocated, mapped, and ready for use. You can read and write to it, just like you would a C style memory allocation.
+At this point the memory is allocated, mapped, and ready for use. You can read
+and write to it, just like you would a C style memory allocation.
 
 Free virtual memory
--------------------
+--------------------------------------------------------------------------------
 
-To free the memory allocated in this manner, use the corresponding free functions. To unmap the memory, use ``hipMemUnmap``. To release the virtual address range, use ``hipMemAddressFree``.  Finally, to release the physical memory, use ``hipMemRelease``. A side effect of these functions is the lack of synchronization when memory is released. If you call ``hipFree`` when you have multiple streams running in parallel, it synchronizes the device. This causes worse resource usage and performance.
+To free the memory allocated in this manner, use the corresponding free
+functions. To unmap the memory, use :cpp:func:`hipMemUnmap`. To release the
+virtual address range, use :cpp:func:`hipMemAddressFree`.  Finally, to release
+the physical memory, use :cpp:func:`hipMemRelease`. A side effect of these
+functions is the lack of synchronization when memory is released. If you call
+:cpp:func:`hipFree` when you have multiple streams running in parallel, it
+synchronizes the device. This causes worse resource usage and performance.
 
 .. code-block:: cpp
 
@@ -88,12 +131,16 @@ To free the memory allocated in this manner, use the corresponding free function
 .. _usage_virtual_memory:
 
 Memory usage
-============
+================================================================================
 
 Dynamically increase allocation size
-------------------------------------
+--------------------------------------------------------------------------------
 
-The ``hipMemAddressReserve`` function allows you to increase the amount of pre-allocated memory. This function accepts a parameter representing the requested starting address of the virtual memory. This allows you to have a continuous virtual address space without worrying about the underlying physical allocation.
+The :cpp:func:`hipMemAddressReserve` function allows you to increase the amount
+of pre-allocated memory. This function accepts a parameter representing the
+requested starting address of the virtual memory. This allows you to have a
+continuous virtual address space without worrying about the underlying physical
+allocation.
 
 .. code-block:: cpp
 
@@ -101,4 +148,7 @@ The ``hipMemAddressReserve`` function allows you to increase the amount of pre-a
     hipMemMap(new_ptr, (new_size - padded_size), 0, newAllocHandle, 0);
     hipMemSetAccess(new_ptr, (new_size - padded_size), &accessDesc, 1);
 
-The code sample above assumes that ``hipMemAddressReserve`` was able to reserve the memory address at the specified location. However, this isn't guaranteed to be true, so you should validate that ``new_ptr`` points to a specific virtual address before using it.
+The code sample above assumes that :cpp:func:`hipMemAddressReserve` was able to
+reserve the memory address at the specified location. However, this isn't
+guaranteed to be true, so you should validate that ``new_ptr`` points to a
+specific virtual address before using it.
