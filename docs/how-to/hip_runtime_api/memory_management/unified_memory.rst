@@ -27,32 +27,32 @@ either CPUs or GPUs. The Unified memory model is shown in the following figure.
 
 .. figure:: ../../../data/how-to/hip_runtime_api/memory_management/unified_memory/um.svg
 
-Traditionally host memory accessible at device side or device memory accessible 
-at host side with zero-copy feature. Zero-copy accesses happen over the 
-Infinity Fabric (IF) interconnect or PCIe lanes on discrete GPUs.
+Traditionally pinned host memory accessible at device side or device memory
+accessible at host side with zero-copy feature. Zero-copy accesses happen over
+the Infinity Fabric (IF) interconnect or PCIe lanes on discrete GPUs.
 
 The unified memory introducing the page-fault or on-demand migration to access 
 host data at kernel side. The steps of page migration:
 
-1. GPU tries to access the memory addresses, that are resident on the host. 
-2. Triggers a page-fault event.
-3. Page request send to host over PCIe or interconnect.
-4. Page unmapped from host memory and send to device over PCIe or interconnect.
-5. Page mapped to device memory.
-6. Multiprocessor access the requested memory addresses.
+#. GPU tries to access the memory addresses, that are resident on the host. 
+#. Triggers a page-fault event.
+#. Page request send to host over PCIe or interconnect.
+#. Page unmapped from host memory and send to device over PCIe or interconnect.
+#. Page mapped to device memory.
+#. Multiprocessor access the requested memory addresses.
 
 If the GPU already reached the memory capacity, then the page migration has two
 extra steps after the page-fault event trigger. The steps of page migration,
 when the GPU is full:
 
-1. GPU tries to access the memory addresses, that are resident on the host. 
-2. Triggers a page-fault event.
-3. **Page unmapped from device memory and send to host over PCIe or IF.**
-4. **Page mapped to host memory.**
-5. Page request send to host over PCIe or interconnect.
-6. Page unmapped from host memory and send to device over PCIe or IF.
-7. Page mapped to device memory.
-8. Multiprocessor access the requested memory addresses.
+#. GPU tries to access the memory addresses, that are resident on the host. 
+#. Triggers a page-fault event.
+#. **Page unmapped from device memory and send to host over PCIe or IF.**
+#. **Page mapped to host memory.**
+#. Page request send to host over PCIe or interconnect.
+#. Page unmapped from host memory and send to device over PCIe or IF.
+#. Page mapped to device memory.
+#. Multiprocessor access the requested memory addresses.
 
 .. _unified memory system requirements:
 
@@ -134,61 +134,85 @@ the environment variable ``XNACK=1``. Without this configuration, the behavior
 will be similar to that of systems without HMM support. For more details, visit
 `GPU memory <https://rocm.docs.amd.com/en/latest/conceptual/gpu-memory.html#xnack>`_.
 
-The chart below illustrates the expected behavior of managed and unified memory
-functions in ROCm and CUDA environments, both with and without HMM support:
+The table below illustrates the expected behavior of managed and unified memory
+functions in ROCm and CUDA environments, both with and without HMM support.
 
 .. tab-set::
-  .. tab-item:: ROCm
+  .. tab-item:: ROCm allocation behaviour
     :sync: original-block
 
     .. list-table:: Comparison of expected behavior of managed and unified memory functions in ROCm
-      :widths: 35, 35, 30
-      :header-rows: 2
+      :widths: 26, 17, 20, 17, 20
+      :header-rows: 1
 
       * - call
-        - Without HMM or with ``XNACK=0``
-        - With HMM and with ``XNACK=1``
+        - Allocation origin without HMM
+        - Access outside the origin without HMM
+        - Allocation origin with HMM
+        - Access outside the origin with HMM
       * - ``malloc()``, ``new``, system allocator
-        - host (not accessible on device)
-        - host, page-fault migration
+        - host
+        - not accessible on device
+        - host
+        - page-fault migration
       * - :cpp:func:`hipMalloc()`
-        - device, zero copy
-        - device, zero copy
+        - device
+        - zero copy
+        - device
+        - zero copy
       * - :cpp:func:`hipMallocManaged()`, ``__managed__``
-        - host, pinned, zero copy
-        - host, page-fault migration
+        - pinned host
+        - zero copy
+        - host
+        - page-fault migration
       * - :cpp:func:`hipHostRegister()`
         - undefined behavior
-        - host, page-fault migration
+        - undefined behavior
+        - host
+        - page-fault migration
       * - :cpp:func:`hipHostMalloc()`
-        - host, pinned, zero copy
-        - host, pinned, zero copy
+        - pinned host
+        - zero copy
+        - pinned host
+        - zero copy
 
-  .. tab-item:: CUDA
+  .. tab-item:: CUDA allocation behaviour
     :sync: cooperative-groups
 
     .. list-table:: Comparison of expected behavior of managed and unified memory functions in CUDA
-      :widths: 40, 25, 25
-      :header-rows: 2
+      :widths: 26, 17, 20, 17, 20
+      :header-rows: 1
 
       * - call
-        - Without HMM
-        - With HMM
+        - Allocation origin without HMM
+        - Access outside the origin without HMM
+        - Allocation origin with HMM
+        - Access outside the origin with HMM
       * - ``malloc()``, ``new``, system allocator
-        - host (not accessible on device)
-        - first touch, page-fault migration
+        - host
+        - not accessible on device
+        - first touch
+        - page-fault migration
       * - ``cudaMalloc()``
-        - device (not accessible on host)
-        - device, page-fault migration
+        - device
+        - not accessible on host
+        - device
+        - page-fault migration
       * - ``cudaMallocManaged()``, ``__managed__``
-        - host, page-fault migration
-        - first touch, page-fault migration
+        - host
+        - page-fault migration
+        - first touch
+        - page-fault migration
       * - ``cudaHostRegister()``
-        - host, page-fault migration
-        - host, page-fault migration
+        - host
+        - page-fault migration
+        - host
+        - page-fault migration
       * - ``cudaMallocHost()``
-        - host, pinned, zero copy
-        - host, pinned, zero copy
+        - pinned host
+        - zero copy
+        - pinned host
+        - zero copy
 
 .. _checking unified memory management support:
 
