@@ -289,6 +289,7 @@ dimensions to 1.
     dim3(uint32_t _x=1, uint32_t _y=1, uint32_t _z=1) : x(_x), y(_y), z(_z) {};
   };
 
+.. _memory_fence_instructions:
 
 Memory fence instructions
 ====================================================
@@ -302,7 +303,7 @@ HIP supports ``__threadfence()`` and ``__threadfence_block()``. If you're using 
     ``hipHostMalloc()``.
   * Remove ``memcpy`` for all allocated fine-grained system memory regions.
 
-.. _synchronization functions:
+.. _synchronization_functions:
 
 Synchronization functions
 ====================================================
@@ -371,6 +372,8 @@ To read a high-resolution timer from the device, HIP provides the following buil
   per-device attribute.
 
   Note that ``clock()`` and ``clock64()`` do not work properly on AMD RDNA3 (GFX11) graphic processors.
+
+.. _atomic functions:
 
 Atomic functions
 ===============================================
@@ -729,6 +732,8 @@ setting the preprocessor macro ``HIP_ENABLE_WARP_SYNC_BUILTINS``. These builtins
 will be enabled unconditionally in ROCm 6.3. Wherever possible, the
 implementation includes a static assert to check that the program source uses
 the correct type for the mask.
+
+.. _warp_vote_functions:
 
 Warp vote and ballot functions
 -------------------------------------------------------------------------------------------------------------
