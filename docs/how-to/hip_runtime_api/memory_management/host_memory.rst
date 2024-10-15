@@ -1,6 +1,5 @@
 .. meta::
-  :description: This chapter describes the host memory of the HIP ecosystem
-                ROCm software.
+  :description: Host memory of the HIP ecosystem
   :keywords: AMD, ROCm, HIP, host memory
 
 .. _host_memory:
@@ -9,41 +8,43 @@
 Host memory
 ********************************************************************************
 
-Host memory is "normal" memory as allocated by C or C++, and resides in the RAM of the host.
-Host memory can be allocated in two different ways:
+Host memory is the "normal" memory residing in the host RAM and allocated by C
+or C++. Host memory can be allocated in two different ways:
 
 * Pageable memory
 * Pinned memory
 
-These different types of memory should be used at different use cases. The
-pageable and pinned memory using explicit memory management, where the
-developers have direct control over memory operations, while at the unified
-memory case the developer gets a simplified memory model with less control over
-low level memory operations.
-
-The data transfer differences between the pageable or pinned memory usage
-represented in the next figure.
+The following figure explains how data is transferred in pageable and pinned
+memory.
 
 .. figure:: ../../../data/how-to/hip_runtime_api/memory_management/pageable_pinned.svg
 
-The difference between memory transfers of explicit memory management and unified memory management are highlighted in the following figure.
+The pageable and pinned memory allow developers to exercise direct control over
+memory operations, which is known as explicit memory management. When using the
+unified memory, developers get a simplified memory model with less control over
+low level memory operations.
+
+The difference in memory transfers between explicit and unified memory
+management are highlighted in the following figure:
 
 .. figure:: ../../../data/how-to/hip_runtime_api/memory_management/unified_memory/um.svg
 
-Unified memory management is described further in :doc:`/how-to/hip_runtime_api/memory_management/unified_memory`.
+For more details on unified memory management, see :doc:`/how-to/hip_runtime_api/memory_management/unified_memory`.
 
 .. _pageable_host_memory:
 
 Pageable memory
 ================================================================================
 
-Pageable memory is exists on "pages" (blocks of memory), which can be
-migrated to other memory storage. For example, migrating memory between CPU
-sockets on a motherboard, or a system that runs out of space in RAM and starts
-dumping pages of RAM into the swap partition of your hard drive.
+Pageable memory exists on memory blocks known as "pages" that can be migrated to
+other memory storage. For example, migrating memory between CPU sockets on a
+motherboard or in a system whose RAM runs out of space and starts dumping pages
+into the swap partition of the hard drive.
 
-Pageable memory is usually gotten when calling ``malloc`` or ``new`` in a C++
-application. The following example shows the pageable host memory usage in HIP.
+Pageable memory is usually allocated with a call to ``malloc`` or ``new`` in a
+C++ application. 
+
+**Example:** Using pageable host memory in HIP:
 
 .. code-block:: cpp
 
@@ -105,29 +106,26 @@ application. The following example shows the pageable host memory usage in HIP.
 
   :cpp:func:`hipMalloc` and :cpp:func:`hipFree` are blocking calls, however, HIP
   also provides non-blocking versions :cpp:func:`hipMallocAsync` and
-  :cpp:func:`hipFreeAsync` which take in a stream as an additional argument.
+  :cpp:func:`hipFreeAsync`, which require a stream as an additional argument.
 
 .. _pinned_host_memory:
 
 Pinned memory
 ================================================================================
 
-Pinned memory (or page-locked memory) is stored in pages that are locked to
-specific sectors in RAM and cannot be migrated. The pointer can be used on both
+Pinned memory or page-locked memory is stored in pages that are locked in specific sectors in RAM and can't be migrated. The pointer can be used on both
 host and device. Accessing host-resident pinned memory in device kernels is
 generally not recommended for performance, as it can force the data to traverse
-the host-device interconnect (e.g. PCIe), which is much slower than
-the on-device bandwidth.
+the host-device interconnect such as PCIe, which is much slower than the on-device bandwidth.
 
 Advantage of pinned memory is the improved transfer times between host and
 device. For transfer operations, such as :cpp:func:`hipMemcpy` or :cpp:func:`hipMemcpyAsync`,
-using pinned memory instead of pageable memory on host can lead to a ~3x
+using pinned memory instead of pageable memory on host can lead to a three times
 improvement in bandwidth.
 
-The disadvantage of pinned memory is, that it reduces the available RAM for other
-processes, which can negatively impact the overall performance of the host.
+The disadvantage of pinned memory is the reduced availability of RAM for other processes, which can negatively impact the overall performance of the host.
 
-The example code how to use pinned memory in HIP showed at the following example.
+**Example:** Using pinned memory in HIP
 
 .. code-block:: cpp
 
@@ -185,54 +183,35 @@ The example code how to use pinned memory in HIP showed at the following example
       HIP_CHECK(hipFree(device_output));
   }
 
-The pinned memory allocation is effected with different flags, which details
-described at :ref:`memory_allocation_flags`.
-
 .. _memory_allocation_flags:
 
-Memory allocation flags of pinned memory
+Memory allocation flags for pinned memory
 --------------------------------------------------------------------------------
 
-The ``hipHostMalloc`` flags specify different memory allocation types for pinned
-host memory:
+The memory allocation for pinned memory can be controlled using ``hipHostMalloc`` flags:
 
-* ``hipHostMallocPortable``: The memory is considered allocated by all contexts,
-  not just the one on which the allocation is made.
-* ``hipHostMallocMapped``: Map the allocation into the address space for
-  the current device, and the device pointer can be obtained with
-  :cpp:func:`hipHostGetDevicePointer`.
-* ``hipHostMallocNumaUser``: The flag to allow host memory allocation to
-  follow Numa policy by user. Target of Numa policy is to select a CPU that is
-  closest to each GPU. Numa distance is the measurement of how far between GPU
-  and CPU devices.
-* ``hipHostMallocWriteCombined``: Allocates the memory as write-combined. On
-  some system configurations, write-combined allocation may be transferred
-  faster across the PCI Express bus, however, could have low read efficiency by
-  most CPUs. It's a good option for data transfer from host to device via mapped
-  pinned memory.
-* ``hipHostMallocCoherent``: Allocate fine-grained memory. Overrides
-  ``HIP_HOST_COHERENT`` environment variable for specific allocation. For
-  further details, check :ref:`coherence_control`.
-* ``hipHostMallocNonCoherent``: Allocate coarse-grained memory. Overrides
-  ``HIP_HOST_COHERENT`` environment variable for specific allocation. For
-  further details, check :ref:`coherence_control`.
+* ``hipHostMallocPortable``: The memory allocation is not restricted to the context making the allocation.
+* ``hipHostMallocMapped``: The memory is allocated into the address space for the current device and the device pointer can be obtained with :cpp:func:`hipHostGetDevicePointer`.
+* ``hipHostMallocNumaUser``: The host memory allocation follows Numa policy specified by the user. Target of Numa policy is to select a CPU that is closest to each GPU. Numa distance is the distance between GPU and CPU devices.
+* ``hipHostMallocWriteCombined``: The memory is allocated as write-combined. Although lacking read efficiency by most CPUs, write-combined allocation might be transferred faster across the PCIe bus on some system configurations. It's a good option for data transfer from host to device via mapped pinned memory.
+* ``hipHostMallocCoherent``: Fine-grained memory is allocated. Overrides ``HIP_HOST_COHERENT`` environment variable for specific allocation. For details, see :ref:`coherence_control`.
+* ``hipHostMallocNonCoherent``: Coarse-grained memory is allocated. Overrides ``HIP_HOST_COHERENT`` environment variable for specific allocation. For details, see :ref:`coherence_control`.
 
-All allocation flags are independent and can be used in any of the combinations
-with on exception. For example, :cpp:func:`hipHostMalloc` can be called with both
-``hipHostMallocPortable`` and ``hipHostMallocMapped`` flags set. Both usage
-models described above use the same allocation flags, and the difference is in
-how the surrounding code uses the host memory.
-
-The one exception is when the ``hipHostMallocCoherent`` and
-``hipHostMallocNonCoherent`` flags are set, what is an illegal state.
+All allocation flags are independent and can be set in any combination. The only
+exception is setting ``hipHostMallocCoherent`` and ``hipHostMallocNonCoherent``
+together, which leads to an illegal state. An example of a valid flag
+combination is calling :cpp:func:`hipHostMalloc` with both
+``hipHostMallocPortable`` and ``hipHostMallocMapped`` flags set. Both the flags
+use the same model and differentiate only between how the surrounding code uses
+the host memory.
 
 .. note:: 
   
-  By default, each GPU selects a Numa CPU node that has the least Numa distance
-  between them, that is, host memory will be automatically allocated closest on
-  the memory pool of Numa node of the current GPU device. Using
-  :cpp:func:`hipSetDevice` API to a different GPU will still be able to access
-  the host allocation, but can have longer Numa distance. 
+  By default, each GPU selects a Numa CPU node with the least Numa distance
+  between them. This implies that the host memory is automatically allocated on
+  the closest memory pool of the current GPU device's Numa node. Using
+  :cpp:func:`hipSetDevice` API to set a different GPU increases the Numa
+  distance but still allows you to access the host allocation.
 
   Numa policy is implemented on Linux and is under development on Microsoft
   Windows.

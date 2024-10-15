@@ -1,6 +1,5 @@
 .. meta::
-  :description: This chapter introduces memory management and shows how to use
-                it.
+  :description: Memory management and its usage
   :keywords: AMD, ROCm, HIP, CUDA, memory management
 
 ********************************************************************************
@@ -15,15 +14,13 @@ The programming model is based on a system with a host and a device, each having
 its own distinct memory. Kernels operate on device memory, while host functions
 operate on host memory.
 
-The runtime offers functions for allocating, freeing, and copying device memory,
-along with transferring data between host and device memory.
-
-The description of these memory type can be located at the following page:
-
 * :ref:`device_memory`
 * :ref:`host_memory`
 
-The different memory managements are described in the following pages:
+The runtime offers functions for allocating, freeing, and copying device memory,
+along with transferring data between host and device memory.
+
+Here are the various memory managements techniques:
 
 * :ref:`coherence_control`
 * :ref:`unified_memory`
@@ -33,7 +30,7 @@ The different memory managements are described in the following pages:
 Memory allocation
 ================================================================================
 
-The following API calls with result in these allocations:
+The API calls and the resulting allocations are listed here:
 
 .. list-table:: Memory coherence control
     :header-rows: 1

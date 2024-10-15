@@ -1,6 +1,5 @@
 .. meta::
-  :description: This chapter describes the compilation workflow of the HIP
-                compilers.
+  :description: Compilation workflow of the HIP compilers.
   :keywords: AMD, ROCm, HIP, CUDA, HIP runtime API
 
 .. _hip_compilers:
@@ -9,78 +8,91 @@
 HIP compilers
 ********************************************************************************
 
-ROCm provides the compiler driver ``hipcc``, that can be used on AMD and NVIDIA
-platforms. ``hipcc`` takes care of setting the default library and include paths
-for HIP, as well as some environment variables, and takes care of invoking the
-appropriate compiler - ``amdclang++`` on AMD platforms and ``nvcc`` on NVIDIA
-platforms. ``amdclang++`` is based on the ``clang++`` compiler. For further 
-details, check :doc:`the llvm project<llvm-project:index>`.
+ROCm provides the compiler driver ``hipcc``, that can be used on AMD ROCm and
+NVIDIA CUDA platforms.
+
+On ROCm, ``hipcc`` takes care of the following:
+
+- Setting the default library and include paths for HIP
+- Setting some environment variables
+- Invoking the appropriate compiler - ``amdclang++``
+
+On NVIDIA CUDA platform, ``hipcc`` takes care of invoking compiler ``nvcc``.
+``amdclang++`` is based on the ``clang++`` compiler. For more
+details, see the :doc:`llvm project<llvm-project:index>`.
 
 HIP compilation workflow
 ================================================================================
 
+HIP provides a flexible compilation workflow that supports both offline
+compilation and runtime (just-in-time, JIT) compilation. Each approach has its 
+advantages depending on the use case, target architecture, and performance needs.
+
+The offline compilation ideal for production environments, where the performance
+is critical, and the target GPU architecture is known in advance.
+
+The runtime compilation useful in development environments or when distributing
+software that must run on a wide range of hardware without knowing the specific
+GPU beforehand. It provides flexibility at the cost of some performance overhead.
+
 Offline compilation
 --------------------------------------------------------------------------------
 
-The compilation of HIP code is separated into a host- and a device-code
+The HIP code compilation is performed in two stages: host and  device code
 compilation stage.
 
-The compiled device code is embedded into the host object file. Depending on the
-platform, the device code can be compiled into assembly or binary. ``nvcc`` and 
-``amdclang++`` target different architectures and use different code object
-formats: ``nvcc`` uses the binary ``cubin`` or the assembly ``PTX`` files, while
-the ``amdclang++`` path is the binary ``hsaco`` format. On NVIDIA platforms the
-driver takes care of compiling the PTX files to executable code during runtime.
+- Device-code compilation stage: The compiled device code is embedded into the
+  host object file. Depending on the platform, the device code can be compiled
+  into assembly or binary. ``nvcc`` and ``amdclang++`` target different
+  architectures and use different code object formats. ``nvcc`` uses the binary
+  ``cubin`` or the assembly PTX files, while the ``amdclang++`` path is the
+  binary ``hsaco`` format. On CUDA platforms, the driver compiles the PTX files
+  to executable code during runtime.
 
-On the host side ``nvcc`` only replaces the ``<<<...>>>`` kernel launch syntax
-with the appropriate CUDA runtime function call and the modified host code is
-passed to the default host compiler. ``hipcc`` or ``amdclang++`` can compile the
-host code in one step without other C++ compilers.
+- Host-code compilation stage: On the host side, ``hipcc`` or ``amdclang++`` can
+  compile the host code in one step without other C++ compilers. On the other
+  hand, ``nvcc`` only replaces the ``<<<...>>>`` kernel launch syntax with the
+  appropriate CUDA runtime function call and the modified host code is passed to
+  the default host compiler. 
 
-An example for how to compile HIP from the command line can be found in the
-:ref:`SAXPY tutorial<compiling_on_the_command_line>` .
+For an example on how to compile HIP from the command line, see :ref:`SAXPY
+tutorial<compiling_on_the_command_line>` .
 
 Runtime compilation
 --------------------------------------------------------------------------------
 
-HIP lets you compile kernels at runtime with the ``hiprtc*`` API. Kernels are
-stored as a text string that are then passed to HIPRTC alongside options to
+HIP allows you to compile kernels at runtime using the ``hiprtc*`` API. Kernels
+are stored as a text string, which is passed to HIPRTC alongside options to 
 guide the compilation.
 
-For further details, check the
-:doc:`how-to section for the HIP runtime compilation<../how-to/hip_rtc>`.
+For more details, see
+:doc:`HIP runtime compiler <../how-to/hip_rtc>`.
 
-Static Libraries
+Static libraries
 ================================================================================
 
-``hipcc`` supports generating two types of static libraries. The first type of 
-static library does not export device functions, and only exports and launches 
-host functions within the same library. The advantage of this type is the 
-ability to link with a non-hipcc compiler such as gcc. The second type exports
-device functions to be linked by other code objects. However, this requires
-using ``hipcc`` as the linker.
+``hipcc`` supports generating two types of static libraries.
 
-In addition, the first type of library contains host objects with device code
-embedded as fat binaries. It is generated using the flag ``--emit-static-lib``.
-The second type of library contains relocatable device objects and is generated
-using ``ar``.
+- The first type of static library only exports and launches host functions
+  within the same library and not the device functions. This library type offers
+  the ability to link with a non-hipcc compiler such as ``gcc``. Additionally,
+  this library type contains host objects with device code embedded as fat
+  binaries. This library type is generated using the flag ``--emit-static-lib``:
 
-Here is an example to create and use static libraries:
-
-* Type 1 using `--emit-static-lib`:
-
-    .. code-block:: cpp
+  .. code-block:: shell
     
-      hipcc hipOptLibrary.cpp --emit-static-lib -fPIC -o libHipOptLibrary.a
-      gcc test.cpp -L. -lhipOptLibrary -L/path/to/hip/lib -lamdhip64 -o test.out
-
-* Type 2 using system `ar`:
-
-    .. code-block:: cpp
+    hipcc hipOptLibrary.cpp --emit-static-lib -fPIC -o libHipOptLibrary.a
+    gcc test.cpp -L. -lhipOptLibrary -L/path/to/hip/lib -lamdhip64 -o test.out
       
-      hipcc hipDevice.cpp -c -fgpu-rdc -o hipDevice.o
-      ar rcsD libHipDevice.a hipDevice.o
-      hipcc libHipDevice.a test.cpp -fgpu-rdc -o test.out
+- The second type of static library exports device functions to be linked by
+  other code objects by using ``hipcc`` as the linker. This library type
+  contains relocatable device objects and is generated using ``ar``:
 
-For more information, please see `HIP samples host functions <https://github.com/ROCm/hip-tests/tree/develop/samples/2_Cookbook/15_static_library/host_functions>`_
-and `device_functions <https://github.com/ROCm/hip-tests/tree/develop/samples/2_Cookbook/15_static_library/device_functions>`_.
+  .. code-block:: shell
+      
+    hipcc hipDevice.cpp -c -fgpu-rdc -o hipDevice.o
+    ar rcsD libHipDevice.a hipDevice.o
+    hipcc libHipDevice.a test.cpp -fgpu-rdc -o test.out
+
+For more information, see `HIP samples host functions <https://github.com/ROCm/hip-tests/tree/develop/samples/2_Cookbook/15_static_library/host_functions>`_
+and `device functions <https://github.com/ROCm/hip-tests/tree/develop/samples/2_Cookbook/15_static_library/device_functions>`_.
