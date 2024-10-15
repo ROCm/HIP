@@ -2,143 +2,141 @@
    :description: Error Handling
    :keywords: AMD, ROCm, HIP, error handling, error
 
-*************************************************************************
+********************************************************************************
 Error handling
-*************************************************************************
+********************************************************************************
 
-Error handling is crucial for several reasons. It enhances the stability of applications by preventing crashes and maintaining a consistent state. It also improves security by protecting against vulnerabilities that could be exploited by malicious actors. Additionally, effective error handling enhances the user experience by providing meaningful feedback and ensuring that applications can recover gracefully from errors. Finally, it aids maintainability by making it easier for developers to diagnose and fix issues.
+HIP provides functionality to detect, report, and manage errors that occur
+during the execution of HIP runtime functions or when launching kernels. Every
+HIP runtime function, apart from launching kernels, has :cpp:type:`hipError_t`
+as return type. :cpp:func:`hipGetLastError()` and :cpp:func:`hipPeekAtLastError()`
+can be used for catching errors from kernel launches, as kernel launches don't
+return an error directly. HIP maintains an internal state, that includes the
+last error code. hipGetLastError returns and resets that error to hipSuccess,
+while :cpp:func:`hipPeekAtLastError` just returns the error without changing it.
+To get a human readable version of the errors, :cpp:func:`hipGetErrorString()`
+and :cpp:func:`hipGetErrorName()` can be used.
 
-Strategies
-==========
+Error handling usage
+================================================================================
 
-One of the fundamental best practices in error handling is to develop a consistent strategy across the entire application. This involves defining how errors are reported, logged, and managed. This can be achieved by using a centralized error handling mechanism that ensures consistency and reduces redundancy. For instance, using macros to simplify error checking and reduce code duplication is a common practice. A macro like ``HIP_CHECK`` can be defined to check the return value of HIP API calls and handle errors appropriately.
+Error handling functions enable developers to implement appropriate error
+handling strategies, such as retry mechanisms, resource cleanup, or graceful
+degradation.
 
-Granular error reporting
-------------------------
-It involves reporting errors at the appropriate level of detail. Too much detail can overwhelm users, while too little can make debugging difficult. Differentiating between user-facing errors and internal errors is crucial. 
+The descriptions of the important :ref:`error handling functions <error_handling_reference>`
+are the following:
 
-Fail-fast principle
--------------------
-It involves detecting and handling errors as early as possible to prevent them from propagating and causing more significant issues. Such as validating inputs and preconditions before performing operations.
+* :cpp:func:`hipGetLastError` returns the last error that occurred during a HIP
+  runtime API call and resets the error code to :cpp:enumerator:`hipSuccess`.
+* :cpp:func:`hipPeekAtLastError` returns the last error that occurred during a HIP
+  runtime API call **without** resetting the error code.
+* :cpp:func:`hipGetErrorName` converts a HIP error code to a string representing
+  the error name.
+* :cpp:func:`hipGetErrorString` converts a HIP error code to a string describing
+  the error.
 
-Resource management 
--------------------
-Ensuring that resources such as memory, file handles, and network connections are properly managed and released in the event of an error is essential.
+Best practices of HIP error handling:
 
-Integration in Error Handling
-=============================
-Functions like ``hipGetLastError`` and ``hipPeekAtLastError`` are used to detect errors after HIP API calls. This ensures that any issues are caught early in the execution flow.
+1. Check errors after each API call - Avoid error propagation.
+2. Use macros for error checking - Check :ref:`hip_check_macros`.
+3. Handle errors gracefully - Free resources and provide meaningful error
+   messages to the user.
 
-For reporting, ``hipGetErrorName`` and ``hipGetErrorString`` provide meaningful error messages that can be logged or displayed to users. This helps in understanding the nature of the error and facilitates debugging.
+.. _hip_check_macros:
 
-By checking for errors and providing detailed information, these functions enable developers to implement appropriate error handling strategies, such as retry mechanisms, resource cleanup, or graceful degradation.
+HIP check macros
+--------------------------------------------------------------------------------
 
-Examples
---------
+HIP uses check macros to simplify error checking and reduce code duplication. 
+The ``HIP_CHECK`` macros are mainly used to detect and report errors. It can 
+also exit from application with ``exit(1);`` function call after the error
+print. The ``HIP_CHECK`` macro example:
 
-``hipGetLastError`` returns the last error that occurred during a HIP runtime API call and resets the error code to ``hipSuccess``:
+.. code-block:: cpp
 
-    .. code-block:: cpp
+  #define HIP_CHECK(expression)                  \
+  {                                              \
+      const hipError_t status = expression;      \
+      if(status != hipSuccess){                  \
+          std::cerr << "HIP error "              \
+                    << status << ": "            \
+                    << hipGetErrorString(status) \
+                    << " at " << __FILE__ << ":" \
+                    << __LINE__ << std::endl;    \
+      }                                          \
+  }
 
-        hipError_t err = hipGetLastError();
-        if (err != hipSuccess)
-        {
-            printf("HIP Error: %s\n", hipGetErrorString(err));
-        }
+Complete example
+--------------------------------------------------------------------------------
 
-``hipPeekAtLastError`` returns the last error that occurred during a HIP runtime API call **without** resetting the error code:
+A complete example to demonstrate the error handling with a simple addition of 
+two values kernel:
 
-    .. code-block:: cpp
+.. code-block:: cpp
 
-        hipError_t err = hipPeekAtLastError();
-        if (err != hipSuccess)
-        {
-            printf("HIP Error: %s\n", hipGetErrorString(err));
-        }
+  #include <hip/hip_runtime.h>
+  #include <vector>
+  #include <iostream>
 
-``hipGetErrorName`` converts a HIP error code to a string representing the error name:
+  #define HIP_CHECK(expression)                  \
+  {                                              \
+      const hipError_t status = expression;      \
+      if(status != hipSuccess){                  \
+          std::cerr << "HIP error "              \
+                    << status << ": "            \
+                    << hipGetErrorString(status) \
+                    << " at " << __FILE__ << ":" \
+                    << __LINE__ << std::endl;    \
+      }                                          \
+  }
 
-    .. code-block:: cpp
+  // Addition of two values.
+  __global__ void add(int *a, int *b, int *c, size_t size) {
+      const size_t index = threadIdx.x + blockDim.x * blockIdx.x;
+      if(index < size) {
+          c[index] += a[index] + b[index];
+      }
+  }
 
-        const char* errName = hipGetErrorName(err);
-        printf("Error Name: %s\n", errName);
+  int main() {
+      constexpr int numOfBlocks = 256;
+      constexpr int threadsPerBlock = 256;
+      constexpr size_t arraySize = 1U << 16;
 
-``hipGetErrorString`` converts a HIP error code to a string describing the error:
+      std::vector<int> a(arraySize), b(arraySize), c(arraySize);
+      int *d_a, *d_b, *d_c;
 
-    .. code-block:: cpp
+      // Setup input values.
+      std::fill(a.begin(), a.end(), 1);
+      std::fill(b.begin(), b.end(), 2);
 
-        const char* errString = hipGetErrorString(err);
-        printf("Error Description: %s\n", errString);
+      // Allocate device copies of a, b and c.
+      HIP_CHECK(hipMalloc(&d_a, arraySize * sizeof(*d_a)));
+      HIP_CHECK(hipMalloc(&d_b, arraySize * sizeof(*d_b)));
+      HIP_CHECK(hipMalloc(&d_c, arraySize * sizeof(*d_c)));
 
-Best Practices
-==============
+      // Copy input values to device.
+      HIP_CHECK(hipMemcpy(d_a, &a, arraySize * sizeof(*d_a), hipMemcpyHostToDevice));
+      HIP_CHECK(hipMemcpy(d_b, &b, arraySize * sizeof(*d_b), hipMemcpyHostToDevice));
 
-1. Check Errors After Each API Call
+      // Launch add() kernel on GPU.
+      hipLaunchKernelGGL(add, dim3(numOfBlocks), dim3(threadsPerBlock), 0, 0, d_a, d_b, d_c, arraySize);
+      // Check the kernel launch
+      HIP_CHECK(hipGetLastError());
+      // Check for kernel execution error
+      HIP_CHECK(hipDeviceSynchronize());
+      
+      // Copy the result back to the host.
+      HIP_CHECK(hipMemcpy(&c, d_c, arraySize * sizeof(*d_c), hipMemcpyDeviceToHost));
 
-   Always check the return value of HIP API calls to catch errors early. For example:
+      // Cleanup allocated memory.
+      HIP_CHECK(hipFree(d_a));
+      HIP_CHECK(hipFree(d_b));
+      HIP_CHECK(hipFree(d_c));
 
-     .. code-block:: cpp
+      // Print the result.
+      std::cout << a[0] << " + " << b[0] << " = " << c[0] << std::endl;
 
-        hipError_t err = hipMalloc(&d_A, size);
-        if (err != hipSuccess) {
-            printf("hipMalloc failed: %s\n", hipGetErrorString(err));
-            return -1;
-        }
-
-2. Use Macros for Error Checking
-
-   Define macros to simplify error checking and reduce code duplication. For example:
-
-     .. code-block:: cpp
-
-        #define HIP_CHECK(call) \
-        { \
-            hipError_t err = call; \
-            if (err != hipSuccess) { \
-                printf("HIP Error: %s:%d, %s\n", __FILE__, __LINE__, hipGetErrorString(err)); \
-                exit(err); \
-            } \
-        }
-
-        // Usage
-        HIP_CHECK(hipMalloc(&d_A, size));
-
-3. Handle Errors Gracefully
-
-   Ensure the application can handle errors gracefully, such as by freeing resources or providing meaningful error messages to the user.
-
-Example
--------
-
-A complete example demonstrating error handling:
-
-    .. code-block:: cpp
-
-        #include <stdio.h>
-        #include <hip/hip_runtime.h>
-
-        #define HIP_CHECK(call) \
-        { \
-            hipError_t err = call; \
-            if (err != hipSuccess) { \
-                printf("HIP Error: %s:%d, %s\n", __FILE__, __LINE__, hipGetErrorString(err)); \
-                exit(err); \
-            } \
-        }
-
-        int main()
-        {
-            constexpr int N    = 100;
-            size_t        size = N * sizeof(float);
-            float        *d_A;
-
-            // Allocate memory on the device
-            HIP_CHECK(hipMalloc(&d_A, size));
-
-            // Perform other operations...
-
-            // Free device memory
-            HIP_CHECK(hipFree(d_A));
-
-            return 0;
-        }
+      return 0;
+  }

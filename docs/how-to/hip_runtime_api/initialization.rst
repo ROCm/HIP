@@ -2,84 +2,100 @@
    :description: Initialization.
    :keywords: AMD, ROCm, HIP, initialization
 
-*************************************************************************
+********************************************************************************
 Initialization
-*************************************************************************
+********************************************************************************
 
-Initialization involves setting up the environment and resources needed for GPU computation.
+The initialization involves setting up the environment and resources needed for
+using GPUs. The following steps are covered with the initialization:
 
-Include HIP headers
-===================
+- Setting up the HIP runtime
 
-To use HIP functions, include the HIP runtime header in your source file:
+  This includes loading necessary libraries and setting up internal data
+  structures.
 
-.. code-block:: cpp
-
-    #include <hip/hip_runtime.h>
-
-Initialize the HIP Runtime
-==========================
-
-The HIP runtime is initialized automatically when the first HIP API call is made. However, you can explicitly initialize it using ``hipInit``:
-
-.. code-block:: cpp
-
-    hipError_t err = hipInit(0);
-    if (err != hipSuccess)
-    {
-        // Handle error
-    }
-
-The initialization includes the following steps:
-
-- Loading the HIP Runtime
-
-  This includes loading necessary libraries and setting up internal data structures.
-
-- Querying GPU Devices
+- Querying and setting GPUs
 
   Identifying and querying the available GPU devices on the system.
 
-- Setting Up Contexts
+- Setting up contexts
 
-  Creating contexts for each GPU device, which are essential for managing resources and executing kernels.
+  Creating contexts for each GPU device, which are essential for managing
+  resources and executing kernels. For further details, check the :ref:`context
+  section <context_driver_api>`.
 
-Get device properties
-=====================
+Initialize the HIP runtime
+================================================================================
 
-Before using a GPU device, you might want to query its properties:
+The HIP runtime is initialized automatically when the first HIP API call is
+made. However, you can explicitly initialize it using :cpp:func:`hipInit`,
+to be able to control the timing of the initialization.
+
+Querying and setting GPUs
+================================================================================
+
+If multiple GPUs are available, it's worth to query and select the desired GPU(s)
+based on properties. 
+
+Querying GPUs
+--------------------------------------------------------------------------------
+
+The properties of a gpu can be queried using :cpp:func:`hipGetDeviceProperties`,
+which returns a struct of :cpp:struct:`hipDeviceProp_t`. This struct can be
+used to identify a device or give an overview of hardware characteristics, that
+might make one gpu better suited for the task at hand than others. 
+
+The :cpp:func:`hipGetDeviceCount` function returns the number of available GPUs,
+which can be used to loop over the available GPUs.
+
+Example code of querying GPUs:
 
 .. code-block:: cpp
 
-    int deviceCount;
-    hipGetDeviceCount(&deviceCount);
-    for (int i = 0; i < deviceCount; ++i)
-    {
-        hipDeviceProp_t prop;
-        hipGetDeviceProperties(&prop, i);
-        printf("Device %d: %s\n", i, prop.name);
-    }
+  #include <hip/hip_runtime.h>
+  #include <iostream>
 
-Set device
-==========
+  int main() {
 
-Select the GPU device to be used for subsequent HIP operations:
+      int deviceCount;
+      if (hipGetDeviceCount(&deviceCount) == hipSuccess){
+          for (int i = 0; i < deviceCount; ++i){
+              hipDeviceProp_t prop;
+              if ( hipGetDeviceProperties(&prop, i) == hipSuccess)
+                  std::cout << "Device" << i << prop.name << std::endl;
+          }
+      }
 
-.. code-block:: cpp
+      return 0;
+  }
 
-    int deviceId = 0; // Example: selecting the first device
-    hipSetDevice(deviceId);
+Setting the GPU
+--------------------------------------------------------------------------------
 
-This function performs several key tasks:
+:cpp:func:`hipSetDevice` function select the GPU to be used for subsequent HIP
+operations. This function performs several key tasks:
 
 - Context Binding
 
-  Binds the current thread to the context of the specified GPU device. This ensures that all subsequent operations are executed on the selected device.
+  Binds the current thread to the context of the specified GPU device. This 
+  ensures that all subsequent operations are executed on the selected device.
 
 - Resource Allocation
 
-  Prepares the device for resource allocation, such as memory allocation and stream creation.
+  Prepares the device for resource allocation, such as memory allocation and
+  stream creation.
 
-- Error Handling
+- Check device availablity
 
-  Checks for errors in device selection and ensures that the specified device is available and capable of executing HIP operations.
+  Checks for errors in device selection and returns error if the specified 
+  device is not available or not capable of executing HIP operations.
+
+Finalize
+================================================================================
+
+:cpp:func:`hipDeviceReset()` deletes all streams created, memory allocated, 
+kernels running and events created by the current process. Make sure that no
+other thread is using the device or streams, memory, kernels or events
+associated with the current device.
+
+Any new HIP API call initializes the HIP runtime again.
