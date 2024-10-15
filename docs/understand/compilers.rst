@@ -24,16 +24,13 @@ details, see the :doc:`llvm project<llvm-project:index>`.
 HIP compilation workflow
 ================================================================================
 
-HIP provides a flexible compilation workflow that supports both offline
-compilation and runtime (just-in-time, JIT) compilation. Each approach has its 
-advantages depending on the use case, target architecture, and performance needs.
+HIP provides a flexible compilation workflow that supports both offline compilation and runtime or just-in-time (JIT) compilation. Each approach has advantages depending on the use case, target architecture, and performance needs.
 
-The offline compilation ideal for production environments, where the performance
-is critical, and the target GPU architecture is known in advance.
+The offline compilation is ideal for production environments, where the performance
+is critical and the target GPU architecture is known in advance.
 
-The runtime compilation useful in development environments or when distributing
-software that must run on a wide range of hardware without knowing the specific
-GPU beforehand. It provides flexibility at the cost of some performance overhead.
+The runtime compilation is useful in development environments or when distributing
+software that must run on a wide range of hardware without the knowledge of the GPU in advance. It provides flexibility at the cost of some performance overhead.
 
 Offline compilation
 --------------------------------------------------------------------------------
