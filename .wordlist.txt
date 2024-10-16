@@ -58,6 +58,7 @@ hipcc
 hipCtx
 hipexamine
 hipified
+HIPify
 hipModule
 hipModuleLaunchKernel
 hipother
@@ -65,6 +66,7 @@ HIPRTC
 icc
 IILE
 iGPU
+inlined
 inplace
 Interoperation
 interoperate
@@ -87,6 +89,7 @@ ltrace
 makefile
 Malloc
 malloc
+MALU
 memset
 multicore
 multigrid
@@ -101,6 +104,7 @@ NOP
 Numa
 Nsight
 ocp
+omnitrace
 overindex
 overindexing
 oversubscription
@@ -111,6 +115,7 @@ preconditioners
 predefining
 prefetched
 preprocessor
+profilers
 PTX
 PyHIP
 queryable
@@ -118,6 +123,7 @@ prefetching
 quad
 representable
 RMW
+rocgdb
 ROCm's
 rocTX
 roundtrip
