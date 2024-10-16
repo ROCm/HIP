@@ -51,6 +51,7 @@ Deprecated texture management functions.
    * - :cpp:func:`hipGetTextureReference`
    * - :cpp:func:`hipTexRefSetAddressMode`
    * - :cpp:func:`hipTexRefSetArray`
+   * - :cpp:func:`hipTexRefSetFlags`
    * - :cpp:func:`hipTexRefSetFilterMode`
    * - :cpp:func:`hipTexRefSetBorderColor`
    * - :cpp:func:`hipTexRefSetMipmapFilterMode`
@@ -69,7 +70,6 @@ Deprecated texture management functions.
    :align: left
 
    * - function
-   * - :cpp:func:`hipTexRefSetFlags`
    * - :cpp:func:`hipTexRefSetFormat`
    * - :cpp:func:`hipTexRefGetAddress`
    * - :cpp:func:`hipTexRefGetAddressMode`
@@ -103,6 +103,23 @@ Deprecated memory management and texture management functions.
    * - :cpp:func:`hipUnbindTexture`
    * - :cpp:func:`hipMemcpyToArray`
    * - :cpp:func:`hipMemcpyFromArray`
+
+Deprecated since ROCm 3.1.0
+============================================================
+
+Deprecated memory management functions.
+
+.. list-table::
+   :widths: 40, 60
+   :header-rows: 1
+   :align: left
+
+   * - function
+     -
+   * - :cpp:func:`hipMallocHost`
+     - replaced with :cpp:func:`hipHostAlloc`
+   * - :cpp:func:`hipMemAllocHost`
+     - replaced with :cpp:func:`hipHostAlloc`
 
 Deprecated since ROCm 3.0.0
 ============================================================
@@ -157,20 +174,3 @@ APIs are now marked as deprecated because there are better alternate interfaces
    * -  :cpp:func:`hipDevicePrimaryCtxRetain`
    * -  :cpp:func:`hipDevicePrimaryCtxReset`
    * -  :cpp:func:`hipDevicePrimaryCtxSetFlags`
-
-Deprecated since ROCm 1.6.0
-============================================================
-
-Deprecated memory management functions.
-
-.. list-table::
-   :widths: 40, 60
-   :header-rows: 1
-   :align: left
-
-   * - function
-     -
-   * - :cpp:func:`hipMallocHost`
-     - replaced with :cpp:func:`hipHostAlloc`
-   * - :cpp:func:`hipMemAllocHost`
-     - replaced with :cpp:func:`hipHostAlloc`
