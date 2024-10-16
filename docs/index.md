@@ -42,6 +42,7 @@ On non-AMD platforms, like NVIDIA, HIP provides header files required to support
   * {doc}`./how-to/hip_runtime_api/memory_management`
   * {doc}`./how-to/hip_runtime_api/cooperative_groups`
   * {doc}`./how-to/hip_runtime_api/hipgraph`
+  * {doc}`./how-to/hip_runtime_api/opengl_interop`
 * [HIP porting guide](./how-to/hip_porting_guide)
 * [HIP porting: driver API guide](./how-to/hip_porting_driver_api)
 * {doc}`./how-to/hip_rtc`
