@@ -19,13 +19,13 @@ to build and run application kernels.
     :align: center
 
 * HIP is a thin API with little or no performance impact over coding directly
-  in NVIDIA CUDA or AMD :doc:`ROCm <rocm:what_is_rocm>`.
+  in NVIDIA CUDA or AMD :doc:`ROCm <rocm:what-is-rocm>`.
 * HIP enables coding in a single-source C++ programming language including
   features such as templates, C++11 lambdas, classes, namespaces, and more.
 * Developers can specialize for the platform (CUDA or ROCm) to tune for
   performance or handle tricky cases.
 
-:doc:`ROCm <rocm:what_is_rocm>` offers compilers (``clang``, ``hipcc``), code
+:doc:`ROCm <rocm:what-is-rocm>` offers compilers (``clang``, ``hipcc``), code
 profilers (``rocprof``, ``omnitrace``), debugging tools (``rocgdb``), libraries
 and HIP with the runtime API and kernel language, to create heterogeneous applications
 running on both CPUs and GPUs. ROCm provides marshalling libraries like
@@ -46,7 +46,7 @@ performance tuning work to port existing projects as described
 :doc:`HIP porting guide <hip:how-to/hip_porting_guide>`.
 
 HIP is designed to work seamlessly with the ROCm Runtime
-(:doc:`ROCr <ROCR-Runtime:index>`). HIP provides two components: those that run
+(:doc:`ROCr <rocr-runtime:index>`). HIP provides two components: those that run
 on the CPU, also known as host system, and those that run on GPUs, also referred
 to as device. The host-based code is used to create device buffers, move data
 between the host application and a device, launch the device code (also known
