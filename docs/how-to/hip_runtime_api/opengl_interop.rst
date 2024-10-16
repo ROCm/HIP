@@ -80,7 +80,6 @@ Two examples are presented with mapping resources, getting pointers -- directly 
     .. tab-item:: with mapped array
 
         .. code-block:: cpp
-
             :emphasize-lines: 20-22
 
             #include <hip/hip_runtime.h>
@@ -127,7 +126,8 @@ An other example is with mapping resources, getting pointers and unmapping resou
     #include <GL/glew.h>
     #include <GL/gl.h>
 
-    int main() {
+    int main()
+    {
         // Initialize OpenGL and create a texture
         GLuint texture;
         glGenTextures(1, &texture);
