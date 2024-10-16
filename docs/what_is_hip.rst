@@ -25,7 +25,7 @@ to build and run application kernels.
 * Developers can specialize for the platform (CUDA or ROCm) to tune for
   performance or handle tricky cases.
 
-:doc:`ROCm <rocm:what-is-rocm>` offers compilers (``clang``, ``hipcc``), code
+ROCm offers compilers (``clang``, ``hipcc``), code
 profilers (``rocprof``, ``omnitrace``), debugging tools (``rocgdb``), libraries
 and HIP with the runtime API and kernel language, to create heterogeneous applications
 running on both CPUs and GPUs. ROCm provides marshalling libraries like
