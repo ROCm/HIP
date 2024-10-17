@@ -20,7 +20,7 @@ operate on host memory.
 The runtime offers functions for allocating, freeing, and copying device memory,
 along with transferring data between host and device memory.
 
-Here are the various memory managements techniques:
+Here are the various memory management techniques:
 
 * :ref:`coherence_control`
 * :ref:`unified_memory`
