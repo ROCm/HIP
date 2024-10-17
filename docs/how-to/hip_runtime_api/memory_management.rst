@@ -11,11 +11,8 @@ high-performance applications. Both allocating and copying memory can result in
 bottlenecks, which can significantly impact performance.
 
 The programming model is based on a system with a host and a device, each having
-its own distinct memory. Kernels operate on device memory, while host functions
-operate on host memory.
-
-* :ref:`device_memory`
-* :ref:`host_memory`
+its own distinct memory. Kernels operate on :ref:`device_memory`, while host functions
+operate on :ref:`host_memory`.
 
 The runtime offers functions for allocating, freeing, and copying device memory,
 along with transferring data between host and device memory.
