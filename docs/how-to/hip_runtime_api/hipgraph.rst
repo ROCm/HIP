@@ -12,7 +12,7 @@ HIP graphs
     The HIP graph API is currently in Beta. Some features can change and might
     have outstanding issues. Not all features supported by CUDA graphs are yet
     supported. For a list of all currently supported functions see the
-    :doc:`HIP graph API documentation<../doxygen/html/group___graph>`.
+    :ref:`HIP graph API documentation<graph_management_reference>`.
 
 HIP graphs are an alternative way of executing tasks on a GPU that can provide
 performance benefits over launching kernels using the standard
@@ -35,7 +35,7 @@ The nodes can be one of the following:
 
 The following figure visualizes the concept of graphs, compared to using streams.
 
-.. figure:: ../data/how-to/hipgraph/hip_graph.svg
+.. figure:: ../../data/how-to/hip_runtime_api/hipgraph/hip_graph.svg
     :alt: Diagram depicting the difference between using streams to execute
           kernels with dependencies, resolved by explicitly synchronizing,
           or using graphs, where the edges denote the dependencies.
@@ -56,7 +56,7 @@ HIP runtime takes care of executing the operations within the graph.
 Graphs can provide additional performance benefits, by enabling optimizations
 that are only possible when knowing the dependencies between the operations.
 
-.. figure:: ../data/how-to/hipgraph/hip_graph_speedup.svg
+.. figure:: ../../data/how-to/hip_runtime_api/hipgraph/hip_graph_speedup.svg
     :alt: Diagram depicting the speed up achievable with HIP graphs compared to
           HIP streams when launching many short-running kernels.
 
@@ -316,11 +316,11 @@ edges of the graph, thereby forming the graph structure.
 The nodes are represented by the generic :cpp:type:`hipGraphNode_t` type. The actual
 node type is implicitly defined by the specific function used to add the node to
 the graph, for example :cpp:func:`hipGraphAddKernelNode` See the
-:doc:`HIP graph API documentation<../doxygen/html/group___graph>` for the
+:ref:`HIP graph API documentation<graph_management_reference>` for the
 available functions, they are of type ``hipGraphAdd{Type}Node``. Each type of
 node also has a predefined set of parameters depending on the operation, for
 example :cpp:class:`hipKernelNodeParams` for a kernel launch. See the
-:doc:`documentation for the general hipGraphNodeParams type<../doxygen/html/structhip_graph_node_params>`
+:doc:`documentation for the general hipGraphNodeParams type<../../doxygen/html/structhip_graph_node_params>`
 for a list of available parameter types and their members.
 
 The general flow for explicitly creating a graph is usually:

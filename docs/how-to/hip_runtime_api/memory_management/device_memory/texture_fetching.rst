@@ -3,11 +3,13 @@
                 ROCm software.
   :keywords: AMD, ROCm, HIP, Texture, Texture Fetching
 
+.. _texture_fetching:
+
 *******************************************************************************
 Texture fetching
 *******************************************************************************
 
-`Textures <../doxygen/html/group___texture.html>`_ are more than just a buffer
+`Textures <../../../../doxygen/html/group___texture.html>`_ are more than just a buffer
 interpreted as a 1D, 2D, or 3D array.
 
 As textures are associated with graphics, they are indexed using floating-point
@@ -32,7 +34,7 @@ sections.
 Here is the sample texture used in this document for demonstration purposes. It
 is 2x2 texels and indexed in the [0 to 1] range.
 
-.. figure:: ../data/understand/textures/original.png
+.. figure:: ../../../../data/how-to/hip_runtime_api/memory_management/textures/original.png
   :width: 150
   :alt: Sample texture
   :align: center
@@ -66,7 +68,7 @@ The following image shows a texture stretched to a 4x4 pixel quad but still
 indexed in the [0 to 1] range. The in-between values are the same as the values
 of the nearest texel.
 
-.. figure:: ../data/understand/textures/nearest.png
+.. figure:: ../../../../data/how-to/hip_runtime_api/memory_management/textures/nearest.png
   :width: 300
   :alt: Texture upscaled with nearest point sampling
   :align: center
@@ -97,7 +99,7 @@ This following image shows a texture stretched out to a 4x4 pixel quad, but
 still indexed in the [0 to 1] range. The in-between values are interpolated
 between the neighboring texels.
 
-.. figure:: ../data/understand/textures/linear.png
+.. figure:: ../../../../data/how-to/hip_runtime_api/memory_management/textures/linear.png
   :width: 300
   :alt: Texture upscaled with linear filtering
   :align: center
@@ -124,7 +126,7 @@ bounds. The border value must be set before texture fetching.
 The following image shows the texture on a 4x4 pixel quad, indexed in the
 [0 to 3] range. The out-of-bounds values are the border color, which is yellow.
 
-.. figure:: ../data/understand/textures/border.png
+.. figure:: ../../../../data/how-to/hip_runtime_api/memory_management/textures/border.png
   :width: 300
   :alt: Texture with yellow border color
   :align: center
@@ -147,7 +149,7 @@ The following image shows the texture on a 4x4 pixel quad, indexed in the
 [0 to 3] range. The out-of-bounds values are repeating the values at the edge of
 the texture.
 
-.. figure:: ../data/understand/textures/clamp.png
+.. figure:: ../../../../data/how-to/hip_runtime_api/memory_management/textures/clamp.png
   :width: 300
   :alt: Texture with clamp addressing
   :align: center
@@ -172,7 +174,7 @@ This creates a repeating image effect.
 The following image shows the texture on a 4x4 pixel quad, indexed in the
 [0 to 3] range. The out-of-bounds values are repeating the original texture.
 
-.. figure:: ../data/understand/textures/wrap.png
+.. figure:: ../../../../data/how-to/hip_runtime_api/memory_management/textures/wrap.png
   :width: 300
   :alt: Texture with wrap addressing
   :align: center
@@ -201,7 +203,7 @@ The following image shows the texture on a 4x4 pixel quad, indexed in The
 [0 to 3] range. The out-of-bounds values are repeating the original texture, but
 mirrored.
 
-.. figure:: ../data/understand/textures/mirror.png
+.. figure:: ../../../../data/how-to/hip_runtime_api/memory_management/textures/mirror.png
   :width: 300
   :alt: Texture with mirror addressing
   :align: center

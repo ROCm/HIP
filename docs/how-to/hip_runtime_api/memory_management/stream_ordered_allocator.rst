@@ -2,6 +2,8 @@
   :description:
   :keywords: stream, memory allocation, SOMA, stream ordered memory allocator
 
+.. _stream_ordered_memory_allocator_how-to:
+
 *******************************************************************************
 Stream Ordered Memory Allocator
 *******************************************************************************

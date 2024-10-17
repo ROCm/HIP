@@ -143,10 +143,12 @@ Retrieval of the result from the device is done much like input data copy. In th
 
   HIP_CHECK(hipMemcpy(y.data(), d_y, size_bytes, hipMemcpyDeviceToHost));
 
+.. _compiling_on_the_command_line:
+
 Compiling on the command line
 =============================
 
-.. _setting_up_the_command-line:
+.. _setting_up_the_command_line:
 
 Setting up the command line
 ---------------------------
