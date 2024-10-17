@@ -19,13 +19,13 @@ memory.
 
 .. figure:: ../../../data/how-to/hip_runtime_api/memory_management/pageable_pinned.svg
 
-The pageable and pinned memory allow developers to exercise direct control over
+The pageable and pinned memory allow you to exercise direct control over
 memory operations, which is known as explicit memory management. When using the
-unified memory, developers get a simplified memory model with less control over
+unified memory, you get a simplified memory model with less control over
 low level memory operations.
 
 The difference in memory transfers between explicit and unified memory
-management are highlighted in the following figure:
+management is highlighted in the following figure:
 
 .. figure:: ../../../data/how-to/hip_runtime_api/memory_management/unified_memory/um.svg
 
@@ -104,7 +104,7 @@ C++ application.
 
 .. note::
 
-  :cpp:func:`hipMalloc` and :cpp:func:`hipFree` are blocking calls, however, HIP
+  :cpp:func:`hipMalloc` and :cpp:func:`hipFree` are blocking calls. However, HIP
   also provides non-blocking versions :cpp:func:`hipMallocAsync` and
   :cpp:func:`hipFreeAsync`, which require a stream as an additional argument.
 
@@ -118,9 +118,9 @@ host and device. Accessing host-resident pinned memory in device kernels is
 generally not recommended for performance, as it can force the data to traverse
 the host-device interconnect such as PCIe, which is much slower than the on-device bandwidth.
 
-Advantage of pinned memory is the improved transfer times between host and
+The advantage of pinned memory is the improved transfer time between host and
 device. For transfer operations, such as :cpp:func:`hipMemcpy` or :cpp:func:`hipMemcpyAsync`,
-using pinned memory instead of pageable memory on host can lead to a three times
+using pinned memory instead of pageable memory on the host can lead to a three times
 improvement in bandwidth.
 
 The disadvantage of pinned memory is the reduced availability of RAM for other processes, which can negatively impact the overall performance of the host.
