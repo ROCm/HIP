@@ -44,7 +44,7 @@ into the swap partition of the hard drive.
 Pageable memory is usually allocated with a call to ``malloc`` or ``new`` in a
 C++ application. 
 
-**Example:** Using pageable host memory in HIP:
+**Example:** Using pageable host memory in HIP
 
 .. code-block:: cpp
 
