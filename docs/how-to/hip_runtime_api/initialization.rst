@@ -34,8 +34,8 @@ to be able to control the timing of the initialization.
 Querying and setting GPUs
 ================================================================================
 
-If multiple GPUs are available, it's worth to query and select the desired GPU(s)
-based on properties. 
+If multiple GPUs are available in the system, you can query and select the desired GPU(s) to use
+based on device properties, such as ... 
 
 Querying GPUs
 --------------------------------------------------------------------------------
