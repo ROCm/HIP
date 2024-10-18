@@ -4228,8 +4228,6 @@ hipError_t hipFree(void* ptr);
  *  This API performs an implicit hipDeviceSynchronize() call.
  *  If pointer is NULL, the hip runtime is initialized and hipSuccess is returned.
  *
- *  @ingroup MemoryD
- *
  *  @param[in] ptr Pointer to memory to be freed
  *  @returns #hipSuccess,
  *          #hipErrorInvalidValue (if pointer is invalid, including device pointers allocated
@@ -4241,6 +4239,8 @@ hipError_t hipFreeHost(void* ptr);
  *  @brief Free memory allocated by the hcc hip host memory allocation API [Deprecated]
  *  This API performs an implicit hipDeviceSynchronize() call.
  *  If pointer is NULL, the hip runtime is initialized and hipSuccess is returned.
+ *
+ *  @ingroup MemoryD
  *
  *  @param[in] ptr Pointer to memory to be freed
  *  @returns #hipSuccess,
