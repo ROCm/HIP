@@ -20,12 +20,12 @@ and :cpp:func:`hipGetErrorName()` can be used.
 Error handling usage
 ================================================================================
 
-Error handling functions enable developers to implement appropriate error
-handling strategies, such as retry mechanisms, resource cleanup, or graceful
+Error handling functions enable developers to implement appropriate strategies
+for handling errors, such as retry mechanisms, resource cleanup, or graceful
 degradation.
 
-The descriptions of the important :ref:`error handling functions <error_handling_reference>`
-are the following:
+Descriptions of the important :ref:`error handling functions <error_handling_reference>`
+are as follows:
 
 * :cpp:func:`hipGetLastError` returns the last error that occurred during a HIP
   runtime API call and resets the error code to :cpp:enumerator:`hipSuccess`.
