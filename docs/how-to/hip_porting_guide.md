@@ -1,4 +1,4 @@
-# HIP Porting Guide
+# HIP porting guide
 
 In addition to providing a portable C++ programming environment for GPUs, HIP is designed to ease
 the porting of existing CUDA code into the HIP environment.  This section describes the available tools
@@ -366,7 +366,7 @@ run hipcc when appropriate.
 
 ### ``warpSize``
 
-Code should not assume a warp size of 32 or 64.  See [Warp Cross-Lane Functions](https://rocm.docs.amd.com/projects/HIP/en/latest/reference/kernel_language.html#warp-cross-lane-functions) for information on how to write portable wave-aware code.
+Code should not assume a warp size of 32 or 64.  See [Warp Cross-Lane Functions](https://rocm.docs.amd.com/projects/HIP/en/latest/reference/cpp_language_extensions.html#warp-cross-lane-functions) for information on how to write portable wave-aware code.
 
 ### Kernel launch with group size > 256
 
@@ -403,7 +403,7 @@ Device Code:
 
 __constant__ int Value[LEN];
 
-__global__ void Get(hipLaunchParm lp, int *Ad)
+__global__ void Get(int *Ad)
 {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     Ad[tid] = Value[tid];
