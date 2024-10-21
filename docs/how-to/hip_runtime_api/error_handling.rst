@@ -17,25 +17,6 @@ while :cpp:func:`hipPeekAtLastError` just returns the error without changing it.
 To get a human readable version of the errors, :cpp:func:`hipGetErrorString()`
 and :cpp:func:`hipGetErrorName()` can be used.
 
-Error handling usage
-================================================================================
-
-Error handling functions enable developers to implement appropriate strategies
-for handling errors, such as retry mechanisms, resource cleanup, or graceful
-degradation.
-
-Descriptions of the important :ref:`error handling functions <error_handling_reference>`
-are as follows:
-
-* :cpp:func:`hipGetLastError` returns the last error that occurred during a HIP
-  runtime API call and resets the error code to :cpp:enumerator:`hipSuccess`.
-* :cpp:func:`hipPeekAtLastError` returns the last error that occurred during a HIP
-  runtime API call **without** resetting the error code.
-* :cpp:func:`hipGetErrorName` converts a HIP error code to a string representing
-  the error name.
-* :cpp:func:`hipGetErrorString` converts a HIP error code to a string describing
-  the error.
-
 Best practices of HIP error handling:
 
 1. Check errors after each API call - Avoid error propagation.
@@ -43,10 +24,13 @@ Best practices of HIP error handling:
 3. Handle errors gracefully - Free resources and provide meaningful error
    messages to the user.
 
+For more details on the error handling functions, see :ref:`error handling 
+functions reference page <error_handling_reference>`.
+
 .. _hip_check_macros:
 
 HIP check macros
---------------------------------------------------------------------------------
+================================================================================
 
 HIP uses check macros to simplify error checking and reduce code duplication. 
 The ``HIP_CHECK`` macros are mainly used to detect and report errors. It can 
@@ -68,7 +52,7 @@ print. The ``HIP_CHECK`` macro example:
   }
 
 Complete example
---------------------------------------------------------------------------------
+================================================================================
 
 A complete example to demonstrate the error handling with a simple addition of 
 two values kernel:

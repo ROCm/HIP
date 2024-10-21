@@ -29,13 +29,24 @@ Initialize the HIP runtime
 
 The HIP runtime is initialized automatically when the first HIP API call is
 made. However, you can explicitly initialize it using :cpp:func:`hipInit`,
-to be able to control the timing of the initialization.
+to be able to control the timing of the initialization. The manual
+initialization can be useful, when you ensure that the GPU is initialized and
+ready or you want to isolate the GPU initialization time from other parts of
+your program.
+
+.. note::
+
+  :cpp:func:`hipDeviceReset()` deletes all streams created, memory allocated, 
+  kernels running and events created by the current process. Any new HIP API
+  call initializes the HIP runtime again.
 
 Querying and setting GPUs
 ================================================================================
 
-If multiple GPUs are available in the system, you can query and select the desired GPU(s) to use
-based on device properties, such as ... 
+If multiple GPUs are available in the system, you can query and select the
+desired GPU(s) to use based on device properties, such as size of global memory,
+size shared memory per block, support of cooperative launch and support of
+managed memory.
 
 Querying GPUs
 --------------------------------------------------------------------------------
@@ -85,17 +96,7 @@ operations. This function performs several key tasks:
   Prepares the device for resource allocation, such as memory allocation and
   stream creation.
 
-- Check device availablity
+- Check device availability
 
   Checks for errors in device selection and returns error if the specified 
   device is not available or not capable of executing HIP operations.
-
-Finalize
-================================================================================
-
-:cpp:func:`hipDeviceReset()` deletes all streams created, memory allocated, 
-kernels running and events created by the current process. Make sure that no
-other thread is using the device or streams, memory, kernels or events
-associated with the current device.
-
-Any new HIP API call initializes the HIP runtime again.
