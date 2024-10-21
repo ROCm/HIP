@@ -12,24 +12,6 @@ users familiar with NVIDIA CUDA.
 HIP Support
 ===========
 
-What NVIDIA CUDA features does HIP support?
--------------------------------------------
-
-The :doc:`NVIDIA CUDA runtime API supported by HIP<hipify:tables/CUDA_Runtime_API_functions_supported_by_HIP>`
-and :doc:`NVIDIA CUDA driver API suupported by HIP<hipify:tables/CUDA_Driver_API_functions_supported_by_HIP>`
-pages describe which NVIDIA CUDA APIs are supported and what the equivalents are.
-The :doc:`HIP API documentation <doxygen/html/index.html>` describes each API and
-its limitations, if any, compared with the equivalent CUDA API.
-
-The kernel language features are documented in the
-:doc:`/reference/cpp_language_extensions` page.
-
-What libraries does HIP provide?
---------------------------------
-
-HIP provides key math and AI libraries. See :doc:`rocm:reference/api-libraries`
-for the full list.
-
 What hardware does HIP support?
 -------------------------------
 
@@ -43,17 +25,36 @@ What operating systems does HIP support?
 The supported operating systems are listed in the
 :doc:`rocm:compatibility/compatibility-matrix`.
 
-CUDA and OpenCL
-===============
+What libraries does HIP provide?
+--------------------------------
+
+HIP provides key math and AI libraries. See :doc:`rocm:reference/api-libraries`
+for the full list.
+
+What NVIDIA CUDA features does HIP support?
+-------------------------------------------
+
+The :doc:`NVIDIA CUDA runtime API supported by HIP<hipify:tables/CUDA_Runtime_API_functions_supported_by_HIP>`
+and :doc:`NVIDIA CUDA driver API suupported by HIP<hipify:tables/CUDA_Driver_API_functions_supported_by_HIP>`
+pages describe which NVIDIA CUDA APIs are supported and what the equivalents are.
+The :doc:`HIP API documentation <doxygen/html/index.html>` describes each API and
+its limitations, if any, compared with the equivalent CUDA API.
+
+The kernel language features are documented in the
+:doc:`/reference/cpp_language_extensions` page.
+
+Relation to other GPGPU frameworks
+==================================
 
 Is HIP a drop-in replacement for CUDA?
 --------------------------------------
 
 The `HIPIFY <https://github.com/ROCm/HIPIFY>`_ tools can automatically convert
-almost all runtime code. Most device code needs no additional conversion because
-HIP and CUDA have similar names for math and built-in functions. HIP code
-provides the similar performance as native CUDA code, plus the benefits of running
-on AMD platforms.
+almost all CUDA runtime code to HIP. Most device code needs no additional
+conversion because HIP and CUDA have the same signatures for math and built-in
+functions except for the name. HIP code provides similar performance as native
+CUDA code on NVIDIA platforms, plus the benefits of being compilable for AMD
+platforms.
 
 Additional porting might be required to deal with architecture feature
 queries or CUDA capabilities that HIP doesn't support.
@@ -97,22 +98,30 @@ Can I install CUDA and ROCm on the same machine?
 
 Yes, but you require a compatible GPU to run the compiled code.
 
-HIP detected my platform incorrectly. What should I do?
--------------------------------------------------------
-
-See the "Identifying the HIP Runtime" section in the
-:doc:`HIP porting guide<how-to/hip_porting_guide>`.
-
 On NVIDIA platforms, can I mix HIP code with CUDA code?
 -------------------------------------------------------
 
 Yes. Most HIP types and data structures are `typedef`s to CUDA equivalents and
-can be used interchangeably.
+can be used interchangeably. This can be useful for iteratively porting CUDA code.
 
 See :doc:`how-to/hip_porting_guide` for more details.
 
+Can a HIP binary run on both AMD and NVIDIA platforms?
+------------------------------------------------------
+
+HIP is a source-portable language that can be compiled to run on AMD or NVIDIA
+platforms. However, the HIP tools don't create a "fat binary" that can run on
+both platforms.
+
 Compiler related questions
 ==========================
+
+hipcc detected my platform incorrectly. What should I do?
+---------------------------------------------------------
+
+The environment variable `HIP_PLATFORM` can be used to specify the platform for
+which the code is going to be compiled with ``hipcc``. See the
+:doc:`hipcc environment variables<HIPCC:env>` for more information.
 
 How to use HIP-Clang to build HIP programs?
 ------------------------------------------------------
@@ -211,9 +220,6 @@ These files are then compiled and linked using
 
 assuming the default installation of ROCm in ``/opt/rocm``.
 
-Miscellaneous
-=============
-
 How to guard code specific to the host or the GPU?
 --------------------------------------------------
 
@@ -221,10 +227,3 @@ The compiler defines the ``__HIP_DEVICE_COMPILE__`` macro only when compiling
 device code.
 
 Refer to the :doc:`how-to/hip_porting_guide` for more information.
-
-Can a HIP binary run on both AMD and NVIDIA platforms?
-------------------------------------------------------
-
-HIP is a source-portable language that can be compiled to run on AMD or NVIDIA
-platforms. However, the HIP tools don't create a "fat binary" that can run on
-either platform.
