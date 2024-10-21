@@ -28,7 +28,7 @@ There are two formats of FP8 numbers, E4M3 and E5M2.
 HIP Header
 ==========
 
-HIP header defined the FP8 ocp/fnuz numbers `here <https://github.com/ROCm/clr/blob/develop/hipamd/include/hip/amd_detail/amd_hip_fp8.h>`_.
+The `HIP header <https://github.com/ROCm/clr/blob/develop/hipamd/include/hip/amd_detail/amd_hip_fp8.h>`_ defines the FP8 ocp/fnuz numbers.
 
 Supported Devices
 =================

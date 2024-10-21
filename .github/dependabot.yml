@@ -14,5 +14,6 @@ updates:
       - "documentation"
       - "dependencies"
       - "ci:docs-only"
+    target-branch: "docs/develop"
     reviewers:
       - "samjwu"

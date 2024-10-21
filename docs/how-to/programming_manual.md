@@ -1,4 +1,4 @@
-# HIP Programming Manual
+# HIP programming manual
 
 ## Host Memory
 
@@ -140,13 +140,13 @@ HIP now supports runtime compilation (HIP RTC), the usage of which will provide 
 
 HIP RTC APIs accept HIP source files in character string format as input parameters and create handles of programs by compiling the HIP source files without spawning separate processes.
 
-For more details on HIP RTC APIs, refer to [HIP Runtime API Reference](https://rocm.docs.amd.com/projects/HIP/en/latest/doxygen/html/index.html).
+For more details on HIP RTC APIs, refer to [HIP Runtime API Reference](../doxygen/html/index).
 
 For Linux developers, the link [here](https://github.com/ROCm/hip-tests/blob/develop/samples/2_Cookbook/23_cmake_hiprtc/saxpy.cpp) shows an example how to program HIP application using runtime compilation mechanism, and a detailed [HIP RTC programming guide](./hip_rtc) is also available.
 
 ## HIP Graph
 
-HIP graph is supported. For more details, refer to the HIP API Guide.
+HIP graphs are supported. For more details, refer to the [HIP API Guide](../doxygen/html/group___graph) or the [how-to section for HIP graphs](../how-to/hipgraph).
 
 ## Device-Side Malloc
 

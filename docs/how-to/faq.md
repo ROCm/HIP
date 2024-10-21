@@ -38,7 +38,7 @@ See the [API Support Table](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs
 * Virtual functions, indirect functions and try/catch (CUDA 4.0)
 * `__prof_trigger`
 * PTX assembly (CUDA 4.0). HIP-Clang supports inline GCN assembly.
-* Several kernel features are under development. See the {doc}`/reference/kernel_language` for more information.
+* Several kernel features are under development. See the {doc}`/reference/cpp_language_extensions` for more information.
 
 ## Is HIP a drop-in replacement for CUDA?
 

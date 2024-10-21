@@ -829,10 +829,10 @@ WARN_LOGFILE           =
 # spaces. See also FILE_PATTERNS and EXTENSION_MAPPING
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = mainpage.md \
-                         ../../include/hip \
+INPUT                  = ../../include/hip \
                          ../../../clr/hipamd/include/hip/amd_detail/amd_hip_gl_interop.h \
-                         ../../../llvm-project/clang/lib/Headers/__clang_hip_math.h \
+                         ../../../clr/hipamd/include/hip/amd_detail/amd_surface_functions.h \
+                         ../../../clr/hipamd/include/hip/amd_detail/amd_hip_cooperative_groups.h \
                          ../../../ROCR-Runtime/src/inc/hsa_ext_amd.h
 
 # This tag can be used to specify the character encoding of the source files
@@ -2195,8 +2195,21 @@ INCLUDE_FILE_PATTERNS  =
 # recursively expanded use the := operator instead of the = operator.
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
-PREDEFINED             = __HIP_PLATFORM_AMD__ \
-                         __dparm(x)=
+PREDEFINED             = "__HIP_PLATFORM_AMD__" \
+                         "DOXYGEN_SHOULD_INCLUDE_THIS=1" \
+                         "DOXYGEN_SHOULD_SKIP_THIS=1" \
+                         "__dparm(x)=" \
+                         "__cplusplus=201103L" \
+                         "__host__=" \
+                         "__device__=" \
+                         "__hip_img_chk__=" \
+                         "__CG_QUALIFIER__=" \
+                         "__CG_STATIC_QUALIFIER__=static" \
+                         "_CG_STATIC_CONST_DECL_=static constexpr" \
+                         "HIP_PUBLIC_API" \
+                         "HIP_ENABLE_WARP_SYNC_BUILTINS" \
+                         "__HOST_DEVICE__" \
+                         "__forceinline__"
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The

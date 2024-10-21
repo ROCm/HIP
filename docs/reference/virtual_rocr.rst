@@ -5,7 +5,7 @@
   :keywords: AMD, ROCm, HIP, HSA, ROCR runtime, virtual memory management
 
 *******************************************************************************
-HSA Runtime API for ROCm
+HSA runtime API for ROCm
 *******************************************************************************
 
 The following functions are located in the https://github.com/ROCm/ROCR-Runtime repository.
