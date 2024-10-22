@@ -1,7 +1,25 @@
+.. meta::
+   :description: HIP provides an external resource interoperability API that allows efficient data sharing between HIP's computing power and OpenGL's graphics rendering.
+   :keywords: AMD, ROCm, HIP, external, interop, interoperability
+
+********************************************************************************
+External resource interoperability
+********************************************************************************
+
+This feature allows HIP to work with resources -- like memory and semaphores -- created by other APIs. This means resources can be used from APIs like CUDA, OpenCL and Vulkan within HIP, making it easier to integrate HIP into existing projects.
+
+To use external resources in HIP, you typically follow these steps:
+
+- import the resource: Use functions to import resources from other APIs
+- use the resource: the imported resources can be used as if they were created by HIP itself
+- destroy the resource: to clean up.
+
 Semaphore Functions
 ===================
 
 Semaphore functions are essential for synchronization in parallel computing. These functions facilitate communication and coordination between different parts of a program or between different programs. By managing semaphores, tasks are executed in the correct order, and resources are utilized effectively. Semaphore functions ensure smooth operation, preventing conflicts and maintaining the integrity of processes; upholding the integrity and performance of concurrent processes.
+
+Semaphore functions are not supported recently on Linux (see: :doc:`../reference/hip_runtime_api/external_interop`.).
 
 .. code-block::cpp
 
