@@ -2275,24 +2275,28 @@ Unroll with a bounds that is known at compile-time is supported. For example:
 In-Line Assembly
 ============================================================
 
-GCN ISA In-line assembly, is supported. For example:
+GCN ISA In-line assembly is supported.
 
-.. code-block:: cpp
+There are some usage limitations in ROCm compiler for inline asm support, please refer to `Inline ASM statements <https://rocm.docs.amd.com/projects/llvm-project/en/latest/reference/rocmcc.html#inline-asm-statements>`_ for details.
 
-  asm volatile ("v_mac_f32_e32 %0, %2, %3" : "=v" (out[i]) : "0"(out[i]), "v" (a), "v" (in[i]));
+Users can get related background resources on `how to use inline assembly <https://gcc.gnu.org/onlinedocs/gcc/extensions-to-the-c-language-family/how-to-use-inline-assembly-language-in-c-code.html>`_ for any usage of inline assembly features.
 
-We insert the GCN isa into the kernel using ``asm()`` Assembler statement.
-``volatile`` keyword is used so that the optimizers must not change the number of volatile operations or change their order of execution relative to other volatile operations.
-``v_mac_f32_e32`` is the GCN instruction, for more information please refer - [AMD GCN3 ISA architecture manual](http://gpuopen.com/compute-product/amd-gcn3-isa-architecture-manual/)
-Index for the respective operand in the ordered fashion is provided by `%` followed by position in the list of operands
-`"v"` is the constraint code (for target-specific AMDGPU) for 32-bit VGPR register, for more info please refer - [Supported Constraint Code List for AMDGPU](https://llvm.org/docs/LangRef.html#supported-constraint-code-list)
-Output Constraints are specified by an `"="` prefix as shown above ("=v"). This indicate that assembly will write to this operand, and the operand will then be made available as a return value of the ``asm`` expression. Input constraints do not have a prefix - just the constraint code. The constraint string of `"0"` says to use the assigned register for output as an input as well (it being the 0'th constraint).
+A short example program including an inline assembly statement can be found at `inline asm tutorial <https://github.com/ROCm/hip-tests/tree/amd-staging/samples/2_Cookbook/10_inline_asm>`_.
 
-## C++ Support
+For further usage of special AMD GPU hardware features that are available through assembly, please refer to the ISA manual for `AMDGPU usage <https://llvm.org/docs/AMDGPUUsage.html#additional-documentation>`_, in which AMD GCN is listed from gfx906 to RDNA 3.5.
+
+C++ Support
+============================================================
+
 The following C++ features are not supported:
-- Run-time-type information (RTTI)
-- Try/catch
-- Virtual functions
+
+* Run-time-type information (RTTI)
+* Try/catch
+
+Partially supported features:
+
+* Virtual functions
+
 Virtual functions are not supported if objects containing virtual function tables are passed between GPU's of different offload arch's, e.g. between gfx906 and gfx1030. Otherwise virtual functions are supported.
 
 Kernel Compilation
