@@ -50,5 +50,6 @@ numfig = False
 
 exclude_patterns = [
     "doxygen/mainpage.md",
-    "understand/glossary.md"
+    "understand/glossary.md",
+    'how-to/debugging_env.rst'
 ]
