@@ -4,16 +4,18 @@ The Heterogeneous-computing Interface for Portability (HIP) API is a C++ runtime
 API and kernel language that lets developers create portable applications for AMD
 and NVIDIA GPUs from single source code.
 
-For HIP supported AMD GPUs on multiple operating systems, see:
+For info on what GPUs are supported by HIP, see the
+[install prerequisites](install_prerequisites).
 
-* [Linux system requirements](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html#supported-gpus)
-* [Microsoft Windows system requirements](https://rocm.docs.amd.com/projects/install-on-windows/en/latest/reference/system-requirements.html#windows-supported-gpus)
+On the AMD ROCm platform, HIP provides header files and runtime library built on
+top of HIP-Clang compiler in the repository
+[Common Language Runtimes (CLR)](./understand/amd_clr), which contains source
+codes for AMD's compute languages runtimes as follows,
 
-The CUDA enabled NVIDIA GPUs are supported by HIP. For more information, see [GPU Compute Capability](https://developer.nvidia.com/cuda-gpus).
-
-On the AMD ROCm platform, HIP provides header files and runtime library built on top of HIP-Clang compiler in the repository [Common Language Runtimes (CLR)](./understand/amd_clr), which contains source codes for AMD's compute languages runtimes as follows,
-
-On non-AMD platforms, like NVIDIA, HIP provides header files required to support non-AMD specific back-end implementation in the repository ['hipother'](https://github.com/ROCm/hipother), which translates from the HIP runtime APIs to CUDA runtime APIs.
+On non-AMD platforms, like NVIDIA, HIP provides header files required to support
+non-AMD specific back-end implementation in the repository
+['hipother'](https://github.com/ROCm/hipother), which translates from the HIP
+runtime API to the CUDA APIs.
 
 ## Overview
 
@@ -50,7 +52,6 @@ On non-AMD platforms, like NVIDIA, HIP provides header files required to support
 * {doc}`./how-to/stream_ordered_allocator`
 * [Cooperative groups](./how-to/cooperative_groups)
 * [HIP graphs](./how-to/hipgraph)
-* {doc}`./how-to/faq`
 
 :::
 
