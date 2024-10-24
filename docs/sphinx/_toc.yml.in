@@ -5,6 +5,8 @@ defaults:
   maxdepth: 6
 root: index
 subtrees:
+- entries:
+  - file: what_is_hip
 
 - caption: Install
   entries:
@@ -12,6 +14,12 @@ subtrees:
     title: Installing HIP
   - file: install/build
     title: Building HIP from source
+  - url: https://rocm.docs.amd.com/projects/install-on-linux/en/${branch}/reference/system-requirements.html#supported-gpus
+    title: Linux supported AMD GPUs
+  - url: https://rocm.docs.amd.com/projects/install-on-windows/en/${branch}/reference/system-requirements.html#windows-supported-gpus
+    title: Windows supported AMD GPUs
+  - url: https://developer.nvidia.com/cuda-gpus
+    title: NVIDIA supported GPUs
 
 - caption: Conceptual
   entries:
