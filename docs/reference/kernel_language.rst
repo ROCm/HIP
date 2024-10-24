@@ -1832,7 +1832,7 @@ the correct type is used.
 Note that the ``__sync`` variants are made available in ROCm 6.2, but disabled by
 default to help with the transition to 64-bit masks. They can be enabled by
 setting the preprocessor macro ``HIP_ENABLE_WARP_SYNC_BUILTINS``. These builtins
-will be enabled unconditionally in ROCm 6.3. Wherever possible, the
+will be enabled unconditionally in the next ROCm release. Wherever possible, the
 implementation includes a static assert to check that the program source uses
 the correct type for the mask.
 
