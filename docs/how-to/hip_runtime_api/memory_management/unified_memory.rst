@@ -37,8 +37,6 @@ model is shown in the following figure.
 
 .. figure:: ../../../data/how-to/hip_runtime_api/memory_management/unified_memory/um.svg
 
-.. _Pinned host memory can be made accessible to the device, meaning the device can read from or write to the pinned memory on the host via the PCIe bus without actually copying the memory to the device. This can be useful for sparse accesses, when it is not known, what regions of the memroy will be accessed by a kernel. This however has the disadvantage, that the memory has to be read from the host over the PCIe bus every time it is accessed (if it's not in the GPUs cache any more), as it is not stored in device memory. All of this however has nothing to do with unified memory. It doesn't even need unified virtual addressing, the host-pointer has to be specifically mapped to the device.
-
 Unified memory enables the access to memory located on other devices via
 several methods, depending on whether hardware support is available or has to be
 managed by the driver.
@@ -58,9 +56,6 @@ allocated and used for a GPU, than the GPU itself has physically available.
 
 This level of unified memory support can be very beneficial for sparse accesses
 to an array, that is not often used on the device.
-
-
-.. _What about mapping memory? Does this require hardware support? This is also a form of unified memory
 
 Driver managed page migration
 --------------------------------------------------------------------------------
@@ -267,7 +262,7 @@ explicit memory management example is presented in the last tab.
     .. tab-item:: hipMallocManaged()
 
         .. code-block:: cpp
-            :emphasize-lines: 12-15
+            :emphasize-lines: 22-25
 
             #include <hip/hip_runtime.h>
             #include <iostream>
@@ -319,19 +314,19 @@ explicit memory management example is presented in the last tab.
     .. tab-item:: __managed__
 
         .. code-block:: cpp
-            :emphasize-lines: 9-10
+            :emphasize-lines: 19-20
 
             #include <hip/hip_runtime.h>
             #include <iostream>
 
-            #define HIP_CHECK(expression)                  \
-            {                                              \
-                const hipError_t err = expression;         \
-                if(err != hipSuccess){                     \
-                        std::cerr << "HIP error: "         \
-                            << hipGetErrorString(err)      \
-                            << " at " << __LINE__ << "\n"; \
-                }                                          \
+            #define HIP_CHECK(expression)              \
+            {                                          \
+                const hipError_t err = expression;     \
+                if(err != hipSuccess){                 \
+                    std::cerr << "HIP error: "         \
+                        << hipGetErrorString(err)      \
+                        << " at " << __LINE__ << "\n"; \
+                }                                      \
             }
 
             // Addition of two values.
@@ -362,21 +357,20 @@ explicit memory management example is presented in the last tab.
     .. tab-item:: new
 
         .. code-block:: cpp
-            :emphasize-lines: 12-15
+            :emphasize-lines: 20-23
 
             #include <hip/hip_runtime.h>
             #include <iostream>
 
-            #define HIP_CHECK(expression)                  \
-            {                                              \
-                const hipError_t err = expression;         \
-                if(err != hipSuccess){                     \
-                        std::cerr << "HIP error: "         \
-                            << hipGetErrorString(err)      \
-                            << " at " << __LINE__ << "\n"; \
-                }                                          \
+            #define HIP_CHECK(expression)              \
+            {                                          \
+                const hipError_t err = expression;     \
+                if(err != hipSuccess){                 \
+                    std::cerr << "HIP error: "         \
+                        << hipGetErrorString(err)      \
+                        << " at " << __LINE__ << "\n"; \
+                }                                      \
             }
-
 
             // Addition of two values.
             __global__ void add(int* a, int* b, int* c) {
@@ -413,19 +407,19 @@ explicit memory management example is presented in the last tab.
     .. tab-item:: Explicit Memory Management
 
         .. code-block:: cpp
-            :emphasize-lines: 17-24, 29-30
+            :emphasize-lines: 27-34, 39-40
 
             #include <hip/hip_runtime.h>
             #include <iostream>
 
-            #define HIP_CHECK(func)                        \
-            {                                              \
-                const hipError_t err = func;               \
-                if(err != hipSuccess){                     \
-                        std::cerr << "HIP error: "         \
-                            << hipGetErrorString(err)      \
-                            << " at " << __LINE__ << "\n"; \
-                }                                          \
+            #define HIP_CHECK(expression)              \
+            {                                          \
+                const hipError_t err = expression;     \
+                if(err != hipSuccess){                 \
+                    std::cerr << "HIP error: "         \
+                        << hipGetErrorString(err)      \
+                        << " at " << __LINE__ << "\n"; \
+                }                                      \
             }
 
             // Addition of two values.
@@ -506,20 +500,20 @@ application by moving data to the desired device before it's actually
 needed. ``hipCpuDeviceId`` is a special constant to specify the CPU as target.
 
 .. code-block:: cpp
-    :emphasize-lines: 20-23,31-32
+    :emphasize-lines: 33-36,41-42
 
     #include <hip/hip_runtime.h>
     #include <iostream>
 
-    #define HIP_CHECK(func)                                \
-            {                                              \
-                const hipError_t err = func;               \
-                if(err != hipSuccess){                     \
-                        std::cerr << "HIP error: "         \
-                            << hipGetErrorString(err)      \
-                            << " at " << __LINE__ << "\n"; \
-                }                                          \
-            }
+    #define HIP_CHECK(expression)              \
+    {                                          \
+        const hipError_t err = expression;     \
+        if(err != hipSuccess){                 \
+            std::cerr << "HIP error: "         \
+                << hipGetErrorString(err)      \
+                << " at " << __LINE__ << "\n"; \
+        }                                      \
+    }
 
     // Addition of two values.
     __global__ void add(int *a, int *b, int *c) {
@@ -589,20 +583,20 @@ The following is the updated version of the example above with memory advice
 instead of prefetching.
 
 .. code-block:: cpp
-    :emphasize-lines: 17-26
+    :emphasize-lines: 29-41
 
     #include <hip/hip_runtime.h>
     #include <iostream>
 
-    #define HIP_CHECK(func)                                \
-            {                                              \
-                const hipError_t err = func;               \
-                if(err != hipSuccess){                     \
-                        std::cerr << "HIP error: "         \
-                            << hipGetErrorString(err)      \
-                            << " at " << __LINE__ << "\n"; \
-                }                                          \
-            }
+    #define HIP_CHECK(expression)              \
+    {                                          \
+        const hipError_t err = expression;     \
+        if(err != hipSuccess){                 \
+            std::cerr << "HIP error: "         \
+                << hipGetErrorString(err)      \
+                << " at " << __LINE__ << "\n"; \
+        }                                      \
+    }
 
     // Addition of two values.
     __global__ void add(int *a, int *b, int *c) {
@@ -661,20 +655,20 @@ Memory range attributes
 memory range. The attributes are given in :cpp:enum:`hipMemRangeAttribute`.
 
 .. code-block:: cpp
-    :emphasize-lines: 29-34
+    :emphasize-lines: 44-49
 
     #include <hip/hip_runtime.h>
     #include <iostream>
 
-    #define HIP_CHECK(func)                                \
-            {                                              \
-                const hipError_t err = func;               \
-                if(err != hipSuccess){                     \
-                        std::cerr << "HIP error: "         \
-                            << hipGetErrorString(err)      \
-                            << " at " << __LINE__ << "\n"; \
-                }                                          \
-            }
+    #define HIP_CHECK(expression)              \
+    {                                          \
+        const hipError_t err = expression;     \
+        if(err != hipSuccess){                 \
+            std::cerr << "HIP error: "         \
+                << hipGetErrorString(err)      \
+                << " at " << __LINE__ << "\n"; \
+        }                                      \
+    }
 
     // Addition of two values.
     __global__ void add(int *a, int *b, int *c) {
