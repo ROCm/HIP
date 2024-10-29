@@ -1,3 +1,8 @@
+myst:
+    html_meta:
+        "description": "Learn about using the HIP programming language for AMD GPUs and CPUs heterogeneous programming."
+        "keywords": "HIP, ROCm, programming, API libraries"
+
 # HIP documentation
 
 The Heterogeneous-computing Interface for Portability (HIP) API is a C++ runtime
