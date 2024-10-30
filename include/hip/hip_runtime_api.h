@@ -683,6 +683,13 @@ enum hipLimit_t {
 /** Event can support IPC. hipEventDisableTiming also must be set.*/
 #define hipEventInterprocess 0x4
 
+//Flags that can be used with hipEventRecordWithFlags.
+/** Default flag. */
+#define hipEventRecordDefault 0x00
+
+/** Event is captured in the graph as an external event node when performing stream capture. */
+#define hipEventRecordExternal 0x01
+
 /** Disable performing a system scope sequentially consistent memory fence when the event
  * transitions from recording to recorded.  This can be used for events that are only being
  * used to measure timing, and do not require the event inspection operations
@@ -3036,6 +3043,44 @@ hipError_t hipEventCreateWithFlags(hipEvent_t* event, unsigned flags);
  * hipEventDestroy, hipEventElapsedTime
  */
 hipError_t hipEventCreate(hipEvent_t* event);
+/**
+ * @brief Record an event in the specified stream.
+ *
+ * @param[in] event event to record.
+ * @param[in] stream stream in which to record event.
+ * @param[in] flags parameter for operations
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized,
+ * #hipErrorInvalidHandle, #hipErrorLaunchFailure
+ *
+ * hipEventQuery() or hipEventSynchronize() must be used to determine when the event
+ * transitions from "recording" (after hipEventRecord() is called) to "recorded"
+ * (when timestamps are set, if requested).
+ *
+ * Events which are recorded in a non-NULL stream will transition to
+ * from recording to "recorded" state when they reach the head of
+ * the specified stream, after all previous
+ * commands in that stream have completed executing.
+ *
+ * Flags include:
+ *   hipEventRecordDefault: Default event creation flag.
+ *   hipEventRecordExternal: Event is captured in the graph as an external event node when
+ *                           performing stream capture
+ *
+ * If hipEventRecord() has been previously called on this event, then this call will overwrite any
+ * existing state in event.
+ *
+ * If this function is called on an event that is currently being recorded, results are undefined
+ * - either outstanding recording may save state into the event, and the order is not guaranteed.
+ *
+ * @note: If this function is not called before use hipEventQuery() or hipEventSynchronize(),
+ * #hipSuccess is returned, meaning no pending event in the stream.
+ *
+ * @see hipEventCreate, hipEventCreateWithFlags, hipEventQuery, hipEventSynchronize,
+ * hipEventDestroy, hipEventElapsedTime
+ *
+ */
+hipError_t hipEventRecordWithFlags(hipEvent_t event, hipStream_t stream __dparm(0),
+                                   unsigned int flags __dparm(0));
 /**
  * @brief Record an event in the specified stream.
  *
