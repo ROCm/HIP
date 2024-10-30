@@ -23,13 +23,13 @@ What operating systems does HIP support?
 ----------------------------------------
 
 Linux as well as Windows are supported by ROCm. The exact versions are listed in
-the system requirements for :ref:`rocm-install-on-linux:supported_distributions
-<Linux>` and :ref:`rocm-install-on-windows:supported-skus-win<Windows>`.
+the system requirements for :ref:`rocm-install-on-linux:supported_distributions`
+and :ref:`rocm-install-on-windows:supported-skus-win`.
 
 .. note::
    Not all HIP runtime API functions are yet supported on Windows.
    A note is added to those functions' documentation in the
-   :ref:`runtime_api_reference<HIP runtime API reference>`.
+   :ref:`HIP runtime API reference<runtime_api_reference>`.
 
 What libraries does HIP provide?
 --------------------------------
@@ -43,7 +43,7 @@ What NVIDIA CUDA features does HIP support?
 The :doc:`NVIDIA CUDA runtime API supported by HIP<hipify:tables/CUDA_Runtime_API_functions_supported_by_HIP>`
 and :doc:`NVIDIA CUDA driver API suupported by HIP<hipify:tables/CUDA_Driver_API_functions_supported_by_HIP>`
 pages describe which NVIDIA CUDA APIs are supported and what the equivalents are.
-The :doc:`HIP API documentation <doxygen/html/index.html>` describes each API and
+The :doc:`HIP API documentation <doxygen/html/index>` describes each API and
 its limitations, if any, compared with the equivalent CUDA API.
 
 The kernel language features are documented in the
@@ -75,10 +75,10 @@ HIP offers several benefits over OpenCL:
 * Host and device code can be mixed in the source files.
 * The HIP API is less verbose than OpenCL and is familiar to CUDA developers.
 * Porting from CUDA to HIP is significantly easier than from CUDA to OpenCL.
-* HIP uses development tools specialized for each platform: :ref:`amdclang++ <llvm-project:index>`
-  for AMD GPUs or :xref:`nvcc <https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html>`
-  for NVIDIA GPUs, and profilers like :ref:`omniperf <omniperf:index>` or
-  :xref:`Nsight Systems <https://developer.nvidia.com/nsight-systems>`.
+* HIP uses development tools specialized for each platform: :doc:`amdclang++ <llvm-project:index>`
+  for AMD GPUs or `nvcc <https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html>`_
+  for NVIDIA GPUs, and profilers like :doc:`omniperf <omniperf:index>` or
+  `Nsight Systems <https://developer.nvidia.com/nsight-systems>`_.
 * HIP provides
   * pointers and host-side pointer arithmetic.
   * device-level control over memory allocation and placement.
@@ -107,7 +107,7 @@ Yes, but you require a compatible GPU to run the compiled code.
 On NVIDIA platforms, can I mix HIP code with CUDA code?
 -------------------------------------------------------
 
-Yes. Most HIP types and data structures are `typedef`s to CUDA equivalents and
+Yes. Most HIP types and data structures are ``typedef`` s to CUDA equivalents and
 can be used interchangeably. This can be useful for iteratively porting CUDA code.
 
 See :doc:`how-to/hip_porting_guide` for more details.
@@ -127,23 +127,23 @@ hipcc detected my platform incorrectly. What should I do?
 
 The environment variable `HIP_PLATFORM` can be used to specify the platform for
 which the code is going to be compiled with ``hipcc``. See the
-:doc:`hipcc environment variables<HIPCC:env>` for more information.
+:doc:`hipcc environment variables<hipcc:env>` for more information.
 
 How to use HIP-Clang to build HIP programs?
 ------------------------------------------------------
 
-:ref:`hipcc <HIPCC:index>` is a compiler driver. This means it is not a compiler
+:doc:`hipcc <hipcc:index>` is a compiler driver. This means it is not a compiler
 but calls the appropriate compilers and sets some options.
 
-The underlying compilers are :ref:`amdclang++ <llvm-project:index>` or
-:xref:`nvcc <https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html>`,
+The underlying compilers are :doc:`amdclang++ <llvm-project:index>` or
+`nvcc <https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html>`_,
 depending on the platform, and can be called directly.
 
 What is HIP-Clang?
 ------------------
 
 HIP-Clang is a Clang/LLVM-based compiler used to compile HIP programs for AMD
-platforms. The executable is named :ref:`amdclang++ <llvm-project:index>` on
+platforms. The executable is named :doc:`amdclang++ <llvm-project:index>` on
 Linux and ``clang++`` on Windows.
 
 Can I link HIP device code with host code compiled with another compiler such as gcc, icc, or clang?
@@ -158,7 +158,7 @@ Can HIP applications be compiled with a C compiler?
 
 HIP is a C/C++ API that can be used with C compilers. However, this applies only
 to the API itself. Device code and the syntax for calling kernels must be
-compiled with a supported compiler like :ref:`hipcc <HIPCC:index>`. The code
+compiled with a supported compiler like :doc:`hipcc <hipcc:index>`. The code
 objects that are generated with ``hipcc`` can, however, be used with a C
 compiler, as shown in the code examples below.
 
