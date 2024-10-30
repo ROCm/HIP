@@ -6,6 +6,7 @@ APU
 APUs
 AQL
 AXPY
+asm
 Asynchrony
 backtrace
 Bitcode
@@ -15,6 +16,7 @@ builtins
 Builtins
 CAS
 clr
+compilable
 coroutines
 Ctx
 cuBLASLt
@@ -77,6 +79,7 @@ intrinsics
 IPC
 IPs
 isa
+iteratively
 Lapack
 latencies
 libc
