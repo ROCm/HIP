@@ -41,7 +41,6 @@ The HIP documentation is organized into the following categories:
 * {doc}`./how-to/stream_ordered_allocator`
 * [Cooperative groups](./how-to/cooperative_groups)
 * [HIP graphs](./how-to/hipgraph)
-* {doc}`./how-to/faq`
 
 :::
 
