@@ -36,7 +36,7 @@ HIP releases are typically naming convention for each ROCM release to help diffe
 ## More Info
 
 * [Installation](docs/install/install.rst)
-* [HIP FAQ](docs/how-to/faq.md)
+* [HIP FAQ](docs/faq.rst)
 * [HIP C++ Language Extensions](docs/reference/cpp_language_extensions.rst)
 * [HIP Porting Guide](docs/how-to/hip_porting_guide.md)
 * [HIP Porting Driver Guide](docs/how-to/hip_porting_driver_api.md)
