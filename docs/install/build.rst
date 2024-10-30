@@ -1,3 +1,7 @@
+.. meta::
+   :description: This page gives instructions on how to build HIP from source.
+   :keywords: AMD, ROCm, HIP, build, build instructions, source
+
 *******************************************
 Build HIP from source
 *******************************************
