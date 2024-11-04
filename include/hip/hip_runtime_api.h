@@ -2122,6 +2122,21 @@ hipError_t hipDeviceGetMemPool(hipMemPool_t* mem_pool, int device);
  */
 hipError_t hipGetDeviceProperties(hipDeviceProp_t* prop, int deviceId);
 /**
+ * @brief Gets the maximum width for 1D linear textures on the specified device
+ *
+ * This function queries the maximum width, in elements, of 1D linear textures that can be allocated
+ * on the specified device. The maximum width depends on the texture element size and the hardware
+ * limitations of the device.
+ *
+ * @param [out] max_width Maximum width, in elements, of 1D linear textures that the device can support
+ * @param [in] device     Device index to query for maximum 1D texture width
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidDevice
+ *
+ * @see hipDeviceGetAttribute, hipMalloc, hipTexRefSetAddressMode
+ */
+hipError_t hipDeviceGetTexture1DLinearMaxWidth(hipMemPool_t* mem_pool, int device);
+/**
  * @brief Set L1/Shared cache partition.
  *
  * @param [in] cacheConfig Cache configuration
