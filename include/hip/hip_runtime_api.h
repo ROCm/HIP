@@ -2068,24 +2068,31 @@ hipError_t hipGetDeviceFlags(unsigned int* flags);
  */
 hipError_t hipDeviceSetSharedMemConfig(hipSharedMemConfig config);
 /**
- * @brief The current device behavior is changed according the flags passed.
+ * @brief The current device behavior is changed according to the flags passed.
  *
  * @param [in] flags Flag to set on the current device
  *
  * The schedule flags impact how HIP waits for the completion of a command running on a device.
- * hipDeviceScheduleSpin         : HIP runtime will actively spin in the thread which submitted the
- * work until the command completes.  This offers the lowest latency, but will consume a CPU core
- * and may increase power. hipDeviceScheduleYield        : The HIP runtime will yield the CPU to
- * system so that other tasks can use it.  This may increase latency to detect the completion but
- * will consume less power and is friendlier to other tasks in the system.
- * hipDeviceScheduleBlockingSync : On ROCm platform, this is a synonym for hipDeviceScheduleYield.
- * hipDeviceScheduleAuto         : Use a hueristic to select between Spin and Yield modes.  If the
- * number of HIP contexts is greater than the number of logical processors in the system, use Spin
- * scheduling.  Else use Yield scheduling.
  *
+ * #hipDeviceScheduleSpin         : HIP runtime will actively spin in the thread which submitted
+ * the work until the command completes.  This offers the lowest latency, but will consume a CPU
+ * core and may increase power.
  *
- * hipDeviceMapHost              : Allow mapping host memory.  On ROCM, this is always allowed and
- * the flag is ignored. hipDeviceLmemResizeToMax      : @warning ROCm silently ignores this flag.
+ * #hipDeviceScheduleYield        : The HIP runtime will yield the CPU to system so that other
+ * tasks can use it. This may increase latency to detect the completion but will consume less
+ * power and is friendlier to other tasks in the system.
+ *
+ * #hipDeviceScheduleBlockingSync : On ROCm platform, this is a synonym for hipDeviceScheduleYield.
+ *
+ * #hipDeviceScheduleAuto         : This is the default value if the input 'flags' is zero.
+ * Uses a heuristic to select between Spin and Yield modes. If the number of HIP contexts is
+ * greater than the number of logical processors in the system, uses Spin scheduling, otherwise
+ * uses Yield scheduling.
+ *
+ * #hipDeviceMapHost              : Allows mapping host memory. On ROCm, this is always allowed and
+ * the flag is ignored.
+ *
+ * #hipDeviceLmemResizeToMax      : This flag is silently ignored on ROCm.
  *
  * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorSetOnActiveProcess
  *
