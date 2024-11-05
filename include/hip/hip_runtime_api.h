@@ -2094,8 +2094,7 @@ hipError_t hipDeviceSetSharedMemConfig(hipSharedMemConfig config);
  *
  * #hipDeviceLmemResizeToMax      : This flag is silently ignored on ROCm.
  *
- * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorSetOnActiveProcess
- *
+ * @returns #hipSuccess, #hipErrorNoDevice, #hipErrorInvalidDevice
  *
  */
 hipError_t hipSetDeviceFlags(unsigned flags);
