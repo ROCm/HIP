@@ -2,12 +2,13 @@
    :description: How to debug using HIP.
    :keywords: AMD, ROCm, HIP, debugging, ltrace, ROCgdb, WinGDB
 
+.. _debugging_with_hip:
+
 *************************************************************************
 Debugging with HIP
 *************************************************************************
 
-AMD debugging tools include *ltrace* and *ROCgdb*. External tools are available and can be found
-online. For example, if you're using Windows, you can use *Microsoft Visual Studio* and *WinGDB*.
+HIP debugging tools include `ltrace <https://ltrace.org/>`_ and :doc:`ROCgdb <rocgdb:index>`. External tools are available and can be found online. For example, if you're using Windows, you can use Microsoft Visual Studio and WinGDB.
 
 You can trace and debug your code using the following tools and techniques.
 
@@ -272,102 +273,7 @@ HIP environment variable summary
 
 Here are some of the more commonly used environment variables:
 
-.. <!-- spellcheck-disable -->
-
-.. # COMMENT: The following lines define a break for use in the table below.
-.. |break| raw:: html
-
-    <br />
-
-.. <!-- spellcheck-enable -->
-
-.. list-table::
-
-    * - **Environment variable**
-      - **Default value**
-      - **Usage**
-
-    * - AMD_LOG_LEVEL
-        |break| Enable HIP log on different Level
-      - 0
-      - 0: Disable log.
-        |break| 1: Enable log on error level
-        |break| 2: Enable log on warning and below levels
-        |break| 0x3: Enable log on information and below levels
-        |break| 0x4: Decode and display AQL packets
-
-    * - AMD_LOG_MASK
-        |break| Enable HIP log on different Level
-      - 0x7FFFFFFF
-      - 0x1: Log API calls
-        |break| 0x02: Kernel and Copy Commands and Barriers
-        |break| 0x4: Synchronization and waiting for commands to finish
-        |break| 0x8: Enable log on information and below levels
-        |break| 0x20: Queue commands and queue contents
-        |break| 0x40: Signal creation, allocation, pool
-        |break| 0x80: Locks and thread-safety code
-        |break| 0x100: Copy debug
-        |break| 0x200: Detailed copy debug
-        |break| 0x400: Resource allocation, performance-impacting events
-        |break| 0x800: Initialization and shutdown
-        |break| 0x1000: Misc debug, not yet classified
-        |break| 0x2000: Show raw bytes of AQL packet
-        |break| 0x4000: Show code creation debug
-        |break| 0x8000: More detailed command info, including barrier commands
-        |break| 0x10000: Log message location
-        |break| 0xFFFFFFFF: Log always even mask flag is zero
-
-    * - HIP_LAUNCH_BLOCKING
-        |break|  Used for serialization on kernel execution.
-      - 0
-      - 0: Disable. Kernel executes normally.
-        |break| 1: Enable. Serializes kernel enqueue, behaves the same as AMD_SERIALIZE_KERNEL.
-
-    * - HIP_VISIBLE_DEVICES (or CUDA_VISIBLE_DEVICES)
-        |break|  Only devices whose index is present in the sequence are visible to HIP
-      -
-      - 0,1,2: Depending on the number of devices on the system
-
-    * - GPU_DUMP_CODE_OBJECT
-        |break| Dump code object
-      - 0
-      - 0: Disable
-        |break| 1: Enable
-
-    * - AMD_SERIALIZE_KERNEL
-        |break|  Serialize kernel enqueue
-      - 0
-      - 1: Wait for completion before enqueue
-        |break| 2: Wait for completion after enqueue
-        |break| 3: Both
-
-    * - AMD_SERIALIZE_COPY
-        |break| Serialize copies
-      - 0
-      - 1: Wait for completion before enqueue
-        |break| 2: Wait for completion after enqueue
-        |break| 3: Both
-
-    * - HIP_HOST_COHERENT
-        |break| Coherent memory in hipHostMalloc
-      - 0
-      - 0: memory is not coherent between host and GPU
-        |break| 1: memory is coherent with host
-
-    * - AMD_DIRECT_DISPATCH
-        |break| Enable direct kernel dispatch (Currently for Linux; under development for Windows)
-      - 1
-      - 0: Disable
-        |break| 1: Enable
-
-    * - GPU_MAX_HW_QUEUES
-        |break| The maximum number of hardware queues allocated per device
-      - 4
-      - The variable controls how many independent hardware queues HIP runtime can create per process,
-        per device. If an application allocates more HIP streams than this number, then HIP runtime reuses
-        the same hardware queues for the new streams in a round-robin manner. Note that this maximum
-        number does not apply to hardware queues that are created for CU-masked HIP streams, or
-        cooperative queues for HIP Cooperative Groups (single queue per device).
+.. include:: ../how-to/debugging_env.rst
 
 General debugging tips
 ======================================================
