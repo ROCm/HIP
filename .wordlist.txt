@@ -50,6 +50,7 @@ FNUZ
 fp
 gedit
 GPGPU
+GROMACS
 GWS
 hardcoded
 HC

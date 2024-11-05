@@ -98,6 +98,7 @@ subtrees:
   - file: reference/cpp_language_support
     title: C++ language support
   - file: reference/math_api
+  - file: reference/env_variables
   - file: reference/terms
     title: Comparing syntax for different APIs
   - file: reference/deprecated_api_list
