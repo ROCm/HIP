@@ -4520,6 +4520,8 @@ hipError_t hipMemcpyHtoAAsync(hipArray_t dstArray, size_t dstOffset, const void*
                               size_t ByteCount, hipStream_t stream);
 /**
  *  @brief Returns a global pointer from a module.
+ *  @ingroup Module
+ *
  *  Returns in *dptr and *bytes the pointer and size of the global of name name located in module hmod.
  *  If no variable of that name exists, it returns hipErrorNotFound. Both parameters dptr and bytes are optional.
  *  If one of them is NULL, it is ignored and hipSuccess is returned.
@@ -5803,7 +5805,7 @@ hipError_t hipModuleUnload(hipModule_t module);
 hipError_t hipModuleGetFunction(hipFunction_t* function, hipModule_t module, const char* kname);
 /**
  * @brief Find out attributes for a given function.
- *
+ * @ingroup Execution
  * @param [out] attr  Attributes of funtion
  * @param [in] func  Pointer to the function handle
  *
@@ -5812,7 +5814,7 @@ hipError_t hipModuleGetFunction(hipFunction_t* function, hipModule_t module, con
 hipError_t hipFuncGetAttributes(struct hipFuncAttributes* attr, const void* func);
 /**
  * @brief Find out a specific attribute for a given function.
- *
+ * @ingroup Execution
  * @param [out] value  Pointer to the value
  * @param [in]  attrib  Attributes of the given funtion
  * @param [in]  hfunc  Function to get attributes from
@@ -5867,7 +5869,7 @@ hipError_t hipModuleLoadDataEx(hipModule_t* module, const void* image, unsigned 
 /**
  * @brief launches kernel f with launch parameters and shared memory on stream with arguments passed
  * to kernelparams or extra
- *
+ * @ingroup Execution
  * @param [in] f         Kernel to launch.
  * @param [in] gridDimX  X grid dimension specified as multiple of blockDimX.
  * @param [in] gridDimY  Y grid dimension specified as multiple of blockDimY.
@@ -5990,8 +5992,7 @@ hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsLi
 /**
  * @brief Launches kernels on multiple devices and guarantees all specified kernels are dispatched
  * on respective streams before enqueuing any other work on the specified streams from any other threads
- *
- *
+ * @ingroup Execution
  * @param [in] launchParamsList          List of launch parameters, one per device.
  * @param [in] numDevices               Size of the launchParamsList array.
  * @param [in] flags                    Flags to control launch behavior.
@@ -9321,12 +9322,9 @@ inline hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchP
     return hipLaunchCooperativeKernelMultiDevice(launchParamsList, numDevices, flags);
 }
 /**
- *
- * @ingroup Module
- *
  * @brief Launches kernels on multiple devices and guarantees all specified kernels are dispatched
  * on respective streams before enqueuing any other work on the specified streams from any other threads
- *
+ * @ingroup Execution
  *
  * @param [in] launchParamsList         List of launch parameters, one per device.
  * @param [in] numDevices               Size of the launchParamsList array.

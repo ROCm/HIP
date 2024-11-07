@@ -27,7 +27,7 @@ THE SOFTWARE.
 #include <tuple>
 #include <type_traits>
 #endif
-/** @addtogroup Module Module Management
+/** @addtogroup Execution Execution Management
  *  @{
  */
 
