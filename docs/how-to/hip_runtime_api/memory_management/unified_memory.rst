@@ -12,7 +12,7 @@ Unified memory management
 In conventional architectures CPUs and attached devices have their own memory
 space and dedicated physical memory backing it up, e.g. normal RAM for CPUs and
 VRAM on GPUs. This way each device can have physical memory optimized for its
-use case. Especially GPUs usually have specialized memory whose bandwidth is a
+use case. GPUs usually have specialized memory whose bandwidth is a
 magnitude higher than the RAM attached to CPUs.
 
 While providing exceptional performance, this setup typically requires explicit
@@ -74,13 +74,12 @@ System requirements
 ================================================================================
 
 Unified memory is supported on Linux by all modern AMD GPUs from the Vega
-series onward. Unified memory management can be achieved with managed memory
-allocation and, for the latest GPUs, with a system allocator.
+series onward. Unified memory management can be achieved by explicitly
+allocating managed memory using :cpp:func:`hipMallocManaged` or marking variables
+with the ``__managed__`` attribute, or, for the latest GPUs, with the normal
+system allocator, as shown in the following table.
 
-The table below lists the supported allocators for the different architectures.
-The allocators are described in the next section.
-
-.. list-table:: Supported Unified Memory Allocators
+.. list-table:: Supported Unified Memory Allocators by GPU architecture
     :widths: 40, 25, 25
     :header-rows: 1
     :align: center
@@ -138,10 +137,11 @@ system requirements` and :ref:`checking unified memory management support`.
   same system allocation API is used.
 
 To ensure the proper functioning of system allocated unified memory on supported
-graphics cards, it is essential to configure the environment variable
-``XNACK=1`` and use a kernel that supports Heterogeneous Memory Management
-(HMM). Without this configuration, the behavior will be similar to that of
-systems without HMM support. For more details, visit
+GPUs, it is essential to configure the environment variable ``XNACK=1`` and use
+a kernel that supports `Heterogeneous Memory Management (HMM)
+<https://www.kernel.org/doc/html/latest/mm/hmm.html>`_. Without this
+configuration, the behavior will be similar to that of systems without HMM
+support. For more details, visit
 `GPU memory <https://rocm.docs.amd.com/en/latest/conceptual/gpu-memory.html#xnack>`_.
 
 The table below illustrates the expected behavior of managed and unified memory
@@ -475,13 +475,14 @@ Using unified memory
 Unified memory can simplify the complexities of memory management in GPU
 computing, by not requiring explicit copies between the host and the devices. It
 can be particularly useful in use cases with sparse memory accesses from both
-the CPU and the GPU, as not the whole memory region needs to be transferred to
-the corresponding processor, thereby reducing the amount of memory sent over the
-PCIe bus.
+the CPU and the GPU, as only the parts of the memory region that are actually
+accessed need to be transferred to the corresponding processor, not the whole
+memory region. This reduces the amount of memory sent over the PCIe bus or other
+interfaces.
 
 In HIP, pinned memory allocations are coherent by default. Pinned memory is
 host memory mapped into the address space of all GPUs, meaning that the pointer
-can be used on both host and device. Addtionally, using pinned memory instead of
+can be used on both host and device. Additionally, using pinned memory instead of
 pageable memory on the host can improve bandwidth for transfers between the host
 and the GPUs.
 
@@ -571,8 +572,8 @@ Memory advice
 Unified memory runtime hints can be set with :cpp:func:`hipMemAdvise()` to help
 improve the performance of your code if you know the memory usage pattern. There
 are several different types of hints as specified in the enum
-:cpp:enum:`hipMemoryAdvise`, e.g. whether a certain device mostly reads the
-memory region, where it should ideally be located, and even whether that
+:cpp:enum:`hipMemoryAdvise`, for example, whether a certain device mostly reads
+the memory region, where it should ideally be located, and even whether that
 specific memory region is accessed by a specific device.
 
 For the best performance, profile your application to optimize the
@@ -728,10 +729,8 @@ memory range. The attributes are given in :cpp:enum:`hipMemRangeAttribute`.
 Asynchronously attach memory to a stream
 --------------------------------------------------------------------------------
 
-The :cpp:func:`hipStreamAttachMemAsync()` function is able to asynchronously attach
-memory to a stream, which can help concurrent execution when using streams.
-
-Currently, this function is a no-operation (NOP) function on AMD GPUs. It simply
-returns success after the runtime memory validation passed. This function is
-necessary on Microsoft Windows, and HMM is not supported on this operating
-system with AMD GPUs at the moment.
+The :cpp:func:`hipStreamAttachMemAsync()` function attaches memory to a stream,
+which can reduce the amount of memory transferred, when managed memory is used.
+When the memory is attached to a stream using this function, it only gets
+transferred between devices, when a kernel that is launched on this stream needs
+access to the memory.
