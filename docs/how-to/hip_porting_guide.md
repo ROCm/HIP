@@ -252,7 +252,7 @@ HIP_PATH ?= $(shell hipconfig --path)
 HIP can depend on rocclr, or CUDA as runtime
 
 * AMD platform
-On AMD platform, HIP uses Radeon Open Compute Common Language Runtime, called ROCclr.
+On AMD platform, HIP uses ROCm Compute Language Runtime, called ROCclr.
 ROCclr is a virtual device interface that HIP runtimes interact with different backends which allows runtimes to work on Linux , as well as Windows without much efforts.
 
 * NVIDIA platform

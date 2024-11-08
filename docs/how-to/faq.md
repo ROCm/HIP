@@ -162,7 +162,7 @@ NOTE: If HIP_ROCCLR_HOME is set, there is no need to set HIP_CLANG_PATH since hi
 
 ## What is AMD clr?
 
-AMD [Common Language Runtime (CLR)](https://github.com/ROCm/clr) is a repository for the AMD platform, which contains source codes for AMD's compute languages runtimes as follows,
+AMD [Compute Language Runtime (CLR)](https://github.com/ROCm/clr) is a repository for the AMD platform, which contains source codes for AMD's compute languages runtimes as follows,
 
 * hipamd - contains implementation of HIP language for AMD GPU.
 * rocclr - contains virtual device interfaces that compute runtimes interact with backends, such as ROCr on Linux and PAL on Windows.
