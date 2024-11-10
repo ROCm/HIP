@@ -3152,6 +3152,18 @@ hipError_t hipMalloc(void** ptr, size_t size);
  * hipHostFree, hipHostMalloc
  */
 hipError_t hipExtMallocWithFlags(void** ptr, size_t sizeBytes, unsigned int flags);
+
+
+/**
+ *-------------------------------------------------------------------------------------------------
+ *-------------------------------------------------------------------------------------------------
+ *  @defgroup MemoryD Memory Management [Deprecated]
+ *  @ingroup Memory
+ *  @{
+ *  This section describes the deprecated memory management functions of HIP runtime API.
+ *
+ */
+
 /**
  *  @brief Allocate pinned host memory [Deprecated]
  *
@@ -3180,6 +3192,11 @@ hipError_t hipMallocHost(void** ptr, size_t size);
  */
 DEPRECATED("use hipHostMalloc instead")
 hipError_t hipMemAllocHost(void** ptr, size_t size);
+// end doxygen deprecated management memory
+/**
+ * @}
+ */
+
 /**
  *  @brief Allocates device accessible page locked (pinned) host memory
  *
@@ -3780,6 +3797,7 @@ hipError_t hipMemPoolImportPointer(
 
 /**
  *  @brief Allocate device accessible page locked host memory [Deprecated]
+ *  @ingroup MemoryD
  *
  *  @param[out] ptr Pointer to the allocated host pinned memory
  *  @param[in]  size Requested memory size in bytes
@@ -3920,6 +3938,7 @@ hipError_t hipMemAllocPitch(hipDeviceptr_t* dptr, size_t* pitch, size_t widthInB
 hipError_t hipFree(void* ptr);
 /**
  *  @brief Free memory allocated by the hcc hip host memory allocation API [Deprecated]
+ *  @ingroup MemoryD
  *
  *  @param[in] ptr Pointer to memory to be freed
  *  @return #hipSuccess,
@@ -4801,6 +4820,7 @@ hipError_t hipMemcpy2DArrayToArray(hipArray_t dst, size_t wOffsetDst, size_t hOf
                                    size_t width, size_t height, hipMemcpyKind kind);
 /**
  *  @brief Copies data between host and device.
+ *  @ingroup MemoryD
  *
  *  @param[in]   dst     Destination memory address
  *  @param[in]   wOffset Destination starting X offset
@@ -4820,6 +4840,7 @@ hipError_t hipMemcpyToArray(hipArray_t dst, size_t wOffset, size_t hOffset, cons
                             size_t count, hipMemcpyKind kind);
 /**
  *  @brief Copies data between host and device.
+ *  @ingroup MemoryD
  *
  *  @param[in]   dst       Destination memory address
  *  @param[in]   srcArray  Source memory address
