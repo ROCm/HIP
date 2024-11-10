@@ -43,7 +43,7 @@ tools, based on the clang front-end and Perl language, can convert CUDA API
 calls into the corresponding HIP API calls. However, HIP is not intended to be a
 drop-in replacement for CUDA, and developers should expect to do some manual
 coding and performance tuning work for AMD GPUs to port existing projects as
-described :doc:`HIP porting guide <hip:how-to/hip_porting_guide>`.
+described :doc:`HIP porting guide <how-to/hip_porting_guide>`.
 
 HIP provides two components: those that run on the CPU, also known as host 
 system, and those that run on GPUs, also referred to as device. The host-based
@@ -61,14 +61,14 @@ HIP components
 ===============================================
 
 HIP consists of the following components. For information on the license
-associated with each component, see :doc:`HIP licensing <hip:license>`.
+associated with each component, see :doc:`HIP licensing <license>`.
 
 C++ runtime API
 -----------------------------------------------
 
 For the AMD ROCm platform, HIP provides headers and a runtime library built on
 top of HIP-Clang compiler in the repository
-:doc:`Common Language Runtime (CLR) <hip:understand/amd_clr>`. The HIP runtime
+:doc:`Common Language Runtime (CLR) <understand/amd_clr>`. The HIP runtime
 implements HIP streams, events, and memory APIs, and is an object library that
 is linked with the application. The source code for all headers and the library
 implementation is available on GitHub.
@@ -93,5 +93,5 @@ language features that are designed to target accelerators, such as:
 * Math functions that resemble those in ``math.h``, which is included with standard C++ compilers
 * Built-in functions for accessing specific GPU hardware capabilities
 
-For further details, check :doc:`C++ language extensions <hip:reference/cpp_language_extensions>`
-and :doc:`C++ language support <hip:reference/cpp_language_support>`.
+For further details, check :doc:`C++ language extensions <reference/cpp_language_extensions>`
+and :doc:`C++ language support <reference/cpp_language_support>`.
