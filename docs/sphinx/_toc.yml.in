@@ -66,6 +66,7 @@ subtrees:
           - file: reference/hip_runtime_api/modules/memory_management
             subtrees:
             - entries:
+              - file: reference/hip_runtime_api/modules/memory_management/memory_management_deprecated
               - file: reference/hip_runtime_api/modules/memory_management/external_resource_interoperability
               - file: reference/hip_runtime_api/modules/memory_management/stream_ordered_memory_allocator
               - file: reference/hip_runtime_api/modules/memory_management/unified_memory_reference
