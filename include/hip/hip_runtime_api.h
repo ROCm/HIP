@@ -8873,9 +8873,9 @@ hipError_t hipMemUnmap(void* ptr, size_t size);
 /**
  *-------------------------------------------------------------------------------------------------
  *-------------------------------------------------------------------------------------------------
- * @defgroup GL OpenGL Interop
+ * @defgroup GraphicsInterop Graphics Interoperability
  * @{
- * This section describes the OpenGL and graphics interoperability functions of HIP runtime API.
+ * This section describes graphics interoperability functions of HIP runtime API.
  */
 
 /**
@@ -8938,7 +8938,7 @@ hipError_t hipGraphicsUnmapResources(int count, hipGraphicsResource_t* resources
  *
  */
 hipError_t hipGraphicsUnregisterResource(hipGraphicsResource_t resource);
-// doxygen end GL Interop
+// doxygen end GraphicsInterop
 /**
  * @}
  */
