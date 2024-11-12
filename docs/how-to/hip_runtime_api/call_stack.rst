@@ -66,11 +66,6 @@ overflow errors by ensuring sufficient stack memory is allocated.
         return 0;
     }
 
-Depending on the GPU model, at full occupancy, it can consume a significant
-amount of memory. For instance, an MI300X with 304 compute units (CU) and up to
-2048 threads per CU (or 304 · 2048 / 64 = 98,304 warps) could use 304 · 2048 ·
-8192 bytes = 4.75 GB for the call stack.
-
 Handling recursion and deep function calls
 -------------------------------------------------------------------------------
 
