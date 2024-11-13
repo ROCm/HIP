@@ -3444,11 +3444,6 @@ hipError_t hipMallocHost(void** ptr, size_t size);
  */
 HIP_DEPRECATED("use hipHostAlloc instead")
 hipError_t hipMemAllocHost(void** ptr, size_t size);
-// end doxygen deprecated management memory
-/**
- * @}
- */
-
 /**
  *  @brief Allocates device accessible page locked (pinned) host memory
  *
@@ -3485,6 +3480,11 @@ hipError_t hipMemAllocHost(void** ptr, size_t size);
  */
 HIP_DEPRECATED("use hipExtHostAlloc instead")
 hipError_t hipHostMalloc(void** ptr, size_t size, unsigned int flags);
+// end doxygen deprecated management memory
+/**
+ * @}
+ */
+
 /**
  *  @brief Allocates device accessible page locked (pinned) host memory
  *
@@ -9643,8 +9643,8 @@ static inline hipError_t hipExtHostAlloc(T** ptr, size_t size,
     return hipExtHostAlloc((void**)ptr, size, flags);
 }
 /**
- * @brief: C++ wrapper for hipHostMalloc
- * @ingroup Memory
+ * @brief C++ wrapper for hipHostMalloc [Deprecated].
+ * @ingroup MemoryD
  * Provide an override to automatically typecast the pointer type from void**, and also provide a
  * default for the flags.
  *
@@ -9652,6 +9652,8 @@ static inline hipError_t hipExtHostAlloc(T** ptr, size_t size,
  * wrappers. It is useful for applications which need to obtain decltypes of
  * HIP runtime APIs.
  *
+ * @warning This API is deprecated.
+ * 
  * @see hipHostMalloc
  */
 template <class T>
