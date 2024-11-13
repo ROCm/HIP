@@ -53,7 +53,7 @@ Deprecated texture management functions.
    * - :cpp:func:`hipTexRefSetArray`
    * - :cpp:func:`hipTexRefSetFlags`
    * - :cpp:func:`hipTexRefSetFilterMode`
-   * - :cpp:func:`hipTexRefSetBorderColor`
+   * - :cpp:func:`hipTexRefSetFormat`
    * - :cpp:func:`hipTexRefSetMipmapFilterMode`
    * - :cpp:func:`hipTexRefSetMipmapLevelBias`
    * - :cpp:func:`hipTexRefSetMipmapLevelClamp`
@@ -70,7 +70,6 @@ Deprecated texture management functions.
    :align: left
 
    * - function
-   * - :cpp:func:`hipTexRefSetFormat`
    * - :cpp:func:`hipTexRefGetAddress`
    * - :cpp:func:`hipTexRefGetAddressMode`
    * - :cpp:func:`hipTexRefGetFilterMode`
@@ -83,6 +82,7 @@ Deprecated texture management functions.
    * - :cpp:func:`hipTexRefGetMipMappedArray`
    * - :cpp:func:`hipTexRefSetAddress`
    * - :cpp:func:`hipTexRefSetAddress2D`
+   * - :cpp:func:`hipTexRefSetBorderColor`
    * - :cpp:func:`hipTexRefSetMaxAnisotropy`
 
 Deprecated since ROCm 3.8.0
@@ -117,9 +117,13 @@ Deprecated memory management functions.
    * - function
      -
    * - :cpp:func:`hipMallocHost`
-     - replaced with :cpp:func:`hipHostAlloc`
+     - replaced with :cpp:func:`hipHostMalloc`
    * - :cpp:func:`hipMemAllocHost`
-     - replaced with :cpp:func:`hipHostAlloc`
+     - replaced with :cpp:func:`hipHostMalloc`
+   * - :cpp:func:`hipHostAlloc` 
+     - replaced with :cpp:func:`hipHostMalloc`
+   * - :cpp:func:`hipFreeHost` 
+     - replaced with :cpp:func:`hipHostFree`
 
 Deprecated since ROCm 3.0.0
 ============================================================
