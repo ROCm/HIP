@@ -369,6 +369,14 @@ Here are some of the more commonly used environment variables:
         number does not apply to hardware queues that are created for CU-masked HIP streams, or
         cooperative queues for HIP Cooperative Groups (single queue per device).
 
+    * - DEBUG_HIP_7_PREVIEW
+        |break| Enable preview of upcoming runtime changes that break backward compatibility.
+        These changes might require updating existing application code to support the new behavior.
+        The new behavior will become default in a future major release and this environment
+        variable will no longer be needed.
+      - 0
+      - 0x1: Match the behavior of hipGetLastError with its corresponding CUDA API
+
 General debugging tips
 ======================================================
 
