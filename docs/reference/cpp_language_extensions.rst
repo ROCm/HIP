@@ -4,301 +4,493 @@
                 learn how HIP differs from CUDA.
   :keywords: AMD, ROCm, HIP, CUDA, c++ language extensions, HIP functions
 
-********************************************************************************
+################################################################################
 C++ language extensions
+################################################################################
+
+HIP extends the C++ language with additional features designed for programming
+heterogeneous applications. These extensions mostly relate to the kernel
+language, but some can also be applied to host functionality.
+
 ********************************************************************************
-
-HIP provides a C++ syntax that is suitable for compiling most code that commonly appears in
-compute kernels (classes, namespaces, operator overloading, and templates). HIP also defines other
-language features that are designed to target accelerators, such as:
-
-* A kernel-launch syntax that uses standard C++ (this resembles a function call and is portable to all
-  HIP targets)
-* Short-vector headers that can serve on a host or device
-* Math functions that resemble those in ``math.h``, which is included with standard C++ compilers
-* Built-in functions for accessing specific GPU hardware capabilities
-
-.. note::
-
-  This chapter describes the built-in variables and functions that are accessible from the HIP kernel. It's
-  intended for users who are familiar with CUDA kernel syntax and want to learn how HIP differs from
-  CUDA.
-
-Features are labeled with one of the following keywords:
-
-* **Supported**: HIP supports the feature with a CUDA-equivalent function
-* **Not supported**: HIP does not support the feature
-* **Under development**: The feature is under development and not yet available
+HIP qualifiers
+********************************************************************************
 
 Function-type qualifiers
-========================================================
+================================================================================
 
-``__device__``
------------------------------------------------------------------------
-
-Supported ``__device__`` functions are:
-
-  * Run on the device
-  * Called from the device only
-
-You can combine ``__device__`` with the host keyword (:ref:`host_attr`).
-
-``__global__``
------------------------------------------------------------------------
-
-Supported ``__global__`` functions are:
-
-  * Run on the device
-  * Called (launched) from the host
-
-HIP ``__global__`` functions must have a ``void`` return type.
-
-HIP doesn't support dynamic-parallelism, which means that you can't call ``__global__`` functions from
-the device.
+HIP introduces three different function qualifiers to mark functions for
+execution on the device or the host, and also adds new qualifiers to control
+inlining of functions.
 
 .. _host_attr:
 
 ``__host__``
------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
-Supported ``__host__`` functions are:
-
-  * Run on the host
-  * Called from the host
-
-You can combine ``__host__`` with ``__device__``; in this case, the function compiles for the host and the
-device. Note that these functions can't use the HIP grid coordinate functions (e.g., ``threadIdx.x``). If
-you need to use HIP grid coordinate functions, you can pass the necessary coordinate information as
-an argument.
+The ``__host__`` qualifier is used to specify functions for execution
+on the host. This qualifier is implicitly defined for any function where no
+host, device or global qualifier is added, in order to not break compatibility
+with existing C++ functions.
 
 You can't combine ``__host__`` with ``__global__``.
 
-HIP parses the ``__noinline__`` and ``__forceinline__`` keywords and converts them into the appropriate
-Clang attributes.
+``__device__``
+--------------------------------------------------------------------------------
+
+The ``__device__`` qualifier is used to specify functions for execution on the
+device. They can only be called from other ``__device__`` functions or from
+``__global__`` functions.
+
+You can combine it with the ``__host__`` qualifier and mark functions
+``__host__ __device__``. In this case, the function is compiled for the host and
+the device. Note that these functions can't use the HIP built-ins (e.g.,
+``threadIdx.x`` or ``warpSize``), as they are not available on the host. If you
+need to use HIP grid coordinate functions, you can pass the necessary coordinate
+information as an argument.
+
+``__global__``
+--------------------------------------------------------------------------------
+
+Functions marked ``__global__`` are executed on the device and are referred to
+as kernels. Their return type must be void. Kernels have a special launch
+mechanism, and have to be launched from the host.
+
+Unlike CUDA, HIP does not support dynamic parallelism, meaning that kernels can
+not be called from the device.
 
 Calling ``__global__`` functions
-=============================================================
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-`__global__` functions are often referred to as *kernels*. When you call a global function, you're
-*launching a kernel*. When launching a kernel, you must specify an execution configuration that includes the
-grid and block dimensions. The execution configuration can also include other information for the launch,
-such as the amount of additional shared memory to allocate and the stream where you want to execute the
-kernel.
+The launch mechanism for kernels differs from standard function calls, as they
+need an additional configuration, that specifies the grid and block dimensions
+(i.e. the amount of threads to be launched), as well as specifying the amount of
+shared memory per block and which stream to execute the kernel on.
 
-HIP introduces a standard C++ calling convention (``hipLaunchKernelGGL``) to pass the run
-configuration to the kernel. However, you can also use the CUDA ``<<< >>>`` syntax.
+Kernels are called using the ``<<<>>>`` syntax known from CUDA, but also
+supports the ``hipLaunchKernelGGL`` macro.
 
-When using ``hipLaunchKernelGGL``, your first five parameters must be:
+When using ``hipLaunchKernelGGL``, the first five configuration parameters must
+be:
 
-  * ``symbol kernelName``: The name of the kernel you want to launch. To support template kernels
-    that contain ``","``, use the ``HIP_KERNEL_NAME`` macro (HIPIFY tools insert this automatically).
-  * ``dim3 gridDim``: 3D-grid dimensions that specify the number of blocks to launch.
-  * ``dim3 blockDim``: 3D-block dimensions that specify the number of threads in each block.
-  * ``size_t dynamicShared``: The amount of additional shared memory that you want to allocate
-    when launching the kernel (see :ref:`shared-variable-type`).
-  * ``hipStream_t``: The stream where you want to run the kernel. A value of ``0`` corresponds to the
-    NULL stream (see :ref:`synchronization functions`).
+* ``symbol kernelName``: The name of the kernel you want to launch. To support
+  template kernels that contain several template parameters separated by use the
+  ``HIP_KERNEL_NAME`` macro to wrap the template instantiation
+  (:doc:`HIPIFY <hipify:index>` inserts this automatically).
+* ``dim3 gridDim``: 3D-grid dimensions that specifies the number of blocks to
+  launch.
+* ``dim3 blockDim``: 3D-block dimensions that specifies the number of threads in
+  each block.
+* ``size_t dynamicShared``: The amount of additional shared dynamic memory to
+  allocate per block.
+* ``hipStream_t``: The stream on which to run the kernel. A value of ``0``
+  corresponds to the default stream.
 
-You can include your kernel arguments after these parameters.
-
-.. code-block:: cpp
-
-  // Example hipLaunchKernelGGL pseudocode:
-  __global__ void MyKernel(float *A, float *B, float *C, size_t N)
-  {
-  ...
-  }
-
-  MyKernel<<<dim3(gridDim), dim3(groupDim), 0, 0>>> (a,b,c,n);
-
-  // Alternatively, you can launch the kernel using:
-  // hipLaunchKernelGGL(MyKernel, dim3(gridDim), dim3(groupDim), 0/*dynamicShared*/, 0/*stream), a, b, c, n);
-
-You can use HIPIFY tools to convert CUDA launch syntax to ``hipLaunchKernelGGL``. This includes the
-conversion of optional ``<<< >>>`` arguments into the five required ``hipLaunchKernelGGL``
-parameters.
-
-.. note::
-
-  HIP doesn't support dimension sizes of :math:`gridDim * blockDim \ge 2^{32}` when launching a kernel.
-
-.. _kernel-launch-example:
-
-Kernel launch example
-==========================================================
+The kernel arguments are listed after the configuration parameters.
 
 .. code-block:: cpp
 
-  // Example showing device function, __device__ __host__
-  // <- compile for both device and host
   #include <hip/hip_runtime.h>
-  // Example showing device function, __device__ __host__
-  __host__ __device__ float PlusOne(float x) // <- compile for both device and host
-  {
-    return x + 1.0;
-  }
 
-  __global__ void MyKernel (const float *a, const float *b, float *c, unsigned N)
+  __global__ void example_kernel(float * const a, const unsigned int N)
   {
-    const int gid = threadIdx.x + blockIdx.x * blockDim.x; // <- coordinate index function
-    if (gid < N) {
-      c[gid] = a[gid] + PlusOne(b[gid]);
+    // Index variables. Determined by the launch configuration.
+    // The following uniquely identifies a thread in a 1D configuration.
+    const int globalIdx = threadIdx.x + blockIdx.x * blockDim.x;
+    // simple initialization of the array
+    if(globalIdx < N){
+      a[globalIdx] = globalIdx;
     }
   }
 
-  void callMyKernel()
+  int main()
   {
-    float *a, *b, *c; // initialization not shown...
-    unsigned N = 1000000;
-    const unsigned blockSize = 256;
-    const int gridSize = (N + blockSize - 1)/blockSize;
+    constexpr int N = 1000000; // problem size
+    constexpr int blockSize = 256; //configurable block size
+    constexpr int gridSize = (N + blockSize - 1)/blockSize; //needed number of blocks for the given problem size
 
-    MyKernel<<<dim3(gridSize), dim3(blockSize), 0, 0>>> (a,b,c,N);
-    // Alternatively, kernel can be launched by
-    // hipLaunchKernelGGL(MyKernel, dim3(gridSize), dim3(blockSize), 0, 0, a,b,c,N);
+    float *a;
+    hipMalloc(&a, sizeof(*a) * N);
+
+    example_kernel<<<dim3(gridSize), dim3(blockSize), 0/*example doesn't use shared memory*/, 0/*default stream*/>>>(a, N);
   }
 
-Variable type qualifiers
-========================================================
+Inline qualifiers
+--------------------------------------------------------------------------------
+
+HIP adds the ``__noinline__`` and ``__forceinline__`` function qualifiers.
+
+``__noinline__`` is a hint to the compiler to not inline the function, whereas 
+``__forceinline__`` forces the compiler to inline the function. These qualifiers
+can be applied to both ``__host__`` and ``__device__`` functions.
+
+``__noinline__`` and ``__forceinline__`` can not be used in combination.
+
+``__launch_bounds__``
+--------------------------------------------------------------------------------
+
+GPU multiprocessors have a fixed pool of resources (primarily registers and
+shared memory) which are shared by the actively running warps. Using more
+resources can increase IPC of the kernel but reduces the resources available for
+other warps and limits the number of warps that can be simultaneously running.
+Thus GPUs have to balance resource usage between instruction- and thread-level
+parallelism.
+
+``__launch_bounds__`` allows the application to provide hints that influence the
+resource (primarily registers) usage of the generated code. It is a function
+attribute that must be attached to a __global__ function:
+
+.. code-block:: cpp
+
+  __global__ void __launch_bounds__(MAX_THREADS_PER_BLOCK, MIN_WARPS_PER_EXECUTION_UNIT)
+  kernel_name(/*args*/);
+
+The  ``__launch_bounds__`` parameters are explained in the following sections:
+
+MAX_THREADS_PER_BLOCK
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This parameter is a guarantee from the programmer, that kernel will not be
+launched with more threads than ``MAX_THREADS_PER_BLOCK``. 
+
+If no ``__launch_bounds__`` are specified, ``MAX_THREADS_PER_BLOCK`` is
+the maximum block size supported by the device (see
+:doc:`reference/hardware_features`). Reducing ``MAX_THREADS_PER_BLOCK`` allows
+the compiler to use more resources per thread than an unconstrained
+compilation. This might however reduce the amount of blocks that can run
+concurrently on a CU, thereby reducing occupancy and trading thread-level
+parallelism for instruction-level parallelism.
+
+``MAX_THREADS_PER_BLOCK`` is particularly useful in cases, where the compiler is
+constrained by register usage in order to meet requirements of large block sizes
+that are never used at launch time.
+
+The compiler can only use the hints to manage register usage, and does not
+automatically reduce shared memory usage. The compilation fails, if the compiler
+can not generate code that satisfies the launch bounds.
+
+On NVCC this parameter maps to the ``.maxntid`` PTX directive.
+
+When launching kernels HIP will validate the launch configuration to make sure
+the requested block size is not larger than ``MAX_THREADS_PER_BLOCK`` and
+return an error if it is exceeded.
+
+If :doc:`AMD_LOG_LEVEL <how-to/logging>` is set, detailed information will be
+shown in the error log message, including the launch configuration of the
+kernel and the specified ``__launch_bounds__``.
+
+MIN_WARPS_PER_EXECUTION_UNIT
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This parameter specifies the minimum number of warps that must be able to run
+concurrently on an execution unit.
+``MIN_WARPS_PER_EXECUTION_UNIT`` is optional and defaults to 1 if not specified.
+Since active warps compete for the same fixed pool of resources, the compiler
+must constrain the resource usage of the warps. This option gives a lower
+bound to the occupancy of the kernel.
+
+From this parameter, the compiler derives a maximum number of registers that can
+be used in the kernel. The amount of registers that can be used at most is
+:math:`\frac{\text{available registers}}{\text{MIN_WARPS_PER_EXECUTION_UNIT}}`, but it might
+also have other, architecture specific, restrictions.
+
+The available registers per Compute Unit are listed in
+:doc:`rocm:reference/gpu-arch-specs`. Beware that these values are per Compute
+Unit, not per Execution Unit. On AMD GPUs a Compute Unit consists of 4 Execution
+Units, also known as SIMDs, each with their own register file. For more
+information see :doc:`understand/hardware_implementation`.
+:cpp:struct:`hipDeviceProp_t` also has a field ``executionUnitsPerMultiprocessor``.
+
+Porting from CUDA ``__launch_bounds``
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+CUDA defines the ``__launch_bounds`` qualifier which works similar to
+``__launch_bounds__``:
+
+.. code-block:: cpp
+
+  __launch_bounds(MAX_THREADS_PER_BLOCK, MIN_BLOCKS_PER_MULTIPROCESSOR)
+
+The first parameter is the same as HIPs' implementation. The second parameter of
+``__launch_bounds`` must  be converted to the format used ``__launch_bounds__``,
+which uses warps and execution units rather than blocks and multiprocessors.
+This conversion is performed automatically by :doc:`HIPIFY <hipify:index>`.
+
+.. code-block:: cpp
+
+  MIN_WARPS_PER_EXECUTION_UNIT = (MIN_BLOCKS_PER_MULTIPROCESSOR * MAX_THREADS_PER_BLOCK) / warpSize
+
+Directly controlling the warps per execution unit makes it easier to reason
+about the occupancy, unlike with blocks, where the occupancy depends on the
+block size.
+
+The use of execution units rather than multiprocessors also provides support for
+architectures with multiple execution units per multiprocessor. For example, the
+AMD GCN architecture has 4 execution units per multiprocessor.
+
+``maxregcount``
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+Unlike ``nvcc``, ``amdclang++`` does not support the ``--maxregcount`` option.
+Instead, users are encouraged to use the ``__launch_bounds__`` directive since
+the parameters are more intuitive and portable than micro-architecture details
+like registers. The directive allows per-kernel control.
+``__launch_bounds__`` works on both AMD and NVIDIA platforms.
+
+Memory space qualifiers
+================================================================================
+
+HIP adds qualifiers to specify the memory space in which the variables are
+located.
+
+``__device__``
+--------------------------------------------------------------------------------
+
+Variables marked with ``__device__`` reside in device memory. It can be
+combined together with one of the following qualifiers, however these qualifiers
+also imply the ``__device__`` qualifier.
+
+By default it can only be accessed from the threads on the device. In order to
+access it from the host, its address and size need to be queried using
+:cpp:func:`hipGetSymbolAddress` and :cpp:func:`hipGetSymbolSize` and copied with
+ :cpp:func:`hipMemcpyToSymbol` or :cpp:func:`hipMemcpyFromSymbol`.
 
 ``__constant__``
------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
-The host writes constant memory before launching the kernel. This memory is read-only from the GPU
-while the kernel is running. The functions for accessing constant memory are:
+Variables marked with ``__constant__`` reside in device memory. Variables in
+that address space are routed through the constant cache, but that address space
+has a limited logical size.
+This memory space is read-only from within kernels and can only be set by the
+host before kernel execution.
 
-* ``hipGetSymbolAddress()``
-* ``hipGetSymbolSize()``
-* ``hipMemcpyToSymbol()``
-* ``hipMemcpyToSymbolAsync()``
-* ``hipMemcpyFromSymbol()``
-* ``hipMemcpyFromSymbolAsync()``
+To get the best performance benefit, these variables need a special access
+pattern to benefit from the constant cache - the access has to be uniform within
+a warp, otherwise the accesses are serialized.
 
-.. note::
+The constant cache reduces the pressure on the other caches and may enable
+higher throughput and lower latency accesses.
 
-  Add ``__constant__`` to a template can lead to undefined behavior. Refer to `HIP Issue #3201 <https://github.com/ROCm/HIP/issues/3201>`_ for details.
+To set the ``__constant__`` variables the host must copy the data to the device
+using :cpp:func:`hipMemcpyToSymbol`, for example:
 
-.. _shared-variable-type:
+.. code-block:: cpp
+
+    __constant__ int const_array[8];
+
+    void use_constant_memory(){
+      int host_data[8] {1,2,3,4,5,6,7,8};
+
+      hipMemcpyToSymbol(const_array, host_data, sizeof(int) * 8);
+
+      // call kernel that accesses const_array
+    }
 
 ``__shared__``
------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
-To allow the host to dynamically allocate shared memory, you can specify ``extern __shared__`` as a
-launch parameter.
+Variables marked with ``__shared__`` are only accessible by threads within the
+same block and have the lifetime of that block. It is usually backed by on-chip
+shared memory, providing fast access to all threads within a block, which makes
+it perfectly suited for sharing variables.
 
-.. note::
+Shared memory can be allocated statically within the kernel, but the size
+of it has to be known at compile time.
 
-  Prior to the HIP-Clang compiler, dynamic shared memory had to be declared using the
-  ``HIP_DYNAMIC_SHARED`` macro in order to ensure accuracy. This is because using static shared
-  memory in the same kernel could've resulted in overlapping memory ranges and data-races. The
-  HIP-Clang compiler provides support for ``extern __shared_`` declarations, so ``HIP_DYNAMIC_SHARED``
-  is no longer required.
+In order to dynamically allocate shared memory during runtime, but before the
+kernel is launched, the variable has to be declared  ``extern``, and the kernel
+launch has to specify the needed amount of ``extern`` shared memory in the launch
+configuration. The statically allocated shared memory is allocated without this
+parameter.
+
+.. code-block:: cpp
+
+  #include <hip/hip_runtime.h>
+
+  extern __shared__ int shared_array[];
+
+  __global__ void kernel(){
+    // initialize shared memory
+    shared_array[threadIdx.x] = threadIdx.x;
+    // use shared memory
+  }
+
+  int main(){
+    //shared memory in this case depends on the configurable block size
+    constexpr int blockSize = 256;
+    constexpr int sharedMemSize = blockSize * sizeof(int);
+    constexpr int gridSize = 2;
+
+    kernel<<<dim3(gridSize), dim3(blockSize), sharedMemSize, 0>>>();
+  }
 
 ``__managed__``
------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
-Managed memory, including the ``__managed__`` keyword, is supported in HIP combined host/device
-compilation.
+Managed memory is a special qualifier, that makes the marked memory available on
+the device and on the host. For more details see :ref:`unified_memory`.
 
 ``__restrict__``
------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
-``__restrict__`` tells the compiler that the associated memory pointer not to alias with any other pointer
-in the kernel or function. This can help the compiler generate better code. In most use cases, every
-pointer argument should use this keyword in order to achieve the benefit.
+The ``__restrict__`` keyword tells the compiler that the associated memory
+pointer does not alias with any other pointer in the function. This can help the
+compiler perform better optimizations. For best results, every pointer passed to
+a function should use this keyword.
 
-Built-in variables
-====================================================
+********************************************************************************
+Built-in constants
+********************************************************************************
 
-Coordinate built-ins
------------------------------------------------------------------------------
+HIP defines some special built-in constants for use in device code.
 
-The kernel uses coordinate built-ins (``thread*``, ``block*``, ``grid*``) to determine the coordinate index
-and bounds for the active work item.
+These built-ins are not implicitly defined by the compiler, the
+``hip_runtime.h`` header has to be included instead.
 
-Built-ins are defined in ``amd_hip_runtime.h``, rather than being implicitly defined by the compiler.
+Index built-ins
+================================================================================
 
-Coordinate variable definitions for built-ins are the same for HIP and CUDA. For example: ``threadIdx.x``,
-``blockIdx.y``, and ``gridDim.y``. The products ``gridDim.x * blockDim.x``, ``gridDim.y * blockDim.y``, and
-``gridDim.z * blockDim.z`` are always less than ``2^32``.
+Kernel code can use these identifiers to distinguish between the different
+threads and blocks within a kernel.
 
-Coordinate built-ins are implemented as structures for improved performance. When used with
-``printf``, they must be explicitly cast to integer types.
+These built-ins are of type dim3, and are constant for each thread, but differ
+between the threads or blocks, and are initialized at kernel launch.
+
+blockDim and gridDim
+--------------------------------------------------------------------------------
+
+``blockDim`` and ``gridDim`` contain the sizes specified at kernel launch.
+``blockDim`` contains the amount of threads in the x-, y- and z-dimensions of
+the block of threads. Similarly ``gridDim`` contains the amount of blocks in the
+grid.
+
+threadIdx and blockIdx
+--------------------------------------------------------------------------------
+
+``threadIdx`` and ``blockIdx`` can be used to identify the threads and blocks
+within the kernel.
+
+``threadIdx`` identifies the thread within a block, meaning its values are
+within ``0`` and ``blockDim.{x,y,z} - 1``. Likewise ``blockIdx`` identifies the
+block within the grid, and the values are within ``0`` and ``gridDim.{} - 1``.
+
+A global unique identifier of a three-dimensional grid can be calculated using
+the following code:
+
+.. code-block:: cpp
+
+  (threadIdx.x + blockIdx.x * blockDim.x) +
+  (threadIdx.y + blockIdx.y * blockDim.y) * blockDim.x +
+  (threadIdx.z + blockIdx.z * blockDim.z) * blockDim.x * blockDim.y
 
 ``warpSize``
------------------------------------------------------------------------------
-The ``warpSize`` variable type is ``int``. It contains the warp size (in threads) for the target device.
-``warpSize`` should only be used in device functions that develop portable wave-aware code.
+================================================================================
+
+The ``warpSize`` constant contains the number of threads per warp for the given
+target device. It can differ between different architectures, and on RDNA
+architectures it can even differ between kernel launches, depending on whether
+they run in CU or WGP mode. See the
+:doc:`hardware features <rocm:/reference/hardware_features>` for more
+information.
+
+On the host side it can be queried using:
+
+.. code-block:: cpp
+
+    int val;
+    hipDeviceGetAttribute(&val, hipDeviceAttributeWarpSize, deviceId);
 
 .. note::
 
-  NVIDIA devices return 32 for this variable; AMD devices return 64 for gfx9 and 32 for gfx10 and above.
+  ``warpSize`` should not be assumed to be a specific value in portable HIP
+  applications. NVIDIA devices return 32 for this variable; AMD devices return
+  64 for gfx9 and 32 for gfx10 and above.
 
+********************************************************************************
 Vector types
-====================================================
+********************************************************************************
 
-The following vector types are defined in ``hip_runtime.h``. They are not automatically provided by the
-compiler.
+These types are not automatically provided by the compiler. The
+``hip_vector_types.h`` header, which is also included by ``hip_runtime.h`` has
+to be included to use these types.
 
-Short vector types
---------------------------------------------------------------------------------------------
+Fundamental vector types
+================================================================================
 
-Short vector types derive from basic integer and floating-point types. These structures are defined in
-``hip_vector_types.h``. The first, second, third, and fourth components of the vector are defined by the
-``x``, ``y``, ``z``, and ``w`` fields, respectively. All short vector types support a constructor function of the
-form ``make_<type_name>()``. For example, ``float4 make_float4(float x, float y, float z, float w)`` creates
-a vector with type ``float4`` and value ``(x,y,z,w)``.
+Fundamental vector types derive from the `fundamental C++ integral and
+floating-point types <https://en.cppreference.com/w/cpp/language/types>`_. These
+types are defined in ``hip_vector_types.h``, which is included by
+``hip_runtime.h``.
 
-HIP supports the following short vector formats:
+All vector types can be created with ``1``, ``2``, ``3`` or ``4`` elements, the
+corresponding type is ``<fundamental_type>i``, where ``i`` is the number of
+elements.
 
-* Signed Integers:
+All vector types support a constructor function of the form
+``make_<type_name>()``. For example,
+``float3 make_float3(float x, float y, float z)`` creates a vector of type
+``float3`` with value ``(x,y,z)``.
+The elements of the vectors can be accessed using their members ``x``, ``y``,
+``z``, and ``w``. 
 
-  * ``char1``, ``char2``, ``char3``, ``char4``
-  * ``short1``, ``short2``, ``short3``, ``short4``
-  * ``int1``, ``int2``, ``int3``, ``int4``
-  * ``long1``, ``long2``, ``long3``, ``long4``
-  * ``longlong1``, ``longlong2``, ``longlong3``, ``longlong4``
+.. code-block:: cpp
 
-* Unsigned Integers:
+  double2 d2_vec = make_double2(2.0, 4.0);
+  double first_elem = d2_vec.x;
 
-  * ``uchar1``, ``uchar2``, ``uchar3``, ``uchar4``
-  * ``ushort1``, ``ushort2``, ``ushort3``, ``ushort4``
-  * ``uint1``, ``uint2``, ``uint3``, ``uint4``
-  * ``ulong1``, ``ulong2``, ``ulong3``, ``ulong4``
-  * ``ulonglong1``, ``ulonglong2``, ``ulonglong3``, ``ulonglong4``
+HIP supports vectors created from the following fundamental types:
 
-* Floating Points:
-
-  * ``float1``, ``float2``, ``float3``, ``float4``
-  * ``double1``, ``double2``, ``double3``, ``double4``
+.. list-table::
+  *
+    - :cspan:`1` Integral Types
+  *
+    - ``char``
+    - ``uchar``
+  *
+    - ``short``
+    - ``ushort``
+  *
+    - ``int``
+    - ``uint``
+  *
+    - ``long``
+    - ``ulong``
+  *
+    - ``longlong``
+    - ``ulonglong``
+  *
+    - :cspan:`1` Floating-Point Types
+  *
+    - :cspan:`1` ``float``
+  *
+    - :cspan:`1` ``double``
 
 .. _dim3:
 
 dim3
---------------------------------------------------------------------------------------------
+================================================================================
 
-``dim3`` is a three-dimensional integer vector type that is commonly used to specify grid and group
-dimensions.
+``dim3`` is a special three-dimensional unsigned integer vector type that is
+commonly used to specify grid and group dimensions for kernel launch
+configurations.
 
-The dim3 constructor accepts between zero and three arguments. By default, it initializes unspecified
-dimensions to 1.
+Its constructor accepts up to three arguments. The unspecified dimensions are
+initialized to 1.
 
-.. code-block:: cpp
-
-  typedef struct dim3 {
-    uint32_t x;
-    uint32_t y;
-    uint32_t z;
-
-    dim3(uint32_t _x=1, uint32_t _y=1, uint32_t _z=1) : x(_x), y(_y), z(_z) {};
-  };
+********************************************************************************
+Built-in device functions
+********************************************************************************
 
 .. _memory_fence_instructions:
 
 Memory fence instructions
-====================================================
+================================================================================
 
-HIP supports ``__threadfence()`` and ``__threadfence_block()``. If you're using ``threadfence_system()`` in the HIP-Clang path, you can use the following workaround:
+HIP supports ``__threadfence()``, ``__threadfence_block()`` and
+``__threadfence_system()``.
+
+On AMD devices, ``__threadfence_system()``, has restrictions and therefore needs
+the following workaround:
 
 #. Build HIP with the ``HIP_COHERENT_HOST_ALLOC`` environment variable enabled.
 #. Modify kernels that use ``__threadfence_system()`` as follows:
@@ -310,7 +502,7 @@ HIP supports ``__threadfence()`` and ``__threadfence_block()``. If you're using 
 .. _synchronization_functions:
 
 Synchronization functions
-====================================================
+================================================================================
 
 Synchronization functions causes all threads in the group to wait at this synchronization point, and for all shared and global memory accesses by the threads to complete, before running synchronization. This guarantees the visibility of accessed data for all threads in the group.
 
@@ -320,14 +512,14 @@ The ``__syncthreads()`` built-in function is supported in HIP. The ``__syncthrea
 The Cooperative Groups API offer options to do synchronization on a developer defined set of thread groups. For further information, check :ref:`Cooperative Groups API <cooperative_groups_reference>` or :ref:`Cooperative Groups how to <cooperative_groups_how-to>`.
 
 Math functions
-====================================================
+================================================================================
 
 HIP-Clang supports a set of math operations that are callable from the device. 
 HIP supports most of the device functions supported by CUDA. These are described
 on :ref:`Math API page <math_api_reference>`.
 
 Texture functions
-===============================================
+================================================================================
 
 The supported texture functions are listed in ``texture_fetch_functions.h`` and
 ``texture_indirect_functions.h`` header files in the
@@ -339,108 +531,109 @@ on your device, use ``Macro __HIP_NO_IMAGE_SUPPORT == 1``. You can query the att
 code.
 
 Surface functions
-===============================================
+================================================================================
 
 The supported surface functions are located on :ref:`Surface object reference
 page <surface_object_reference>`.
 
 Timer functions
-===============================================
+================================================================================
 
-To read a high-resolution timer from the device, HIP provides the following built-in functions:
+HIP provides device functions to read a high-resolution timer from within the
+kernel.
 
-* Returning the incremental counter value for every clock cycle on a device:
+The following functions count the cycles on the device, where the rate varies
+with the actual frequency.
 
   .. code-block:: cpp
 
     clock_t clock()
     long long int clock64()
 
-  The difference between the values that are returned represents the cycles used.
+.. note::
 
-* Returning the wall clock count at a constant frequency on the device:
+  ``clock()`` and ``clock64()`` do not work properly on AMD RDNA3 (GFX11) graphic processors.
 
-  .. code-block:: cpp
+The difference between the returned values represents the cycles used.
 
-    long long int wall_clock64()
+.. code-block:: cpp
 
-  This can be queried using the HIP API with the ``hipDeviceAttributeWallClockRate`` attribute of the
-  device in HIP application code. For example:
+  __global void kernel(){
+    long long int start = clock64();
+    // kernel code
+    long long int stop = clock64();
+    long long int cycles = stop - start;
+  }
+
+``long long int wall_clock64()`` returns the wall clock time on the device, with a constant, fixed frequency.
+The frequency is device dependent and can be queried using:
 
   .. code-block:: cpp
 
     int wallClkRate = 0; //in kilohertz
-    HIPCHECK(hipDeviceGetAttribute(&wallClkRate, hipDeviceAttributeWallClockRate, deviceId));
-
-  Where ``hipDeviceAttributeWallClockRate`` is a device attribute. Note that wall clock frequency is a
-  per-device attribute.
-
-  Note that ``clock()`` and ``clock64()`` do not work properly on AMD RDNA3 (GFX11) graphic processors.
+    hipDeviceGetAttribute(&wallClkRate, hipDeviceAttributeWallClockRate, deviceId);
 
 .. _atomic functions:
 
 Atomic functions
-===============================================
+================================================================================
 
-Atomic functions are run as read-modify-write (RMW) operations that reside in global or shared
-memory. No other device or thread can observe or modify the memory location during an atomic
-operation. If multiple instructions from different devices or threads target the same memory location,
-the instructions are serialized in an undefined order.
+Atomic functions are read-modify-write (RMW) operations, whose result is visible
+to all other threads on the scope of the atomic operation, once the operation
+completes.
 
-To support system scope atomic operations, you can use the HIP APIs that contain the ``_system`` suffix.
-For example:
+If multiple instructions from different devices or threads target the same
+memory location, the instructions are serialized in an undefined order.
 
-* ``atomicAnd``: This function is atomic and coherent within the GPU device running the function
+Atomic operations in kernels can operate on block scope (i.e. shared memory),
+device scope (global memory), or system scope (system memory), depending on
+hardware support. 
 
-* ``atomicAnd_system``: This function extends the atomic operation from the GPU device to other CPUs and GPU devices in the system.
+The listed functions are also available with the ``_system`` suffix, operating
+on system scope, which includes host memory and other GPUs' memory. The
+functions without suffix operate on shared or global memory on the executing
+device, depending on the memory space of the variable.
 
-HIP supports the following atomic operations.
+For hardware support see :doc:`hardware features <rocm:/reference/hardware_features>` for more information.
+
+HIP supports the following atomic operations, where ``TYPE`` is one of ``int``,
+``unsigned int``, ``unsigned long``, ``unsigned long long``, ``float`` or
+``double``, while ``INTEGER`` is ``int``, ``unsigned int``, ``unsigned long``,
+``unsigned long long``:
+
+.. list-table:: Atomic operations
+
+    * - ``TYPE atomicAdd(TYPE* address, TYPE val)``
+
+    * - ``TYPE atomicSub(TYPE* address, TYPE val)``
+
+    * - ``TYPE atomicMin(TYPE* address, TYPE val)``
+    * - ``long long atomicMin(long long* address, long long val)``
+
+    * - ``TYPE atomicMax(TYPE* address, TYPE val)``
+    * - ``long long atomicMax(long long* address, long long val)``
+
+    * - ``TYPE atomicExch(TYPE* address, TYPE val)``
+
+    * - ``TYPE atomicCAS(TYPE* address, TYPE compare, TYPE val)``
+
+    * - ``INTEGER atomicAnd(INTEGER* address, INTEGER val)``
+
+    * - ``INTEGER atomicOr(INTEGER* address, INTEGER val)``
+
+    * - ``INTEGER atomicXor(INTEGER* address, INTEGER val)``
+
+
+Differences in HIP and CUDA atomic support
+--------------------------------------------------------------------------------
+
+The following table lists differences in atomic support between HIP and CUDA.
 
 .. list-table:: Atomic operations
 
     * - **Function**
       - **Supported in HIP**
       - **Supported in CUDA**
-
-    * - ``int atomicAdd(int* address, int val)``
-      - ✓
-      - ✓
-
-    * - ``int atomicAdd_system(int* address, int val)``
-      - ✓
-      - ✓
-
-    * - ``unsigned int atomicAdd(unsigned int* address,unsigned int val)``
-      - ✓
-      - ✓
-
-    * - ``unsigned int atomicAdd_system(unsigned int* address, unsigned int val)``
-      - ✓
-      - ✓
-
-    * - ``unsigned long long atomicAdd(unsigned long long* address,unsigned long long val)``
-      - ✓
-      - ✓
-
-    * - ``unsigned long long atomicAdd_system(unsigned long long* address, unsigned long long val)``
-      - ✓
-      - ✓
-
-    * - ``float atomicAdd(float* address, float val)``
-      - ✓
-      - ✓
-
-    * - ``float atomicAdd_system(float* address, float val)``
-      - ✓
-      - ✓
-
-    * - ``double atomicAdd(double* address, double val)``
-      - ✓
-      - ✓
-
-    * - ``double atomicAdd_system(double* address, double val)``
-      - ✓
-      - ✓
 
     * - ``float unsafeAtomicAdd(float* address, float val)``
       - ✓
@@ -458,93 +651,6 @@ HIP supports the following atomic operations.
       - ✓
       - ✗
 
-    * - ``int atomicSub(int* address, int val)``
-      - ✓
-      - ✓
-
-    * - ``int atomicSub_system(int* address, int val)``
-      - ✓
-      - ✓
-
-    * - ``unsigned int atomicSub(unsigned int* address,unsigned int val)``
-      - ✓
-      - ✓
-
-    * - ``unsigned int atomicSub_system(unsigned int* address, unsigned int val)``
-      - ✓
-      - ✓
-
-    * - ``int atomicExch(int* address, int val)``
-      - ✓
-      - ✓
-
-    * - ``int atomicExch_system(int* address, int val)``
-      - ✓
-      - ✓
-
-    * - ``unsigned int atomicExch(unsigned int* address,unsigned int val)``
-      - ✓
-      - ✓
-
-    * - ``unsigned int atomicExch_system(unsigned int* address, unsigned int val)``
-      - ✓
-      - ✓
-
-    * - ``unsigned long long atomicExch(unsigned long long int* address,unsigned long long int val)``
-      - ✓
-      - ✓
-
-    * - ``unsigned long long atomicExch_system(unsigned long long* address, unsigned long long val)``
-      - ✓
-      - ✓
-
-    * - ``unsigned long long atomicExch_system(unsigned long long* address, unsigned long long val)``
-      - ✓
-      - ✓
-
-    * - ``float atomicExch(float* address, float val)``
-      - ✓
-      - ✓
-
-    * - ``int atomicMin(int* address, int val)``
-      - ✓
-      - ✓
-
-    * - ``int atomicMin_system(int* address, int val)``
-      - ✓
-      - ✓
-
-    * - ``unsigned int atomicMin(unsigned int* address,unsigned int val)``
-      - ✓
-      - ✓
-
-    * - ``unsigned int atomicMin_system(unsigned int* address, unsigned int val)``
-      - ✓
-      - ✓
-
-    * - ``unsigned long long atomicMin(unsigned long long* address,unsigned long long val)``
-      - ✓
-      - ✓
-
-    * - ``int atomicMax(int* address, int val)``
-      - ✓
-      - ✓
-
-    * - ``int atomicMax_system(int* address, int val)``
-      - ✓
-      - ✓
-
-    * - ``unsigned int atomicMax(unsigned int* address,unsigned int val)``
-      - ✓
-      - ✓
-
-    * - ``unsigned int atomicMax_system(unsigned int* address, unsigned int val)``
-      - ✓
-      - ✓
-
-    * - ``unsigned long long atomicMax(unsigned long long* address,unsigned long long val)``
-      - ✓
-      - ✓
 
     * - ``unsigned int atomicInc(unsigned int* address)``
       - ✗
@@ -554,108 +660,9 @@ HIP supports the following atomic operations.
       - ✗
       - ✓
 
-    * - ``int atomicCAS(int* address, int compare, int val)``
-      - ✓
-      - ✓
 
-    * - ``int atomicCAS_system(int* address, int compare, int val)``
-      - ✓
-      - ✓
-
-    * - ``unsigned int atomicCAS(unsigned int* address,unsigned int compare,unsigned int val)``
-      - ✓
-      - ✓
-
-    * - ``unsigned int atomicCAS_system(unsigned int* address, unsigned int compare, unsigned int val)``
-      - ✓
-      - ✓
-
-    * - ``unsigned long long atomicCAS(unsigned long long* address,unsigned long long compare,unsigned long long val)``
-      - ✓
-      - ✓
-
-    * - ``unsigned long long atomicCAS_system(unsigned long long* address, unsigned long long compare, unsigned long long val)``
-      - ✓
-      - ✓
-
-    * - ``int atomicAnd(int* address, int val)``
-      - ✓
-      - ✓
-
-    * - ``int atomicAnd_system(int* address, int val)``
-      - ✓
-      - ✓
-
-    * - ``unsigned int atomicAnd(unsigned int* address,unsigned int val)``
-      - ✓
-      - ✓
-
-    * - ``unsigned int atomicAnd_system(unsigned int* address, unsigned int val)``
-      - ✓
-      - ✓
-
-    * - ``unsigned long long atomicAnd(unsigned long long* address,unsigned long long val)``
-      - ✓
-      - ✓
-
-    * - ``unsigned long long atomicAnd_system(unsigned long long* address, unsigned long long val)``
-      - ✓
-      - ✓
-
-    * - ``int atomicOr(int* address, int val)``
-      - ✓
-      - ✓
-
-    * - ``int atomicOr_system(int* address, int val)``
-      - ✓
-      - ✓
-
-    * - ``unsigned int atomicOr(unsigned int* address,unsigned int val)``
-      - ✓
-      - ✓
-
-    * - ``unsigned int atomicOr_system(unsigned int* address, unsigned int val)``
-      - ✓
-      - ✓
-
-    * - ``unsigned int atomicOr_system(unsigned int* address, unsigned int val)``
-      - ✓
-      - ✓
-
-    * - ``unsigned long long atomicOr(unsigned long long int* address,unsigned long long val)``
-      - ✓
-      - ✓
-
-    * - ``unsigned long long atomicOr_system(unsigned long long* address, unsigned long long val)``
-      - ✓
-      - ✓
-
-    * - ``int atomicXor(int* address, int val)``
-      - ✓
-      - ✓
-
-    * - ``int atomicXor_system(int* address, int val)``
-      - ✓
-      - ✓
-
-    * - ``unsigned int atomicXor(unsigned int* address,unsigned int val)``
-      - ✓
-      - ✓
-
-    * - ``unsigned int atomicXor_system(unsigned int* address, unsigned int val)``
-      - ✓
-      - ✓
-
-    * - ``unsigned long long atomicXor(unsigned long long* address,unsigned long long val)``
-      - ✓
-      - ✓
-
-    * - ``unsigned long long atomicXor_system(unsigned long long* address, unsigned long long val)``
-      - ✓
-      - ✓
-
-Unsafe floating-point atomic RMW operations
-----------------------------------------------------------------------------------------------------------------
+Unsafe floating-point atomic operations
+--------------------------------------------------------------------------------
 Some HIP devices support fast atomic RMW operations on floating-point values. For example,
 ``atomicAdd`` on single- or double-precision floating-point values may generate a hardware RMW
 instruction that is faster than emulating the atomic operation using an atomic compare-and-swap
@@ -666,8 +673,8 @@ functions implemented with atomic CAS loops. For example, some devices will use 
 or denormal modes, and some devices produce incorrect answers if fast floating-point atomic RMW
 instructions target fine-grained memory allocations.
 
-The HIP-Clang compiler offers a compile-time option, so you can choose fast--but potentially
-unsafe--atomic instructions for your code. On devices that support these instructions, you can include
+The HIP-Clang compiler offers a compile-time option, so you can choose fast - but potentially
+unsafe - atomic instructions for your code. On devices that support these instructions, you can include
 the ``-munsafe-fp-atomics`` option. This flag indicates to the compiler that all floating-point atomic
 function calls are allowed to use an unsafe version, if one exists. For example, on some devices, this
 flag indicates to the compiler that no floating-point ``atomicAdd`` function can target fine-grained
@@ -697,22 +704,25 @@ RMW functions produce unsafe atomic RMW instructions:
 .. _warp-cross-lane:
 
 Warp cross-lane functions
-========================================================
+================================================================================
 
-Threads in a warp are referred to as ``lanes`` and are numbered from ``0`` to ``warpSize - 1``.
-Warp cross-lane functions operate across all lanes in a warp. The hardware guarantees that all warp
-lanes will execute in lockstep, so additional synchronization is unnecessary, and the instructions
-use no shared memory.
+Threads in a warp are referred to as ``lanes`` and are numbered from ``0`` to
+``warpSize - 1``. Warp cross-lane functions cooperate across all lanes in a
+warp. The hardware guarantees that all warp lanes will execute in lockstep, so
+additional synchronization is unnecessary, and the instructions use no shared
+memory.
 
-Note that NVIDIA and AMD devices have different warp sizes. You can use ``warpSize`` built-ins in you
-portable code to query the warp size.
+Note that NVIDIA and AMD devices have different warp sizes. You should use the
+``warpSize`` built-in in portable code to query the warp size.
 
 .. tip::
-  Be sure to review HIP code generated from the CUDA path to ensure that it doesn't assume a
-  ``waveSize`` of 32. "Wave-aware" code that assumes a ``waveSize`` of 32 can run on a wave-64
-  machine, but it only utilizes half of the machine's resources.
+  Be sure to review HIP code ported from CUDA to ensure that it doesn't assume a
+  ``warpSize`` of 32. Code that assumes a ``warpSize`` of 32 can run on a device
+  with 64 threads per warp, but it only utilizes half of the machine's resources.
 
-To get the default warp size of a GPU device, use ``hipGetDeviceProperties`` in you host functions.
+Since ``warpSize`` can differ between devices, it can not be assumed to be a
+compile-time constant on the host. It has to be queried using
+:cpp:func:`hipDeviceGetAttribute` or :cpp:func:`hipDeviceGetProperties`.
 
 .. code-block:: cpp
 
@@ -721,18 +731,15 @@ To get the default warp size of a GPU device, use ``hipGetDeviceProperties`` in 
   int w = props.warpSize;
     // implement portable algorithm based on w (rather than assume 32 or 64)
 
-Only use ``warpSize`` built-ins in device functions, and don't assume ``warpSize`` to be a compile-time
-constant.
-
 Note that assembly kernels may be built for a warp size that is different from the default.
-All mask values either returned or accepted by these builtins are 64-bit
+All mask values either returned or accepted by these built-ins are 64-bit
 unsigned integer values, even when compiled for a wave-32 device, where all the
 higher bits are unused. CUDA code ported to HIP requires changes to ensure that
 the correct type is used.
 
 Note that the ``__sync`` variants are made available in ROCm 6.2, but disabled by
 default to help with the transition to 64-bit masks. They can be enabled by
-setting the preprocessor macro ``HIP_ENABLE_WARP_SYNC_BUILTINS``. These builtins
+setting the preprocessor macro ``HIP_ENABLE_WARP_SYNC_BUILTINS``. These built-ins
 will be enabled unconditionally in the next ROCm release. Wherever possible, the
 implementation includes a static assert to check that the program source uses
 the correct type for the mask.
@@ -740,7 +747,7 @@ the correct type for the mask.
 .. _warp_vote_functions:
 
 Warp vote and ballot functions
--------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 .. code-block:: cpp
 
@@ -770,8 +777,8 @@ lane.
 ``__activemask()`` returns a bit mask of currently active warp lanes. The nth bit
 of the result is 1 if the nth warp lane is active.
 
-Note that the ``__ballot`` and ``__activemask`` builtins in HIP have a 64-bit return
-value (unlike the 32-bit value returned by the CUDA builtins). Code ported from
+Note that the ``__ballot`` and ``__activemask`` built-ins in HIP have a 64-bit return
+value (unlike the 32-bit value returned by the CUDA built-ins). Code ported from
 CUDA should be adapted to support the larger warp sizes that the HIP version
 requires.
 
@@ -788,7 +795,7 @@ argument must execute the same call with the same mask, otherwise the result is
 undefined.
 
 Warp match functions
--------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 .. code-block:: cpp
 
@@ -818,7 +825,7 @@ argument must execute the same call with the same mask, otherwise the result is
 undefined.
 
 Warp shuffle functions
--------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 The default width is ``warpSize`` (see :ref:`warp-cross-lane`). Half-float shuffles are not supported.
 
@@ -845,123 +852,17 @@ argument must execute the same call with the same mask, otherwise the result is
 undefined.
 
 Cooperative groups functions
-==============================================================
+================================================================================
 
-You can use cooperative groups to synchronize groups of threads. Cooperative groups also provide a
-way of communicating between groups of threads at a granularity that is different from the block.
+You can use cooperative groups to synchronize groups of threads. Cooperative
+groups also provide a way of communicating between groups of threads.
 
-HIP supports the following kernel language cooperative groups types and functions:
-
-.. list-table:: Cooperative groups functions
-
-    * - **Function**
-      - **Supported in HIP**
-      - **Supported in CUDA**
-
-    * - ``void thread_group.sync();``
-      - ✓
-      - ✓
-
-    * - ``unsigned thread_group.size();``
-      - ✓
-      - ✓
-
-    * - ``unsigned thread_group.thread_rank()``
-      - ✓
-      - ✓
-
-    * - ``bool thread_group.is_valid();``
-      - ✓
-      - ✓
-
-    * - ``grid_group this_grid()``
-      - ✓
-      - ✓
-
-    * - ``void grid_group.sync()``
-      - ✓
-      - ✓
-
-    * - ``unsigned grid_group.size()``
-      - ✓
-      - ✓
-
-    * - ``unsigned grid_group.thread_rank()``
-      - ✓
-      - ✓
-
-    * - ``bool grid_group.is_valid()``
-      - ✓
-      - ✓
-
-    * - ``multi_grid_group this_multi_grid()``
-      - ✓
-      - ✓
-
-    * - ``void multi_grid_group.sync()``
-      - ✓
-      - ✓
-
-    * - ``unsigned multi_grid_group.size()``
-      - ✓
-      - ✓
-
-    * - ``unsigned multi_grid_group.thread_rank()``
-      - ✓
-      - ✓
-
-    * - ``bool multi_grid_group.is_valid()``
-      - ✓
-      - ✓
-
-    * - ``unsigned multi_grid_group.num_grids()``
-      - ✓
-      - ✓
-
-    * - ``unsigned multi_grid_group.grid_rank()``
-      - ✓
-      - ✓
-
-    * - ``thread_block this_thread_block()``
-      - ✓
-      - ✓
-
-    * - ``multi_grid_group this_multi_grid()``
-      - ✓
-      - ✓
-
-    * - ``void multi_grid_group.sync()``
-      - ✓
-      - ✓
-
-    * - ``void thread_block.sync()``
-      - ✓
-      - ✓
-
-    * - ``unsigned thread_block.size()``
-      - ✓
-      - ✓
-
-    * - ``unsigned thread_block.thread_rank()``
-      - ✓
-      - ✓
-
-    * - ``bool thread_block.is_valid()``
-      - ✓
-      - ✓
-
-    * - ``dim3 thread_block.group_index()``
-      - ✓
-      - ✓
-
-    * - ``dim3 thread_block.thread_index()``
-      - ✓
-      - ✓
-
-For further information, check :ref:`Cooperative Groups API <cooperative_groups_reference>` or :ref:`Cooperative Groups how to <cooperative_groups_how-to>`.
+For further information, check :ref:`Cooperative Groups API
+<cooperative_groups_reference>` or :ref:`Cooperative Groups how to
+<cooperative_groups_how-to>`.
 
 Warp matrix functions
-============================================================
+================================================================================
 
 Warp matrix functions allow a warp to cooperatively operate on small matrices that have elements
 spread over lanes in an unspecified manner.
@@ -993,217 +894,3 @@ HIP does not support kernel language warp matrix types or functions.
     * - ``void mma_sync(fragment<...> &d, const fragment<...> &a, const fragment<...> &b, const fragment<...> &c , bool sat)``
       - ✗
       - ✓
-
-Independent thread scheduling
-============================================================
-
-Certain architectures that support CUDA allow threads to progress independently of each other. This
-independent thread scheduling makes intra-warp synchronization possible.
-
-HIP does not support this type of scheduling.
-
-Profiler Counter Function
-============================================================
-
-The CUDA ``__prof_trigger()`` instruction is not supported.
-
-Assert
-============================================================
-
-The assert function is supported in HIP.
-Assert function is used for debugging purpose, when the input expression equals to zero, the execution will be stopped.
-
-.. code-block:: cpp
-
-  void assert(int input)
-
-There are two kinds of implementations for assert functions depending on the use sceneries,
-- One is for the host version of assert, which is defined in ``assert.h``,
-- Another is the device version of assert, which is implemented in ``hip/hip_runtime.h``.
-Users need to include ``assert.h`` to use ``assert``. For assert to work in both device and host functions, users need to include ``"hip/hip_runtime.h"``.
-
-HIP provides the function ``abort()`` which can be used to terminate the application when terminal failures are detected. It is implemented using the ``__builtin_trap()`` function.
-
-This function produces a similar effect of using ``asm("trap")`` in the CUDA code.
-
-.. note::
-
-  In HIP, the function terminates the entire application, while in CUDA, ``asm("trap")`` only terminates the dispatch and the application continues to run.
-
-
-``printf``
-============================================================
-
-``printf`` function is supported in HIP.
-The following is a simple example to print information in the kernel.
-
-.. code-block:: cpp
-
-  #include <hip/hip_runtime.h>
-
-  __global__ void run_printf() { printf("Hello World\n"); }
-
-  int main() {
-    run_printf<<<dim3(1), dim3(1), 0, 0>>>();
-  }
-
-
-Device-Side Dynamic Global Memory Allocation
-============================================================
-
-Device-side dynamic global memory allocation is under development. HIP now includes a preliminary
-implementation of malloc and free that can be called from device functions.
-
-``__launch_bounds__``
-============================================================
-
-GPU multiprocessors have a fixed pool of resources (primarily registers and shared memory) which are shared by the actively running warps. Using more resources can increase IPC of the kernel but reduces the resources available for other warps and limits the number of warps that can be simultaneously running. Thus GPUs have a complex relationship between resource usage and performance.
-
-``__launch_bounds__`` allows the application to provide usage hints that influence the resources (primarily registers) used by the generated code. It is a function attribute that must be attached to a __global__ function:
-
-.. code-block:: cpp
-
-  __global__ void __launch_bounds__(MAX_THREADS_PER_BLOCK, MIN_WARPS_PER_EXECUTION_UNIT)
-  MyKernel(hipGridLaunch lp, ...)
-  ...
-
-``__launch_bounds__`` supports two parameters:
-- MAX_THREADS_PER_BLOCK - The programmers guarantees that kernel will be launched with threads less than MAX_THREADS_PER_BLOCK. (On NVCC this maps to the ``.maxntid`` PTX directive). If no launch_bounds is specified, MAX_THREADS_PER_BLOCK is the maximum block size supported by the device (typically 1024 or larger). Specifying MAX_THREADS_PER_BLOCK less than the maximum effectively allows the compiler to use more resources than a default unconstrained compilation that supports all possible block sizes at launch time.
-The threads-per-block is the product of (``blockDim.x * blockDim.y * blockDim.z``).
-- MIN_WARPS_PER_EXECUTION_UNIT - directs the compiler to minimize resource usage so that the requested number of warps can be simultaneously active on a multi-processor. Since active warps compete for the same fixed pool of resources, the compiler must reduce resources required by each warp(primarily registers). MIN_WARPS_PER_EXECUTION_UNIT is optional and defaults to 1 if not specified. Specifying a MIN_WARPS_PER_EXECUTION_UNIT greater than the default 1 effectively constrains the compiler's resource usage.
-
-When launch kernel with HIP APIs, for example, ``hipModuleLaunchKernel()``, HIP will do validation to make sure input kernel dimension size is not larger than specified launch_bounds.
-In case exceeded, HIP would return launch failure, if AMD_LOG_LEVEL is set with proper value (for details, please refer to ``docs/markdown/hip_logging.md``), detail information will be shown in the error log message, including
-launch parameters of kernel dim size, launch bounds, and the name of the faulting kernel. It's helpful to figure out which is the faulting kernel, besides, the kernel dim size and launch bounds values will also assist in debugging such failures.
-
-Compiler Impact
---------------------------------------------------------------------------------------------
-
-The compiler uses these parameters as follows:
-- The compiler uses the hints only to manage register usage, and does not automatically reduce shared memory or other resources.
-- Compilation fails if compiler cannot generate a kernel which meets the requirements of the specified launch bounds.
-- From MAX_THREADS_PER_BLOCK, the compiler derives the maximum number of warps/block that can be used at launch time.
-Values of MAX_THREADS_PER_BLOCK less than the default allows the compiler to use a larger pool of registers : each warp uses registers, and this hint constrains the launch to a warps/block size which is less than maximum.
-- From MIN_WARPS_PER_EXECUTION_UNIT, the compiler derives a maximum number of registers that can be used by the kernel (to meet the required #simultaneous active blocks).
-If MIN_WARPS_PER_EXECUTION_UNIT is 1, then the kernel can use all registers supported by the multiprocessor.
-- The compiler ensures that the registers used in the kernel is less than both allowed maximums, typically by spilling registers (to shared or global memory), or by using more instructions.
-- The compiler may use heuristics to increase register usage, or may simply be able to avoid spilling. The MAX_THREADS_PER_BLOCK is particularly useful in this cases, since it allows the compiler to use more registers and avoid situations where the compiler constrains the register usage (potentially spilling) to meet the requirements of a large block size that is never used at launch time.
-
-CU and EU Definitions
---------------------------------------------------------------------------------------------
-
-A compute unit (CU) is responsible for executing the waves of a work-group. It is composed of one or more execution units (EU) which are responsible for executing waves. An EU can have enough resources to maintain the state of more than one executing wave. This allows an EU to hide latency by switching between waves in a similar way to symmetric multithreading on a CPU. In order to allow the state for multiple waves to fit on an EU, the resources used by a single wave have to be limited. Limiting such resources can allow greater latency hiding, but can result in having to spill some register state to memory. This attribute allows an advanced developer to tune the number of waves that are capable of fitting within the resources of an EU. It can be used to ensure at least a certain number will fit to help hide latency, and can also be used to ensure no more than a certain number will fit to limit cache thrashing.
-
-Porting from CUDA ``__launch_bounds``
---------------------------------------------------------------------------------------------
-
-CUDA defines a ``__launch_bounds`` which is also designed to control occupancy:
-
-.. code-block:: cpp
-
-  __launch_bounds(MAX_THREADS_PER_BLOCK, MIN_BLOCKS_PER_MULTIPROCESSOR)
-
-- The second parameter ``__launch_bounds`` parameters must be converted to the format used __hip_launch_bounds, which uses warps and execution-units rather than blocks and multi-processors (this conversion is performed automatically by HIPIFY tools).
-
-.. code-block:: cpp
-
-  MIN_WARPS_PER_EXECUTION_UNIT = (MIN_BLOCKS_PER_MULTIPROCESSOR * MAX_THREADS_PER_BLOCK) / 32
-
-The key differences in the interface are:
-- Warps (rather than blocks):
-The developer is trying to tell the compiler to control resource utilization to guarantee some amount of active Warps/EU for latency hiding. Specifying active warps in terms of blocks appears to hide the micro-architectural details of the warp size, but makes the interface more confusing since the developer ultimately needs to compute the number of warps to obtain the desired level of control.
-- Execution Units (rather than multiprocessor):
-The use of execution units rather than multiprocessors provides support for architectures with multiple execution units/multi-processor. For example, the AMD GCN architecture has 4 execution units per multiprocessor. The ``hipDeviceProps`` has a field ``executionUnitsPerMultiprocessor``.
-Platform-specific coding techniques such as ``#ifdef`` can be used to specify different launch_bounds for NVCC and HIP-Clang platforms, if desired.
-
-``maxregcount``
---------------------------------------------------------------------------------------------
-
-Unlike NVCC, HIP-Clang does not support the ``--maxregcount`` option. Instead, users are encouraged to use the hip_launch_bounds directive since the parameters are more intuitive and portable than
-micro-architecture details like registers, and also the directive allows per-kernel control rather than an entire file. hip_launch_bounds works on both HIP-Clang and NVCC targets.
-
-Asynchronous Functions
-============================================================
-
-The supported asynchronous functions reference are located on the following pages:
-
-* :ref:`stream_management_reference`
-* :ref:`stream_ordered_memory_allocator_reference`
-* :ref:`peer_to_peer_device_memory_access_reference`
-* :ref:`memory_management_reference`
-* :ref:`external_resource_interoperability_reference`
-
-Register Keyword
-============================================================
-
-The register keyword is deprecated in C++, and is silently ignored by both NVCC and HIP-Clang. You can pass the option ``-Wdeprecated-register`` the compiler warning message.
-
-Pragma Unroll
-============================================================
-
-Unroll with a bounds that is known at compile-time is supported. For example:
-
-.. code-block:: cpp
-
-  #pragma unroll 16 /* hint to compiler to unroll next loop by 16 */
-  for (int i=0; i<16; i++) ...
-
-.. code-block:: cpp
-
-  #pragma unroll 1 /* tell compiler to never unroll the loop */
-  for (int i=0; i<16; i++) ...
-
-.. code-block:: cpp
-
-  #pragma unroll /* hint to compiler to completely unroll next loop. */
-  for (int i=0; i<16; i++) ...
-
-In-Line Assembly
-============================================================
-
-GCN ISA In-line assembly is supported.
-
-There are some usage limitations in ROCm compiler for inline asm support, please refer to `Inline ASM statements <https://rocm.docs.amd.com/projects/llvm-project/en/latest/reference/rocmcc.html#inline-asm-statements>`_ for details.
-
-Users can get related background resources on `how to use inline assembly <https://gcc.gnu.org/onlinedocs/gcc/extensions-to-the-c-language-family/how-to-use-inline-assembly-language-in-c-code.html>`_ for any usage of inline assembly features.
-
-A short example program including an inline assembly statement can be found at `inline asm tutorial <https://github.com/ROCm/hip-tests/tree/amd-staging/samples/2_Cookbook/10_inline_asm>`_.
-
-For further usage of special AMD GPU hardware features that are available through assembly, please refer to the ISA manual for `AMDGPU usage <https://llvm.org/docs/AMDGPUUsage.html#additional-documentation>`_, in which AMD GCN is listed from gfx906 to RDNA 3.5.
-
-C++ Support
-============================================================
-
-The following C++ features are not supported:
-
-* Run-time-type information (RTTI)
-* Try/catch
-
-Partially supported features:
-
-* Virtual functions
-
-Virtual functions are not supported if objects containing virtual function tables are passed between GPU's of different offload arch's, e.g. between gfx906 and gfx1030. Otherwise virtual functions are supported.
-
-Kernel Compilation
-============================================================
-
-hipcc now supports compiling C++/HIP kernels to binary code objects.
-The file format for binary is ``.co`` which means Code Object. The following command builds the code object using ``hipcc``.
-
-.. code-block:: bash
-
-  hipcc --genco --offload-arch=[TARGET GPU] [INPUT FILE] -o [OUTPUT FILE]
-
-  [TARGET GPU] = GPU architecture
-  [INPUT FILE] = Name of the file containing kernels
-  [OUTPUT FILE] = Name of the generated code object file
-
-.. note::
-
-  When using binary code objects is that the number of arguments to the kernel is different on HIP-Clang and NVCC path. Refer to the `HIP module_api sample <https://github.com/ROCm/hip-tests/tree/develop/samples/0_Intro/module_api>`_ for differences in the arguments to be passed to the kernel.
-
-gfx-arch-specific-kernel
-============================================================
-
-Clang defined '__gfx*__' macros can be used to execute gfx arch specific codes inside the kernel. Refer to the sample in `HIP 14_gpu_arch sample <https://github.com/ROCm/hip-tests/tree/develop/samples/2_Cookbook/14_gpu_arch>`_.
