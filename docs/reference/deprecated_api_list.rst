@@ -43,10 +43,8 @@ These APIs are now marked as deprecated because there are better alternate inter
 Memory management
 ============================================================
 
-* ``hipMallocHost`` (replaced with ``hipHostAlloc``)
-* ``hipMemAllocHost`` (replaced with ``hipHostAlloc``)
-* ``hipHostMalloc`` (replaced with ``hipExtHostAlloc``)
-* ``hipHostFree`` (replaced with ``hipFreeHost``)
+* ``hipMallocHost`` (replaced with ``hipHostMalloc``)
+* ``hipMemAllocHost`` (replaced with ``hipHostMalloc``)
 * ``hipMemcpyToArray``
 * ``hipMemcpyFromArray``
 
