@@ -34,6 +34,7 @@ subtrees:
   - file: how-to/hip_runtime_api
     subtrees:
     - entries:
+      - file: how-to/hip_runtime_api/initialization
       - file: how-to/hip_runtime_api/memory_management
         subtrees:
         - entries:
@@ -46,6 +47,7 @@ subtrees:
           - file: how-to/hip_runtime_api/memory_management/unified_memory
           - file: how-to/hip_runtime_api/memory_management/virtual_memory
           - file: how-to/hip_runtime_api/memory_management/stream_ordered_allocator
+      - file: how-to/hip_runtime_api/error_handling
       - file: how-to/hip_runtime_api/cooperative_groups
       - file: how-to/hip_runtime_api/hipgraph
   - file: how-to/hip_porting_guide
