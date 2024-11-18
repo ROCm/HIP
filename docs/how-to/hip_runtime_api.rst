@@ -32,4 +32,5 @@ the following figure:
 
 .. note::
 
-  For CUDA-specific headers, see the `hipother repository <https://github.com/ROCm/hipother>`_.
+  On NVIDIA platform HIP runtime API calls CUDA runtime or CUDA driver via
+  hipother interface. For more information, see the `hipother repository <https://github.com/ROCm/hipother>`_.
