@@ -39,7 +39,7 @@ your program.
 
 .. note::
 
-  You can use :cpp:func:`hipDeviceReset()` to delete all streams created, memory
+  You can use :cpp:func:`hipDeviceReset` to delete all streams created, memory
   allocated, kernels running and events created by the current process. Any new
   HIP API call initializes the HIP runtime again.
 
@@ -55,9 +55,9 @@ Querying GPUs
 --------------------------------------------------------------------------------
 
 The properties of a GPU can be queried using :cpp:func:`hipGetDeviceProperties`,
-which returns a struct of :cpp:struct:`hipDeviceProp_t`. The properties in the struct can be
-used to identify a device or give an overview of hardware characteristics, that
-might make one GPU better suited for the task than others. 
+which returns a struct of :cpp:struct:`hipDeviceProp_t`. The properties in the
+struct can be used to identify a device or give an overview of hardware
+characteristics, that might make one GPU better suited for the task than others.
 
 The :cpp:func:`hipGetDeviceCount` function returns the number of available GPUs,
 which can be used to loop over the available GPUs.

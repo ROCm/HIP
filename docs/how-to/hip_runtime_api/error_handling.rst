@@ -9,20 +9,20 @@ Error handling
 HIP provides functionality to detect, report, and manage errors that occur
 during the execution of HIP runtime functions or when launching kernels. Every
 HIP runtime function, apart from launching kernels, has :cpp:type:`hipError_t`
-as return type. :cpp:func:`hipGetLastError()` and :cpp:func:`hipPeekAtLastError()`
+as return type. :cpp:func:`hipGetLastError` and :cpp:func:`hipPeekAtLastError`
 can be used for catching errors from kernel launches, as kernel launches don't
 return an error directly. HIP maintains an internal state, that includes the
 last error code. :cpp:func:`hipGetLastError` returns and resets that error to
-hipSuccess, while :cpp:func:`hipPeekAtLastError` just returns the error without
-changing it. To get a human readable version of the errors,
-:cpp:func:`hipGetErrorString()` and :cpp:func:`hipGetErrorName()` can be used.
+``hipSuccess``, while :cpp:func:`hipPeekAtLastError` just returns the error
+without changing it. To get a human readable version of the errors,
+:cpp:func:`hipGetErrorString` and :cpp:func:`hipGetErrorName` can be used.
 
 .. note::
 
     :cpp:func:`hipGetLastError` returns the returned error code of the last HIP
-    runtime API call even if it's hipSuccess, while ``cudaGetLastError`` returns
-    the error returned by any of the preceding CUDA APIs in the same host thread.
-    :cpp:func:`hipGetLastError` behavior will be matched with
+    runtime API call even if it's ``hipSuccess``, while ``cudaGetLastError``
+    returns the error returned by any of the preceding CUDA APIs in the same
+    host thread. :cpp:func:`hipGetLastError` behavior will be matched with
     ``cudaGetLastError`` in ROCm release 7.0. 
 
 Best practices of HIP error handling:
