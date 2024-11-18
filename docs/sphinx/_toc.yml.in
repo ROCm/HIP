@@ -27,26 +27,33 @@ subtrees:
   - file: understand/programming_model
   - file: understand/hardware_implementation
   - file: understand/amd_clr
-  - file: understand/texture_fetching
-    title: Texture fetching
+  - file: understand/compilers
 
 - caption: How to
   entries:
-  - file: how-to/programming_manual
+  - file: how-to/hip_runtime_api
+    subtrees:
+    - entries:
+      - file: how-to/hip_runtime_api/memory_management
+        subtrees:
+        - entries:
+          - file: how-to/hip_runtime_api/memory_management/host_memory
+          - file: how-to/hip_runtime_api/memory_management/device_memory
+            subtrees:
+            - entries:
+              - file: how-to/hip_runtime_api/memory_management/device_memory/texture_fetching
+          - file: how-to/hip_runtime_api/memory_management/coherence_control
+          - file: how-to/hip_runtime_api/memory_management/unified_memory
+          - file: how-to/hip_runtime_api/memory_management/virtual_memory
+          - file: how-to/hip_runtime_api/memory_management/stream_ordered_allocator
+      - file: how-to/hip_runtime_api/cooperative_groups
+      - file: how-to/hip_runtime_api/hipgraph
   - file: how-to/hip_porting_guide
   - file: how-to/hip_porting_driver_api
   - file: how-to/hip_rtc
   - file: how-to/performance_guidelines
   - file: how-to/debugging
   - file: how-to/logging
-  - file: how-to/cooperative_groups
-  - file: how-to/unified_memory
-    title: Unified memory
-  - file: how-to/virtual_memory
-    title: Virtual memory
-  - file: how-to/stream_ordered_allocator
-  - file: how-to/hipgraph
-    title: HIP graphs
 
 - caption: Reference
   entries:

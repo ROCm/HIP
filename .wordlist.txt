@@ -71,6 +71,7 @@ IILE
 iGPU
 inlined
 inplace
+interop
 Interoperation
 interoperate
 Interprocess
