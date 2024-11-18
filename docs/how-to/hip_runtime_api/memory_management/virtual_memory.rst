@@ -9,11 +9,21 @@
 Virtual memory management
 *****************************
 
-Memory management is important when creating high-performance applications in the HIP ecosystem. Both allocating and copying memory can result in bottlenecks, which can significantly impact performance.
+Memory management is important when creating high-performance applications in
+the HIP ecosystem. Both allocating and copying memory can result in bottlenecks,
+which can significantly impact performance.
 
-Global memory allocation in HIP uses the C language style allocation function. This works fine for simple cases but can cause problems if your memory needs change. If you need to increase the size of your memory, you must allocate a second larger buffer and copy the data to it before you can free the original buffer. This increases overall memory usage and causes unnecessary ``memcpy`` calls. Another solution is to allocate a larger buffer than you initially need. However, this isn't an efficient way to handle resources and doesn't solve the issue of reallocation when the extra buffer runs out.
+Global memory allocation in HIP uses the C language style allocation function.
+This works fine for simple cases but can cause problems if your memory needs
+change. If you need to increase the size of your memory, you must allocate a
+second larger buffer and copy the data to it before you can free the original
+buffer. This increases overall memory usage and causes unnecessary ``memcpy``
+calls. Another solution is to allocate a larger buffer than you initially need.
+However, this isn't an efficient way to handle resources and doesn't solve the
+issue of reallocation when the extra buffer runs out.
 
-Virtual memory management solves these memory management problems. It helps to reduce memory usage and unnecessary ``memcpy`` calls.
+Virtual memory management solves these memory management problems. It helps to
+reduce memory usage and unnecessary ``memcpy`` calls.
 
 .. _memory_allocation_virtual_memory:
 
