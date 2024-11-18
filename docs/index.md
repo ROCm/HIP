@@ -30,7 +30,9 @@ The HIP documentation is organized into the following categories:
 :::{grid-item-card} How to
 
 * {doc}`./how-to/hip_runtime_api`
+  * {doc}`./how-to/hip_runtime_api/initialization`
   * {doc}`./how-to/hip_runtime_api/memory_management`
+  * {doc}`./how-to/hip_runtime_api/error_handling`  
   * {doc}`./how-to/hip_runtime_api/cooperative_groups`
   * {doc}`./how-to/hip_runtime_api/hipgraph`
 * [HIP porting guide](./how-to/hip_porting_guide)
