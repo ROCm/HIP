@@ -31,8 +31,6 @@ two different types of coherence:
   To achieve fine-grained coherence, many AMD GPUs use a limited cache policy,
   such as leaving these allocations uncached by the GPU or making them read-only.
 
-.. TODO: Is this still valid? What about Mi300?
-
 Mi200 accelerator's hardware based floating point instructions work on
 coarse-grained memory regions. Coarse-grained coherence is typically useful in
 reducing host-device interconnect communication.
@@ -161,10 +159,10 @@ fine- and coarse-grained memory types are listed here:
       - Depends on the used event.
       - No
 
-You can control the release scope for hipEvents. By default, the GPU performs a
-device-scope acquire and release operation with each recorded event. This makes
-the host and device memory visible to other commands executing on the same
-device.
+You can control the release scope for ``hipEvents``. By default, the GPU
+performs a device-scope acquire and release operation with each recorded event.
+This makes the host and device memory visible to other commands executing on the
+same device.
 
 :cpp:func:`hipEventCreateWithFlags`: You can specify a stronger system-level
 fence by creating the event with ``hipEventCreateWithFlags``:
