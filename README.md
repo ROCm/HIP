@@ -115,7 +115,7 @@ HIP C++ code can be compiled with either,
   functions and thus has very low overhead - developers coding in HIP should expect the same performance as coding in native CUDA.  The code is then
   compiled with nvcc, the standard C++ compiler provided with the CUDA SDK.  Developers can use any tools supported by the CUDA SDK including the CUDA
   profiler and debugger.
-* On the AMD ROCm platform, HIP provides a header and runtime library built on top of HIP-Clang compiler in the repository [Common Language Runtime (CLR)](https://github.com/ROCm/clr).  The HIP runtime implements HIP streams, events, and memory APIs,
+* On the AMD ROCm platform, HIP provides a header and runtime library built on top of HIP-Clang compiler in the repository [Compute Language Runtime (CLR)](https://github.com/ROCm/clr).  The HIP runtime implements HIP streams, events, and memory APIs,
   and is a object library that is linked with the application.  The source code for all headers and the library implementation is available on GitHub.
   HIP developers on ROCm can use AMD's [ROCgdb](https://github.com/ROCm/ROCgdb) for debugging and profiling.
 
