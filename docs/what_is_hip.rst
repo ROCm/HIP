@@ -68,7 +68,7 @@ C++ runtime API
 
 For the AMD ROCm platform, HIP provides headers and a runtime library built on
 top of HIP-Clang compiler in the repository
-:doc:`Common Language Runtime (CLR) <hip:understand/amd_clr>`. The HIP runtime
+:doc:`Compute Language Runtime (CLR) <understand/amd_clr>`. The HIP runtime
 implements HIP streams, events, and memory APIs, and is an object library that
 is linked with the application. The source code for all headers and the library
 implementation is available on GitHub.
