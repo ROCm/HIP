@@ -64,9 +64,9 @@ Set the repository branch using the variable: ``ROCM_BRANCH``. For example, for 
             git clone -b "$ROCM_BRANCH" https://github.com/ROCm/clr.git
             git clone -b "$ROCM_BRANCH" https://github.com/ROCm/hip.git
 
-         CLR (Common Language Runtime) repository includes ROCclr, HIPAMD and OpenCL.
+         CLR (Compute Language Runtime) repository includes ROCclr, HIPAMD and OpenCL.
 
-         ROCclr (Radeon Open Compute Common Language Runtime) is a virtual device interface which
+         ROCclr (ROCm Compute Language Runtime) is a virtual device interface which
          is defined on the AMD platform. HIP runtime uses ROCclr to interact with different backends.
 
          HIPAMD provides implementation specifically for HIP on the AMD platform.
