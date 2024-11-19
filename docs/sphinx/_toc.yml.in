@@ -92,7 +92,7 @@ subtrees:
           - file: reference/hip_runtime_api/modules/runtime_compilation
           - file: reference/hip_runtime_api/modules/callback_activity_apis
           - file: reference/hip_runtime_api/modules/graph_management
-          - file: reference/hip_runtime_api/modules/opengl_interoperability
+          - file: reference/hip_runtime_api/modules/graphics_interoperability
           - file: reference/hip_runtime_api/modules/cooperative_groups_reference
       - file: reference/hip_runtime_api/global_defines_enums_structs_files
         subtrees:

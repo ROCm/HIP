@@ -37,6 +37,5 @@ The API is organized into modules based on functionality.
 * :ref:`runtime_compilation_reference`
 * :ref:`callback_activity_apis_reference`
 * :ref:`graph_management_reference`
-* :ref:`opengl_interoperability_reference`
 * :ref:`graphics_interoperability_reference`
 * :ref:`cooperative_groups_reference`
