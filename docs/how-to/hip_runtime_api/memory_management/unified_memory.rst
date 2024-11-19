@@ -249,7 +249,7 @@ is supported, and 0 if it is not supported.
     * - :cpp:enumerator:`hipDeviceAttributeManagedMemory`
       - Device supports allocating managed memory on this system
     * - :cpp:enumerator:`hipDeviceAttributePageableMemoryAccess`
-      - Device supports coherently accessing pageable memory without calling hipHostRegister on it.
+      - Device supports coherently accessing pageable memory without calling :cpp:func:`hipHostRegister()` on it.
     * - :cpp:enumerator:`hipDeviceAttributeConcurrentManagedAccess`
       - Full unified memory support. Device can coherently access managed memory concurrently with the CPU
   
