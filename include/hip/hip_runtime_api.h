@@ -733,15 +733,12 @@ enum hipLimit_t {
 * @note  This numa allocation flag is applicable on Linux, under development on Windows.
 */
 #define hipHostMallocNumaUser  0x20000000
-#define hipExtHostAllocNumaUser  0x20000000
 
 /** Allocate coherent memory. Overrides HIP_HOST_COHERENT for specific allocation.*/
 #define hipHostMallocCoherent  0x40000000
-#define hipExtHostAllocCoherent  0x40000000
 
 /** Allocate non-coherent memory. Overrides HIP_HOST_COHERENT for specific allocation.*/
 #define hipHostMallocNonCoherent  0x80000000
-#define hipExtHostAllocNonCoherent  0x80000000
 
 /** Memory can be accessed by any stream on any device*/
 #define hipMemAttachGlobal  0x01
@@ -3528,38 +3525,6 @@ hipError_t hipMemAllocHost(void** ptr, size_t size);
  *  @see hipSetDeviceFlags, hiptHostFree
  */
 hipError_t hipHostMalloc(void** ptr, size_t size, unsigned int flags);
-/**
- *  @brief Allocates device accessible page locked (pinned) host memory
- *
- *  This API allocates pinned host memory which is mapped into the address space of all GPUs
- *  in the system, the memory can be accessed directly by the GPU device, and can be read or
- *  written with much higher bandwidth than pageable memory obtained with functions such as
- *  malloc().
- *
- *  Using the pinned host memory, applications can implement faster data transfers for HostToDevice
- *  and DeviceToHost. The runtime tracks the hipExtHostAlloc allocations and can avoid some of the
- *  setup required for regular unpinned memory.
- *
- *  When the memory accesses are infrequent, zero-copy memory can be a good choice, for coherent
- *  allocation. GPU can directly access the host memory over the CPU/GPU interconnect, without need
- *  to copy the data.
- *
- *  Currently the allocation granularity is 4KB for the API.
- *
- *  Developers need to choose proper allocation flag with consideration of synchronization.
- *
- *  @param[out] ptr Pointer to the allocated host pinned memory
- *  @param[in]  size Requested memory size in bytes
- *  If size is 0, no memory is allocated, *ptr returns nullptr, and hipSuccess is returned.
- *  @param[in]  flags Type of host memory allocation
- *
- *  If no input for flags, it will be the default pinned memory allocation on the host.
- *
- *  @return #hipSuccess, #hipErrorOutOfMemory
- *
- *  @see hipSetDeviceFlags, hipFreeHost
- */
-hipError_t hipExtHostAlloc(void** ptr, size_t size, unsigned int flags);
 /**
  *-------------------------------------------------------------------------------------------------
  *-------------------------------------------------------------------------------------------------
@@ -9665,25 +9630,6 @@ static inline hipError_t hipMallocFromPoolAsync(
   hipStream_t   stream) {
   return hipMallocFromPoolAsync(reinterpret_cast<void**>(dev_ptr), size, mem_pool, stream);
 }
-#if !defined(__HIP_DISABLE_CPP_FUNCTIONS__)
-/**
- * @brief: C++ wrapper for hipExtHostAlloc
- * @ingroup Memory
- * Provide an override to automatically typecast the pointer type from void**, and also provide a
- * default for the flags.
- *
- * __HIP_DISABLE_CPP_FUNCTIONS__ macro can be defined to suppress these
- * wrappers. It is useful for applications which need to obtain decltypes of
- * HIP runtime APIs.
- *
- * @see hipExtHostAlloc
- */
-template <class T>
-static inline hipError_t hipExtHostAlloc(T** ptr, size_t size,
-                                       unsigned int flags = hipHostAllocDefault) {
-    return hipExtHostAlloc((void**)ptr, size, flags);
-}
-#endif //!defined(__HIP_DISABLE_CPP_FUNCTIONS__)
 /**
 * @}
 */

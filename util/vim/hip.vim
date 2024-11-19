@@ -105,7 +105,6 @@ syn keyword hipFunctionName hipEventSynchronize
 syn keyword hipFunctionName hipFree 
 syn keyword hipFunctionName hipFreeArray 
 syn keyword hipFunctionName hipHostMalloc
-syn keyword hipFunctionName hipExtHostAlloc
 syn keyword hipFunctionName hipHostAlloc
 syn keyword hipFunctionName hipHostFree
 syn keyword hipFunctionName hipFreeHost
@@ -196,9 +195,6 @@ syn keyword hipFlags hipHostAllocDefault
 syn keyword hipFlags hipHostAllocPortable
 syn keyword hipFlags hipHostAllocMapped
 syn keyword hipFlags hipHostAllocWriteCombined
-syn keyword hipFlags hipExtHostAllocCoherent
-syn keyword hipFlags hipExtHostAllocNonCoherent
-syn keyword hipFlags hipExtHostAllocNumaUser
 
 syn keyword hipFlags hipHostRegisterDefault
 syn keyword hipFlags hipHostRegisterPortable
