@@ -72,7 +72,7 @@ iGPU
 inlined
 inplace
 interop
-Interoperation
+interoperation
 interoperate
 Interprocess
 interprocess
@@ -158,6 +158,7 @@ unintuitive
 UMM
 unmap
 unmapped
+unmapping
 upscaled
 variadic
 WinGDB
