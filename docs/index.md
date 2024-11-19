@@ -1,34 +1,29 @@
+<head>
+  <meta charset="UTF-8">
+  <meta name="description" content="HIP documentation and programming guide.">
+  <meta name="keywords" content="HIP, Heterogeneous-computing Interface for Portability, HIP programming guide">
+</head>
+
 # HIP documentation
 
-The Heterogeneous-computing Interface for Portability (HIP) is a C++ runtime API and kernel language that lets you create portable applications for AMD and NVIDIA GPUs from a single source code. For more information, see [What is HIP?](./what_is_hip)
-
-Installation instructions are available from:
-
-* [Installing HIP](./install/install)
-* [Building HIP from source](./install/build)
-
-HIP enabled GPUs:  
-
-* [Supported AMD GPUs on Linux](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html#supported-gpus)
-* [Supported AMD GPUs on Windows](https://rocm.docs.amd.com/projects/install-on-windows/en/latest/reference/system-requirements.html#windows-supported-gpus)
-* [Supported NVIDIA GPUs](https://developer.nvidia.com/cuda-gpus)
+The Heterogeneous-computing Interface for Portability (HIP) is a C++ runtime API
+and kernel language that lets you create portable applications for AMD and
+NVIDIA GPUs from a single source code. For more information, see [What is HIP?](./what_is_hip)
 
 The HIP documentation is organized into the following categories:
 
 ::::{grid} 1 2 2 2
 :gutter: 3
 
-:::{grid-item-card} Conceptual
+:::{grid-item-card} Programming guide
 
+* [Introduction](./programming_guide)
 * {doc}`./understand/programming_model`
 * {doc}`./understand/hardware_implementation`
-* {doc}`./understand/amd_clr`
 * {doc}`./understand/compilers`
-
-:::
-
-:::{grid-item-card} How to
-
+* {doc}`./how-to/performance_guidelines`
+* [Debugging with HIP](./how-to/debugging)
+* {doc}`./how-to/logging`
 * {doc}`./how-to/hip_runtime_api`
   * {doc}`./how-to/hip_runtime_api/initialization`
   * {doc}`./how-to/hip_runtime_api/memory_management`
@@ -38,9 +33,7 @@ The HIP documentation is organized into the following categories:
 * [HIP porting guide](./how-to/hip_porting_guide)
 * [HIP porting: driver API guide](./how-to/hip_porting_driver_api)
 * {doc}`./how-to/hip_rtc`
-* {doc}`./how-to/performance_guidelines`
-* [Debugging with HIP](./how-to/debugging)
-* {doc}`./how-to/logging`
+* {doc}`./understand/amd_clr`
 
 :::
 
