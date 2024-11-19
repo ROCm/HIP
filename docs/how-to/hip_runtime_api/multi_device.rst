@@ -9,9 +9,22 @@ Multi-device management
 *******************************************************************************
 
 Device enumeration
-==================
+===============================================================================
 
-Device enumeration involves identifying all the available GPUs connected to the host system. A single host machine can have multiple GPUs, each with its own unique identifier. By listing these devices, you can decide which GPU to use for computation. The host queries the system to count and list all connected GPUs, ensuring that the application can leverage the full computational power available.
+Device enumeration involves identifying all the available GPUs connected to the
+host system. A single host machine can have multiple GPUs, each with its own
+unique identifier. By listing these devices, you can decide which GPU to use
+for computation. The host queries the system to count and list all connected
+GPUs, ensuring that the application can leverage the full computational power
+available. Typically, applications list devices and their properties for
+deployment planning, and also make dynamic selections during runtime to ensure
+optimal performance.
+
+If the application does not assign a specific GPU, the runtime typically
+assigns one automatically based on factors such as availability, performance,
+memory, and efficiency. As a result, the runtime might choose the least
+utilized GPU, the one best suited for the task, the GPU with adequate memory,
+or the most energy-efficient option.
 
 .. code-block:: cpp
 
@@ -37,11 +50,11 @@ Device enumeration involves identifying all the available GPUs connected to the 
             std::cout << "  Max Threads per Block: " << deviceProp.maxThreadsPerBlock << std::endl;
             std::cout << "  Max Threads per Multiprocessor: " << deviceProp.maxThreadsPerMultiProcessor << std::endl;
             std::cout << "  Number of Multiprocessors: " << deviceProp.multiProcessorCount << std::endl;
-            std::cout << "  Max Threads Dimensions: [" 
+            std::cout << "  Max Threads Dimensions: ["
                     << deviceProp.maxThreadsDim[0] << ", "
                     << deviceProp.maxThreadsDim[1] << ", "
                     << deviceProp.maxThreadsDim[2] << "]" << std::endl;
-            std::cout << "  Max Grid Size: [" 
+            std::cout << "  Max Grid Size: ["
                     << deviceProp.maxGridSize[0] << ", "
                     << deviceProp.maxGridSize[1] << ", "
                     << deviceProp.maxGridSize[2] << "]" << std::endl;
@@ -54,9 +67,14 @@ Device enumeration involves identifying all the available GPUs connected to the 
 .. _multi-device_selection:
 
 Device selection
-================
+===============================================================================
 
-Once you have enumerated the available GPUs, the next step is to select a specific device for computation. This involves setting the active GPU that will execute subsequent operations. This step is crucial in multi-GPU systems where different GPUs might have different capabilities or workloads. By selecting the appropriate device, you ensure that the computational tasks are directed to the correct GPU, optimizing performance and resource utilization.
+Once you have enumerated the available GPUs, the next step is to select a
+specific device for computation. This involves setting the active GPU that will
+execute subsequent operations. This step is crucial in multi-GPU systems where
+different GPUs might have different capabilities or workloads. By selecting the
+appropriate device, you ensure that the computational tasks are directed to the
+correct GPU, optimizing performance and resource utilization.
 
 .. code-block:: cpp
 
@@ -102,14 +120,6 @@ Once you have enumerated the available GPUs, the next step is to select a specif
         simpleKernel<<<1000, 128>>>(deviceData1); // Launch kernel on device 1
         HIP_CHECK(hipDeviceSynchronize());
 
-        // Attempt to use deviceData0 on device 1 (This will not work as deviceData0 is allocated on device 0)
-        HIP_CHECK(hipSetDevice(deviceId1));
-        hipError_t err = hipMemcpy(deviceData1, deviceData0, size, hipMemcpyDeviceToDevice); // This should fail
-        if (err != hipSuccess)
-        {
-            std::cout << "Error: Cannot access deviceData0 from device 1, deviceData0 is on device 0" << std::endl;
-        }
-
         // Copy result from device 0
         double hostData0[1024];
         HIP_CHECK(hipSetDevice(deviceId0));
@@ -133,8 +143,17 @@ Once you have enumerated the available GPUs, the next step is to select a specif
 
 
 Stream and event behavior
-=========================
-Streams are used to manage the execution order of kernels and memory operations on a GPU. Creating streams allows multiple operations to execute concurrently, improving application efficiency. Events, used with streams, track the progress of operations and synchronize different tasks. This coordination ensures that operations complete in the desired order.
+===============================================================================
+
+In a multi-device system, streams and events are essential for efficient
+parallel computation and synchronization. Streams enable asynchronous task
+execution, allowing multiple devices to process data concurrently without
+blocking one another. Events provide a mechanism for synchronizing operations
+across devices, ensuring that tasks on one device are completed before
+dependent tasks on another device begin. This coordination prevents race
+conditions and optimizes data flow in multi-GPU systems. Together, streams and
+events maximize performance by enabling parallel execution, load balancing, and
+effective resource utilization across heterogeneous hardware.
 
 .. code-block:: cpp
 
@@ -149,113 +168,256 @@ Streams are used to manage the execution order of kernels and memory operations 
 
     int main()
     {
-        double* deviceData;
-        size_t  size = 1024 * sizeof(*deviceData);
+        int numDevices;
+        hipGetDeviceCount(&numDevices);
 
-        // Create a stream and events
-        hipStream_t stream;
-        hipEvent_t startEvent, stopEvent;
+        if (numDevices < 2) {
+            std::cerr << "This example requires at least two GPUs." << std::endl;
+            return -1;
+        }
 
-        hipStreamCreate(&stream);
-        hipEventCreate(&startEvent);
-        hipEventCreate(&stopEvent);
+        double *deviceData0, *deviceData1;
+        size_t size = 1024 * sizeof(*deviceData0);
 
-        // Allocate memory on device
-        hipMalloc(&deviceData, size);
+        // Create streams and events for each device
+        hipStream_t stream0, stream1;
+        hipEvent_t startEvent0, stopEvent0, startEvent1, stopEvent1;
 
-        // Record the start event
-        hipEventRecord(startEvent, stream);
+        // Initialize device 0
+        hipSetDevice(0);
+        hipStreamCreate(&stream0);
+        hipEventCreate(&startEvent0);
+        hipEventCreate(&stopEvent0);
+        hipMalloc(&deviceData0, size);
 
-        // Launch the kernel asynchronously
-        simpleKernel<<<1000, 128, 0, stream>>>(deviceData);
+        // Initialize device 1
+        hipSetDevice(1);
+        hipStreamCreate(&stream1);
+        hipEventCreate(&startEvent1);
+        hipEventCreate(&stopEvent1);
+        hipMalloc(&deviceData1, size);
 
-        // Record the stop event
-        hipEventRecord(stopEvent, stream);
+        // Record the start event on device 0
+        hipSetDevice(0);
+        hipEventRecord(startEvent0, stream0);
 
-        // Wait for the stop event to complete
-        hipEventSynchronize(stopEvent);
+        // Launch the kernel asynchronously on device 0
+        simpleKernel<<<1000, 128, 0, stream0>>>(deviceData0);
 
-        // Calculate elapsed time between the events
-        float milliseconds = 0;
-        hipEventElapsedTime(&milliseconds, startEvent, stopEvent);
-        std::cout << "Elapsed time: " << milliseconds << " ms" << std::endl;
+        // Record the stop event on device 0
+        hipEventRecord(stopEvent0, stream0);
 
-        // Cleanup
-        hipEventDestroy(startEvent);
-        hipEventDestroy(stopEvent);
-        hipStreamSynchronize(stream);
-        hipStreamDestroy(stream);
-        hipFree(deviceData);
+        // Wait for the stop event on device 0 to complete
+        hipEventSynchronize(stopEvent0);
+
+        // Record the start event on device 1
+        hipSetDevice(1);
+        hipEventRecord(startEvent1, stream1);
+
+        // Launch the kernel asynchronously on device 1
+        simpleKernel<<<1000, 128, 0, stream1>>>(deviceData1);
+
+        // Record the stop event on device 1
+        hipEventRecord(stopEvent1, stream1);
+
+        // Wait for the stop event on device 1 to complete
+        hipEventSynchronize(stopEvent1);
+
+        // Calculate elapsed time between the events for both devices
+        float milliseconds0 = 0, milliseconds1 = 0;
+        hipEventElapsedTime(&milliseconds0, startEvent0, stopEvent0);
+        hipEventElapsedTime(&milliseconds1, startEvent1, stopEvent1);
+
+        std::cout << "Elapsed time on GPU 0: " << milliseconds0 << " ms" << std::endl;
+        std::cout << "Elapsed time on GPU 1: " << milliseconds1 << " ms" << std::endl;
+
+        // Cleanup for device 0
+        hipSetDevice(0);
+        hipEventDestroy(startEvent0);
+        hipEventDestroy(stopEvent0);
+        hipStreamSynchronize(stream0);
+        hipStreamDestroy(stream0);
+        hipFree(deviceData0);
+
+        // Cleanup for device 1
+        hipSetDevice(1);
+        hipEventDestroy(startEvent1);
+        hipEventDestroy(stopEvent1);
+        hipStreamSynchronize(stream1);
+        hipStreamDestroy(stream1);
+        hipFree(deviceData1);
 
         return 0;
     }
 
 Peer-to-peer memory access
-==========================
-In multi-GPU systems, peer-to-peer memory access enables one GPU to directly read or write to the memory of another GPU. This capability reduces data transfer times by allowing GPUs to communicate directly without involving the host. Enabling peer-to-peer access can significantly improve the performance of applications that require frequent data exchange between GPUs, as it eliminates the need to transfer data through the host memory.
+===============================================================================
 
-By adding peer-to-peer access to the example referenced in :ref:`multi_device_selection`, data can be copied between devices:
+In multi-GPU systems, peer-to-peer memory access enables one GPU to directly
+read or write to the memory of another GPU. This capability reduces data
+transfer times by allowing GPUs to communicate directly without involving the
+host. Enabling peer-to-peer access can significantly improve the performance of
+applications that require frequent data exchange between GPUs, as it eliminates
+the need to transfer data through the host memory.
 
-.. code-block:: cpp
+By adding peer-to-peer access to the example referenced in
+:ref:`multi_device_selection`, data can be copied between devices:
 
-    #include <hip/hip_runtime.h>
-    #include <iostream>
+.. tab-set::
 
-    __global__ void simpleKernel(double *data)
-    {
-        int idx   = blockIdx.x * blockDim.x + threadIdx.x;
-        data[idx] = idx * 2.0;
-    }
+    .. tab-item:: with peer-to-peer
 
-    int main()
-    {
-        double* deviceData0;
-        double* deviceData1;
-        size_t  size = 1024 * sizeof(*deviceData0);
+        .. code-block:: cpp
+            :emphasize-lines: 31-36, 50-54
 
-        int deviceId0 = 0;
-        int deviceId1 = 1;
+            #include <hip/hip_runtime.h>
+            #include <iostream>
 
-        // Enable peer access
-        hipSetDevice(deviceId0);
-        hipDeviceEnablePeerAccess(deviceId1, 0);
+            #define HIP_CHECK(expression)                        \
+            {                                                    \
+                const hipError_t status = expression;            \
+                if (status != hipSuccess) {                      \
+                    std::cerr << "HIP error " << status          \
+                            << ": " << hipGetErrorString(status) \
+                            << " at " << __FILE__ << ":"         \
+                            << __LINE__ << std::endl;            \
+                    exit(status);                                \
+                }                                                \
+            }
 
-        hipSetDevice(deviceId1);
-        hipDeviceEnablePeerAccess(deviceId0, 0);
+            __global__ void simpleKernel(double *data)
+            {
+                int idx   = blockIdx.x * blockDim.x + threadIdx.x;
+                data[idx] = idx * 2.0;
+            }
 
-        // Set device 0 and perform operations
-        hipSetDevice(deviceId0); // Set device 0 as current
-        hipMalloc(&deviceData0, size); // Allocate memory on device 0
-        simpleKernel<<<1000, 128>>>(deviceData0); // Launch kernel on device 0
+            int main()
+            {
+                double* deviceData0;
+                double* deviceData1;
+                size_t  size = 1024 * sizeof(*deviceData0);
 
-        // Set device 1 and perform operations
-        hipSetDevice(deviceId1); // Set device 1 as current
-        hipMalloc(&deviceData1, size); // Allocate memory on device 1
-        simpleKernel<<<1000, 128>>>(deviceData1); // Launch kernel on device 1
+                int deviceId0 = 0;
+                int deviceId1 = 1;
 
-        // Use peer-to-peer access
-        hipSetDevice(deviceId0);
-        
-        // Now device 0 can access memory allocated on device 1
-        hipMemcpy(deviceData0, deviceData1, size, hipMemcpyDeviceToDevice);
+                // Enable peer access
+                hipSetDevice(deviceId0);
+                hipDeviceEnablePeerAccess(deviceId1, 0);
 
-        // Copy result from device 0
-        double hostData0[1024];
-        hipSetDevice(deviceId0);
-        hipMemcpy(hostData0, deviceData0, size, hipMemcpyDeviceToHost);
+                hipSetDevice(deviceId1);
+                hipDeviceEnablePeerAccess(deviceId0, 0);
 
-        // Copy result from device 1
-        double hostData1[1024];
-        hipSetDevice(deviceId1);
-        hipMemcpy(hostData1, deviceData1, size, hipMemcpyDeviceToHost);
+                // Set device 0 and perform operations
+                HIP_CHECK(hipSetDevice(deviceId0)); // Set device 0 as current
+                HIP_CHECK(hipMalloc(&deviceData0, size)); // Allocate memory on device 0
+                simpleKernel<<<1000, 128>>>(deviceData0); // Launch kernel on device 0
+                HIP_CHECK(hipDeviceSynchronize());
 
-        // Display results from both devices
-        std::cout << "Device 0 data: " << hostData0[0] << std::endl;
-        std::cout << "Device 1 data: " << hostData1[0] << std::endl;
+                // Set device 1 and perform operations
+                HIP_CHECK(hipSetDevice(deviceId1)); // Set device 1 as current
+                HIP_CHECK(hipMalloc(&deviceData1, size)); // Allocate memory on device 1
+                simpleKernel<<<1000, 128>>>(deviceData1); // Launch kernel on device 1
+                HIP_CHECK(hipDeviceSynchronize());
 
-        // Free device memory
-        hipFree(deviceData0);
-        hipFree(deviceData1);
+                // Use peer-to-peer access
+                hipSetDevice(deviceId0);
 
-        return 0;
-    }
+                // Now device 0 can access memory allocated on device 1
+                hipMemcpy(deviceData0, deviceData1, size, hipMemcpyDeviceToDevice);
+
+                // Copy result from device 0
+                double hostData0[1024];
+                HIP_CHECK(hipSetDevice(deviceId0));
+                HIP_CHECK(hipMemcpy(hostData0, deviceData0, size, hipMemcpyDeviceToHost));
+
+                // Copy result from device 1
+                double hostData1[1024];
+                HIP_CHECK(hipSetDevice(deviceId1));
+                HIP_CHECK(hipMemcpy(hostData1, deviceData1, size, hipMemcpyDeviceToHost));
+
+                // Display results from both devices
+                std::cout << "Device 0 data: " << hostData0[0] << std::endl;
+                std::cout << "Device 1 data: " << hostData1[0] << std::endl;
+
+                // Free device memory
+                HIP_CHECK(hipFree(deviceData0));
+                HIP_CHECK(hipFree(deviceData1));
+
+                return 0;
+            }
+
+    .. tab-item:: without peer-to-peer
+
+        .. code-block:: cpp
+            :emphasize-lines: 43-49, 53, 58
+
+            #include <hip/hip_runtime.h>
+            #include <iostream>
+
+            #define HIP_CHECK(expression)                        \
+            {                                                    \
+                const hipError_t status = expression;            \
+                if (status != hipSuccess) {                      \
+                    std::cerr << "HIP error " << status          \
+                            << ": " << hipGetErrorString(status) \
+                            << " at " << __FILE__ << ":"         \
+                            << __LINE__ << std::endl;            \
+                    exit(status);                                \
+                }                                                \
+            }
+
+            __global__ void simpleKernel(double *data)
+            {
+                int idx   = blockIdx.x * blockDim.x + threadIdx.x;
+                data[idx] = idx * 2.0;
+            }
+
+            int main()
+            {
+                double* deviceData0;
+                double* deviceData1;
+                size_t  size = 1024 * sizeof(*deviceData0);
+
+                int deviceId0 = 0;
+                int deviceId1 = 1;
+
+                // Set device 0 and perform operations
+                HIP_CHECK(hipSetDevice(deviceId0)); // Set device 0 as current
+                HIP_CHECK(hipMalloc(&deviceData0, size)); // Allocate memory on device 0
+                simpleKernel<<<1000, 128>>>(deviceData0); // Launch kernel on device 0
+                HIP_CHECK(hipDeviceSynchronize());
+
+                // Set device 1 and perform operations
+                HIP_CHECK(hipSetDevice(deviceId1)); // Set device 1 as current
+                HIP_CHECK(hipMalloc(&deviceData1, size)); // Allocate memory on device 1
+                simpleKernel<<<1000, 128>>>(deviceData1); // Launch kernel on device 1
+                HIP_CHECK(hipDeviceSynchronize());
+
+                // Attempt to use deviceData0 on device 1 (This will not work as deviceData0 is allocated on device 0)
+                HIP_CHECK(hipSetDevice(deviceId1));
+                hipError_t err = hipMemcpy(deviceData1, deviceData0, size, hipMemcpyDeviceToDevice); // This should fail
+                if (err != hipSuccess)
+                {
+                    std::cout << "Error: Cannot access deviceData0 from device 1, deviceData0 is on device 0" << std::endl;
+                }
+
+                // Copy result from device 0
+                double hostData0[1024];
+                HIP_CHECK(hipSetDevice(deviceId0));
+                HIP_CHECK(hipMemcpy(hostData0, deviceData0, size, hipMemcpyDeviceToHost));
+
+                // Copy result from device 1
+                double hostData1[1024];
+                HIP_CHECK(hipSetDevice(deviceId1));
+                HIP_CHECK(hipMemcpy(hostData1, deviceData1, size, hipMemcpyDeviceToHost));
+
+                // Display results from both devices
+                std::cout << "Device 0 data: " << hostData0[0] << std::endl;
+                std::cout << "Device 1 data: " << hostData1[0] << std::endl;
+
+                // Free device memory
+                HIP_CHECK(hipFree(deviceData0));
+                HIP_CHECK(hipFree(deviceData1));
+
+                return 0;
+            }
