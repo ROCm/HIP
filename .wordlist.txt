@@ -44,6 +44,7 @@ extern
 fatbin
 fatbinary
 foundationally
+framebuffer
 frontends
 fnuz
 FNUZ
@@ -74,6 +75,7 @@ inplace
 interop
 Interoperation
 interoperate
+interoperation
 Interprocess
 interprocess
 Intrinsics
@@ -141,6 +143,7 @@ scalarizing
 sceneries
 shaders
 SIMT
+sinewave
 SOMA
 SPMV
 structs
@@ -157,5 +160,6 @@ UMM
 unmap
 upscaled
 variadic
+vulkan
 WinGDB
 zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz

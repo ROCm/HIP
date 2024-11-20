@@ -36,6 +36,7 @@ The HIP documentation is organized into the following categories:
   * {doc}`./how-to/hip_runtime_api/cooperative_groups`
   * {doc}`./how-to/hip_runtime_api/hipgraph`
   * {doc}`./how-to/hip_runtime_api/call_stack`
+  * {doc}`./how-to/hip_runtime_api/external_interop`
 * [HIP porting guide](./how-to/hip_porting_guide)
 * [HIP porting: driver API guide](./how-to/hip_porting_driver_api)
 * {doc}`./how-to/hip_rtc`

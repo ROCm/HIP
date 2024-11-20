@@ -51,6 +51,7 @@ subtrees:
       - file: how-to/hip_runtime_api/cooperative_groups
       - file: how-to/hip_runtime_api/hipgraph
       - file: how-to/hip_runtime_api/call_stack
+      - file: how-to/hip_runtime_api/external_interop
   - file: how-to/hip_porting_guide
   - file: how-to/hip_porting_driver_api
   - file: how-to/hip_rtc
