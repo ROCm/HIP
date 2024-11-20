@@ -49,6 +49,13 @@ its limitations, if any, compared with the equivalent CUDA API.
 The kernel language features are documented in the
 :doc:`/reference/cpp_language_extensions` page.
 
+.. warning::
+   If you specify HIP_PLATFORM=NVIDIA with hipcc, you also need to pass ``-x cu``
+   to hipcc when compiling files with the ``.hip`` file extension. Otherwise,
+   nvcc will not recognize the ``.hip`` file extension and will fail with 
+   ``nvcc fatal   : Don't know what to do with  <file>.hip``.  
+
+
 Relation to other GPGPU frameworks
 ==================================
 
