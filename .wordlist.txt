@@ -12,11 +12,14 @@ backtrace
 Bitcode
 bitcode
 bitcodes
+blockDim
+blockIdx
 builtins
 Builtins
 CAS
 clr
 compilable
+constexpr
 coroutines
 Ctx
 cuBLASLt
@@ -51,6 +54,7 @@ FNUZ
 fp
 gedit
 GPGPU
+gridDim
 GROMACS
 GWS
 hardcoded
@@ -87,6 +91,7 @@ iteratively
 Lapack
 latencies
 libc
+libhipcxx
 libstdc
 lifecycle
 linearizing
@@ -97,6 +102,7 @@ makefile
 Malloc
 malloc
 MALU
+maxregcount
 MiB
 memset
 multicore
@@ -125,6 +131,7 @@ preconditioners
 predefining
 prefetched
 preprocessor
+printf
 profilers
 PTX
 PyHIP
@@ -153,6 +160,7 @@ SYCL
 syntaxes
 texel
 texels
+threadIdx
 tradeoffs
 templated
 toolkits
@@ -167,5 +175,6 @@ unregister
 upscaled
 variadic
 vulkan
+warpSize
 WinGDB
 zc

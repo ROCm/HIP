@@ -47,7 +47,7 @@ The :doc:`HIP API documentation <doxygen/html/index>` describes each API and
 its limitations, if any, compared with the equivalent CUDA API.
 
 The kernel language features are documented in the
-:doc:`/reference/cpp_language_extensions` page.
+:doc:`/how-to/hip_cpp_language_extensions` page.
 
 Relation to other GPGPU frameworks
 ==================================
