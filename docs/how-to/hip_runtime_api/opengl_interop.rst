@@ -4,15 +4,15 @@
                  OpenGL's graphics rendering.
    :keywords: AMD, ROCm, HIP, OpenGL, interop, interoperability
 
-********************************************************************************
+*******************************************************************************
 OpenGL interoperability
-********************************************************************************
+*******************************************************************************
 
 The HIP--OpenGL interoperation involves mapping OpenGL resources, such as
 buffers and textures, for HIP access. This mapping process enables HIP to
-utilize these resources directly, bypassing the need for costly data transfers between
-the CPU and GPU. This capability is useful in applications that require both
-intensive GPU computation and real-time visualization.
+utilize these resources directly, bypassing the need for costly data transfers
+between the CPU and GPU. This capability is useful in applications that require
+both intensive GPU computation and real-time visualization.
 
 The graphics resources must be registered using functions like
 :cpp:func:`hipGraphicsGLRegisterBuffer` or :cpp:func:`hipGraphicsGLRegisterImage`
@@ -27,15 +27,15 @@ Unmapping resources with :cpp:func:`hipGraphicsUnmapResources` after
 computations ensure proper resource management.
 
 Example
-================================================================================
+===============================================================================
 
 ROCm examples have a `HIP--OpenGL interoperation example <https://github.com/ROCm/rocm-examples/tree/develop/HIP-Basic/opengl_interop>`_,
 where a simple HIP kernel is used to simulate a sine wave and rendered to a
 window as a grid of triangles using OpenGL. For a working example, there are
 multiple initialization steps needed like creating and opening a window, 
-initializing OpenGL or selecting the OpenGL-capable device. After the initialization
-in the example, the kernel simulates the sinewave and updates the window's
-framebuffer in a cycle until the window is not closed.
+initializing OpenGL or selecting the OpenGL-capable device. After the
+initialization in the example, the kernel simulates the sinewave and updates
+the window's framebuffer in a cycle until the window is not closed.
 
 .. note::
 
@@ -55,7 +55,8 @@ The OpenGL buffer is imported to HIP in the following way:
    :end-before: // [Sphinx buffer register and get end]
    :language: cpp
 
-The imported pointer is manipulated in the sinewave kernel as shown in the following example:
+The imported pointer is manipulated in the sinewave kernel as shown in the
+following example:
 
 .. literalinclude:: ../../tools/example_codes/opengl_interop.hip
    :start-after: /// [Sphinx sinewave kernel start]
