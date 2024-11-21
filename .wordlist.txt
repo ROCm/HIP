@@ -90,7 +90,6 @@ libc
 libstdc
 lifecycle
 linearizing
-literalinclude
 LOC
 LUID
 ltrace
@@ -114,7 +113,6 @@ Numa
 Nsight
 ocp
 omnitrace
-opengl
 overindex
 overindexing
 oversubscription

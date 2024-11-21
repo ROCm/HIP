@@ -42,21 +42,31 @@ the window's framebuffer in a cycle until the window is not closed.
    The more recent OpenGL functions are loaded with `OpenGL loader <https://github.com/ROCm/rocm-examples/tree/develop/External/glad>`_,
    as these are not loaded by default on all platforms. The use of a custom
    loader is shown in the following example
+ 
+   .. <!-- spellcheck-disable -->
 
    .. literalinclude:: ../../tools/example_codes/opengl_interop.hip
       :start-after: // [Sphinx opengl functions load start]
       :end-before: // [Sphinx opengl functions load end]
       :language: cpp
 
+   .. <!-- spellcheck-enable -->
+
 The OpenGL buffer is imported to HIP in the following way:
+
+.. <!-- spellcheck-disable -->
 
 .. literalinclude:: ../../tools/example_codes/opengl_interop.hip
    :start-after: // [Sphinx buffer register and get start]
    :end-before: // [Sphinx buffer register and get end]
    :language: cpp
 
+.. <!-- spellcheck-enable -->
+
 The imported pointer is manipulated in the sinewave kernel as shown in the
 following example:
+
+.. <!-- spellcheck-disable -->
 
 .. literalinclude:: ../../tools/example_codes/opengl_interop.hip
    :start-after: /// [Sphinx sinewave kernel start]
@@ -68,10 +78,16 @@ following example:
    :end-before: // [Sphinx buffer use in kernel end]
    :language: cpp
 
+.. <!-- spellcheck-enable -->
+
 The HIP graphics resource that is imported from the OpenGL buffer has to be
 unmap and unregister in the following way:
+
+.. <!-- spellcheck-disable -->
 
 .. literalinclude:: ../../tools/example_codes/opengl_interop.hip
    :start-after: // [Sphinx unregister start]
    :end-before: // [Sphinx unregister end]
    :language: cpp
+
+.. <!-- spellcheck-enable -->
