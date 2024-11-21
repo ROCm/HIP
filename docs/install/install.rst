@@ -49,15 +49,30 @@ Installation
    .. tab-item:: NVIDIA
       :sync: nvidia
 
-      #. Install the NVIDIA driver.
+      #. Install the NVIDIA toolkit.
 
-         .. code-block:: shell
-
-            sudo apt-get install ubuntu-drivers-common && sudo ubuntu-drivers autoinstall
-            sudo reboot
-
-         Alternatively, you can download the latest
+         The latest release can be found here:
          `CUDA Toolkit <https://developer.nvidia.com/cuda-downloads>`_.
+
+      #. Setup the radeon repo.
+
+         .. code-block::shell
+
+            # Replace url with appropriate link in the table below
+            wget https://repo.radeon.com/amdgpu-install/6.2/distro/version_name/amdgpu-install_6.2.60200-1_all.deb
+            sudo apt install ./amdgpu-install_6.2.60200-1_all.deb
+            sudo apt update
+
+         .. list-table:: amdgpu-install links
+            :widths: 25 100
+            :header-rows: 1
+
+            * - Ubuntu version
+              - URL
+            * - 24.04
+              - https://repo.radeon.com/amdgpu-install/6.2.4/ubuntu/noble/amdgpu-install_6.2.60204-1_all.deb
+            * - 22.04
+              - https://repo.radeon.com/amdgpu-install/6.2.4/ubuntu/jammy/amdgpu-install_6.2.60204-1_all.deb
 
       #. Install the ``hip-runtime-nvidia`` and ``hip-dev`` packages. This installs the CUDA SDK and HIP
          porting layer.
@@ -70,7 +85,11 @@ Installation
             * CUDA SDK: ``/usr/local/cuda``
             * HIP: ``/opt/rocm/hip``
 
-         You can optionally add ``/opt/rocm/bin`` to your path, which can make it easier to use the tools.
+      #. Set the HIP_PLATFORM to nvidia.
+
+         .. code-block:: shell
+
+            export HIP_PLATFORM="nvidia"
 
 Verify your installation
 ==========================================================
