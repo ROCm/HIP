@@ -55,6 +55,8 @@ subtrees:
       - file: how-to/hip_runtime_api/multi_device
       - file: how-to/hip_runtime_api/opengl_interop
       - file: how-to/hip_runtime_api/external_interop
+  - file: how-to/hip_cpp_language_extensions
+  - file: how-to/kernel_language_cpp_support
   - file: how-to/hip_porting_guide
   - file: how-to/hip_porting_driver_api
   - file: how-to/hip_rtc
@@ -106,10 +108,6 @@ subtrees:
           - file: doxygen/html/annotated
           - file: doxygen/html/files
   - file: reference/virtual_rocr
-  - file: reference/cpp_language_extensions
-    title: C++ language extensions
-  - file: reference/cpp_language_support
-    title: C++ language support
   - file: reference/math_api
   - file: reference/env_variables
   - file: reference/terms

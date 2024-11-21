@@ -95,5 +95,5 @@ language features that are designed to target accelerators, such as:
 * Math functions that resemble those in ``math.h``, which is included with standard C++ compilers
 * Built-in functions for accessing specific GPU hardware capabilities
 
-For further details, check :doc:`C++ language extensions <reference/cpp_language_extensions>`
-and :doc:`C++ language support <reference/cpp_language_support>`.
+For further details, check :doc:`HIP C++ language extensions <how-to/hip_cpp_language_extensions>`
+and :doc:`Kernel language C++ support <how-to/kernel_language_cpp_support>`.

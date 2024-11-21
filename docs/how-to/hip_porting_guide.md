@@ -373,7 +373,9 @@ run hipcc when appropriate.
 
 ### ``warpSize``
 
-Code should not assume a warp size of 32 or 64.  See [Warp Cross-Lane Functions](https://rocm.docs.amd.com/projects/HIP/en/latest/reference/cpp_language_extensions.html#warp-cross-lane-functions) for information on how to write portable wave-aware code.
+Code should not assume a warp size of 32 or 64.  See the
+:ref:`HIP language extension for warpSize <warp_size>` for information on how
+to write portable wave-aware code.
 
 ### Kernel launch with group size > 256
 
