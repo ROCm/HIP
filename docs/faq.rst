@@ -49,13 +49,6 @@ its limitations, if any, compared with the equivalent CUDA API.
 The kernel language features are documented in the
 :doc:`/reference/cpp_language_extensions` page.
 
-.. warning::
-   If you specify HIP_PLATFORM=NVIDIA with hipcc, you also need to pass ``-x cu``
-   to hipcc when compiling files with the ``.hip`` file extension. Otherwise,
-   nvcc will not recognize the ``.hip`` file extension and will fail with 
-   ``nvcc fatal   : Don't know what to do with  <file>.hip``.  
-
-
 Relation to other GPGPU frameworks
 ==================================
 
@@ -135,6 +128,12 @@ hipcc detected my platform incorrectly. What should I do?
 The environment variable ``HIP_PLATFORM`` can be used to specify the platform
 for which the code is going to be compiled with ``hipcc``. See the
 :doc:`hipcc environment variables<hipcc:env>` for more information.
+
+.. warning::
+   If you specify HIP_PLATFORM=NVIDIA with hipcc, you also need to pass ``-x cu``
+   to hipcc when compiling files with the ``.hip`` file extension. Otherwise,
+   nvcc will not recognize the ``.hip`` file extension and will fail with 
+   ``nvcc fatal   : Don't know what to do with  <file>.hip``.  
 
 How to use HIP-Clang to build HIP programs?
 ------------------------------------------------------
