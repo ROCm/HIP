@@ -43,4 +43,5 @@ Here are the various HIP Runtime API high level functions:
 * :doc:`./hip_runtime_api/cooperative_groups`
 * :doc:`./hip_runtime_api/hipgraph`
 * :doc:`./hip_runtime_api/call_stack`
+* :doc:`./hip_runtime_api/multi_device`
 * :doc:`./hip_runtime_api/external_interop`
