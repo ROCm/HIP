@@ -33,6 +33,7 @@ The HIP documentation is organized into the following categories:
   * {doc}`./how-to/hip_runtime_api/initialization`
   * {doc}`./how-to/hip_runtime_api/memory_management`
   * {doc}`./how-to/hip_runtime_api/error_handling`  
+  * {doc}`./how-to/hip_runtime_api/multi_device`
   * {doc}`./how-to/hip_runtime_api/cooperative_groups`
   * {doc}`./how-to/hip_runtime_api/hipgraph`
   * {doc}`./how-to/hip_runtime_api/call_stack`

@@ -36,6 +36,7 @@ subtrees:
     - entries:
       - file: how-to/hip_runtime_api/initialization
       - file: how-to/hip_runtime_api/memory_management
+      - file: how-to/hip_runtime_api/multi_device
         subtrees:
         - entries:
           - file: how-to/hip_runtime_api/memory_management/host_memory
