@@ -34,3 +34,14 @@ the following figure:
 
   On NVIDIA platform HIP runtime API calls CUDA runtime or CUDA driver via
   hipother interface. For more information, see the `hipother repository <https://github.com/ROCm/hipother>`_.
+
+Here are the various HIP Runtime API high level functions:
+
+* :doc:`./hip_runtime_api/initialization`
+* :doc:`./hip_runtime_api/memory_management`
+* :doc:`./hip_runtime_api/error_handling`  
+* :doc:`./hip_runtime_api/cooperative_groups`
+* :doc:`./hip_runtime_api/hipgraph`
+* :doc:`./hip_runtime_api/call_stack`
+* :doc:`./hip_runtime_api/multi_device`
+* :doc:`./hip_runtime_api/external_interop`

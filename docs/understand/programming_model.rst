@@ -2,7 +2,9 @@
   :description: This chapter explains the HIP programming model, the contract
                 between the programmer and the compiler/runtime executing the
                 code, how it maps to the hardware.
-  :keywords: AMD, ROCm, HIP, CUDA, API design
+  :keywords: ROCm, HIP, CUDA, API design, programming model
+
+.. _programming_model:
 
 *******************************************************************************
 HIP programming model

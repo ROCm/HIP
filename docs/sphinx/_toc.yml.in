@@ -22,15 +22,16 @@ subtrees:
   - url: https://developer.nvidia.com/cuda-gpus
     title: NVIDIA supported GPUs
 
-- caption: Conceptual
+- caption: Programming guide
   entries:
+  - file: programming_guide
+    title: Introduction
   - file: understand/programming_model
   - file: understand/hardware_implementation
-  - file: understand/amd_clr
   - file: understand/compilers
-
-- caption: How to
-  entries:
+  - file: how-to/performance_guidelines
+  - file: how-to/debugging
+  - file: how-to/logging
   - file: how-to/hip_runtime_api
     subtrees:
     - entries:
@@ -56,9 +57,7 @@ subtrees:
   - file: how-to/hip_porting_guide
   - file: how-to/hip_porting_driver_api
   - file: how-to/hip_rtc
-  - file: how-to/performance_guidelines
-  - file: how-to/debugging
-  - file: how-to/logging
+  - file: understand/amd_clr
 
 - caption: Reference
   entries:

@@ -116,6 +116,8 @@ omnitrace
 overindex
 overindexing
 oversubscription
+overutilized
+parallelizable
 pixelated
 pragmas
 preallocated
@@ -154,6 +156,7 @@ texels
 tradeoffs
 templated
 toolkits
+transfering
 typedefs
 unintuitive
 UMM
