@@ -2,6 +2,8 @@
   :description: Memory management and its usage
   :keywords: AMD, ROCm, HIP, CUDA, memory management
 
+.. _memory_management:
+
 ********************************************************************************
 Memory management
 ********************************************************************************

@@ -2,6 +2,8 @@
    :description: Initialization.
    :keywords: AMD, ROCm, HIP, initialization
 
+.. _initialization:
+
 ********************************************************************************
 Initialization
 ********************************************************************************

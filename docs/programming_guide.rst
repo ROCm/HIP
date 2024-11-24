@@ -71,9 +71,13 @@ returned values, in order to catch and handle those errors, if possible.
 An exception is kernel launches, which don't return any value. These
 errors can be caught with specific functions like :cpp:func:`hipGetLastError()`.
 
+For more information, see :ref:`error_handling` .
+
 Multi-GPU and Load Balancing
 ================================================================================
 
 Large-scale applications that need more compute power can use multiple GPUs in
 the system. This requires distributing workloads across multiple GPUs to balance
 the load to prevent GPUs from being overutilized while others are idle.
+
+ For more information, see :ref:`multi-device` .

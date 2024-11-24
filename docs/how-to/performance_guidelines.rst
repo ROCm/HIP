@@ -41,7 +41,7 @@ the host or parallel to the devices.
 
 For parallel workloads, when threads belonging to the same block need to
 synchronize to share data, use :cpp:func:`__syncthreads()` (see:
-:ref:`synchronization functions`) within the same kernel invocation. For threads
+:ref:`synchronization_functions`) within the same kernel invocation. For threads
 belonging to different blocks, use global memory with two separate
 kernel invocations. It is recommended to avoid the latter approach as it adds
 overhead.

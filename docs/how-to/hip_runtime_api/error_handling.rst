@@ -2,6 +2,8 @@
    :description: Error Handling
    :keywords: AMD, ROCm, HIP, error handling, error
 
+.. _error_handling:
+
 ********************************************************************************
 Error handling
 ********************************************************************************
