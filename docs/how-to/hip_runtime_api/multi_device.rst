@@ -64,7 +64,7 @@ or the most energy-efficient option.
         return 0;
     }
 
-.. _multi-device_selection:
+.. _multi_device_selection:
 
 Device selection
 ===============================================================================

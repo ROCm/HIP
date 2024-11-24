@@ -30,7 +30,7 @@ Semaphore functions ensure smooth operation, preventing conflicts and
 maintaining the integrity of processes; upholding the integrity and performance
 of concurrent processes.
 
-External semaphore functions can be used in HIP as described in :doc:`../reference/hip_runtime_api/external_interop`.
+External semaphore functions can be used in HIP as described in :ref:`external_resource_interoperability_reference`.
 
 Memory Functions
 ===============================================================================
@@ -83,8 +83,8 @@ cross-API manner.
 .. <!-- spellcheck-disable -->
 
 .. literalinclude:: ../../tools/example_codes/external_interop.hip
-   :start-after: // [Sphinx semaphore convert start]
-   :end-before: // [Sphinx semaphore convert end]
+   :start-after: // [Sphinx semaphore import start]
+   :end-before: // [Sphinx semaphore import end]
    :language: cpp
 
 .. <!-- spellcheck-enable -->
