@@ -8,19 +8,20 @@ resources:
     type: github
     endpoint: ROCm
     name: ROCm/clr
-    ref: amd-staging
+    ref: $(Build.SourceBranch)
   - repository: hipother_repo
     type: github
     endpoint: ROCm
     name: ROCm/hipother
-    ref: amd-staging
+    ref: $(Build.SourceBranch)
   pipelines:
   - pipeline: rocr-runtime_pipeline
     source: \ROCR-Runtime
     trigger:
       branches:
         include:
-        - master
+        - amd-staging
+        - amd-mainline
   - pipeline: rocprofiler-register_pipeline
     source: \rocprofiler-register
     trigger:
