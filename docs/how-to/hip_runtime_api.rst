@@ -5,7 +5,7 @@
 .. _hip_runtime_api_how-to:
 
 ********************************************************************************
-HIP runtime API
+Using HIP runtime API
 ********************************************************************************
 
 The HIP runtime API provides C and C++ functionalities to manage event, stream,
