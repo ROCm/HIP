@@ -9,10 +9,11 @@ OpenGL interoperability
 *******************************************************************************
 
 The HIP--OpenGL interoperation involves mapping OpenGL resources, such as
-buffers and textures, for HIP access. This mapping process enables HIP to
-utilize these resources directly, bypassing the need for costly data transfers
-between the CPU and GPU. This capability is useful in applications that require
-both intensive GPU computation and real-time visualization.
+buffers and textures, for HIP to interact with OpenGL. This mapping process
+enables HIP to utilize these resources directly, bypassing the need for costly
+data transfers between the CPU and GPU. This capability is useful in
+applications that require both intensive GPU computation and real-time
+visualization.
 
 The graphics resources must be registered using functions like
 :cpp:func:`hipGraphicsGLRegisterBuffer` or :cpp:func:`hipGraphicsGLRegisterImage`
@@ -35,7 +36,7 @@ window as a grid of triangles using OpenGL. For a working example, there are
 multiple initialization steps needed like creating and opening a window, 
 initializing OpenGL or selecting the OpenGL-capable device. After the
 initialization in the example, the kernel simulates the sinewave and updates
-the window's framebuffer in a cycle until the window is not closed.
+the window's framebuffer in a cycle until the window is closed.
 
 .. note::
 
@@ -80,8 +81,8 @@ following example:
 
 .. <!-- spellcheck-enable -->
 
-The HIP graphics resource that is imported from the OpenGL buffer has to be
-unmap and unregister in the following way:
+The HIP graphics resource that is imported from the OpenGL buffer and is not
+needed anymore should be unmapped and unregistered as shown in the following way:
 
 .. <!-- spellcheck-disable -->
 
