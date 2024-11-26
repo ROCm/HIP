@@ -3536,6 +3536,8 @@ hipError_t hipExtHostAlloc(void** ptr, size_t size, unsigned int flags);
  *
  * The API returns the allocation pointer, managed by HMM, can be used further to execute kernels
  * on device and fetch data between the host and device as needed.
+ * 
+ * If HMM is not supported, the function behaves the same as @p hipMallocHost .
  *
  * @note   It is recommend to do the capability check before call this API.
  *
