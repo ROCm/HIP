@@ -73,7 +73,7 @@ iGPU
 inlined
 inplace
 interop
-Interoperation
+interoperation
 interoperate
 interoperation
 Interprocess
@@ -162,6 +162,8 @@ unintuitive
 UMM
 unmap
 unmapped
+unmapping
+unregister
 upscaled
 variadic
 vulkan
