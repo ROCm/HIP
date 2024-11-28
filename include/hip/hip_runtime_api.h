@@ -6381,7 +6381,7 @@ hipError_t hipExtLaunchKernel(const void* function_address, dim3 numBlocks, dim3
  *
  * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported, #hipErrorOutOfMemory
  *
- * @note 3D liner filter isn't supported on GFX90A boards, on which the API @p hipCreateTextureObject will
+ * @note 3D linear filter isn't supported on GFX90A boards, on which the API @p hipCreateTextureObject will
  * return hipErrorNotSupported.
  *
  */
