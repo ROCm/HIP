@@ -268,7 +268,7 @@ By adding peer-to-peer access to the example referenced in
     .. tab-item:: with peer-to-peer
 
         .. code-block:: cpp
-            :emphasize-lines: 31-36, 50-54
+            :emphasize-lines: 31-37, 51-55
 
             #include <hip/hip_runtime.h>
             #include <iostream>
