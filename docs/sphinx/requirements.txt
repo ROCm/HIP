@@ -116,7 +116,7 @@ requests==2.32.3
     # via
     #   pygithub
     #   sphinx
-rocm-docs-core[api-reference]==1.7.2
+rocm-docs-core[api-reference]==1.10.0
     # via -r requirements.in
 six==1.16.0
     # via python-dateutil
