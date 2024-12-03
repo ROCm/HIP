@@ -8,7 +8,8 @@
 HIP programming guide introduction
 ********************************************************************************
 
-This topic provides key HIP programming concepts and links to more detailed information. 
+This topic provides key HIP programming concepts and links to more detailed
+information. 
 
 Write GPU Kernels for Parallel Execution
 ================================================================================
@@ -56,8 +57,8 @@ Synchronize CPU and GPU Workloads
 ================================================================================
 
 Tasks on the host and devices run asynchronously, so proper synchronization is
-needed when dependencies between those tasks exist. The asynchronous execution of
-tasks is useful for fully utilizing the available resources. Even when only a
+needed when dependencies between those tasks exist. The asynchronous execution
+of tasks is useful for fully utilizing the available resources. Even when only a
 single device is available, memory transfers and the execution of tasks can be
 overlapped with asynchronous execution.
 
@@ -80,4 +81,4 @@ Large-scale applications that need more compute power can use multiple GPUs in
 the system. This requires distributing workloads across multiple GPUs to balance
 the load to prevent GPUs from being overutilized while others are idle.
 
- For more information, see :ref:`multi-device` .
+For more information, see :ref:`multi-device` .
