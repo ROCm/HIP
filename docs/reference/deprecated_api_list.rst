@@ -10,23 +10,6 @@ Several of our API functions have been flagged for deprecation. Using the
 following functions results in errors and unexpected results, so we encourage
 you to update your code accordingly.
 
-Deprecated since ROCm 6.3.0
-============================================================
-
-Deprecated memory management functions.
-
-.. list-table::
-   :widths: 40, 60
-   :header-rows: 1
-   :align: left
-
-   * - function
-     -
-   * - :cpp:func:`hipHostMalloc`
-     - replaced with :cpp:func:`hipExtHostAlloc`
-   * - :cpp:func:`hipHostFree`
-     - replaced with :cpp:func:`hipFreeHost`
-
 Deprecated since ROCm 6.1.0
 ============================================================
 

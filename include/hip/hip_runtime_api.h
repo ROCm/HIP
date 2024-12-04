@@ -3444,6 +3444,10 @@ hipError_t hipMallocHost(void** ptr, size_t size);
  */
 HIP_DEPRECATED("use hipHostMalloc instead")
 hipError_t hipMemAllocHost(void** ptr, size_t size);
+// end doxygen deprecated management memory
+/**
+ * @}
+ */
 /**
  *  @brief Allocates device accessible page locked (pinned) host memory
  *
@@ -3478,11 +3482,6 @@ hipError_t hipMemAllocHost(void** ptr, size_t size);
  *  @see hipSetDeviceFlags, hiptHostFree
  */
 hipError_t hipHostMalloc(void** ptr, size_t size, unsigned int flags);
-// end doxygen deprecated management memory
-/**
- * @}
- */
-
 /**
  *  @brief Allocates device accessible page locked (pinned) host memory
  *
