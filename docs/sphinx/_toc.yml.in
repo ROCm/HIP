@@ -15,9 +15,9 @@ subtrees:
     title: Installing HIP
   - file: install/build
     title: Building HIP from source
-  - url: https://rocm.docs.amd.com/projects/install-on-linux/en/${branch}/reference/system-requirements.html#supported-gpus
+  - url: https://rocm.docs.amd.com/projects/install-on-linux/en/${branch}/reference/system-requirements.html
     title: Linux supported AMD GPUs
-  - url: https://rocm.docs.amd.com/projects/install-on-windows/en/${branch}/reference/system-requirements.html#windows-supported-gpus
+  - url: https://rocm.docs.amd.com/projects/install-on-windows/en/${branch}/reference/system-requirements.html
     title: Windows supported AMD GPUs
   - url: https://developer.nvidia.com/cuda-gpus
     title: NVIDIA supported GPUs
