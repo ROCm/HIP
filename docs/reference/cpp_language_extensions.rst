@@ -97,7 +97,7 @@ When using ``hipLaunchKernelGGL``, your first five parameters must be:
   * ``size_t dynamicShared``: The amount of additional shared memory that you want to allocate
     when launching the kernel (see :ref:`shared-variable-type`).
   * ``hipStream_t``: The stream where you want to run the kernel. A value of ``0`` corresponds to the
-    NULL stream (see :ref:`synchronization functions`).
+    NULL stream (see :ref:`synchronization_functions`).
 
 You can include your kernel arguments after these parameters.
 

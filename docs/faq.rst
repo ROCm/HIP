@@ -77,7 +77,7 @@ HIP offers several benefits over OpenCL:
 * Porting from CUDA to HIP is significantly easier than from CUDA to OpenCL.
 * HIP uses development tools specialized for each platform: :doc:`amdclang++ <llvm-project:index>`
   for AMD GPUs or `nvcc <https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html>`_
-  for NVIDIA GPUs, and profilers like :doc:`omniperf <omniperf:index>` or
+  for NVIDIA GPUs, and profilers like :doc:`ROCm Compute Profiler <rocprofiler-compute:index>` or
   `Nsight Systems <https://developer.nvidia.com/nsight-systems>`_.
 * HIP provides
   * pointers and host-side pointer arithmetic.

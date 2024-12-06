@@ -121,7 +121,7 @@ Unified memory allocators
 
 Support for the different unified memory allocators depends on the GPU
 architecture and on the system. For more information, see :ref:`unified memory
-system requirements` and :ref:`checking unified memory management support`.
+system requirements` and :ref:`checking unified memory support`.
 
 - **HIP allocated managed memory and variables**
   
@@ -227,13 +227,13 @@ functions on ROCm and CUDA, both with and without HMM support.
         - pinned host
         - zero copy [zc]_
 
-.. _checking unified memory support:
-
 .. [zc] Zero copy is a feature, where the memory is pinned to either the device
         or the host, and won't be transferred when accessed by another device or
         the host. Instead only the requested memory is transferred, without
         making an explicit copy, like a normal memory access, hence the term
         "zero copy".
+
+.. _checking unified memory support:
 
 Checking unified memory support
 --------------------------------------------------------------------------------
