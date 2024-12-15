@@ -19,11 +19,11 @@ Project organization
 
 CLR includes the following source code,
 
-* ``hipamd`` - contains implementation of ``HIP`` language on the AMD platform. It is hosted at `clr/hipamd <https://github.com/ROCm/clr/tree/develop/hipamd>`_.
+* ``hipamd`` - contains implementation of ``HIP`` language on the AMD platform. It is hosted at `clr/hipamd <https://github.com/ROCm/clr/tree/amd-staging/hipamd>`_.
 
-* ``opencl`` - contains implementation of `OpenCL™ <https://www.khronos.org/opencl/>`_ on AMD platform. It is hosted at `clr/opencl <https://github.com/ROCm/clr/tree/develop/opencl>`_.
+* ``opencl`` - contains implementation of `OpenCL™ <https://www.khronos.org/opencl/>`_ on AMD platform. It is hosted at `clr/opencl <https://github.com/ROCm/clr/tree/amd-staging/opencl>`_.
 
-* ``rocclr`` - contains ROCm compute runtime used in `HIP` and `OpenCL™`. This is hosted at `clr/rocclr <https://github.com/ROCm/clr/tree/develop/rocclr>`_.
+* ``rocclr`` - contains ROCm compute runtime used in `HIP` and `OpenCL™`. This is hosted at `clr/rocclr <https://github.com/ROCm/clr/tree/amd-staging/rocclr>`_.
 
 
 How to build/install
@@ -79,4 +79,4 @@ To run ``hip-tests`` please go to the repository and follow the steps.
 Release notes
 -------------
 
-HIP provides release notes in CLR `change log <https://github.com/ROCm/clr/blob/develop/CHANGELOG.md>`_, which has records of changes in each release.
+HIP provides release notes in CLR `change log <https://github.com/ROCm/clr/blob/amd-staging/amd-staging/CHANGELOG.md>`_, which has records of changes in each release.

@@ -1,6 +1,6 @@
 .. meta::
-  :description: This chapter lists user-mode API interfaces and libraries 
-                necessary for host applications to launch compute kernels to 
+  :description: This chapter lists user-mode API interfaces and libraries
+                necessary for host applications to launch compute kernels to
                 available HSA ROCm kernel agents.
   :keywords: AMD, ROCm, HIP, HSA, ROCR runtime, virtual memory management
 

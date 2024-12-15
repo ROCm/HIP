@@ -26,11 +26,10 @@ according to the :ref:`SIMT model<programming_model_simt>`, together with the
 necessary registers and caches.
 
 The threads are executed in groupings called warps. The amount of threads
-making up a warp is architecture dependent.
-On AMD GPUs the warp size is commonly 64 threads, except in RDNA
-architectures which can utilize a warp size of 32 or 64 respectively. 
-The warp size of supported AMD GPUs is listed in the :doc:`rocm:reference/gpu-arch-specs`. 
-NVIDIA GPUs have a warp size of 32.
+making up a warp is architecture dependent. On AMD GPUs the warp size is
+commonly 64 threads, except in RDNA architectures which can utilize a warp size
+of 32 or 64 respectively. The warp size of supported AMD GPUs is listed in the
+:doc:`rocm:reference/gpu-arch-specs`. NVIDIA GPUs have a warp size of 32.
 
 In contrast to CPUs, GPUs generally do not employ complex cache structures or
 control logic, like branch prediction or out-of-order execution, but instead

@@ -97,7 +97,7 @@ When using ``hipLaunchKernelGGL``, your first five parameters must be:
   * ``size_t dynamicShared``: The amount of additional shared memory that you want to allocate
     when launching the kernel (see :ref:`shared-variable-type`).
   * ``hipStream_t``: The stream where you want to run the kernel. A value of ``0`` corresponds to the
-    NULL stream (see :ref:`synchronization functions`).
+    NULL stream (see :ref:`synchronization_functions`).
 
 You can include your kernel arguments after these parameters.
 
@@ -293,6 +293,7 @@ dimensions to 1.
     dim3(uint32_t _x=1, uint32_t _y=1, uint32_t _z=1) : x(_x), y(_y), z(_z) {};
   };
 
+.. _memory_fence_instructions:
 
 Memory fence instructions
 ====================================================
@@ -306,7 +307,7 @@ HIP supports ``__threadfence()`` and ``__threadfence_block()``. If you're using 
     ``hipHostMalloc()``.
   * Remove ``memcpy`` for all allocated fine-grained system memory regions.
 
-.. _synchronization functions:
+.. _synchronization_functions:
 
 Synchronization functions
 ====================================================
@@ -321,7 +322,7 @@ The Cooperative Groups API offer options to do synchronization on a developer de
 Math functions
 ====================================================
 
-HIP-Clang supports a set of math operations that are callable from the device. 
+HIP-Clang supports a set of math operations that are callable from the device.
 HIP supports most of the device functions supported by CUDA. These are described
 on :ref:`Math API page <math_api_reference>`.
 
@@ -375,6 +376,8 @@ To read a high-resolution timer from the device, HIP provides the following buil
   per-device attribute.
 
   Note that ``clock()`` and ``clock64()`` do not work properly on AMD RDNA3 (GFX11) graphic processors.
+
+.. _atomic functions:
 
 Atomic functions
 ===============================================
@@ -733,6 +736,8 @@ setting the preprocessor macro ``HIP_ENABLE_WARP_SYNC_BUILTINS``. These builtins
 will be enabled unconditionally in the next ROCm release. Wherever possible, the
 implementation includes a static assert to check that the program source uses
 the correct type for the mask.
+
+.. _warp_vote_functions:
 
 Warp vote and ballot functions
 -------------------------------------------------------------------------------------------------------------

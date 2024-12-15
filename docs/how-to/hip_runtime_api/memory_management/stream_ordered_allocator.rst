@@ -2,6 +2,8 @@
   :description:
   :keywords: stream, memory allocation, SOMA, stream ordered memory allocator
 
+.. _stream_ordered_memory_allocator_how-to:
+
 *******************************************************************************
 Stream Ordered Memory Allocator
 *******************************************************************************
@@ -25,7 +27,7 @@ Using SOMA
 =====================================
 
 You can allocate memory using ``hipMallocAsync()`` with stream-ordered
-semantics. This restricts the asynchronous access to the memory between the stream executions of the allocation and deallocation. Accessing 
+semantics. This restricts the asynchronous access to the memory between the stream executions of the allocation and deallocation. Accessing
 memory if the compliant memory accesses won't overlap
 temporally. ``hipFreeAsync()`` frees memory from the pool with stream-ordered
 semantics.

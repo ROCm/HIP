@@ -1,12 +1,21 @@
+.. meta::
+   :description: This page explains how to install HIP
+   :keywords: AMD, ROCm, HIP, install, installation
+
 *******************************************
 Install HIP
 *******************************************
 
 HIP can be installed on AMD (ROCm with HIP-Clang) and NVIDIA (CUDA with NVCC) platforms.
 
-Note: The version definition for the HIP runtime is different from CUDA. On an AMD platform, the
-``hipRuntimeGerVersion`` function returns the HIP runtime version; on an NVIDIA platform, this function
-returns the CUDA runtime version.
+.. note::
+
+   The version definition for the HIP runtime is different from CUDA. On AMD
+   platforms, the :cpp:func:`hipRuntimeGetVersion` function returns the HIP
+   runtime version. On NVIDIA platforms, this function returns the CUDA runtime
+   version.
+
+.. _install_prerequisites:
 
 Prerequisites
 =======================================
@@ -24,8 +33,9 @@ Prerequisites
    .. tab-item:: NVIDIA
       :sync: nvidia
 
-      Check the system requirements in the
-      `NVIDIA CUDA Installation Guide <https://docs.nvidia.com/cuda/cuda-installation-guide-linux/>`_.
+      With NVIDIA GPUs, HIP requires unified memory. All CUDA-enabled NVIDIA
+      GPUs with compute capability 5.0 or later should be supported. For more
+      information, see `NVIDIA's list of CUDA enabled GPUs <https://developer.nvidia.com/cuda-gpus>`_.
 
 Installation
 =======================================
@@ -41,7 +51,7 @@ Installation
          * :doc:`rocm-install-on-linux:index`
          * :doc:`rocm-install-on-windows:index`
 
-      By default, HIP is installed into ``/opt/rocm/hip``.
+      By default, HIP is installed into ``/opt/rocm``.
 
       .. note::
          There is no autodetection for the HIP installation. If you choose to install it somewhere other than the default location, you must set the ``HIP_PATH`` environment variable as explained in `Build HIP from source <./build.html>`_.
@@ -83,7 +93,7 @@ Installation
 
          The default paths are:
             * CUDA SDK: ``/usr/local/cuda``
-            * HIP: ``/opt/rocm/hip``
+            * HIP: ``/opt/rocm``
 
       #. Set the HIP_PLATFORM to nvidia.
 

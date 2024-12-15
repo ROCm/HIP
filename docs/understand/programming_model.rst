@@ -2,7 +2,9 @@
   :description: This chapter explains the HIP programming model, the contract
                 between the programmer and the compiler/runtime executing the
                 code, how it maps to the hardware.
-  :keywords: AMD, ROCm, HIP, CUDA, API design
+  :keywords: ROCm, HIP, CUDA, API design, programming model
+
+.. _programming_model:
 
 *******************************************************************************
 HIP programming model
@@ -10,7 +12,7 @@ HIP programming model
 
 The HIP programming model makes it easy to map data-parallel C/C++ algorithms to
 massively parallel, wide single instruction, multiple data (SIMD) architectures,
-such as GPUs. 
+such as GPUs.
 
 While the model may be expressed in most imperative languages, (for example
 Python via PyHIP) this document will focus on the original C/C++ API of HIP.
@@ -74,7 +76,7 @@ a few key differences between the two:
   accessible from all contexts.
 
   Looking at :ref:`rdna3_cu` and :ref:`cdna3_cu`, you can see that
-  every CU has an instance of storage backing the namespace ``__shared__``. 
+  every CU has an instance of storage backing the namespace ``__shared__``.
   Even if the host were to have access to these regions of
   memory, the performance benefits of the segmented memory subsystem are
   supported by the inability of asynchronous access from the host.
@@ -90,11 +92,11 @@ a few key differences between the two:
 
 * Asynchrony is at the forefront of the HIP API. Computations launched on the device
   execute asynchronously with respect to the host, and it is the user's responsibility to
-  synchronize their data dispatch/fetch with computations on the device. 
-  
+  synchronize their data dispatch/fetch with computations on the device.
+
   .. note::
-    HIP does perform implicit synchronization on occasions, more advanced than other 
-    APIs such as OpenCL or SYCL, in which the responsibility of synchronization mostly 
+    HIP does perform implicit synchronization on occasions, more advanced than other
+    APIs such as OpenCL or SYCL, in which the responsibility of synchronization mostly
     depends on the user.
 
 .. _programming_model_simt:
@@ -130,7 +132,7 @@ The incoming four-vector of floating-point values ``b`` is multiplied by a
 scalar and then added element-wise to the four-vector floating-point values of
 ``a``. On modern SIMD-capable architectures, the four-vector ops are expected to
 compile to a single SIMD instruction. However, GPU execution of this kernel will
-typically break down the vector elements into 4 separate threads for parallel execution, 
+typically break down the vector elements into 4 separate threads for parallel execution,
 as seen in the following figure:
 
 .. _simt:
@@ -145,7 +147,7 @@ as seen in the following figure:
 
 In HIP, lanes of the SIMD architecture are fed by mapping threads of a SIMT
 execution, one thread down each lane of an SIMD engine. Execution parallelism
-usually isn't exploited from the width of the built-in vector types, but across multiple threads via the thread ID constants ``threadIdx.x``, ``blockIdx.x``, etc. 
+usually isn't exploited from the width of the built-in vector types, but across multiple threads via the thread ID constants ``threadIdx.x``, ``blockIdx.x``, etc.
 
 .. _inherent_thread_model:
 
@@ -159,7 +161,7 @@ online/offline to binaries, in bulk.
 All threads of a kernel are uniquely identified by a set of integral values, called thread IDs.
 The set of integers identifying a thread relate to the hierarchy in which the threads execute.
 
-The thread hierarchy inherent to how AMD GPUs operate is depicted in the 
+The thread hierarchy inherent to how AMD GPUs operate is depicted in the
 following figure.
 
 .. _inherent_thread_hierarchy:
@@ -175,9 +177,9 @@ following figure.
 
 Warp (or Wavefront)
   The innermost grouping of threads is called a warp, or a wavefront in ISA terms. A warp
-  is the most tightly coupled groups of threads, both physically and logically. Threads 
-  inside a warp are also called lanes, and the integral value identifying them is the lane ID. 
-  
+  is the most tightly coupled groups of threads, both physically and logically. Threads
+  inside a warp are also called lanes, and the integral value identifying them is the lane ID.
+
   .. tip::
 
     Lane IDs aren't queried like other thread IDs, but are user-calculated. As a
@@ -222,10 +224,10 @@ groups let you define your own set of thread groups which may fit  your user-cas
 better than the defaults defined by the hardware.
 
 .. note::
-  The implicit groups defined by kernel launch parameters are still available 
+  The implicit groups defined by kernel launch parameters are still available
   when working with cooperative groups.
 
-For further information, see :doc:`Cooperative groups </how-to/cooperative_groups>`. 
+For further information, see :doc:`Cooperative groups </how-to/hip_runtime_api/cooperative_groups>`.
 
 Memory model
 ============
@@ -287,7 +289,7 @@ HIP programs consist of two distinct scopes:
     importantly around kernel launching and argument setting. It is geared
     towards implementing abstractions atop, such as the runtime API itself.
     Offers two additional pieces of functionality not provided by the Runtime
-    API: ``hipModule`` and ``hipCtx`` APIs. For further details, check 
+    API: ``hipModule`` and ``hipCtx`` APIs. For further details, check
     :doc:`HIP driver API </how-to/hip_porting_driver_api>`.
 
 * The device-side kernels running on GPUs. Both the host and the device-side

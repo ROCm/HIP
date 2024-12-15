@@ -8,14 +8,26 @@
 Porting CUDA driver API
 *******************************************************************************
 
-NVIDIA provides separate CUDA driver and runtime APIs. The two APIs have significant overlap in functionality:
+NVIDIA provides separate CUDA driver and runtime APIs. The two APIs have
+significant overlap in functionality:
 
-* Both APIs support events, streams, memory management, memory copy, and error handling.
+* Both APIs support events, streams, memory management, memory copy, and error
+  handling.
+
 * Both APIs deliver similar performance.
-* Driver API calls begin with the prefix ``cu``, while runtime API calls begin with the prefix ``cuda``. For example, the driver API contains ``cuEventCreate``, while the runtime API contains ``cudaEventCreate``, which has similar functionality.
-* The driver API defines a different, but largely overlapping, error code space than the runtime API and uses a different coding convention. For example, the driver API defines ``CUDA_ERROR_INVALID_VALUE``, while the runtime API defines ``cudaErrorInvalidValue``.
 
-The driver API offers two additional functionalities not provided by the runtime API: ``cuModule`` and ``cuCtx`` APIs.
+* Driver API calls begin with the prefix ``cu``, while runtime API calls begin
+  with the prefix ``cuda``. For example, the driver API contains
+  ``cuEventCreate``, while the runtime API contains ``cudaEventCreate``, which
+  has similar functionality.
+
+* The driver API defines a different, but largely overlapping, error code space
+  than the runtime API and uses a different coding convention. For example, the
+  driver API defines ``CUDA_ERROR_INVALID_VALUE``, while the runtime API defines
+  ``cudaErrorInvalidValue``.
+
+The driver API offers two additional functionalities not provided by the runtime
+API: ``cuModule`` and ``cuCtx`` APIs.
 
 cuModule API
 ================================================================================
@@ -345,7 +357,7 @@ The sample below shows how to use ``hipModuleGetFunction``.
 HIP module and texture Driver API
 ================================================================================
 
-HIP supports texture driver APIs. However, texture references must be declared 
+HIP supports texture driver APIs. However, texture references must be declared
 within the host scope. The following code demonstrates the use of texture
 references for the ``__HIP_PLATFORM_AMD__`` platform.
 

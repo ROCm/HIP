@@ -1,5 +1,5 @@
 .. meta::
-  :description: This chapter describes the built-in math functions that are accessible in HIP. 
+  :description: This chapter describes the built-in math functions that are accessible in HIP.
   :keywords: AMD, ROCm, HIP, CUDA, math functions, HIP math functions
 
 .. _math_api_reference:

@@ -6,6 +6,7 @@ APU
 APUs
 AQL
 AXPY
+asm
 Asynchrony
 backtrace
 Bitcode
@@ -15,6 +16,7 @@ builtins
 Builtins
 CAS
 clr
+compilable
 coroutines
 Ctx
 cuBLASLt
@@ -42,12 +44,14 @@ extern
 fatbin
 fatbinary
 foundationally
+framebuffer
 frontends
 fnuz
 FNUZ
 fp
 gedit
 GPGPU
+GROMACS
 GWS
 hardcoded
 HC
@@ -58,6 +62,7 @@ hipcc
 hipCtx
 hipexamine
 hipified
+HIPify
 hipModule
 hipModuleLaunchKernel
 hipother
@@ -65,9 +70,12 @@ HIPRTC
 icc
 IILE
 iGPU
+inlined
 inplace
-Interoperation
+interop
+interoperation
 interoperate
+interoperation
 Interprocess
 interprocess
 Intrinsics
@@ -75,6 +83,7 @@ intrinsics
 IPC
 IPs
 isa
+iteratively
 Lapack
 latencies
 libc
@@ -87,6 +96,8 @@ ltrace
 makefile
 Malloc
 malloc
+MALU
+MiB
 memset
 multicore
 multigrid
@@ -101,9 +112,12 @@ NOP
 Numa
 Nsight
 ocp
+omnitrace
 overindex
 overindexing
 oversubscription
+overutilized
+parallelizable
 pixelated
 pragmas
 preallocated
@@ -111,6 +125,7 @@ preconditioners
 predefining
 prefetched
 preprocessor
+profilers
 PTX
 PyHIP
 queryable
@@ -118,6 +133,7 @@ prefetching
 quad
 representable
 RMW
+rocgdb
 ROCm's
 rocTX
 roundtrip
@@ -129,6 +145,7 @@ scalarizing
 sceneries
 shaders
 SIMT
+sinewave
 SOMA
 SPMV
 structs
@@ -139,11 +156,16 @@ texels
 tradeoffs
 templated
 toolkits
+transfering
 typedefs
 unintuitive
 UMM
 unmap
+unmapped
+unmapping
+unregister
 upscaled
 variadic
+vulkan
 WinGDB
-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
+zc

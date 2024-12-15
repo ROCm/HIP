@@ -8,9 +8,16 @@
 Cooperative groups
 *******************************************************************************
 
-Cooperative groups API is an extension to the HIP programming model, which provides developers with a flexible, dynamic grouping mechanism for the communicating threads. Cooperative groups let you define your own set of thread groups which may fit your user-cases better than those defined by the hardware. This lets you specify the level of granularity for thread communication which can lead to more efficient parallel decompositions.
+The cooperative groups API is an extension to the HIP programming model, which
+provides developers with a flexible, dynamic grouping mechanism for the
+communicating threads. Cooperative groups let you define your own set of thread
+groups which may fit your use-cases better than those defined by the hardware.
+This lets you specify the level of granularity for thread communication which
+can lead to more efficient parallel decompositions.
 
-The API is accessible in the ``cooperative_groups`` namespace after the  ``hip_cooperative_groups.h`` is included. The header contains the following  elements:
+The API is accessible in the ``cooperative_groups`` namespace after the
+``hip_cooperative_groups.h`` header is included. The header contains the following
+elements:
 
 * Static functions to create groups and subgroups.
 * Hardware-accelerated operations over the whole group, like shuffles.
@@ -19,13 +26,13 @@ The API is accessible in the ``cooperative_groups`` namespace after the  ``hip_c
 * Get group properties member functions.
 
 Cooperative groups thread model
-===============================
+================================================================================
 
-The thread hierarchy abstraction of cooperative groups are in :ref:`grid hierarchy <coop_thread_top_hierarchy>` and :ref:`block hierarchy <coop_thread_bottom_hierarchy>`.
+The thread hierarchy abstractions of cooperative groups are depicted in the following figures: :ref:`grid hierarchy <coop_thread_top_hierarchy>` and :ref:`block hierarchy <coop_thread_bottom_hierarchy>`.
 
 .. _coop_thread_top_hierarchy:
 
-.. figure:: ../data/how-to/cooperative_groups/thread_hierarchy_coop_top.svg
+.. figure:: ../../data/how-to/hip_runtime_api/cooperative_groups/thread_hierarchy_coop_top.svg
   :alt: Diagram depicting nested rectangles of varying color. The outermost one
         titled "Grid", inside sets of different sized rectangles layered on
         one another titled "Block". Each "Block" containing sets of uniform
@@ -34,11 +41,16 @@ The thread hierarchy abstraction of cooperative groups are in :ref:`grid hierarc
 
   Cooperative group thread hierarchy in grids.
 
-The **multi grid** is an abstraction of potentially multiple simultaneous launches of the same kernel over multiple devices (Deprecated since 5.0). The **grid** in cooperative groups is a single dispatch of kernels for execution like the original grid. 
+The **multi grid** is an abstraction of potentially multiple simultaneous
+launches of the same kernel over multiple devices. The **grid** in cooperative
+groups is a single dispatch of kernels for execution like the original grid.
 
 .. note::
 
-  The ability to synchronize over a grid or multi grid requires the kernel to be launched using the specific cooperative groups API.
+  * The ability to synchronize over a grid or multi grid requires the kernel to
+    be launched using the specific cooperative groups API.
+
+  * Multi grid deprecated since ROCm 5.0.
 
 The **block** is the same as the :ref:`inherent_thread_model` block entity.
 
@@ -48,7 +60,7 @@ The **block** is the same as the :ref:`inherent_thread_model` block entity.
 
 .. _coop_thread_bottom_hierarchy:
 
-.. figure:: ../data/how-to/cooperative_groups/thread_hierarchy_coop_bottom.svg
+.. figure:: ../../data/how-to/hip_runtime_api/cooperative_groups/thread_hierarchy_coop_bottom.svg
   :alt: The new level between block thread and threads.
 
   Cooperative group thread hierarchy in blocks.
@@ -156,7 +168,7 @@ Threads (64 threads on CDNA and 32 threads on RDNA) in a warp cannot execute dif
 
 .. note::
 
-  The NVIDIA GPU's independent thread scheduling presents the appearance that threads on different branches execute concurrently. 
+  The NVIDIA GPU's independent thread scheduling presents the appearance that threads on different branches execute concurrently.
 
 .. warning::
 
@@ -378,8 +390,8 @@ With each group type, the synchronization requires using the correct cooperative
                                      dim3(threads_per_block),
                                      0,
                                      hipStreamDefault,
-                                     &d_vector, 
-                                     &d_block_reduced, 
+                                     &d_vector,
+                                     &d_block_reduced,
                                      &d_partition_reduced));
 
   .. tab-item:: Grid

@@ -5,6 +5,9 @@ defaults:
   maxdepth: 6
 root: index
 subtrees:
+- entries:
+  - file: what_is_hip
+  - file: faq
 
 - caption: Install
   entries:
@@ -12,33 +15,50 @@ subtrees:
     title: Installing HIP
   - file: install/build
     title: Building HIP from source
+  - url: https://rocm.docs.amd.com/projects/install-on-linux/en/${branch}/reference/system-requirements.html
+    title: Linux supported AMD GPUs
+  - url: https://rocm.docs.amd.com/projects/install-on-windows/en/${branch}/reference/system-requirements.html
+    title: Windows supported AMD GPUs
+  - url: https://developer.nvidia.com/cuda-gpus
+    title: NVIDIA supported GPUs
 
-- caption: Conceptual
+- caption: Programming guide
   entries:
+  - file: programming_guide
+    title: Introduction
   - file: understand/programming_model
   - file: understand/hardware_implementation
-  - file: understand/amd_clr
-  - file: understand/texture_fetching
-    title: Texture fetching
-
-- caption: How to
-  entries:
-  - file: how-to/programming_manual
-  - file: how-to/hip_porting_guide
-  - file: how-to/hip_porting_driver_api
-  - file: how-to/hip_rtc
+  - file: understand/compilers
   - file: how-to/performance_guidelines
   - file: how-to/debugging
   - file: how-to/logging
-  - file: how-to/cooperative_groups
-  - file: how-to/unified_memory
-    title: Unified memory
-  - file: how-to/virtual_memory
-    title: Virtual memory
-  - file: how-to/stream_ordered_allocator
-  - file: how-to/hipgraph
-    title: HIP graphs
-  - file: how-to/faq
+  - file: how-to/hip_runtime_api
+    subtrees:
+    - entries:
+      - file: how-to/hip_runtime_api/initialization
+      - file: how-to/hip_runtime_api/memory_management
+        subtrees:
+        - entries:
+          - file: how-to/hip_runtime_api/memory_management/host_memory
+          - file: how-to/hip_runtime_api/memory_management/device_memory
+            subtrees:
+            - entries:
+              - file: how-to/hip_runtime_api/memory_management/device_memory/texture_fetching
+          - file: how-to/hip_runtime_api/memory_management/coherence_control
+          - file: how-to/hip_runtime_api/memory_management/unified_memory
+          - file: how-to/hip_runtime_api/memory_management/virtual_memory
+          - file: how-to/hip_runtime_api/memory_management/stream_ordered_allocator
+      - file: how-to/hip_runtime_api/error_handling
+      - file: how-to/hip_runtime_api/cooperative_groups
+      - file: how-to/hip_runtime_api/hipgraph
+      - file: how-to/hip_runtime_api/call_stack
+      - file: how-to/hip_runtime_api/multi_device
+      - file: how-to/hip_runtime_api/opengl_interop
+      - file: how-to/hip_runtime_api/external_interop
+  - file: how-to/hip_porting_guide
+  - file: how-to/hip_porting_driver_api
+  - file: how-to/hip_rtc
+  - file: understand/amd_clr
 
 - caption: Reference
   entries:
@@ -75,6 +95,7 @@ subtrees:
           - file: reference/hip_runtime_api/modules/runtime_compilation
           - file: reference/hip_runtime_api/modules/callback_activity_apis
           - file: reference/hip_runtime_api/modules/graph_management
+          - file: reference/hip_runtime_api/modules/graphics_interoperability
           - file: reference/hip_runtime_api/modules/opengl_interoperability
           - file: reference/hip_runtime_api/modules/cooperative_groups_reference
       - file: reference/hip_runtime_api/global_defines_enums_structs_files
@@ -90,12 +111,14 @@ subtrees:
   - file: reference/cpp_language_support
     title: C++ language support
   - file: reference/math_api
+  - file: reference/env_variables
   - file: reference/terms
     title: Comparing syntax for different APIs
   - file: reference/deprecated_api_list
     title: List of deprecated APIs
   - file: reference/fp8_numbers
     title: FP8 numbers in HIP
+  - file: reference/hardware_features
 
 - caption: Tutorials
   entries:

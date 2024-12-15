@@ -724,7 +724,7 @@ enum hipLimit_t {
 
 /** Allocates the memory as write-combined. On some system configurations, write-combined allocation
  * may be transferred faster across the PCI Express bus, however, could have low read efficiency by
- * most CPUs. It's a good option for data tranfer from host to device via mapped pinned memory.*/
+ * most CPUs. It's a good option for data transfer from host to device via mapped pinned memory.*/
 #define hipHostMallocWriteCombined 0x4
 #define hipHostAllocWriteCombined 0x4
 
@@ -735,11 +735,11 @@ enum hipLimit_t {
 #define hipHostMallocNumaUser  0x20000000
 #define hipExtHostAllocNumaUser  0x20000000
 
-/** Allocate coherent memory. Overrides HIP_COHERENT_HOST_ALLOC for specific allocation.*/
+/** Allocate coherent memory. Overrides HIP_HOST_COHERENT for specific allocation.*/
 #define hipHostMallocCoherent  0x40000000
 #define hipExtHostAllocCoherent  0x40000000
 
-/** Allocate non-coherent memory. Overrides HIP_COHERENT_HOST_ALLOC for specific allocation.*/
+/** Allocate non-coherent memory. Overrides HIP_HOST_COHERENT for specific allocation.*/
 #define hipHostMallocNonCoherent  0x80000000
 #define hipExtHostAllocNonCoherent  0x80000000
 
@@ -3494,7 +3494,6 @@ hipError_t hipMemAllocHost(void** ptr, size_t size);
 /**
  * @}
  */
-
 /**
  *  @brief Allocates device accessible page locked (pinned) host memory
  *
@@ -3582,6 +3581,8 @@ hipError_t hipExtHostAlloc(void** ptr, size_t size, unsigned int flags);
  *
  * The API returns the allocation pointer, managed by HMM, can be used further to execute kernels
  * on device and fetch data between the host and device as needed.
+ *
+ * If HMM is not supported, the function behaves the same as @p hipMallocHost .
  *
  * @note   It is recommend to do the capability check before call this API.
  *
@@ -9323,7 +9324,7 @@ return hipOccupancyMaxPotentialBlockSize(gridSize, blockSize,(hipFunction_t)kern
  * @ingroup ModuleCooperativeG
  *
  * \tparam T                  The type of the kernel function.
- * 
+ *
  * @param [in] f              Kernel function to launch.
  * @param [in] gridDim        Grid dimensions specified as multiple of blockDim.
  * @param [in] blockDim       Block dimensions specified in work-items.

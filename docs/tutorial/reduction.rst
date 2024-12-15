@@ -30,7 +30,7 @@ Implementing reductions on GPUs requires a basic understanding of the :doc:`/und
 
 Synchronizing parallel threads of execution across a GPU is crucial for correctness as the partial results can't be synchronized before they manifest. Synchronizing all the threads running on a GPU at any given time is possible, however, it is a costly and intricate operation. If synchronization is not absolutely necessary, map the parallel algorithm so that multiprocessors and blocks can make independent progress and need not sync frequently.
 
-There are ten reduction implementations in the `rocm-examples <https://github.com/ROCm/rocm-examples/tree/develop/Tutorials/reduction/include/Reduction>`_, which are described in the following sections. 
+There are ten reduction implementations in the `rocm-examples <https://github.com/ROCm/rocm-examples/tree/develop/Tutorials/reduction/include/Reduction>`_, which are described in the following sections.
 
 Naive shared reduction
 ----------------------
@@ -188,7 +188,7 @@ A notable exception is when the shared read uniformly broadcasts to the same add
 .. note::
 
     To avoid bank conflicts, read shared memory in a coalesced manner, which implies that reads/writes of each lane in a warp evaluate to consecutive locations. Analyzing the read/write patterns could help you to understand the cause of bank conflicts. For more details, check `CDNA3 ISA <https://www.amd.com/content/dam/amd/en/documents/instinct-tech-docs/instruction-set-architectures/amd-instinct-mi300-cdna3-instruction-set-architecture.pdf>`_ or `RDNA3 ISA <https://www.amd.com/content/dam/amd/en/documents/radeon-tech-docs/instruction-set-architectures/rdna3-shader-instruction-set-architecture-feb-2023_0.pdf>`_ data share operations chapter.
-    
+
 Utilize upper half of the block
 -------------------------------
 
