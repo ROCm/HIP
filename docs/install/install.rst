@@ -50,7 +50,7 @@ Installation
          * :doc:`rocm-install-on-linux:index`
          * :doc:`rocm-install-on-windows:index`
 
-      By default, HIP is installed into ``/opt/rocm/hip``.
+      By default, HIP is installed into ``/opt/rocm``.
 
       .. note::
          There is no autodetection for the HIP installation. If you choose to install it somewhere other than the default location, you must set the ``HIP_PATH`` environment variable as explained in `Build HIP from source <./build.html>`_.
@@ -77,7 +77,7 @@ Installation
 
          The default paths are:
             * CUDA SDK: ``/usr/local/cuda``
-            * HIP: ``/opt/rocm/hip``
+            * HIP: ``/opt/rocm``
 
          You can optionally add ``/opt/rocm/bin`` to your path, which can make it easier to use the tools.
 
