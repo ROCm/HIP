@@ -710,24 +710,39 @@ enum hipLimit_t {
 
 //Flags that can be used with hipHostMalloc/hipHostAlloc.
 /** Default pinned memory allocation on the host.*/
-#define hipHostMallocDefault 0x0
 #define hipHostAllocDefault 0x0
 
+/** Default pinned memory allocation on the host.
+ * @note This is the same definition as #hipHostAllocPortable.*/
+#define hipHostMallocDefault 0x0
+
 /** Memory is considered allocated by all contexts.*/
-#define hipHostMallocPortable 0x1
 #define hipHostAllocPortable 0x1
+
+/** Memory is considered allocated by all contexts.
+ * @note This is the same definition as #hipHostAllocPortable.*/
+#define hipHostMallocPortable 0x1
 
 /** Map the allocation into the address space for the current device. The device pointer
  * can be obtained with #hipHostGetDevicePointer.*/
-#define hipHostMallocMapped  0x2
 #define hipHostAllocMapped  0x2
+
+/** Map the allocation into the address space for the current device. The device pointer
+ * can be obtained with #hipHostGetDevicePointer.
+ * @note This is the same #hipHostMallocMapped.*/
+#define hipHostMallocMapped  0x2
 
 /** Allocates the memory as write-combined. On some system configurations, write-combined allocation
  * may be transferred faster across the PCI Express bus, however, could have low read efficiency by
  * most CPUs. It's a good option for data transfer from host to device via mapped pinned memory.*/
-#define hipHostMallocWriteCombined 0x4
 #define hipHostAllocWriteCombined 0x4
 
+/** Allocates the memory as write-combined. On some system configurations, write-combined allocation
+ * may be transferred faster across the PCI Express bus, however, could have low read efficiency by
+ * most CPUs. It's a good option for data transfer from host to device via mapped pinned memory.
+ * @note  This flag is the same definition as #hipHostAllocWriteCombined which is equivalent to
+ * cudaHostAllocWriteCombined.*/
+#define hipHostMallocWriteCombined 0x4
 /**
 * Host memory allocation will follow numa policy set by user.
 * @note  This numa allocation flag is applicable on Linux, under development on Windows.
