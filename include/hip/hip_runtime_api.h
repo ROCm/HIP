@@ -1836,13 +1836,15 @@ hipError_t hipInit(unsigned int flags);
  *
  * @param [out] driverVersion driver version
  *
+ * HIP driver version shows up in the format:
+ * HIP_VERSION_MAJOR * 10000000 + HIP_VERSION_MINOR * 100000 + HIP_VERSION_PATCH.
+ *
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
- * @warning The HIP feature set does not correspond to an exact CUDA SDK driver revision.
- * This function always set *driverVersion to 4 as an approximation though HIP supports
- * some features which were introduced in later CUDA SDK revisions.
- * HIP apps code should not rely on the driver revision number here and should
- * use arch feature flags to test device capabilities or conditional compilation.
+ * @warning The HIP driver version does not correspond to an exact CUDA driver revision.
+ * On AMD platform, the API returns the HIP driver version, while on NVIDIA platform, it calls
+ * the corresponding CUDA runtime API and returns the CUDA driver version.
+ * There is no mapping/correlation between HIP driver version and CUDA driver version.
  *
  * @see hipRuntimeGetVersion
  */
