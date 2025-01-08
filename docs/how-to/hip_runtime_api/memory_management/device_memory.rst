@@ -35,7 +35,7 @@ with the ``__device__`` qualifier, this memory space is also referred to as
 device memory.
 
 Without explicitly copying it, it can only be accessed by the threads within a
-kernel operating on the device, however :ref:`unified memory` can be used to
+kernel operating on the device, however :ref:`unified_memory` can be used to
 let the runtime manage this, if desired.
 
 Allocating global memory
@@ -101,7 +101,7 @@ better option, but is also limited in size.
 Copying between device and host
 --------------------------------------------------------------------------------
 
-When not using :ref:`unified memory`, memory has to be explicitly copied between
+When not using :ref:`unified_memory`, memory has to be explicitly copied between
 the device and the host, using the HIP runtime API.
 
 .. code-block:: cpp
@@ -213,6 +213,8 @@ has to be launched in order to see the updated surface.
 
 The corresponding functions are listed in the :ref:`Surface object API reference
 <surface_object_reference>`.
+
+.. _shared_memory:
 
 Shared memory
 ================================================================================
