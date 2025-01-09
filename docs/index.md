@@ -55,8 +55,7 @@ The HIP documentation is organized into the following categories:
 :::{grid-item-card} Tutorial
 
 * [HIP basic examples](https://github.com/ROCm/rocm-examples/tree/develop/HIP-Basic)
-* [HIP examples](https://github.com/ROCm/HIP-Examples)
-* [HIP test samples](https://github.com/ROCm/hip-tests/tree/develop/samples)
+* [HIP examples](https://github.com/ROCm/rocm-examples)
 * [SAXPY tutorial](./tutorial/saxpy)
 * [Reduction tutorial](./tutorial/reduction)
 * [Cooperative groups tutorial](./tutorial/cooperative_groups_tutorial)

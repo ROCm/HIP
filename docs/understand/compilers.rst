@@ -96,5 +96,6 @@ Static libraries
     ar rcsD libHipDevice.a hipDevice.o
     hipcc libHipDevice.a test.cpp -fgpu-rdc -o test.out
 
-For more information, see `HIP samples host functions <https://github.com/ROCm/hip-tests/tree/develop/samples/2_Cookbook/15_static_library/host_functions>`_
-and `device functions <https://github.com/ROCm/hip-tests/tree/develop/samples/2_Cookbook/15_static_library/device_functions>`_.
+A full example for this can be found in the ROCm-examples, see the examples for
+`static host libraries <https://github.com/ROCm/rocm-examples/tree/develop/HIP-Basic/static_host_library>`_
+or `static device libraries <https://github.com/ROCm/rocm-examples/tree/develop/HIP-Basic/static_device_library>`_.

@@ -122,10 +122,8 @@ subtrees:
   entries:
   - url: https://github.com/ROCm/rocm-examples/tree/develop/HIP-Basic
     title: HIP basic examples
-  - url: https://github.com/ROCm/HIP-Examples
+  - url: https://github.com/ROCm/rocm-examples
     title: HIP examples
-  - url: https://github.com/ROCm/hip-tests/tree/develop/samples
-    title: HIP test samples
   - file: tutorial/saxpy
   - file: tutorial/reduction
   - file: tutorial/cooperative_groups_tutorial

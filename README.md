@@ -127,19 +127,9 @@ provides source portability to either platform.   HIP provides the _hipcc_ compi
 
 ## Examples and Getting Started
 
-* A sample and [blog](https://github.com/ROCm/hip-tests/tree/develop/samples/0_Intro/square) that uses any of [HIPIFY](https://github.com/ROCm/HIPIFY/blob/amd-staging/README.md) tools to convert a simple app from CUDA to HIP:
+* The [ROCm-examples](https://github.com/ROCm/rocm-examples) repository includes many examples with explanations that help users getting started with HIP, as well as providing advanced examples for HIP and its libraries.
 
-  ```shell
-  cd samples/01_Intro/square
-  # follow README / blog steps to hipify the application.
-  ```
-
-* Guide to [Porting a New Cuda Project](https://rocm.docs.amd.com/projects/HIP/en/latest/how-to/hip_porting_guide.html#porting-a-new-cuda-project)
-
-## More Examples
-
-The GitHub repository [HIP-Examples](https://github.com/ROCm/HIP-Examples) contains a hipified version of benchmark suite.
-Besides, there are more samples in Github [HIP samples](https://github.com/ROCm/hip-tests/tree/develop/samples), showing how to program with different features, build and run.
+* HIP's documentation includes a guide for [Porting a New Cuda Project](https://rocm.docs.amd.com/projects/HIP/en/latest/how-to/hip_porting_guide.html#porting-a-new-cuda-project).
 
 ## Tour of the HIP Directories
 
