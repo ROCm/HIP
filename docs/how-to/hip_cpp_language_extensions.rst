@@ -469,7 +469,7 @@ compile-time constant on the host. It has to be queried using
   applications. NVIDIA devices return 32 for this variable; AMD devices return
   64 for gfx9 and 32 for gfx10 and above. While code that assumes a ``warpSize``
   of 32 can run on devices with a ``warpSize`` of 64, it only utilizes half of
-  the the compute resources.
+  the compute resources.
 
 ********************************************************************************
 Vector types

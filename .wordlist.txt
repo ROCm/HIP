@@ -24,7 +24,8 @@ coroutines
 Ctx
 cuBLASLt
 cuCtx
-CUDA's
+CUDA
+cuda
 cuDNN
 cuModule
 dataflow
@@ -35,7 +36,6 @@ Dereferencing
 dll
 DirectX
 EIGEN
-EIGEN's
 enqueue
 enqueues
 entrypoint
@@ -61,7 +61,6 @@ hardcoded
 HC
 hcBLAS
 HIP-Clang
-HIP's
 hipcc
 hipCtx
 hipexamine
@@ -142,7 +141,6 @@ quad
 representable
 RMW
 rocgdb
-ROCm's
 rocTX
 roundtrip
 rst
@@ -158,7 +156,6 @@ sinewave
 SOMA
 SPMV
 structs
-struct's
 SYCL
 syntaxes
 texel
