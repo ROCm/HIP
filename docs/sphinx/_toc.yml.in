@@ -49,9 +49,10 @@ subtrees:
           - file: how-to/hip_runtime_api/memory_management/virtual_memory
           - file: how-to/hip_runtime_api/memory_management/stream_ordered_allocator
       - file: how-to/hip_runtime_api/error_handling
-      - file: how-to/hip_runtime_api/cooperative_groups
-      - file: how-to/hip_runtime_api/hipgraph
       - file: how-to/hip_runtime_api/call_stack
+      - file: how-to/hip_runtime_api/asynchronous
+      - file: how-to/hip_runtime_api/hipgraph
+      - file: how-to/hip_runtime_api/cooperative_groups
       - file: how-to/hip_runtime_api/multi_device
       - file: how-to/hip_runtime_api/opengl_interop
       - file: how-to/hip_runtime_api/external_interop

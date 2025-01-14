@@ -3,6 +3,8 @@
    developers optimize the performance of HIP-capable GPU architectures.
   :keywords: AMD, ROCm, HIP, CUDA, performance, guidelines
 
+.. _how_to_performance_guidelines:
+
 *******************************************************************************
 Performance guidelines
 *******************************************************************************
@@ -32,12 +34,14 @@ reveal and efficiently provide as much parallelism as possible. The parallelism
 can be performed at the application level, device level, and multiprocessor
 level.
 
+.. _application_parallel_execution:
+
 Application level
 --------------------------------------------------------------------------------
 
 To enable parallel execution of the application across the host and devices, use
-asynchronous calls and streams. Assign workloads based on efficiency: serial to
-the host or parallel to the devices.
+:ref:`asynchronous calls and streams <asynchronous_how-to>`. Assign workloads
+based on efficiency: serial to the host or parallel to the devices.
 
 For parallel workloads, when threads belonging to the same block need to
 synchronize to share data, use :cpp:func:`__syncthreads()` (see:

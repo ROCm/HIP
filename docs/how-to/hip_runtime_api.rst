@@ -40,6 +40,7 @@ Here are the various HIP Runtime API high level functions:
 * :doc:`./hip_runtime_api/initialization`
 * :doc:`./hip_runtime_api/memory_management`
 * :doc:`./hip_runtime_api/error_handling`
+* :doc:`./hip_runtime_api/asynchronous`
 * :doc:`./hip_runtime_api/cooperative_groups`
 * :doc:`./hip_runtime_api/hipgraph`
 * :doc:`./hip_runtime_api/call_stack`

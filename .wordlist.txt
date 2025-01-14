@@ -7,7 +7,7 @@ APUs
 AQL
 AXPY
 asm
-Asynchrony
+asynchrony
 backtrace
 Bitcode
 bitcode
@@ -124,6 +124,7 @@ overindexing
 oversubscription
 overutilized
 parallelizable
+parallelized
 pixelated
 pragmas
 preallocated
