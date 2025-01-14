@@ -9,6 +9,7 @@ AXPY
 asm
 Asynchronicity
 Asynchrony
+asynchrony
 backtrace
 Bitcode
 bitcode
@@ -128,6 +129,7 @@ oversubscription
 overutilized
 parallelizable
 pipelining
+parallelized
 pixelated
 pragmas
 preallocated
