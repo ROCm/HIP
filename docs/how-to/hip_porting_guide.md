@@ -1,3 +1,9 @@
+<head>
+  <meta charset="UTF-8">
+  <meta name="description" content="HIP porting guide describing how to port CUDA code to HIP.">
+  <meta name="keywords" content="HIP, Heterogeneous-computing Interface for Portability, HIP porting guide">
+</head>
+
 # HIP porting guide
 
 In addition to providing a portable C++ programming environment for GPUs, HIP is designed to ease
