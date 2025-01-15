@@ -1,3 +1,9 @@
+<head>
+  <meta charset="UTF-8">
+  <meta name="description" content="Table comparing syntax for HIP, CUDA, and OpenCL APIs">
+  <meta name="keywords" content="HIP, Heterogeneous-computing Interface for Portability, HIP terms">
+</head>
+
 # Table comparing syntax for different compute APIs
 
 |Term|CUDA|HIP|OpenCL|
