@@ -7,7 +7,8 @@ APUs
 AQL
 AXPY
 asm
-asynchrony
+Asynchronicity
+Asynchrony
 backtrace
 bfloat
 Bitcode
@@ -71,6 +72,7 @@ hipModule
 hipModuleLaunchKernel
 hipother
 HIPRTC
+hyperthreading
 icc
 IILE
 iGPU
@@ -116,6 +118,7 @@ NDRange
 nonnegative
 NOP
 Numa
+ns
 Nsight
 ocp
 omnitrace
@@ -124,6 +127,7 @@ overindexing
 oversubscription
 overutilized
 parallelizable
+pipelining
 parallelized
 pixelated
 pragmas
