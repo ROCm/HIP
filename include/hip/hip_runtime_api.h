@@ -113,12 +113,15 @@ typedef struct hipDeviceProp_t {
     int clockRate;                    ///< Max clock frequency of the multiProcessors in khz.
     size_t totalConstMem;             ///< Size of shared constant memory region on the device
                                       ///< (in bytes).
-    int major;  ///< Major compute capability.  On HCC, this is an approximation and features may
-                ///< differ from CUDA CC.  See the arch feature flags for portable ways to query
+    int major;  ///< Major compute capability version.  This indicates the core instruction set
+                ///< of the GPU architecture.  For example, a value of 11 would correspond to
+                ///< Navi III (RDNA3).  See the arch feature flags for portable ways to query
                 ///< feature caps.
-    int minor;  ///< Minor compute capability.  On HCC, this is an approximation and features may
-                ///< differ from CUDA CC.  See the arch feature flags for portable ways to query
-                ///< feature caps.
+    int minor;  ///< Minor compute capability version.  This indicates a particular configuration,
+                ///< feature set, or variation within the group represented by the major compute
+                ///< capability version.  For example, different models within the same major version
+                ///< might have varying levels of support for certain features or optimizations.
+                ///< See the arch feature flags for portable ways to query feature caps.
     size_t textureAlignment;       ///< Alignment requirement for textures
     size_t texturePitchAlignment;  ///< Pitch alignment requirement for texture references bound to
     int deviceOverlap;             ///< Deprecated. Use asyncEngineCount instead
