@@ -7,7 +7,7 @@
 .. _programming_model:
 
 *******************************************************************************
-HIP programming model
+Introduction to HIP programming model
 *******************************************************************************
 
 The HIP programming model makes it easy to map data-parallel C/C++ algorithms to
@@ -20,6 +20,50 @@ Python via PyHIP) this document will focus on the original C/C++ API of HIP.
 A basic understanding of the underlying device architecture helps you
 make efficient use of HIP and general purpose graphics processing unit (GPGPU)
 programming in general.
+
+Getting into Hardware: CPU vs GPU
+=================================
+
+developed to fit the capabilities of GPU hardware
+ 
+In theory, could be developed for the same as CPUs, but to get the best performance out of the hardware, it differs from (even multi-threaded) CPU applications
+ 
+Different design goals in CPU and GPU implementations:
+CPUs have been designed to quickly execute a single thread, i.e. increase the amount of serial instructions that can be executed (this includes fetching data, reducing pipeline stalls where the ALU has to wait for previous instructions to finish, etc.)
+  --> low throughput, but also low latency (goal is to finish a single series of instructions (i.e. a thread) as quickly as possible)
+GPUs have been designed to execute many independent (but "similar") threads as possible in parallel ("similar" in this case means, in the ideal case, the same instruction, but on different data)
+  --> high throughput, but also high latency (goal is to make progress on many threads in parallel, not finish a single one fast)
+ 
+Hardware differences CPU vs GPU
+CPU:
+  one register file per thread (on "classical"/modern/normal CPUs you have at most 2 register files per core, that is called hyper-/multi-threading, depending on vendor)
+  one ALU executing the thread
+    - designed to quickly execute instructions of the same thread
+	  - highly pipelined (might not be exclusive to CPUs)
+	  - complex branch prediction
+  Comparably huge L1/L2 cache per core, shared by fewer threads (as already pointed out, maximum of 2 when hyperthreading is available)
+  Disadvantage: context switch (that is switching execution from one thread to another) takes a considerable amount of time (ALU pipeline needs to be emptied, register file has to be written to memory to free it for another thread)
+ 
+GPU:
+  register file is shared among threads (amount of threads that can be executed in parallel depends, among other factors, on the amount of registers needed per thread. Here would be a good reference to a better explanation of occupancy)
+  Many ALUs (technically as many as threads in a warp) to execute a whole warp at once. however, they can't execute arbitrary threads: the threads have to execute the same instruction. This is called SIMT (you execute a single instruction, but for many different threads)
+   - ALU is shared between warps! Not only threads of the same warp. If a warp can not issue its next instruction for some reason (waiting for data, branching, long-latency instruction), the core/compute unit issues an instruction from another warp. This improves utilization of the ALU without needing branch prediction or any other fancy features (but a huge register file)
+   - this collection of ALUs is called SIMD. There exists an equivalent on CPUs: SIMDs are an extension to the architecture, that allows a *S*ingle CPU *I*nstruction to operate on *M*ultiple *D*ata. Difference is, that CPU SIMDs are waay smaller than GPU SIMDs. (I think the newest SIMD extension for CPUs is AVX-512, which can operate on 512 bits at the same time. When considering 32-bit floating point, this is 512/32 = 16 elements at once. GPU "cores" (Compute Units) can operate on at least 64 32-bit floating point elements at once. Depending on architecture maybe even more [Don't have a source at hand for backing that up])
+   - obviously designed to execute many threads at once
+     - not sure about pipeline-length
+	 - no/bad branch prediction
+	 - if the threads don't follow the same branch, the ALU is still occupied for a full warp, but the result for those threads is masked out -> wasted ALU cycles
+  L1 cache is shared between all threads residing on a "core"/compute unit. Differs between architectures: L2 Cache is shared between all cores/compute units.
+    - cache on GPUs (used to be, changed slightly with newer architectures) is there to coalesce accesses, so that if a "neighbouring" thread accesses the same data, it can be fetched from L1, not necessarily for holding values to reuse the data later.
+ 
+  Context switching is easy! All threads that run on a core/compute unit have their registers on the compute unit all the time, so they don't need to be stored to global memory, and each cycle one instruction from any warp that resides on the compute unit can be issued
+  --> All of this should hopefully explain, why GPU threads are tightly coupled, why many of them are needed to get peak performance, and why they are considered "light-weight" (can be easily switched between)
+  --> This should also explain, why we have warps in the HIP programming model. While in theory warps with completelly different threads, that don't follow the same execution path are possible, this highlights why it's not a good idea.
+ 
+Points I didn't yet fully flesh out: On GPUs the threads in a warp can easily cooperate (warp-level intrinsics, run on the same "core"/compute unit). On CPUs communication between threads is a bit more costly (but not sure if it's worth mentioning that)
+ 
+Note: All of this up until now was only explaining everything on a warp (GPU)/thread (CPU) level. This does not yet explain, why we need thread-blocks.
+Notes I haven't yet fleshed out for that: Blocks are assigned to a specific compute unit. Threads in a block usually work on a similar task. Being executed on the same compute unit gives more opportunities for cooperation (sharing cache to reduce accesses to global memory, using shared memory/LDS to share intermediate results with low latency, and other ways to cooperate [LDS-atomics, warp-level intrinsics, ...])
 
 RDNA & CDNA architecture summary
 ================================
