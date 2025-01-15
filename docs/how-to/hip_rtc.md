@@ -1,3 +1,9 @@
+<head>
+  <meta charset="UTF-8">
+  <meta name="description" content="HIP Runtime Compiler API.">
+  <meta name="keywords" content="HIP, Heterogeneous-computing Interface for Portability, HIP runtime compiler">
+</head>
+
 # Programming for HIP runtime compiler (RTC)
 
 HIP lets you compile kernels at runtime with the `hiprtc*` APIs.
