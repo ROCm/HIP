@@ -1,3 +1,7 @@
+.. meta::
+   :description: Debug environment variables for HIP.
+   :keywords: AMD, ROCm, HIP, debugging, Environment variables, ROCgdb
+
 .. list-table::
     :header-rows: 1
     :widths: 35,14,51
