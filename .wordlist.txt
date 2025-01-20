@@ -162,6 +162,7 @@ sinewave
 SOMA
 SPMV
 structs
+struct's
 SYCL
 syntaxes
 texel
