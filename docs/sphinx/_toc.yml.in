@@ -111,8 +111,7 @@ subtrees:
   - file: reference/virtual_rocr
   - file: reference/math_api
   - file: reference/env_variables
-  - file: reference/terms
-    title: Comparing syntax for different APIs
+  - file: reference/api_syntax
   - file: reference/deprecated_api_list
     title: List of deprecated APIs
   - file: reference/fp8_numbers

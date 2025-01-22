@@ -45,7 +45,7 @@ The HIP documentation is organized into the following categories:
 * [HSA runtime API for ROCm](./reference/virtual_rocr)
 * [HIP math API](./reference/math_api)
 * [HIP environment variables](./reference/env_variables)
-* [Comparing syntax for different APIs](./reference/terms)
+* [CUDA to HIP API Function Comparison](./reference/api_syntax)
 * [List of deprecated APIs](./reference/deprecated_api_list)
 * [FP8 numbers in HIP](./reference/fp8_numbers)
 * {doc}`./reference/hardware_features`
