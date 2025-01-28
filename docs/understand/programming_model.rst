@@ -12,73 +12,81 @@ Introduction to HIP programming model
 
 The HIP programming model makes it easy to map data-parallel C/C++ algorithms to
 massively parallel, wide single instruction, multiple data (SIMD) architectures,
-such as GPUs.
+such as GPUs. HIP supports many imperative languages, such as Python via PyHIP,
+but this document focuses on the original C/C++ API of HIP.
 
-While the model may be expressed in most imperative languages, (for example
-Python via PyHIP) this document will focus on the original C/C++ API of HIP.
+.. RJH>> If HIP programming uses SIMT for thread instructions, but the hardware implementation is SIMD for the execution of threads, then maybe we focus on SIMT as the top-level concept? 
 
-A basic understanding of the underlying device architecture helps you
+While GPUs may be capable of running applications written for CPUs if properly ported
+and compiled, it would not be an efficient use of GPU resources. GPUs are different
+from CPUs in fundamental ways, and should be used accordingly to achieve optimum
+performance. A basic understanding of the underlying device architecture helps you
 make efficient use of HIP and general purpose graphics processing unit (GPGPU)
-programming in general.
+programming in general. The topics that follow introduce you to the key concepts of 
+GPU-based programming, and the HIP programming model. 
 
 Getting into Hardware: CPU vs GPU
 =================================
 
-developed to fit the capabilities of GPU hardware
- 
-In theory, could be developed for the same as CPUs, but to get the best performance out of the hardware, it differs from (even multi-threaded) CPU applications
- 
-Different design goals in CPU and GPU implementations:
-CPUs have been designed to quickly execute a single thread, i.e. increase the amount of serial instructions that can be executed (this includes fetching data, reducing pipeline stalls where the ALU has to wait for previous instructions to finish, etc.)
-  --> low throughput, but also low latency (goal is to finish a single series of instructions (i.e. a thread) as quickly as possible)
-GPUs have been designed to execute many independent (but "similar") threads as possible in parallel ("similar" in this case means, in the ideal case, the same instruction, but on different data)
-  --> high throughput, but also high latency (goal is to make progress on many threads in parallel, not finish a single one fast)
- 
-Hardware differences CPU vs GPU
-CPU:
-  one register file per thread (on "classical"/modern/normal CPUs you have at most 2 register files per core, that is called hyper-/multi-threading, depending on vendor)
-  one ALU executing the thread
-    - designed to quickly execute instructions of the same thread
-	  - highly pipelined (might not be exclusive to CPUs)
-	  - complex branch prediction
-  Comparably huge L1/L2 cache per core, shared by fewer threads (as already pointed out, maximum of 2 when hyperthreading is available)
-  Disadvantage: context switch (that is switching execution from one thread to another) takes a considerable amount of time (ALU pipeline needs to be emptied, register file has to be written to memory to free it for another thread)
- 
-GPU:
-  register file is shared among threads (amount of threads that can be executed in parallel depends, among other factors, on the amount of registers needed per thread. Here would be a good reference to a better explanation of occupancy)
-  Many ALUs (technically as many as threads in a warp) to execute a whole warp at once. however, they can't execute arbitrary threads: the threads have to execute the same instruction. This is called SIMT (you execute a single instruction, but for many different threads)
-   - ALU is shared between warps! Not only threads of the same warp. If a warp can not issue its next instruction for some reason (waiting for data, branching, long-latency instruction), the core/compute unit issues an instruction from another warp. This improves utilization of the ALU without needing branch prediction or any other fancy features (but a huge register file)
-   - this collection of ALUs is called SIMD. There exists an equivalent on CPUs: SIMDs are an extension to the architecture, that allows a *S*ingle CPU *I*nstruction to operate on *M*ultiple *D*ata. Difference is, that CPU SIMDs are waay smaller than GPU SIMDs. (I think the newest SIMD extension for CPUs is AVX-512, which can operate on 512 bits at the same time. When considering 32-bit floating point, this is 512/32 = 16 elements at once. GPU "cores" (Compute Units) can operate on at least 64 32-bit floating point elements at once. Depending on architecture maybe even more [Don't have a source at hand for backing that up])
-   - obviously designed to execute many threads at once
-     - not sure about pipeline-length
-	 - no/bad branch prediction
-	 - if the threads don't follow the same branch, the ALU is still occupied for a full warp, but the result for those threads is masked out -> wasted ALU cycles
-  L1 cache is shared between all threads residing on a "core"/compute unit. Differs between architectures: L2 Cache is shared between all cores/compute units.
-    - cache on GPUs (used to be, changed slightly with newer architectures) is there to coalesce accesses, so that if a "neighbouring" thread accesses the same data, it can be fetched from L1, not necessarily for holding values to reuse the data later.
- 
-  Context switching is easy! All threads that run on a core/compute unit have their registers on the compute unit all the time, so they don't need to be stored to global memory, and each cycle one instruction from any warp that resides on the compute unit can be issued
-  --> All of this should hopefully explain, why GPU threads are tightly coupled, why many of them are needed to get peak performance, and why they are considered "light-weight" (can be easily switched between)
-  --> This should also explain, why we have warps in the HIP programming model. While in theory warps with completelly different threads, that don't follow the same execution path are possible, this highlights why it's not a good idea.
- 
-Points I didn't yet fully flesh out: On GPUs the threads in a warp can easily cooperate (warp-level intrinsics, run on the same "core"/compute unit). On CPUs communication between threads is a bit more costly (but not sure if it's worth mentioning that)
- 
-Note: All of this up until now was only explaining everything on a warp (GPU)/thread (CPU) level. This does not yet explain, why we need thread-blocks.
-Notes I haven't yet fleshed out for that: Blocks are assigned to a specific compute unit. Threads in a block usually work on a similar task. Being executed on the same compute unit gives more opportunities for cooperation (sharing cache to reduce accesses to global memory, using shared memory/LDS to share intermediate results with low latency, and other ways to cooperate [LDS-atomics, warp-level intrinsics, ...])
+CPUs and GPUs have been designed for different purposes. CPUs have been designed
+to quickly execute a single thread, decreasing the time it takes for a single
+operation, increasing the amount of serial instructions that can be executed.
+This includes fetching data, and reducing pipeline stalls where the ALU has to
+wait for previous instructions to finish. CPUs provide low latency processing for
+serial instructions, but also lower throughput overall. Latency is the speed of
+an operation, while throughput is the number of operations completed in a unit of
+time. On CPUs the goal is to quickly process operations. 
 
-RDNA & CDNA architecture summary
-================================
-
-GPUs in general are made up of basic building blocks called compute units (CUs),
+On the other hand, GPUs have been designed to execute many similar commands, or threads, in parallel,
+achieving high throughput, but also higher latency. For the GPU, the objective is
+to process as many operations in parallel, rather than to finish a single instruction
+quickly. GPUs in general are made up of basic building blocks called compute units (CUs),
 that execute the threads of a kernel. These CUs provide the necessary resources
 for the threads: the Arithmetic Logical Units (ALUs), register files, caches and
 shared memory for efficient communication between the threads.
 
-This design allows for efficient execution of kernels while also being able to
-scale from small GPUs embedded in APUs with few CUs up to GPUs designed for data
-centers with hundreds of CUs. Figure :ref:`rdna3_cu` and :ref:`cdna3_cu` show
-examples of such compute units.
+The following defines a few hardware differences between CPUs and GPUs: 
 
-For architecture details, check :ref:`hardware_implementation`.
+.. RJH>> I think the following section does a good job of highlighting the differences in hardware that result in programming changes needed for GPUs. I think this should be our focus for the Programming model content. 
+
+* CPU:
+
+  - One register file per thread. On modern CPUs you have at most 2 register files
+  per core, called hyperthreading or multithreading.
+
+  .. RJH>> Are these the same? I found a link discussing this: https://www.baeldung.com/cs/multithreading-vs-hyperthreading#:~:text=Hyperthreading%20breaks%20a%20single%20physical,distinction%20between%20the%20two%20techniques.
+
+  - One ALU executing the thread.
+
+    - Designed to quickly execute instructions of the same thread.
+    - Highly pipelined.
+    - Complex branch prediction.
+
+  - Large L1/L2 cache per core, shared by fewer threads (maximum of 2 when hyperthreading is available).
+  - A disadvantage is switching execution from one thread to another (or context switching) takes a considerable amount of time: the ALU pipeline needs to be emptied, the register file has to be written to memory to free the register for another thread.
+ 
+* GPU:
+
+  - Register files are shared among threads. The number of threads that can be run in parallel depends on the registers needed per thread as described in :ref:`hardware_implementation`.
+  - Multiple ALUs execute a collection of threads having the same operations, also known as a wavefront or warp. This is called single-instruction, multiple threads (SIMT) operation as described in :ref:`programming_model_simt`. 
+
+    - ALUs are shared between the threads of a wavefront, and when the thread is idle due to data transfer or instruction branching, the ALU is shared with other wavefronts for better resource utilization. 
+    - The collection of ALUs is called SIMD. SIMDs are an extension to the hardware architecture, that allows a `single instruction` to concurrently operate on `multiple data` inputs. CPU SIMDs are smaller than GPU SIMDs, which enables greater throughput on the GPU.
+    - For branching threads where conditional instructions lead to thread divergence, ALUs still processes the full wavefront, but the result for divergent threads is masked out. This leads to wasted ALU cycles, and should be a consideration in your programming. Keep instructions consistent, and leave conditionals out of threads.
+
+    .. RJH>> It feels like the first of these sub-bullets, and the last of them above, have different messages: ALUs is shared outside of wavefronts, or the ALU processes the thread in any case, but the results are masked out?
+ 
+  - The advantage for GPUs is that context switching is easy. All threads that run on a core/compute unit have their registers on the compute unit all the time, so they don't need to be stored to global memory, and each cycle one instruction from any wavefront that resides on the compute unit can be issued.
+ 
+RDNA & CDNA architecture summary
+--------------------------------
+
+AMD GPU designs enable efficient execution of kernels while scaling from small
+GPUs with a few CUs, embedded in APUs, to large GPUs designed for data
+centers with hundreds of CUs. Figure :ref:`rdna3_cu` and :ref:`cdna3_cu` show
+examples of such compute units. For additional architecture details, see :ref:`hardware_implementation`.
+
+.. RJH>> I believe RDNA is on Radeon Graphic cards, and CDNA is on instinct data center accelerators. Do we want to add this distinction here? 
 
 .. _rdna3_cu:
 
@@ -105,8 +113,8 @@ For architecture details, check :ref:`hardware_implementation`.
 Heterogeneous Programming
 =========================
 
-The HIP programming model assumes two execution contexts. One is referred to as
-*host* while compute kernels execute on a *device*. These contexts have
+The HIP programming model assumes two execution contexts. The application starts on the CPU
+*host* while compute kernels are launched on the GPU *device*. These contexts have
 different capabilities, therefor slightly different rules apply. The *host*
 execution is defined by the C++ abstract machine, while *device* execution
 follows the :ref:`SIMT model<programming_model_simt>` of HIP. These execution contexts in
@@ -125,23 +133,57 @@ a few key differences between the two:
   memory, the performance benefits of the segmented memory subsystem are
   supported by the inability of asynchronous access from the host.
 
-* Not all C++ language features map cleanly to typical device architectures,
-  some are very expensive (meaning slow) to implement on GPU devices, therefor
-  they are forbidden in device contexts to avoid users tapping into features
-  that unexpectedly decimate their program's performance. Offload devices targeted
+.. RJH>> The prior sentence is not clear to me. The performance benefits of the shared memory on the GPU are based on the CPUs inability to access it? 
+
+* Not all C++ language features map cleanly to typical GPU device architectures.
+  Some C++ features, such as XXX, are very expensive (meaning slow) to implement on GPU devices, therefor
+  they are forbidden in device contexts to avoid using features
+  that unexpectedly decimate the program's performance. Offload devices targeted
   by HIP aren't general purpose devices, at least not in the sense that a CPU is.
   HIP focuses on data parallel computations and as such caters to throughput
   optimized architectures, such as GPUs or accelerators derived from GPU
   architectures.
+
+.. RJH>> I think the above could list some example features that are too expensive for GPUs, and clarify whether it is HIP or the GPU hardware that is forbidding these features? 
 
 * Asynchrony is at the forefront of the HIP API. Computations launched on the device
   execute asynchronously with respect to the host, and it is the user's responsibility to
   synchronize their data dispatch/fetch with computations on the device.
 
   .. note::
-    HIP does perform implicit synchronization on occasions, more advanced than other
-    APIs such as OpenCL or SYCL, in which the responsibility of synchronization mostly
-    depends on the user.
+    HIP does perform implicit synchronization on occasions, unlike other
+    APIs such as OpenCL or SYCL, where the responsibility of synchronization depends mostly on the user.
+
+Host programming
+----------------
+
+In heterogeneous programming, the CPU is available for processing operations but the host application has the additional task of managing data and computation exchanges between the CPU (host) and GPU (device). Here is a typical sequence of operations:
+
+1.	Initialize the HIP runtime and select the GPU: As described in :ref:`initialization`, refers to identifying and selecting a target GPU, setting up a context to let the CPU interact with the GPU.  
+2.	Memory Management: As discussed in :ref:`memory_management`, this includes allocating the required memory on the host and device, and the transfer of input data from the host to the device. Note that the data is transferred to the device, and passed as an input parameter for the kernel. 
+3.	Configure and launch the kernel on the GPU: As described in :ref:`device_program`, define and load the kernel or kernels to be run, launch kernels using the triple chevron syntax or appropriate API call (e.g., hipLaunchKernelGGL), and pass parameters as needed.
+4.	Synchronization: As described in Asynchronous execution use streams and events to manage task dependencies, overlap computation with data transfers, and manage asynchronous processes to ensure proper sequencing of operations, waiting for events or streams to finish execution and transfer results from the GPU back to the host.
+5.	Error handling: As described in :ref:`error_handling`, you should catch and handle potential errors from API calls, kernel launches, or memory operations (e.g., using hipGetErrorString to retrieve error messages).
+6.	Cleanup and resource management: Validate results, clean up GPU contexts and resources, and free allocated memory on the host and devices.
+
+This structure allows for efficient use of GPU resources and facilitates the acceleration of compute-intensive tasks while keeping the host CPU available for other tasks.
+
+.. _device_program:
+
+Device programming
+------------------
+
+Launching the kernel in the host application starts a kernel program running on the GPU to perform parallel computations. Understanding how the kernel works and the processes involved is essential to writing efficient GPU applications. The general flow of the kernel program looks like this:
+
+1.	Thread Grouping: As described in :ref:`SIMT model<programming_model_simt>`, threads are organized into blocks, and blocks are organized into grids.
+2.	Indexing: The kernel computes the unique index for each thread to access the relevant data to be processed by the thread.
+3.	Data Fetch: Threads fetch input data from memory previously transferred from the host to the device.
+4.	Computation: Threads perform the required computations on the input data, and generate any needed output.
+5.	Synchronization: When needed, threads synchronize within their block to ensure correct results when working with shared memory.
+
+Kernel programs can be simple with single instructions deployed across multiple threads in wavefronts, as described below and as demonstrated in the `Hello World tutorial <https://github.com/ROCm/rocm-examples/tree/develop/HIP-Basic/hello_world>`_ or :doc:`../tutorial/saxpy`. However, heterogeneous GPU applications can become quite complex, managing hundreds or thousands of threads with repeated data transfers between host and device to support massive parallelization, using multiple streams to manage asynchronous operations, using rich libraries of functions defined for operation on GPUs as described in `Kernel program <./kernel_program>`. 
+
+.. RJH>> This "Kernel program" topic does not currently exist, though I think we should discuss whether it could be included here or as a separate topic.
 
 .. _programming_model_simt:
 
@@ -196,7 +238,7 @@ usually isn't exploited from the width of the built-in vector types, but across 
 .. _inherent_thread_model:
 
 Inherent thread model
-=====================
+---------------------
 
 The SIMT nature of HIP is captured by the ability to execute user-provided
 device programs, expressed as single-source C/C++ functions or sources compiled
@@ -219,10 +261,10 @@ following figure.
 
   Hierarchy of thread groups.
 
-Warp (or Wavefront)
-  The innermost grouping of threads is called a warp, or a wavefront in ISA terms. A warp
+Wavefront (or Warp)
+  The innermost grouping of threads is called a warp, or a wavefront in ISA terms. A wavefront
   is the most tightly coupled groups of threads, both physically and logically. Threads
-  inside a warp are also called lanes, and the integral value identifying them is the lane ID.
+  inside a wavefront are also called lanes, and the integral value identifying them is the lane ID.
 
   .. tip::
 
@@ -230,8 +272,8 @@ Warp (or Wavefront)
     consequence, they are only as multidimensional as the user interprets the
     calculated values to be.
 
-  The size of a warp is architecture dependent and always fixed. For AMD GPUs
-  the wavefront is typically 64 threads, though sometimes 32 threads. Warps are
+  The size of a wavefront is architecture dependent and always fixed. For AMD GPUs
+  the wavefront is typically 64 threads, though sometimes 32 threads. Wavefronts are
   signified by the set of communication primitives at their disposal, as
   discussed in :ref:`warp-cross-lane`.
 
