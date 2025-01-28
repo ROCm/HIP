@@ -10,7 +10,7 @@ Unified memory management
 *******************************************************************************
 
 In conventional architectures CPUs and attached devices have their own memory
-space and dedicated physical memory backing it up, e.g. normal RAM for CPUs and
+space and dedicated physical memory backing it up, for example normal RAM for CPUs and
 VRAM on GPUs. This way each device can have physical memory optimized for its
 use case. GPUs usually have specialized memory whose bandwidth is a
 magnitude higher than the RAM attached to CPUs.
@@ -46,7 +46,7 @@ Hardware supported on-demand page migration
 
 When a kernel on the device tries to access a memory address that is not in its
 memory, a page-fault is triggered. The GPU then in turn requests the page from
-the host or an other device, on which the memory is located. The page is then
+the host or another device, on which the memory is located. The page is then
 unmapped from the source, sent to the device and mapped to the device's memory.
 The requested memory is then available to the processes running on the device.
 
@@ -110,8 +110,144 @@ allocator can be used.
 
 ❌: **Unsupported**
 
-:sup:`1` Works only with ``XNACK=1`` and kernels with HMM support. First GPU
+:sup:`1` Works only with ``HSA_XNACK=1`` and kernels with HMM support. First GPU
 access causes recoverable page-fault.
+
+.. _xnack:
+
+XNACK
+-----
+
+On specific GPU architectures (referenced in the previous table), there is an
+option to automatically migrate pages of memory between host and device. This is important
+for managed memory, where the locality of the data is important for performance.
+Depending on the system, page migration may be disabled by default in which case managed
+memory will act like pinned host memory and suffer degraded performance.
+
+**XNACK** describes the GPU's ability to retry memory accesses that failed due to a page fault
+(which normally would lead to a memory access error), and instead retrieve the missing page.
+To enable this behavior, set the environment variable ``HSA_XNACK=1``.
+
+This also affects memory allocated by the system as indicated by the first table in
+:ref:`unified memory allocators`.
+
+Below is a small example that demonstrates an explicit page fault and how **XNACK** affects
+the page fault behavior.
+
+.. code-block:: cpp
+
+    #include <hip/hip_runtime.h>
+    #include <iostream>
+
+    #define HIP_CHECK(expression)              \
+    {                                          \
+        const hipError_t err = expression;     \
+        if(err != hipSuccess){                 \
+            std::cerr << "HIP error: "         \
+                << hipGetErrorString(err)      \
+                << " at " << __LINE__ << "\n"; \
+            exit(EXIT_FAILURE);                \
+        }                                      \
+    }
+
+    __global__ void write_to_memory(int* data, int size)
+    {
+        int idx = blockIdx.x * blockDim.x + threadIdx.x;
+        if (idx < size)
+        {
+            // Writing to memory that may not have been allocated in GPU memory
+            data[idx] = idx * 2; // Triggers a page fault if not resident
+        }
+    }
+
+    int main()
+    {
+        const int N = 1024; // 1K elements
+        const int blocksize = 256;
+        int* data;
+
+        // Allocate unified memory
+        HIP_CHECK(hipMallocManaged(&data, N * sizeof(int)));
+
+        // Intentionally don't initialize or prefetch any part of the data
+        // No initialization: data is uninitialized but accessible
+
+        // Launch kernel that writes to all elements
+        dim3 threads(blocksize);
+        dim3 blocks(N / blocksize);
+        hipLaunchKernelGGL(write_to_memory, blocks, threads, 0, 0, data, N);
+
+        // Synchronize to ensure kernel completion/termination and fault resolution
+        HIP_CHECK(hipDeviceSynchronize());
+
+        // Check results
+        bool pass = true;
+        for (int i = 0; i < N; ++i)
+        {
+            if (data[i] != (i * 2))
+            {
+                pass = false;
+                std::cout << "Failed at position" << i << " with value " << data[i] <<std::endl;
+                break;
+            }
+        }
+
+        if (pass)
+        {
+            std::cout << "Passed" << std::endl;
+        }
+
+        // Free memory
+        HIP_CHECK(hipFree(data));
+        return 0;
+    }
+
+
+The key behaviors in the example above are as follows:-
+
+#. | No Prefetch or Initialization: The memory is allocated using hipMallocManaged, but
+   | it's not initialized or explicitly prefetched to the GPU.
+
+#. | Kernel Write: The kernel writes to the entire array, including memory locations
+   | that haven't been allocated in GPU memory yet. This triggers page faults for pages
+   | not currently mapped to the GPU.
+
+#. | If **XNACK** is enabled, page faults are handled gracefully: the runtime allocates
+   | or fetches the missing pages as needed, ensuring correct execution. If **XNACK** is
+   | disabled, the GPU would not handle the page faults, leading to undefined behavior.
+
+To check if page migration is available on a platform, use ``rocminfo``:
+
+.. code-block:: bash
+
+    $ rocminfo | grep xnack
+    Name:                    amdgcn-amd-amdhsa--gfx90a:sramecc+:xnack-
+
+Here, ``xnack-`` means that XNACK is available but is disabled by default.
+Turning on XNACK by setting the environment variable ``HSA_XNACK=1`` gives
+the expected result, ``xnack+``:
+
+.. code-block:: bash
+
+    $ HSA_XNACK=1 rocminfo | grep xnack
+    Name:                    amdgcn-amd-amdhsa--gfx90a:sramecc+:xnack+
+
+``hipcc`` by default generates code that runs correctly with both XNACK enabled or disabled.
+Setting the ``--offload-arch=``-option with ``xnack+`` or ``xnack-`` forces code to
+be only run with XNACK enabled or disabled respectively.
+
+.. code-block:: bash
+
+    # Compiled kernels will run regardless if XNACK is enabled or is disabled.
+    hipcc --offload-arch=gfx90a
+
+    # Compiled kernels will only run with XNACK enabled (HSA_XNACK=1)
+    # If XNACK is disabled, execution will fail because no compatible kernel is available.
+    hipcc --offload-arch=gfx90a:xnack+
+
+    # Compiled kernels will only run with XNACK disabled (HSA_XNACK=0)
+    # If XNACK is enabled, execution will fail because no compatible kernel is available.
+    hipcc --offload-arch=gfx90a:xnack-
 
 .. _unified memory allocators:
 
@@ -139,7 +275,7 @@ system requirements` and :ref:`checking unified memory support`.
   same system allocation API is used.
 
 To ensure the proper functioning of system allocated unified memory on supported
-GPUs, it is essential to configure the environment variable ``XNACK=1`` and use
+GPUs, it is essential to configure the environment variable ``HSA_XNACK=1`` and use
 a kernel that supports `HMM
 <https://www.kernel.org/doc/html/latest/mm/hmm.html>`_. Without this
 configuration, the behavior will be similar to that of systems without HMM
@@ -157,10 +293,10 @@ functions on ROCm and CUDA, both with and without HMM support.
       :header-rows: 1
 
       * - call
-        - Allocation origin without HMM or ``XNACK=0``
-        - Access outside the origin without HMM or ``XNACK=0``
-        - Allocation origin with HMM and ``XNACK=1``
-        - Access outside the origin with HMM and ``XNACK=1``
+        - Allocation origin without HMM or ``HSA_XNACK=0``
+        - Access outside the origin without HMM or ``HSA_XNACK=0``
+        - Allocation origin with HMM and ``HSA_XNACK=1``
+        - Access outside the origin with HMM and ``HSA_XNACK=1``
       * - ``new``, ``malloc()``
         - host
         - not accessible on device
