@@ -110,7 +110,7 @@ allocator can be used.
 
 ❌: **Unsupported**
 
-:sup:`1` Works only with ``XNACK=1`` and kernels with HMM support. First GPU
+:sup:`1` Works only with ``HSA_XNACK=1`` and kernels with HMM support. First GPU
 access causes recoverable page-fault. For more details, visit `GPU memory
 <https://rocm.docs.amd.com/en/latest/conceptual/gpu-memory.html#xnack>`_.
 
@@ -140,8 +140,8 @@ system requirements` and :ref:`checking unified memory support`.
   same system allocation API is used.
 
 To ensure the proper functioning of system allocated unified memory on supported
-GPUs, it is essential to configure the environment variable ``XNACK=1`` and use
-a kernel that supports `HMM
+GPUs, it is essential to set the environment variable ``HSA_XNACK=1`` and use
+a GPU kernel mode driver that supports HMM
 <https://www.kernel.org/doc/html/latest/mm/hmm.html>`_. Without this
 configuration, the behavior will be similar to that of systems without HMM
 support. For more details, visit
@@ -159,10 +159,10 @@ functions on ROCm and CUDA, both with and without HMM support.
       :header-rows: 1
 
       * - call
-        - Allocation origin without HMM or ``XNACK=0``
-        - Access outside the origin without HMM or ``XNACK=0``
-        - Allocation origin with HMM and ``XNACK=1``
-        - Access outside the origin with HMM and ``XNACK=1``
+        - Allocation origin without HMM or ``HSA_XNACK=0``
+        - Access outside the origin without HMM or ``HSA_XNACK=0``
+        - Allocation origin with HMM and ``HSA_XNACK=1``
+        - Access outside the origin with HMM and ``HSA_XNACK=1``
       * - ``new``, ``malloc()``
         - host
         - not accessible on device
