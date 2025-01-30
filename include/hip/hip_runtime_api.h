@@ -1089,7 +1089,10 @@ typedef enum hipMemAccessFlags {
     hipMemAccessFlagsProtReadWrite = 3   ///< Set the address range read-write accessible
 } hipMemAccessFlags;
 /**
- * Memory access descriptor
+ * Memory access descriptor structure is used to specify memory access
+ * permissions for a virtual memory region in Virtual Memory Management API.
+ * This structure changes read, and write permissions for
+ * specific memory regions.
  */
 typedef struct hipMemAccessDesc {
     hipMemLocation      location; ///< Location on which the accessibility has to change

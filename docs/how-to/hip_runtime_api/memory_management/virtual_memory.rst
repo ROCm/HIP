@@ -28,7 +28,7 @@ reduce memory usage and unnecessary ``memcpy`` calls.
 .. _memory_allocation_virtual_memory:
 
 Memory allocation
-================================================================================
+=================
 
 Standard memory allocation uses the :cpp:func:`hipMalloc` function to allocate a
 block of memory on the device. However, when using virtual memory, this process
@@ -37,10 +37,34 @@ is separated into multiple steps using the :cpp:func:`hipMemCreate`,
 :cpp:func:`hipMemSetAccess` functions. This guide explains what these functions
 do and how you can use them for virtual memory management.
 
-Allocate physical memory
---------------------------------------------------------------------------------
+.. _vmm_support:
 
-The first step is to allocate the physical memory itself with the
+Virtual memory management support
+---------------------------------
+
+The first step is to check if the targeted device or GPU supports virtual memory management.
+Use the :cpp:func:`hipDeviceGetAttribute` function to get the 
+``hipDeviceAttributeVirtualMemoryManagementSupported`` attribute for a specific GPU, as shown in the following example.
+
+.. code-block:: cpp
+
+    int vmm = 0, currentDev = 0;
+    hipDeviceGetAttribute(
+        &vmm, hipDeviceAttributeVirtualMemoryManagementSupported, currentDev
+    );
+
+    if (vmm == 0) {
+        std::cout << "GPU " << currentDev << " doesn't support virtual memory management." << std::endl;
+    } else {
+        std::cout << "GPU " << currentDev << " support virtual memory management." << std::endl;
+    }
+
+.. _allocate_physical_memory:
+
+Allocate physical memory
+------------------------
+
+The next step is to allocate the physical memory using the
 :cpp:func:`hipMemCreate` function. This function accepts the size of the buffer,
 an ``unsigned long long`` variable for the flags, and a
 :cpp:struct:`hipMemAllocationProp` variable. :cpp:struct:`hipMemAllocationProp`
@@ -48,42 +72,54 @@ contains the properties of the memory to be allocated, such as where the memory
 is physically located and what kind of shareable handles are available. If the
 allocation is successful, the function returns a value of
 :cpp:enumerator:`hipSuccess`, with :cpp:type:`hipMemGenericAllocationHandle_t`
-representing a valid physical memory allocation. The allocated memory size must
-be aligned with the granularity appropriate for the properties of the
-allocation. You can use the :cpp:func:`hipMemGetAllocationGranularity` function
-to determine the correct granularity.
+representing a valid physical memory allocation.
+
+The allocated memory must be aligned with the appropriate granularity. The
+granularity value can be queried with :cpp:func:`hipMemGetAllocationGranularity`,
+and its value depends on the target device hardware and the type of memory
+allocation. If the allocation size is not aligned, meaning it is not cleanly
+divisible by the minimum granularity value, :cpp:func:`hipMemCreate` will return
+an out-of-memory error.
 
 .. code-block:: cpp
 
     size_t granularity = 0;
     hipMemGenericAllocationHandle_t allocHandle;
     hipMemAllocationProp prop = {};
-    prop.type = HIP_MEM_ALLOCATION_TYPE_PINNED;
-    prop.location.type = HIP_MEM_LOCATION_TYPE_DEVICE;
+    // The pinned allocation type cannot be migrated from its current location
+    // while the application is actively using it.
+    prop.type = hipMemAllocationTypePinned;
+    // Set the location type to device, currently there are no other valid option.
+    prop.location.type = hipMemLocationTypeDevice;
+    // Set the device id, where the memory will be allocated.
     prop.location.id = currentDev;
-    hipMemGetAllocationGranularity(&granularity, &prop, HIP_MEM_ALLOC_GRANULARITY_MINIMUM);
+    hipMemGetAllocationGranularity(&granularity, &prop, hipMemAllocationGranularityMinimum);
     padded_size = ROUND_UP(size, granularity);
     hipMemCreate(&allocHandle, padded_size, &prop, 0);
 
-Reserve virtual address range
---------------------------------------------------------------------------------
+.. _reserve_virtual_address:
 
-After you have acquired an allocation of physical memory, you must map it before
-you can use it. To do so, you need a virtual address to map it to.  Mapping
-means the physical memory allocation is available from the virtual address range
-it is mapped to. To reserve a virtual memory range, use the
-:cpp:func:`hipMemAddressReserve` function. The size of the virtual memory must
-match the amount of physical memory previously allocated. You can then map the
-physical memory allocation to the newly-acquired virtual memory address range
-using the :cpp:func:`hipMemMap` function.
+Reserve virtual address range
+-----------------------------
+
+After you have acquired an allocation of physical memory, you must map it to a
+virtual address before you can use it. Mapping means the physical memory
+allocation is available from the virtual address range it is mapped to. To
+reserve a virtual memory range, use the :cpp:func:`hipMemAddressReserve`
+function. The size of the virtual memory must match the amount of physical
+memory previously allocated. You can then map the physical memory allocation to
+the newly-acquired virtual memory address range using the :cpp:func:`hipMemMap`
+function.
 
 .. code-block:: cpp
 
     hipMemAddressReserve(&ptr, padded_size, 0, 0, 0);
     hipMemMap(ptr, padded_size, 0, allocHandle, 0);
 
+.. _set_memory_access:
+
 Set memory access
---------------------------------------------------------------------------------
+-----------------
 
 Finally, use the :cpp:func:`hipMemSetAccess` function to enable memory access.
 It accepts the pointer to the virtual memory, the size, and a
@@ -103,16 +139,39 @@ devices.
 .. code-block:: cpp
 
     hipMemAccessDesc accessDesc = {};
-    accessDesc.location.type = HIP_MEM_LOCATION_TYPE_DEVICE;
+    accessDesc.location.type = hipMemLocationTypeDevice;
     accessDesc.location.id = currentDev;
-    accessDesc.flags = HIP_MEM_ACCESS_FLAGS_PROT_READWRITE;
+    accessDesc.flags = hipMemAccessFlagsProtReadwrite;
     hipMemSetAccess(ptr, padded_size, &accessDesc, 1);
 
 At this point the memory is allocated, mapped, and ready for use. You can read
 and write to it, just like you would a C style memory allocation.
 
+.. _usage_virtual_memory:
+
+Dynamically increase allocation size
+------------------------------------
+
+To increase the amount of pre-allocated memory, use
+:cpp:func:`hipMemAddressReserve`, which accepts the starting address, and the
+size of the reservation in bytes. This allows you to have a continuous virtual
+address space without worrying about the underlying physical allocation.
+
+.. code-block:: cpp
+
+    hipMemAddressReserve(&new_ptr, (new_size - padded_size), 0, ptr + padded_size, 0);
+    hipMemMap(new_ptr, (new_size - padded_size), 0, newAllocHandle, 0);
+    hipMemSetAccess(new_ptr, (new_size - padded_size), &accessDesc, 1);
+
+The code sample above assumes that :cpp:func:`hipMemAddressReserve` was able to
+reserve the memory address at the specified location. However, this isn't
+guaranteed to be true, so you should validate that ``new_ptr`` points to a
+specific virtual address before using it.
+
+.. _free_virtual_memory:
+
 Free virtual memory
---------------------------------------------------------------------------------
+-------------------
 
 To free the memory allocated in this manner, use the corresponding free
 functions. To unmap the memory, use :cpp:func:`hipMemUnmap`. To release the
@@ -128,27 +187,208 @@ synchronizes the device. This causes worse resource usage and performance.
     hipMemRelease(allocHandle);
     hipMemAddressFree(ptr, size);
 
-.. _usage_virtual_memory:
-
-Memory usage
+Virtual aliases
 ================================================================================
 
-Dynamically increase allocation size
+Virtual aliases are multiple virtual memory addresses mapping to the same
+physical memory on the GPU. This allows different threads, processes, or memory
+allocations to access shared physical memory through different virtual
+addresses on different devices.
+
+Multiple virtual memory mappings can be created using multiple calls to
+:cpp:func:`hipMemMap` on the same memory allocation.
+
+.. note::
+    
+    RDNA cards may not produce correct results, if users access two different
+    virtual addresses that map to the same physical address. In this case, the
+    L1 data caches will be incoherent due to the virtual-to-physical aliasing.
+    These GPUs will produce correct results if users access virtual-to-physical
+    aliases using volatile pointers.
+
+    NVIDIA GPUs require special fences to produce correct results when
+    using virtual aliases.
+
+Example code
 --------------------------------------------------------------------------------
 
-The :cpp:func:`hipMemAddressReserve` function allows you to increase the amount
-of pre-allocated memory. This function accepts a parameter representing the
-requested starting address of the virtual memory. This allows you to have a
-continuous virtual address space without worrying about the underlying physical
-allocation.
+The virtual aliases example follows these steps:
+
+1. Check virtual memory management :ref:`support <vmm_support>`:
+   The :cpp:func:`hipDeviceGetAttribute` function is used to check the virtual
+   memory management support of the GPU with ID 0.
+
+2. Physical memory :ref:`allocation <allocate_physical_memory>`: Physical memory
+   is allocated using :cpp:func:`hipMemCreate` with pinned memory on the
+   device.
+
+3. Virtual memory :ref:`reservation <reserve_virtual_address>`: Two separate
+   virtual address ranges are reserved using :cpp:func:`hipMemAddressReserve`.
+
+4. Mapping virtual addresses to physical memory: The physical memory is mapped
+   to two different virtual addresses (``virtualPointerA`` and
+   ``virtualPointerB``) using :cpp:func:`hipMemMap`.
+
+5. Memory :ref:`access permissions <set_memory_access>`: Permissions are set for
+   both aliases to allow read and write access using :cpp:func:`hipMemSetAccess`.
+
+6. Memory operations: Data is written to the memory via ``virtualPointerA``
+   alias and read through another ``virtualPointerB`` alias.
+
+7. Launch kernels: The ``zeroAddr``, ``fillAddr`` and ``updateBoth`` kernels are
+   launched using the virtual memory aliases.
+
+8. :ref:`Cleanup <free_virtual_memory>`: The mappings, physical memory, and
+   virtual addresses are released at the end to avoid memory leaks.
 
 .. code-block:: cpp
 
-    hipMemAddressReserve(&new_ptr, (new_size - padded_size), 0, ptr + padded_size, 0);
-    hipMemMap(new_ptr, (new_size - padded_size), 0, newAllocHandle, 0);
-    hipMemSetAccess(new_ptr, (new_size - padded_size), &accessDesc, 1);
+    #include <hip/hip_runtime.h>
+    #include <iostream>
 
-The code sample above assumes that :cpp:func:`hipMemAddressReserve` was able to
-reserve the memory address at the specified location. However, this isn't
-guaranteed to be true, so you should validate that ``new_ptr`` points to a
-specific virtual address before using it.
+    #define ROUND_UP(SIZE,GRANULARITY) ((1 + SIZE / GRANULARITY) * GRANULARITY)
+
+    #define HIP_CHECK(expression)              \
+    {                                          \
+        const hipError_t err = expression;     \
+        if(err != hipSuccess){                 \
+            std::cerr << "HIP error: "         \
+                << hipGetErrorString(err)      \
+                << " at " << __LINE__ << "\n"; \
+        }                                      \
+    }
+
+    __global__ void zeroAddr(volatile int* pointer) {
+        *pointer = 0;
+    }
+
+    __global__ void fillAddr(volatile int* pointer) {
+        *pointer = 42;
+    }
+
+    __global__ void updateBoth(volatile int* pointerA, int* pointerB) {
+        // Undefined behavior on NVIDIA cards
+        *pointerA = 0;
+        *pointerB = 42;
+    }
+
+    int main() {
+
+        int currentDev = 0;
+    
+        // Step 1: Check virtual memory management support on device 0
+        int vmm = 0;
+        HIP_CHECK(
+            hipDeviceGetAttribute(
+                &vmm, hipDeviceAttributeVirtualMemoryManagementSupported, currentDev
+            )
+        );
+
+        std::cout << "Virtual memory management support value: " << vmm << std::endl;
+
+        if (vmm == 0) {
+            std::cout << "GPU 0 doesn't support virtual memory management.";
+            return 0;
+        }
+        
+        // Size of memory to allocate
+        size_t size = 4 * 1024;
+        
+        // Step 2: Allocate physical memory
+        hipMemGenericAllocationHandle_t allocHandle;
+        hipMemAllocationProp prop = {};
+        prop.type = hipMemAllocationTypePinned;
+        prop.location.type = hipMemLocationTypeDevice;
+        prop.location.id = currentDev;
+        size_t granularity = 0;
+        HIP_CHECK(
+            hipMemGetAllocationGranularity(
+                &granularity,
+                &prop,
+                hipMemAllocationGranularityMinimum));
+        size_t padded_size = ROUND_UP(size, granularity);
+        HIP_CHECK(hipMemCreate(&allocHandle, padded_size, &prop, 0));
+        
+        // Step 3: Reserve a virtual memory address range
+        void* virtualPointerA = nullptr;
+        HIP_CHECK(hipMemAddressReserve(&virtualPointerA, padded_size, granularity, nullptr, 0));
+
+        void* virtualPointerB = nullptr;
+        HIP_CHECK(hipMemAddressReserve(&virtualPointerB, padded_size, granularity, nullptr, 0));
+
+        // Step 4: Map the physical memory to the first virtual address range
+        HIP_CHECK(hipMemMap(virtualPointerA, padded_size, 0, allocHandle, 0));
+
+        // Map the same physical memory to a second virtual address range
+        HIP_CHECK(hipMemMap(virtualPointerB, padded_size, 0, allocHandle, 0));
+
+        // Step 5: Set memory access permissions for both aliases
+        hipMemAccessDesc accessDesc = {};
+        accessDesc.location.type = hipMemLocationTypeDevice;
+        accessDesc.location.id = currentDev;
+        accessDesc.flags = hipMemAccessFlagsProtReadWrite;
+
+        HIP_CHECK(hipMemSetAccess(virtualPointerA, padded_size, &accessDesc, 1));
+        HIP_CHECK(hipMemSetAccess(virtualPointerB, padded_size, &accessDesc, 1));
+
+        // Step 6: Perform memory operations
+        int value = 42;
+        HIP_CHECK(hipMemcpy(virtualPointerA, &value, sizeof(int), hipMemcpyHostToDevice));
+
+        int result = 1;
+        HIP_CHECK(hipMemcpy(&result, virtualPointerB, sizeof(int), hipMemcpyDeviceToHost));
+        if( result == 42) {
+            std::cout << "Success. Value through alias: " << result << std::endl;
+        } else {
+            std::cout << "Failure. Value through alias: " << result << std::endl;
+        }
+            
+        // Step 7: Launch kernels
+        // Launch zeroAddr kernel
+        zeroAddr<<<1, 1>>>((int*)virtualPointerA);
+        HIP_CHECK(hipDeviceSynchronize());
+    
+        // Check zeroAddr kernel result
+        result = 1;
+        HIP_CHECK(hipMemcpy(&result, virtualPointerB, sizeof(int), hipMemcpyDeviceToHost));
+        if( result == 0) {
+            std::cout << "Success. zeroAddr kernel through alias: " << result << std::endl;
+        } else {
+            std::cout << "Failure. zeroAddr kernel through alias: " << result << std::endl;
+        }
+
+        // Launch fillAddr kernel
+        fillAddr<<<1, 1>>>((int*)virtualPointerB);
+        HIP_CHECK(hipDeviceSynchronize());
+
+        // Check fillAddr kernel result
+        result = 1;
+        HIP_CHECK(hipMemcpy(&result, virtualPointerA, sizeof(int), hipMemcpyDeviceToHost));
+        if( result == 42) {
+            std::cout << "Success. fillAddr kernel through alias: " << result << std::endl;
+        } else {
+            std::cout << "Failure. fillAddr kernel through alias: " << result << std::endl;
+        }
+
+        // Launch updateBoth kernel
+        updateBoth<<<1, 1>>>((int*)virtualPointerA, (int*)virtualPointerB);
+        HIP_CHECK(hipDeviceSynchronize());
+
+        // Check updateBoth kernel result
+        result = 1;
+        HIP_CHECK(hipMemcpy(&result, virtualPointerA, sizeof(int), hipMemcpyDeviceToHost));
+        std::cout << "UpdateBoth kernel through alias A: " << result << std::endl;
+        result = 1;
+        HIP_CHECK(hipMemcpy(&result, virtualPointerB, sizeof(int), hipMemcpyDeviceToHost));
+        std::cout << "UpdateBoth kernel through alias B: " << result << std::endl;
+
+
+        // Step 8: Cleanup
+        HIP_CHECK(hipMemUnmap(virtualPointerA, padded_size));
+        HIP_CHECK(hipMemUnmap(virtualPointerB, padded_size));
+        HIP_CHECK(hipMemRelease(allocHandle));
+        HIP_CHECK(hipMemAddressFree(virtualPointerA, padded_size));
+        HIP_CHECK(hipMemAddressFree(virtualPointerB, padded_size));
+
+        return 0;
+    }
