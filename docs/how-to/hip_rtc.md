@@ -226,18 +226,18 @@ int main() {
 
 ## Kernel Compilation Cache
 
-HIPRTC incorporates a cache to avoid recompiling kernels between program executions. The contents of the cache include the kernel source code (including the contents of any `#include` headers), the compilation flags, and the compiler version. After a ROCm version update, the kernels are progressively recompiled, and the new results are cached. When the cache is disabled, each kernel is recompiled every time it is requested. 
+HIPRTC incorporates a cache to avoid recompiling kernels between program executions. The contents of the cache include the kernel source code (including the contents of any `#include` headers), the compilation flags, and the compiler version. After a ROCm version update, the kernels are progressively recompiled, and the new results are cached. When the cache is disabled, each kernel is recompiled every time it is requested.
 
-The cache's status as enabled or disabled, the location for storing the cache contents, and the cache eviction policy can be managed using the following environment variables: 
+The cache's status as enabled or disabled, the location for storing the cache contents, and the cache eviction policy can be managed using the following environment variables:
 
 * `AMD_COMGR_CACHE` By default this variable has a value of `0` and the compilation cache feature is disabled. To enable the feature set the environment variable to a value of `1` (or any value other than `0`). This behavior may change in a future release.
 
-* `AMD_COMGR_CACHE_DIR`: By default the value of this environment variable is defined as `$XDG_CACHE_HOME/comgr_cache`, which defaults to `$USER/.cache/comgr_cache` on Linux, and `%LOCALAPPDATA%\cache\comgr_cache` on Windows. You can specify a different directory for the environment variable to change the path for cache storage. If the runtime fails to access the specified cache directory, or the environment variable is set to an empty string (""), the cache is disabled. 
+* `AMD_COMGR_CACHE_DIR`: By default the value of this environment variable is defined as `$XDG_CACHE_HOME/comgr_cache`, which defaults to `$USER/.cache/comgr_cache` on Linux, and `%LOCALAPPDATA%\cache\comgr_cache` on Windows. You can specify a different directory for the environment variable to change the path for cache storage. If the runtime fails to access the specified cache directory, or the environment variable is set to an empty string (""), the cache is disabled.
 
 * `AMD_COMGR_CACHE_POLICY`: If assigned a value, the string is interpreted and applied to the cache pruning policy. The string format is consistent with [Clang's ThinLTO cache pruning policy](https://rocm.docs.amd.com/projects/llvm-project/en/latest/LLVM/clang/html/ThinLTO.html#cache-pruning). The default policy is defined as: `prune_interval=1h:prune_expiration=0h:cache_size=75%:cache_size_bytes=30g:cache_size_files=0`. If the runtime fails to parse the defined string, or the environment variable is set to an empty string (""), the cache is disabled.
 
 :::{note}
-  This cache is also shared with the OpenCL runtime shipped with ROCm. 
+  This cache is also shared with the OpenCL runtime shipped with ROCm.
 :::
 
 ## HIPRTC specific options
