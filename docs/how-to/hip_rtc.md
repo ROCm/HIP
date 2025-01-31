@@ -228,7 +228,7 @@ int main() {
 
 HIPRTC incorporates a cache to avoid recompiling kernels between program executions. The contents of the cache include the kernel source code (including the contents of any `#include` headers), the compilation flags, and the compiler version. After a ROCm version update, the kernels are progressively recompiled, and the new results are cached. When the cache is disabled, each kernel is recompiled every time it is requested. 
 
-The cache's status as enabled or disabled, the location for storing the cache contents, and the cache eviction policy can be managed using the following environment variables: 
+Use the following environment variables to manage the cache's status as enabled or disabled, the location for storing the cache contents, and the cache eviction policy: 
 
 * `AMD_COMGR_CACHE` By default this variable has a value of `0` and the compilation cache feature is disabled. To enable the feature set the environment variable to a value of `1` (or any value other than `0`). This behavior may change in a future release.
 
