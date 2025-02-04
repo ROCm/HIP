@@ -5289,64 +5289,6 @@ hipError_t hipDrvMemcpy3D(const HIP_MEMCPY3D* pCopy);
  * hipMemcpyAsync
  */
 hipError_t hipDrvMemcpy3DAsync(const HIP_MEMCPY3D* pCopy, hipStream_t stream);
-// doxygen end Memory
-/**
- * @}
- */
-/**
- *-------------------------------------------------------------------------------------------------
- *-------------------------------------------------------------------------------------------------
- *  @defgroup PeerToPeer PeerToPeer Device Memory Access
- *  @{
- *  @warning PeerToPeer support is experimental.
- *  This section describes the PeerToPeer device memory access functions of HIP runtime API.
- */
-/**
- * @brief Determine if a device can access a peer's memory.
- *
- * @param [out] canAccessPeer Returns the peer access capability (0 or 1)
- * @param [in] deviceId - device from where memory may be accessed.
- * @param [in] peerDeviceId - device where memory is physically located
- *
- * Returns "1" in @p canAccessPeer if the specified @p device is capable
- * of directly accessing memory physically located on peerDevice , or "0" if not.
- *
- * Returns "0" in @p canAccessPeer if deviceId == peerDeviceId, and both are valid devices : a
- * device is not a peer of itself.
- *
- * @returns #hipSuccess,
- * @returns #hipErrorInvalidDevice if deviceId or peerDeviceId are not valid devices
- */
-hipError_t hipDeviceCanAccessPeer(int* canAccessPeer, int deviceId, int peerDeviceId);
-/**
- * @brief Enable direct access from current device's virtual address space to memory allocations
- * physically located on a peer device.
- *
- * Memory which already allocated on peer device will be mapped into the address space of the
- * current device.  In addition, all future memory allocations on peerDeviceId will be mapped into
- * the address space of the current device when the memory is allocated. The peer memory remains
- * accessible from the current device until a call to hipDeviceDisablePeerAccess or hipDeviceReset.
- *
- *
- * @param [in] peerDeviceId  Peer device to enable direct access to from the current device
- * @param [in] flags  Reserved for future use, must be zero
- *
- * Returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue,
- * @returns #hipErrorPeerAccessAlreadyEnabled if peer access is already enabled for this device.
- */
-hipError_t hipDeviceEnablePeerAccess(int peerDeviceId, unsigned int flags);
-/**
- * @brief Disable direct access from current device's virtual address space to memory allocations
- * physically located on a peer device.
- *
- * Returns hipErrorPeerAccessNotEnabled if direct access to memory on peerDevice has not yet been
- * enabled from the current device.
- *
- * @param [in] peerDeviceId  Peer device to disable direct access to
- *
- * @returns #hipSuccess, #hipErrorPeerAccessNotEnabled
- */
-hipError_t hipDeviceDisablePeerAccess(int peerDeviceId);
 /**
  * @brief Get information on memory allocations.
  *
@@ -5360,14 +5302,73 @@ hipError_t hipDeviceDisablePeerAccess(int peerDeviceId);
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
 hipError_t hipMemGetAddressRange(hipDeviceptr_t* pbase, size_t* psize, hipDeviceptr_t dptr);
-#ifndef USE_PEER_NON_UNIFIED
-#define USE_PEER_NON_UNIFIED 1
-#endif
-#if USE_PEER_NON_UNIFIED == 1
+// doxygen end Memory
 /**
- * @brief Copies memory from one device to memory on another device.
+ * @}
+ */
+/**
+ *-------------------------------------------------------------------------------------------------
+ *-------------------------------------------------------------------------------------------------
+ *  @defgroup PeerToPeer PeerToPeer Device Memory Access
+ *  @{
+ *  @ingroup API
+ *  This section describes the PeerToPeer device memory access functions of HIP runtime API.
+ */
+/**
+ * @brief Determines if a device can access a peer device's memory.
  *
- * @param [out] dst - Destination device pointer.
+ * @param [out] canAccessPeer - Returns the peer access capability (0 or 1)
+ * @param [in] deviceId - The device accessing the peer device memory.
+ * @param [in] peerDeviceId - Peer device where memory is physically located
+ *
+ * The value of @p canAccessPeer,
+ *
+ * Returns "1" if the specified @p deviceId is capable of directly accessing memory physically
+ * located on @p peerDeviceId,
+ *
+ * Returns "0" if the specified @p deviceId is not capable of directly accessing memory physically
+ * located on @p peerDeviceId.
+ *
+ * Returns "0" if @p deviceId == @p peerDeviceId, both are valid devices,
+ * however, a device is not a peer of itself.
+ *
+ * Returns #hipErrorInvalidDevice if deviceId or peerDeviceId are not valid devices
+ *
+ * @returns #hipSuccess, #hipErrorInvalidDevice
+ *
+ */
+hipError_t hipDeviceCanAccessPeer(int* canAccessPeer, int deviceId, int peerDeviceId);
+/**
+ * @brief Enables direct access to memory allocations on a peer device.
+ *
+ * When this API is successful, all memory allocations on peer device will be mapped into the
+ * address space of the current device. In addition, any future memory allocation on the
+ * peer device will remain accessible from the current device, until the access is disabled using
+ * hipDeviceDisablePeerAccess or device is reset using hipDeviceReset.
+ *
+ * @param [in] peerDeviceId - Peer device to enable direct access to from the current device
+ * @param [in] flags - Reserved for future use, must be zero
+ *
+ * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue,
+ * @returns #hipErrorPeerAccessAlreadyEnabled if peer access is already enabled for this device.
+ */
+hipError_t hipDeviceEnablePeerAccess(int peerDeviceId, unsigned int flags);
+/**
+ * @brief Disables direct access to memory allocations on a peer device.
+ *
+ * If direct access to memory allocations on peer device has not been enabled yet from the current
+ * device, it returns #hipErrorPeerAccessNotEnabled.
+ *
+ * @param [in] peerDeviceId  Peer device to disable direct access to
+ *
+ * @returns #hipSuccess, #hipErrorPeerAccessNotEnabled
+ */
+hipError_t hipDeviceDisablePeerAccess(int peerDeviceId);
+
+/**
+ * @brief Copies memory between two peer accessible devices.
+ *
+ * @param [out] dst - Destination device pointer
  * @param [in] dstDeviceId - Destination device
  * @param [in] src - Source device pointer
  * @param [in] srcDeviceId - Source device
@@ -5378,9 +5379,9 @@ hipError_t hipMemGetAddressRange(hipDeviceptr_t* pbase, size_t* psize, hipDevice
 hipError_t hipMemcpyPeer(void* dst, int dstDeviceId, const void* src, int srcDeviceId,
                          size_t sizeBytes);
 /**
- * @brief Copies memory from one device to memory on another device.
+ * @brief Copies memory between two peer accessible devices asynchronously.
  *
- * @param [out] dst - Destination device pointer.
+ * @param [out] dst - Destination device pointer
  * @param [in] dstDeviceId - Destination device
  * @param [in] src - Source device pointer
  * @param [in] srcDevice - Source device
@@ -5391,7 +5392,7 @@ hipError_t hipMemcpyPeer(void* dst, int dstDeviceId, const void* src, int srcDev
  */
 hipError_t hipMemcpyPeerAsync(void* dst, int dstDeviceId, const void* src, int srcDevice,
                               size_t sizeBytes, hipStream_t stream __dparm(0));
-#endif
+
 // doxygen end PeerToPeer
 /**
  * @}
