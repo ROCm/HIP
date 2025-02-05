@@ -15,8 +15,6 @@ massively parallel, wide single instruction, multiple data (SIMD) architectures,
 such as GPUs. HIP supports many imperative languages, such as Python via PyHIP,
 but this document focuses on the original C/C++ API of HIP.
 
-.. RJH>> If HIP programming uses SIMT for thread instructions, but the hardware implementation is SIMD for the execution of threads, then maybe we focus on SIMT as the top-level concept? 
-
 While GPUs may be capable of running applications written for CPUs if properly ported
 and compiled, it would not be an efficient use of GPU resources. GPUs are different
 from CPUs in fundamental ways, and should be used accordingly to achieve optimum
@@ -47,19 +45,13 @@ shared memory for efficient communication between the threads.
 
 The following defines a few hardware differences between CPUs and GPUs: 
 
-.. RJH>> I think the following section does a good job of highlighting the differences in hardware that result in programming changes needed for GPUs. I think this should be our focus for the Programming model content. 
-
 * CPU:
 
   - One register file per thread. On modern CPUs you have at most 2 register files
-  per core, called hyperthreading or multithreading.
-
-  .. RJH>> Are these the same? I found a link discussing this: https://www.baeldung.com/cs/multithreading-vs-hyperthreading#:~:text=Hyperthreading%20breaks%20a%20single%20physical,distinction%20between%20the%20two%20techniques.
-
+  per core, called hyperthreading.
   - One ALU executing the thread.
 
     - Designed to quickly execute instructions of the same thread.
-    - Highly pipelined.
     - Complex branch prediction.
 
   - Large L1/L2 cache per core, shared by fewer threads (maximum of 2 when hyperthreading is available).
@@ -70,12 +62,9 @@ The following defines a few hardware differences between CPUs and GPUs:
   - Register files are shared among threads. The number of threads that can be run in parallel depends on the registers needed per thread as described in :ref:`hardware_implementation`.
   - Multiple ALUs execute a collection of threads having the same operations, also known as a wavefront or warp. This is called single-instruction, multiple threads (SIMT) operation as described in :ref:`programming_model_simt`. 
 
-    - ALUs are shared between the threads of a wavefront, and when the thread is idle due to data transfer or instruction branching, the ALU is shared with other wavefronts for better resource utilization. 
     - The collection of ALUs is called SIMD. SIMDs are an extension to the hardware architecture, that allows a `single instruction` to concurrently operate on `multiple data` inputs. CPU SIMDs are smaller than GPU SIMDs, which enables greater throughput on the GPU.
     - For branching threads where conditional instructions lead to thread divergence, ALUs still processes the full wavefront, but the result for divergent threads is masked out. This leads to wasted ALU cycles, and should be a consideration in your programming. Keep instructions consistent, and leave conditionals out of threads.
 
-    .. RJH>> It feels like the first of these sub-bullets, and the last of them above, have different messages: ALUs is shared outside of wavefronts, or the ALU processes the thread in any case, but the results are masked out?
- 
   - The advantage for GPUs is that context switching is easy. All threads that run on a core/compute unit have their registers on the compute unit all the time, so they don't need to be stored to global memory, and each cycle one instruction from any wavefront that resides on the compute unit can be issued.
  
 RDNA & CDNA architecture summary
@@ -85,8 +74,6 @@ AMD GPU designs enable efficient execution of kernels while scaling from small
 GPUs with a few CUs, embedded in APUs, to large GPUs designed for data
 centers with hundreds of CUs. Figure :ref:`rdna3_cu` and :ref:`cdna3_cu` show
 examples of such compute units. For additional architecture details, see :ref:`hardware_implementation`.
-
-.. RJH>> I believe RDNA is on Radeon Graphic cards, and CDNA is on instinct data center accelerators. Do we want to add this distinction here? 
 
 .. _rdna3_cu:
 
@@ -113,10 +100,8 @@ examples of such compute units. For additional architecture details, see :ref:`h
 Heterogeneous Programming
 =========================
 
-The HIP programming model assumes two execution contexts. The application starts on the CPU
-*host* while compute kernels are launched on the GPU *device*. These contexts have
-different capabilities, therefor slightly different rules apply. The *host*
-execution is defined by the C++ abstract machine, while *device* execution
+The HIP programming model has two execution contexts. The main application starts on the CPU
+*host*, and compute kernels are launched on the *device* side such as Instinct accelerators or GPUs. The *host* execution is defined by the C++ abstract machine, while *device* execution
 follows the :ref:`SIMT model<programming_model_simt>` of HIP. These execution contexts in
 code are signified by the ``__host__`` and ``__device__`` decorators. There are
 a few key differences between the two:
@@ -136,8 +121,7 @@ a few key differences between the two:
 .. RJH>> The prior sentence is not clear to me. The performance benefits of the shared memory on the GPU are based on the CPUs inability to access it? 
 
 * Not all C++ language features map cleanly to typical GPU device architectures.
-  Some C++ features, such as XXX, are very expensive (meaning slow) to implement on GPU devices, therefor
-  they are forbidden in device contexts to avoid using features
+  Some C++ features, such as XXX, are very expensive (meaning slow) to implement on GPU devices, therefore they are forbidden in device contexts to avoid using features
   that unexpectedly decimate the program's performance. Offload devices targeted
   by HIP aren't general purpose devices, at least not in the sense that a CPU is.
   HIP focuses on data parallel computations and as such caters to throughput
@@ -151,8 +135,8 @@ a few key differences between the two:
   synchronize their data dispatch/fetch with computations on the device.
 
   .. note::
-    HIP does perform implicit synchronization on occasions, unlike other
-    APIs such as OpenCL or SYCL, where the responsibility of synchronization depends mostly on the user.
+    HIP performs implicit synchronization on occasions, unlike some
+    APIs where the responsibility for synchronization is left to the user.
 
 Host programming
 ----------------
@@ -161,9 +145,9 @@ In heterogeneous programming, the CPU is available for processing operations but
 
 1.	Initialize the HIP runtime and select the GPU: As described in :ref:`initialization`, refers to identifying and selecting a target GPU, setting up a context to let the CPU interact with the GPU.  
 2.	Memory Management: As discussed in :ref:`memory_management`, this includes allocating the required memory on the host and device, and the transfer of input data from the host to the device. Note that the data is transferred to the device, and passed as an input parameter for the kernel. 
-3.	Configure and launch the kernel on the GPU: As described in :ref:`device_program`, define and load the kernel or kernels to be run, launch kernels using the triple chevron syntax or appropriate API call (e.g., hipLaunchKernelGGL), and pass parameters as needed.
-4.	Synchronization: As described in Asynchronous execution use streams and events to manage task dependencies, overlap computation with data transfers, and manage asynchronous processes to ensure proper sequencing of operations, waiting for events or streams to finish execution and transfer results from the GPU back to the host.
-5.	Error handling: As described in :ref:`error_handling`, you should catch and handle potential errors from API calls, kernel launches, or memory operations (e.g., using hipGetErrorString to retrieve error messages).
+3.	Configure and launch the kernel on the GPU: As described in :ref:`device_program`, define and load the kernel or kernels to be run, launch kernels using the triple chevron syntax or appropriate API call (for example ``hipLaunchKernelGGL``), and pass parameters as needed.
+4.	Synchronization: As described in :ref:`asynchronous_how-to`, kernel execution occurs in the context of device streams, specifically the default (`0`) stream. You can use streams and events to manage task dependencies, overlap computation with data transfers, and manage asynchronous processes to ensure proper sequencing of operations. Wait for events or streams to finish execution and transfer results from the GPU back to the host.
+5.	Error handling: As described in :ref:`error_handling`, you should catch and handle potential errors from API calls, kernel launches, or memory operations. For example, use ``hipGetErrorString`` to retrieve error messages.
 6.	Cleanup and resource management: Validate results, clean up GPU contexts and resources, and free allocated memory on the host and devices.
 
 This structure allows for efficient use of GPU resources and facilitates the acceleration of compute-intensive tasks while keeping the host CPU available for other tasks.
@@ -175,51 +159,59 @@ Device programming
 
 Launching the kernel in the host application starts a kernel program running on the GPU to perform parallel computations. Understanding how the kernel works and the processes involved is essential to writing efficient GPU applications. The general flow of the kernel program looks like this:
 
-1.	Thread Grouping: As described in :ref:`SIMT model<programming_model_simt>`, threads are organized into blocks, and blocks are organized into grids.
+1.	Thread Grouping: As described in :ref:`SIMT model<programming_model_simt>`, threads are organized into blocks, and blocks are organized into grids. 
 2.	Indexing: The kernel computes the unique index for each thread to access the relevant data to be processed by the thread.
 3.	Data Fetch: Threads fetch input data from memory previously transferred from the host to the device.
 4.	Computation: Threads perform the required computations on the input data, and generate any needed output.
 5.	Synchronization: When needed, threads synchronize within their block to ensure correct results when working with shared memory.
 
-Kernel programs can be simple with single instructions deployed across multiple threads in wavefronts, as described below and as demonstrated in the `Hello World tutorial <https://github.com/ROCm/rocm-examples/tree/develop/HIP-Basic/hello_world>`_ or :doc:`../tutorial/saxpy`. However, heterogeneous GPU applications can become quite complex, managing hundreds or thousands of threads with repeated data transfers between host and device to support massive parallelization, using multiple streams to manage asynchronous operations, using rich libraries of functions defined for operation on GPUs as described in `Kernel program <./kernel_program>`. 
-
-.. RJH>> This "Kernel program" topic does not currently exist, though I think we should discuss whether it could be included here or as a separate topic.
+Kernels can be simple single instruction programs deployed across multiple threads in wavefronts, as described below and as demonstrated in the `Hello World tutorial <https://github.com/ROCm/rocm-examples/tree/develop/HIP-Basic/hello_world>`_ or :doc:`../tutorial/saxpy`. However, heterogeneous GPU applications can also become quite complex, managing hundreds or thousands of threads with repeated data transfers between host and device to support massive parallelization, using multiple streams to manage concurrent asynchronous operations, using rich libraries of functions optimized for GPU hardware as described in the `ROCm documentation <https://rocm.docs.amd.com/en/latest/>`_. 
 
 .. _programming_model_simt:
 
 Single instruction multiple threads (SIMT)
 ==========================================
 
-The SIMT programming model behind the HIP device-side execution is a middle-ground
-between SMT (Simultaneous Multi-Threading) programming known from multicore CPUs,
-and SIMD (Single Instruction, Multiple Data) programming mostly known from exploiting
-relevant instruction sets on CPUs (for example SSE/AVX/Neon).
+The HIP kernel code, which is written as a series of scalar instructions for multiple threads with different thread indices, gets mapped to the SIMD units of the GPUs.
+Every single instruction, which is executed for every participating thread of a
+kernel, gets mapped to the SIMD as often as there are threads.
 
-A HIP device compiler maps SIMT code written in HIP C++ to an inherently SIMD
-architecture (like GPUs). This is done by scalarizing the entire kernel and issuing the scalar
-instructions of multiple kernel instances (called threads) to each of the SIMD engine lanes, rather
-than exploiting data parallelism within a single instance of a kernel and spreading
-identical instructions over the available SIMD engines.
+This is done by grouping threads into warps, which contain as many threads as there
+are physical lanes in a SIMD, and issuing that instruction to the SIMD for every
+warp of a kernel. Ideally the SIMD is always fully utilized, however if the number of threads
+can't be evenly divided by the warpsize, then the unused lanes are masked out
+from the corresponding SIMD execution.
 
-Consider the following kernel:
+A kernel follows the same C++ rules as the functions on the host, but it has a special __global__ label to mark it for execution on the device, as shown in the following example:
 
 .. code-block:: cpp
 
-  __global__ void k(float4* a, const float4* b)
+  __global__ void AddKernel(float* a, const float* b)
   {
-    int tid = threadIdx.x;
-    int bid = blockIdx.x;
-    int dim = blockDim.x;
+    int global_id = threadIdx.x + blockIdx.x * blockDim.x;
 
-    a[tid] += (tid + bid - dim) * b[tid];
+    a[global_id] += b[global_id];
   }
 
-The incoming four-vector of floating-point values ``b`` is multiplied by a
-scalar and then added element-wise to the four-vector floating-point values of
-``a``. On modern SIMD-capable architectures, the four-vector ops are expected to
-compile to a single SIMD instruction. However, GPU execution of this kernel will
-typically break down the vector elements into 4 separate threads for parallel execution,
-as seen in the following figure:
+One of the first differences to note, is the usage of the special ``threadIdx``, ``blockIdx`` and ``blockDim`` variables.
+Unlike normal C++ host functions, a kernel is not launched once, but as often as specified by the user. Each of these instances is a separate thread, with its own values for ``threadIdx``, ``blockIdx`` and ``blockDim``.
+This is called SIMT, meaning that a *S*ingle *I*nstruction is executed in *M*ultiple *T*hreads.
+
+Kernels are launched using the "triple chevron" syntax, for example:
+
+.. code-block:: cpp
+
+  AddKernel<<<number_of_blocks, threads_per_block>>>(a, b);
+
+Here the total number of threads launched for the ``AddKernel`` program is defined by ``number_of_blocks *  threads_per_block``. These values are defined by the programmer to address the problem to be solved and the available resources within the system. In other words, the thread configuration is customized to the needs of the operations. 
+
+For comparison, the ``AddKernel`` program could be written in plain C++ as a ``FOR`` loop:
+
+.. code-block:: cpp
+
+  for(int i = 0; i < (number_of_blocks * threads_per_block); ++i){
+    a[i] += b[i];
+  }
 
 .. _simt:
 
@@ -240,17 +232,11 @@ usually isn't exploited from the width of the built-in vector types, but across 
 Inherent thread model
 ---------------------
 
-The SIMT nature of HIP is captured by the ability to execute user-provided
-device programs, expressed as single-source C/C++ functions or sources compiled
-online/offline to binaries, in bulk.
-
 All threads of a kernel are uniquely identified by a set of integral values, called thread IDs.
 The set of integers identifying a thread relate to the hierarchy in which the threads execute.
 
-The thread hierarchy inherent to how AMD GPUs operate is depicted in the
+The thread hierarchy is integral to how AMD GPUs operate, and is depicted in the
 following figure.
-
-.. _inherent_thread_hierarchy:
 
 .. figure:: ../data/understand/programming_model/thread_hierarchy.svg
   :alt: Diagram depicting nested rectangles of varying color. The outermost one
@@ -260,6 +246,8 @@ following figure.
         rectangles filled with downward pointing arrows inside.
 
   Hierarchy of thread groups.
+
+.. _wavefront:
 
 Wavefront (or Warp)
   The innermost grouping of threads is called a warp, or a wavefront in ISA terms. A wavefront
@@ -280,23 +268,20 @@ Wavefront (or Warp)
 .. _inherent_thread_hierarchy_block:
 
 Block
-  The middle grouping is called a block or thread block. The defining feature
-  of a block is that all threads in a block will share an instance of memory
-  which they may use to share data or synchronize with one another.
+  The next level of the thread hierarchy is called a thread block, or block. The
+  defining feature of a block is that all threads in a block will share an instance
+  of memory which they may use to share data or synchronize with one another,
+  as described in :ref:`memory_hierarchy`.
 
   The size of a block is user-configurable but is limited by the queryable
   capabilities of the executing hardware. The unique ID of the thread within a
-  block is 3-dimensional as provided by the API. When linearizing thread IDs
-  within a block, assume the "fast index" being dimension ``x``, followed by
+  block can be 1, 2, or 3-dimensional as provided by the HIP API. You can configure the thread block to best represent the data associated with the instruction set. When linearizing thread IDs within a block, assume the "fast index" being dimension ``x``, followed by
   the ``y`` and ``z`` dimensions.
 
 .. _inherent_thread_hierarchy_grid:
 
 Grid
-  The outermost grouping is called a grid. A grid manifests as a single
-  dispatch of kernels for execution. The unique ID of each block within a grid
-  is 3-dimensional, as provided by the API and is queryable by every thread
-  within the block.
+  The top-most level of the thread hierarchy is a grid. A grid is the collection of blocks, which are collections of threads, defined for the kernel. A grid manifests as a single launch of the kernel to run. The unique ID of each block within a grid can be 1, 2, or 3-dimensional, as provided by the API and is queryable by every thread within the block.
 
 Cooperative groups thread model
 -------------------------------
@@ -315,6 +300,8 @@ better than the defaults defined by the hardware.
 
 For further information, see :doc:`Cooperative groups </how-to/hip_runtime_api/cooperative_groups>`.
 
+.. _memory_hierarchy:
+
 Memory model
 ============
 
@@ -322,7 +309,6 @@ The hierarchy of threads introduced by the :ref:`inherent_thread_model` is induc
 by the memory subsystem of GPUs. The following figure summarizes the memory
 namespaces and how they relate to the various levels of the threading model.
 
-.. _memory_hierarchy:
 
 .. figure:: ../data/understand/programming_model/memory_hierarchy.svg
   :alt: Diagram depicting nested rectangles of varying color. The outermost one
@@ -448,4 +434,3 @@ intended use-cases.
     compiler itself and not intended towards end-user code. Should you be
     writing a tool having to launch device code using HIP, consider using these
     over the alternatives.
-
