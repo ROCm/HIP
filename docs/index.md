@@ -46,7 +46,7 @@ The HIP documentation is organized into the following categories:
 * [HIP environment variables](./reference/env_variables)
 * [CUDA to HIP API Function Comparison](./reference/api_syntax)
 * [List of deprecated APIs](./reference/deprecated_api_list)
-* [FP8 numbers in HIP](./reference/fp8_numbers)
+* [Low Precision Floating Point Types](./reference/low_fp_types)
 * {doc}`./reference/hardware_features`
 
 :::
