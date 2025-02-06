@@ -79,4 +79,4 @@ To run ``hip-tests`` please go to the repository and follow the steps.
 Release notes
 -------------
 
-HIP provides release notes in CLR `change log <https://github.com/ROCm/clr/blob/amd-staging/amd-staging/CHANGELOG.md>`_, which has records of changes in each release.
+HIP provides release notes in CLR `change log <https://github.com/ROCm/clr/blob/amd-staging/CHANGELOG.md>`_, which has records of changes in each release.
