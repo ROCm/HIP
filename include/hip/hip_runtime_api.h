@@ -484,7 +484,8 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributePageableMemoryAccessUsesHostPageTables, ///< Device accesses pageable memory via the host's page tables
     hipDeviceAttributePciBusId,                         ///< PCI Bus ID.
     hipDeviceAttributePciDeviceId,                      ///< PCI Device ID.
-    hipDeviceAttributePciDomainID,                      ///< PCI Domain ID.
+    hipDeviceAttributePciDomainId,                      ///< PCI Domain Id.
+    hipDeviceAttributePciDomainID = hipDeviceAttributePciDomainId,  ///< PCI Domain ID, for backward compatibility.
     hipDeviceAttributePersistingL2CacheMaxSize,         ///< Maximum l2 persisting lines capacity in bytes
     hipDeviceAttributeMaxRegistersPerBlock,             ///< 32-bit registers available to a thread block. This number is shared
                                                         ///< by all thread blocks simultaneously resident on a multiprocessor.
@@ -1574,7 +1575,10 @@ typedef struct hipGraphInstantiateParams {
  */
 typedef struct hipMemAllocationProp {
     hipMemAllocationType type;                       ///< Memory allocation type
-    hipMemAllocationHandleType requestedHandleType;  ///< Requested handle type
+    union {
+      hipMemAllocationHandleType requestedHandleType;   ///< Requested handle type
+      hipMemAllocationHandleType requestedHandleTypes;  ///< Requested handle types
+    };
     hipMemLocation location;                         ///< Memory location
     void* win32HandleMetaData;                       ///< Metadata for Win32 handles
     struct {
