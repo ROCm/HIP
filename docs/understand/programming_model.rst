@@ -162,7 +162,7 @@ kernel, gets mapped to the SIMD.
 This is done by grouping threads into warps, which contain as many threads as there
 are physical lanes in a SIMD, and issuing that instruction to the SIMD for every
 warp of a kernel. Ideally the SIMD is always fully utilized, however if the number of threads
-can't be evenly divided by the warpsize, then the unused lanes are masked out
+can't be evenly divided by the warpSize, then the unused lanes are masked out
 from the corresponding SIMD execution.
 
 A kernel follows the same C++ rules as the functions on the host, but it has a special ``__global__`` label to mark it for execution on the device, as shown in the following example:
