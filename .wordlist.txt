@@ -55,6 +55,7 @@ FNUZ
 fp
 gedit
 GPGPU
+gridDim
 GROMACS
 GWS
 hardcoded
@@ -102,6 +103,7 @@ makefile
 Malloc
 malloc
 MALU
+maxregcount
 MiB
 memset
 multicore
@@ -161,6 +163,7 @@ SYCL
 syntaxes
 texel
 texels
+threadIdx
 tradeoffs
 templated
 toolkits
