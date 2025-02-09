@@ -467,3 +467,37 @@ intended use-cases.
     ``HIP_TEMPLATE_KERNEL_LAUNCH`` preprocessor macro before including the HIP
     headers to turn it into a templated function.
 
+Asynchronous execution
+----------------------
+
+Asynchronous operations between the host and the kernel provide a variety of opportunities, or challenges, for managing synchronization. For instance, a basic model would be to launch an asynchronous operation on a kernel in a stream, create an event to track the operation, continue operations in the host program, and when the asynchronous operation completes synchronize the kernel to return the results. This basic example might look something like the following: 
+
+.. code_block:: cpp
+
+  // Create a HIP stream  
+  hipStream_t stream;  
+  hipStreamCreate(&stream);  
+
+  // Launch the kernel asynchronously  
+  myKernel<<<dataSize / 256, 256, 0, stream>>>(d_data);  
+
+  // Perform continued host processing here  
+  // This could be any CPU-bound work that doesn't depend on the kernel's result  
+  doHostProcessing();  
+
+  // Synchronize the stream to ensure kernel execution is complete  
+  hipStreamSynchronize(stream);  
+
+  // Any host processing that depends on the kernel's result should occur after synchronization  
+  processKernelResults();  
+
+  // Copy the result back to the host  
+  hipMemcpy(...);  
+
+However, one of the opportunities of asynchronous operation is the pipelining of operations between launching kernels and transferring memory. In this case you would be working with multiple streams running concurrently, or at least overlapping in some regard, and managing any dependencies between the streams in the host application. 
+
+There is also the producer-consumer paradigm that can be used to convert a sequential program into parallel operations to improve performance. This process can employ multiple streams to kick off asynchronous kernels, provide data to the kernels, perform operations, and return the results for further processing in the host application. 
+
+These asynchronous activities call for stream management strategies. In the case of the single stream, the only management would be the synchronization of the stream when the work was complete. However, with multiple streams, you have overlapping execution of operations, and synchronization becomes more complex. You need to manage the activities of each stream, evaluating the availability of results, evaluate the critical path of the tasks, allocate resources on the hardware, and manage the execution order. 
+
+All of this could probably use some examples. Let us know where you find them. 
