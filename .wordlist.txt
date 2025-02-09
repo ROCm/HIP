@@ -21,6 +21,7 @@ Builtins
 CAS
 clr
 compilable
+constexpr
 coroutines
 Ctx
 cuBLASLt
@@ -135,6 +136,7 @@ preconditioners
 predefining
 prefetched
 preprocessor
+printf
 profilers
 PTX
 PyHIP
