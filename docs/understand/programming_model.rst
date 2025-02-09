@@ -23,8 +23,8 @@ make efficient use of HIP and general purpose graphics processing unit (GPGPU)
 programming in general. The following topics introduce you to the key concepts of 
 GPU-based programming, and the HIP programming model. 
 
-Getting into Hardware: CPU vs GPU
-=================================
+Hardware differences: CPU vs GPU
+================================
 
 CPUs and GPUs have been designed for different purposes. CPUs have been designed
 to quickly execute a single thread, decreasing the time it takes for a single
@@ -352,17 +352,27 @@ Local or per-thread memory
   CU as described in :doc:`Compute Units <./hardware_implementation>`,
   an important concept in resource usage and performance optimization. 
 
+  Use local memory when the data is specific to a thread, to store variables generated
+  by the thread, or to provide register pressure relief for the thread. 
+
 Shared memory
-  Read-write storage visible to all the threads in a given block.
+  Read-write storage visible to all the threads in a given block. Use shared memory
+  when the data is reused within a thread block, when cross-thread communication
+  is needed, or to minimize global memory transactions by using device memory
+  whenever possible. 
 
 Global
   Read-write storage visible to all threads in a given grid. There are
   specialized versions of global memory with different usage semantics which
-  are typically backed by the same hardware storing global.
+  are typically backed by the same hardware storing global. 
+
+  Use global memory when you have large datasets, are transferring memory between
+  the host and the device, and when you are sharing data between thread blocks. 
 
   Constant
     Read-only storage visible to all threads in a given grid. It is a limited
-    segment of global with queryable size.
+    segment of global with queryable size. Use constant memory for read-only data
+    that is shared across multiple threads, and that has a small data size. 
 
   Texture
     Read-only storage visible to all threads in a given grid and accessible
@@ -371,92 +381,57 @@ Global
   Surface
     A read-write version of texture memory.
 
-Using different memory types
-----------------------------
+Memory optimizations and best practices
+---------------------------------------
 
-* Use global memory when:
+The following are a few memory access patterns and best practices to improve performance. See :ref:`memory_management` for additional details.
 
-  - You are transferring data from the host to the device
-  - You have large data sets, and latency isn't an issue
-  - You are sharing data between thread blocks
+* **Global memory**: Coalescing reduces the number of memory transactions.
 
-* Use shared memory when:
+  Coalesced memory access in HIP refers to the optimization of memory transactions to maximize throughput when accessing global memory. When a kernel accesses global memory, the memory transactions typically occur in chunks of 32, 64, or 128 bytes, which must be naturally aligned. Coalescing memory accesses means aligning and organizing these accesses so that multiple threads in a warp can combine their memory requests into the fewest possible transactions. If threads access memory in a coalesced manner, meaning consecutive threads read or write consecutive memory locations, the memory controller can merge these accesses into a single transaction. This is crucial because global memory bandwidth is relatively low compared to on-chip bandwidths, and non-optimal memory accesses can significantly impact performance. If all the threads in a warp can access consecutive memory locations, memory access is fully coalesced. 
 
-  - The data is reused within a thread block
-  - Cross-thread communication is needed
-  - To reduce global memory bandwidth
+  To achieve coalesced memory access in HIP, you should:
 
-* Use local memory when:
+  1. *Align Data*: Use data types that are naturally aligned and ensure that structures and arrays are aligned properly.
+  2. *Optimize Access Patterns*: Arrange memory accesses so that consecutive threads in a warp access consecutive memory locations. For example, if threads access a 2D array, the array and thread block widths should be multiples of the warp size.
+  3. *Avoid strided access*: For example array[i * stride] can lead to memory bank conflicts and inefficient access.
+  4. *Pad Data*: If necessary, pad data structures to ensure alignment and coalescing.
 
-  - The data is specific to a thread
-  - To store automatic variables for the thread
-  - To provide register pressure relief for the thread
+* **Shared memory**: Avoiding bank conflicts reduces serialization of memory transactions.
 
-* Use constant memory when:
+  Shared memory is a small, fast memory region inside the CU. Unlike global memory, shared memory accesses do not require coalescing, but they can suffer from bank conflicts, which are another form of inefficient memory access. Shared memory is divided into multiple memory banks (usually 32 banks on modern GPUs). If multiple threads within a warp try to access different addresses that map to the same memory bank, accesses get serialized, leading to poor performance. To optimize shared memory usage ensure that consecutive threads access different memory banks. Use padding if necessary to avoid conflicts.
 
-  - The data is read-only
-  - The same value is used across threads
-  - The data size is small
+* **Texture memory**: Spatial locality improves caching performance.
 
-Memory access patterns and best practices
------------------------------------------
+  Texture memory is read-only memory optimized for spatial locality and caching rather than coalescing. Texture memory is cached, unlike standard global memory, and it provides optimized access patterns for 2D and spatially local data. Accessing neighboring values results in cache hits, improving performance. Therefore, instead of worrying about coalescing, optimal memory access patterns involve ensuring that threads access spatially adjacent texture elements, and the memory layout aligns well with the 2D caching mechanism.
 
-While you should refer to the :ref:`memory_management`, the following are a few memory
-access patterns and best practices: 
+* **Unified memory**: Structured access reduces the overhead of page migrations.
 
-* Global memory: Coalescing reduces memory transactions.
-* Shared memory: Avoiding bank conflicts is crucial.
-* Texture memory: Spatial locality improves caching.
-* Unified memory: Structured access minimizes page migration overhead.
+  Unified memory allows the CPU and GPU to share memory seamlessly, but performance depends on access patterns. Unified memory enables automatic page migration between CPU and GPU memory. However, if different threads access different pages, it can lead to expensive page migrations and slow throughput performance. Accessing unified memory in a structured, warp-friendly manner reduces unnecessary page transfers. Ensure threads access memory in a structured, consecutive manner, minimizing page faults. Prefetch data to the GPU before computation by using ``hipMemPrefetchAsync()``. In addition, using small batch transfers as described below, can reduce unexpected page migrations when using unified memory. 
 
-When a kernel accesses global memory, the memory transactions typically occur in chunks of 32, 64, or 128 bytes. If threads access memory in a coalesced manner, meaning consecutive threads read or write consecutive memory locations, the memory controller can merge these accesses into a single transaction. Coalesced access primarily applies to global memory, which is the largest but slowest type of memory on a GPU and coalesced access significantly improves performance by reducing memory latency and increasing bandwidth efficiency. 
+* **Small batch transfers**: Enable pipelining and improve PCIe bandwidth use.
 
-To achieve coalesced memory access in HIP, ensure that memory addresses accessed by consecutive threads are aligned. Structure data for coalesced access by storing it in a contiguous manner so that thread[i] can access array[i], and not some random location. Avoid strided access patterns, for example array[i * stride] can lead to memory bank conflicts and inefficient access. If all the threads in a warp can access consecutive memory locations, memory access is fully coalesced. 
-
-Shared memory is a small, fast memory region inside the CU. Unlike global memory, shared memory accesses do not require coalescing, but they can suffer from bank conflicts, which are another form of inefficient memory access. Shared memory is divided into multiple memory banks (usually 32 banks on modern GPUs). If multiple threads within a warp try to access different addresses that map to the same memory bank, accesses get serialized, leading to poor performance. To optimize shared memory usage ensure that consecutive threads access different memory banks. Use padding if necessary to avoid conflicts.
-
-Texture memory is read-only memory optimized for spatial locality and caching rather than coalescing. Texture memory is cached, unlike standard global memory, and it provides optimized access patterns for 2D and spatially local data. Accessing neighboring values results in cache hits, improving performance. Therefore, instead of worrying about coalescing, optimal memory access patterns involve ensuring that threads access spatially adjacent texture elements, and the memory layout aligns well with the 2D caching mechanism.
-
-Unified memory allows the CPU and GPU to share memory seamlessly, but performance depends on access patterns. Unified memory enables automatic page migration between CPU and GPU memory. However, if different threads access different pages, it can lead to expensive page migrations and slow throughput performance. Accessing unified memory in a structured, warp-friendly manner reduces unnecessary page transfers. Ensure threads access memory in a structured, consecutive manner, minimizing page faults. Prefetch data to the GPU before computation by using ``hipMemPrefetchAsync()``. In addition, using small batch transfers as described below, can reduce unexpected page migrations when using unified memory. 
-
-Memory transfers between the host and the device can become a major bottleneck if not optimized. One method is to use small batch memory transfers where data is transferred in smaller chunks instead of a dealing with large datasets to avoid long blocking operations. Small batch transfers offer better PCIe bandwidth utilization over large data transfers. Small batch transfers offer performance improvement by offering reduced latency with small batches that run asynchronously using ``hipMemcpyAsync()`` as described in :ref:`asynchronous_how-to`, pipelining data transfers and kernel execution using separate streams. Finally, using pinned memory with small batch transfers enables faster DMA transfers without CPU involvement, greatly improving memory transfer performance. 
+  Memory transfers between the host and the device can become a major bottleneck if not optimized. One method is to use small batch memory transfers where data is transferred in smaller chunks instead of a dealing with large datasets to avoid long blocking operations. Small batch transfers offer better PCIe bandwidth utilization over large data transfers. Small batch transfers offer performance improvement by offering reduced latency with small batches that run asynchronously using ``hipMemcpyAsync()`` as described in :ref:`asynchronous_how-to`, pipelining data transfers and kernel execution using separate streams. Finally, using pinned memory with small batch transfers enables faster DMA transfers without CPU involvement, greatly improving memory transfer performance. 
 
 Execution model
 ===============
 
 As previously discussed in :ref:`heterogeneous_programming`, HIP programs consist of two distinct scopes:
 
-* The host-side API running on the host processor. There are two APIs available:
+* The host-side API running on the host processor. 
+* The device-side kernels running on GPUs. 
 
-  * The HIP runtime API which enables use of the single-source programming
-    model.
-
-  * The HIP driver API which sits at a lower level and most importantly differs
-    by removing some facilities provided by the runtime API, most
-    importantly around kernel launching and argument setting. It is geared
-    towards implementing abstractions atop, such as the runtime API itself.
-    Offers two additional pieces of functionality not provided by the Runtime
-    API: ``hipModule`` and ``hipCtx`` APIs. For further details, check
-    :doc:`HIP driver API </how-to/hip_porting_driver_api>`.
-
-* The device-side kernels running on GPUs. Both the host and the device-side
-  APIs have synchronous and asynchronous functions in them.
-
-.. note::
-
-  The HIP does not present two *separate* APIs link NVIDIA CUDA. HIP only extends
-  the HIP runtime API with new APIs for ``hipModule`` and ``hipCtx``.
+Both the host and the device-side APIs have synchronous and asynchronous functions.
 
 Host-side execution
 -------------------
 
-The part of the host-side API which deals with device management and their
-queries are synchronous. All asynchronous APIs, such as kernel execution, data
-movement and potentially data allocation/freeing all happen in the context of
-device streams.
+The host-side API dealing with device management and their queries are synchronous.
+All asynchronous APIs, such as kernel execution, data movement and potentially data
+allocation/freeing all happen in the context of device streams.
 
 Streams are FIFO buffers of commands to execute relating to a given device.
-Commands which enqueue tasks on a stream all return promptly and the command is
+Operations which enqueue tasks on a stream all return promptly and the command is
 executed asynchronously. All side effects of a command on a stream are visible
 to all subsequent commands on the same stream. Multiple streams may point to
 the same device and those streams may be fed from multiple concurrent host-side
@@ -465,10 +440,10 @@ be.
 
 Asynchronous APIs involving a stream all return a stream event which may be
 used to synchronize the execution of multiple streams. A user may enqueue a
-barrier onto a stream referencing an event. The barrier will block until
-the command related to the event does not complete, at which point all
-side effects of the command shall be visible to commands following the barrier,
-even if those side effects manifest on different devices.
+barrier onto a stream referencing an event. The barrier will block activity on the
+stream until the operation related to the event completes. After the event completes, all
+side effects of the operation will be visible to subsequent commands even if those
+side effects manifest on different devices.
 
 Streams also support executing user-defined functions as callbacks on the host.
 The stream will not launch subsequent commands until the callback completes.
@@ -476,16 +451,7 @@ The stream will not launch subsequent commands until the callback completes.
 Device-side execution
 ---------------------
 
-The SIMT programming model behind the HIP device-side execution is a
-middle-ground between SMT (Simultaneous Multi-Threading) programming known from
-multicore CPUs, and SIMD (Single Instruction, Multiple Data) programming
-mostly known from exploiting relevant instruction sets on CPUs (for example
-SSE/AVX/Neon).
-
-Kernel launch
--------------
-
-Kernels may be launched in multiple ways all with different syntaxes and
+Kernels may be launched in multiple ways, all with different syntaxes and
 intended use-cases.
 
 * Using the triple-chevron ``<<<...>>>`` operator on a ``__global__`` annotated
@@ -501,11 +467,3 @@ intended use-cases.
     ``HIP_TEMPLATE_KERNEL_LAUNCH`` preprocessor macro before including the HIP
     headers to turn it into a templated function.
 
-* Using the launch APIs supporting the triple-chevron syntax directly.
-
-  .. caution::
-
-    These APIs are intended to be used/generated by tools such as the HIP
-    compiler itself and not intended towards end-user code. Should you be
-    writing a tool having to launch device code using HIP, consider using these
-    over the alternatives.
