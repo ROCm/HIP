@@ -384,7 +384,7 @@ Global
 Memory optimizations and best practices
 ---------------------------------------
 
-The following are a few memory access patterns and best practices to improve performance. See :ref:`memory_management` for additional details.
+The following are a few memory access patterns and best practices to improve performance. You can find additional information in :ref:`memory_management` and :doc:`../how-to/performance_guidelines`.
 
 * **Global memory**: Coalescing reduces the number of memory transactions.
 
@@ -501,3 +501,12 @@ There is also the producer-consumer paradigm that can be used to convert a seque
 These asynchronous activities call for stream management strategies. In the case of the single stream, the only management would be the synchronization of the stream when the work was complete. However, with multiple streams, you have overlapping execution of operations, and synchronization becomes more complex. You need to manage the activities of each stream, evaluating the availability of results, evaluate the critical path of the tasks, allocate resources on the hardware, and manage the execution order. 
 
 All of this could probably use some examples. Let us know where you find them. 
+
+Multi-GPU and Load Balancing
+----------------------------
+
+Large-scale applications that need more compute power can use multiple GPUs in
+the system. This requires distributing workloads across multiple GPUs to balance
+the load to prevent GPUs from being overutilized while others are idle.
+
+For more information, see :ref:`multi-device` .
