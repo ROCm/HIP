@@ -24,8 +24,6 @@ subtrees:
 
 - caption: Programming guide
   entries:
-  - file: programming_guide
-    title: Introduction
   - file: understand/programming_model
   - file: understand/hardware_implementation
   - file: understand/compilers
