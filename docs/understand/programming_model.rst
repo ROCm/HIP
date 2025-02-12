@@ -32,6 +32,15 @@ operation, increasing the amount of sequential instructions that can be executed
 This includes fetching data, and reducing pipeline stalls where the ALU has to
 wait for previous instructions to finish. 
 
+.. figure:: ../data/understand/programming_model/cpu-gpu-comparison-adjusted.svg
+  :alt: Diagram depicting the differences between CPU and GPU hardware.
+        The CPU block shows four large processing cores, lists Large Cache per
+        Core, and High Clock Speed of 3 to 5 gigahertz. The GPU block shows 42
+        smaller processing cores, lists Shared Memory across Cores, and Lower
+        Clock SPeeds of 1 to 2 gigahertz.  
+
+  Differences in CPUs and GPUs
+
 On CPUs the goal is to quickly process operations. CPUs provide low latency processing for
 serial instructions. On the other hand, GPUs have been designed to execute many similar commands, or threads,
 in parallel, achieving higher throughput. Latency is the delay from when an operation
@@ -134,6 +143,14 @@ In heterogeneous programming, the CPU is available for processing operations but
 
 This structure allows for efficient use of GPU resources and facilitates the acceleration of compute-intensive tasks while keeping the host CPU available for other tasks.
 
+.. figure:: ../data/understand/programming_model/host-device-flow.svg
+  :alt: Diagram depicting a host CPU and device GPU rectangles of varying color.
+        There are arrows pointing between the rectangles showing from the Host
+        to the Device the initialization, data transfer, and Kernel execution
+        steps, and from the Device back to the Host the returning results. 
+
+  Interaction of Host and Device in a GPU application
+
 .. _device_program:
 
 Device programming
@@ -164,6 +181,16 @@ are physical lanes in a SIMD, and issuing that instruction to the SIMD for every
 warp of a kernel. Ideally the SIMD is always fully utilized, however if the number of threads
 can't be evenly divided by the warpSize, then the unused lanes are masked out
 from the corresponding SIMD execution.
+
+.. _simt:
+
+.. figure:: ../data/understand/programming_model/simt-execution-revised.svg
+  :alt: Diagram depicting the SIMT execution model. There is a red rectangle 
+        which contains the expression a[i] = b[i] + c[i], and below that four
+        arrows that point to Thread 0,1,2, and 3. Each thread contains different
+        values for b, c, and a, showing the parallel operations of this equation. 
+
+  Instruction flow of a sample SIMT program
 
 A kernel follows the same C++ rules as the functions on the host, but it has a special ``__global__`` label to mark it for execution on the device, as shown in the following example:
 
@@ -216,16 +243,6 @@ In HIP, lanes of the SIMD architecture are fed by mapping threads of a SIMT
 execution, one thread down each lane of an SIMD engine. Execution parallelism
 usually isn't exploited from the width of the built-in vector types, but across
 multiple threads via the thread ID constants ``threadIdx.x``, ``blockIdx.x``, etc.
-
-.. _simt:
-
-.. figure:: ../data/understand/programming_model/simt.svg
-  :alt: Image representing the instruction flow of a SIMT program. Two identical
-        arrows pointing downward with blocks representing the instructions
-        inside and ellipsis between the arrows. The instructions represented in
-        the arrows are, from top to bottom: ADD, DIV, FMA, FMA, FMA and FMA.
-
-  Instruction flow of a sample SIMT program.
 
 .. _inherent_thread_model:
 
@@ -384,6 +401,14 @@ Global
 Memory optimizations and best practices
 ---------------------------------------
 
+.. figure:: ../data/understand/programming_model/memory-access.svg
+  :alt: Diagram depicting an example memory access pattern for coalesced memory. 
+        The diagram has uncoalesced access on the left side, with consecutive
+        threads accessing memory in a random pattern. With coalesced access on the
+        right showing consecutive threads accessing consecutive memory addresses. 
+
+  Coalesced memory accesses
+
 The following are a few memory access patterns and best practices to improve performance. You can find additional information in :ref:`memory_management` and :doc:`../how-to/performance_guidelines`.
 
 * **Global memory**: Coalescing reduces the number of memory transactions.
@@ -445,6 +470,15 @@ stream until the operation related to the event completes. After the event compl
 side effects of the operation will be visible to subsequent commands even if those
 side effects manifest on different devices.
 
+.. figure:: ../data/understand/programming_model/stream-workflow.svg
+  :alt: Diagram depicting the stream and event workflow, with an example of
+        multiple streams working together. The diagram shows operations as red
+        rectangles, and events as white dots. There are three streams labelled
+        Stream 1, 2, and 3. The streams each have multiple operations and events
+        that require synchronization between the streams. 
+
+  Multiple stream workflow
+
 Streams also support executing user-defined functions as callbacks on the host.
 The stream will not launch subsequent commands until the callback completes.
 
@@ -496,11 +530,205 @@ Asynchronous operations between the host and the kernel provide a variety of opp
 
 However, one of the opportunities of asynchronous operation is the pipelining of operations between launching kernels and transferring memory. In this case you would be working with multiple streams running concurrently, or at least overlapping in some regard, and managing any dependencies between the streams in the host application. 
 
+.. code_block:: cpp
+
+  #include <hip/hip_runtime.h>
+  #include <iostream>
+  #include <vector>
+
+  #define hip_check(hip_call)                                                   \
+  {                                                                             \
+    auto hip_res = hip_call;                                                    \
+    if (hip_res != hipSuccess) {                                                \
+        std::cerr << "Failed in hip call: " << #hip_call                        \
+                  << " with error: " << hipGetErrorName(hip_res) << std::endl;  \
+        std::abort();                                                           \
+    }                                                                           \
+  }
+
+
+  __global__ void vector_add(const float* a, const float* b, float* c, int n_elements) {
+      int idx = blockDim.x * blockIdx.x + threadIdx.x;
+      if (idx < n_elements) {
+          c[idx] = a[idx] + b[idx];
+      }
+  }
+
+  int main() {
+    const int n_elements = 1 << 20;  // 1M elements
+    const int n_streams = 4;
+    const int elements_per_stream = n_elements / n_streams;
+
+    // Create streams
+    std::vector<hipStream_t> streams(n_streams);
+    for (int i = 0; i < n_streams; i++) {
+        hip_check(hipStreamCreate(&streams[i]));
+    }
+
+    // Allocate and initialize memory
+    std::vector<float> h_a(n_elements), h_b(n_elements), h_c(n_elements);
+    std::vector<float> h_ref(n_elements);  // For validation
+    for (int i = 0; i < n_elements; i++) {
+        h_a[i] = static_cast<float>(i);
+        h_b[i] = static_cast<float>(i * 2);
+        h_ref[i] = h_a[i] + h_b[i];
+    }
+
+    float *d_a, *d_b, *d_c;
+    hip_check(hipMalloc(&d_a, n_elements * sizeof(float)));
+    hip_check(hipMalloc(&d_b, n_elements * sizeof(float)));
+    hip_check(hipMalloc(&d_c, n_elements * sizeof(float)));
+
+    // Pipeline operations across streams
+    for (int i = 0; i < n_streams; i++) {
+      int offset = i * elements_per_stream;
+      int bytes = elements_per_stream * sizeof(float);
+      
+      // Stage 1: Copy input data
+      hip_check(hipMemcpyAsync(d_a + offset, h_a.data() + offset, bytes, 
+                              hipMemcpyHostToDevice, streams[i]));
+      hip_check(hipMemcpyAsync(d_b + offset, h_b.data() + offset, bytes, 
+                              hipMemcpyHostToDevice, streams[i]));
+
+      // Stage 2: Launch kernel
+      const int n_threads = 256;
+      const int n_blocks = (elements_per_stream + n_threads - 1) / n_threads;
+      vector_add<<<n_blocks, n_threads, 0, streams[i]>>>(
+          d_a + offset, d_b + offset, d_c + offset, elements_per_stream);
+      hip_check(hipGetLastError());
+
+      // Stage 3: Copy result back
+      hip_check(hipMemcpyAsync(h_c.data() + offset, d_c + offset, bytes, 
+                              hipMemcpyDeviceToHost, streams[i]));
+    }
+
+    // Wait for completion and validate
+    for (auto stream : streams) {
+      hip_check(hipStreamSynchronize(stream));
+    }
+
+    bool passed = true;
+    for (int i = 0; i < n_elements; i++) {
+      if (std::abs(h_c[i] - h_ref[i]) > 1e-5f) {
+        std::cerr << "Validation failed at " << i << ": "
+                  << h_c[i] << " != " << h_ref[i] << std::endl;
+        passed = false;
+        break;
+      }
+    }
+
+    // Cleanup
+    for (auto stream : streams) {
+      hip_check(hipStreamDestroy(stream));
+    }
+    hip_check(hipFree(d_a));
+    hip_check(hipFree(d_b));
+    hip_check(hipFree(d_c));
+
+    std::cout << "Pipeline example " << (passed ? "PASSED" : "FAILED") << std::endl;
+    return passed ? 0 : 1;
+  }
+
 There is also the producer-consumer paradigm that can be used to convert a sequential program into parallel operations to improve performance. This process can employ multiple streams to kick off asynchronous kernels, provide data to the kernels, perform operations, and return the results for further processing in the host application. 
 
-These asynchronous activities call for stream management strategies. In the case of the single stream, the only management would be the synchronization of the stream when the work was complete. However, with multiple streams, you have overlapping execution of operations, and synchronization becomes more complex. You need to manage the activities of each stream, evaluating the availability of results, evaluate the critical path of the tasks, allocate resources on the hardware, and manage the execution order. 
+.. code_block:: cpp
 
-All of this could probably use some examples. Let us know where you find them. 
+  #include <hip/hip_runtime.h>
+  #include <iostream>
+  #include <vector>
+  #include <cmath>
+
+  #define hip_check(hip_call)                                                   \
+  {                                                                             \
+    auto hip_res = hip_call;                                                    \
+    if (hip_res != hipSuccess) {                                                \
+        std::cerr << "Failed in hip call: " << #hip_call                        \
+                  << " with error: " << hipGetErrorName(hip_res) << std::endl;  \
+        std::abort();                                                           \
+    }                                                                           \
+  }
+
+  __global__ void producer_kernel(int* data, int n_elements) {
+    int idx = blockDim.x * blockIdx.x + threadIdx.x;
+    if (idx < n_elements) {
+      data[idx] = idx * idx;  // Generate data
+    }
+  }
+
+  __global__ void consumer_kernel(const int* input, float* output, int n_elements) {
+    int idx = blockDim.x * blockIdx.x + threadIdx.x;
+    if (idx < n_elements) {
+      output[idx] = sqrt(static_cast<float>(input[idx]));  // Process data
+    }
+  }
+
+  int main() {
+    const int n_elements = 1 << 20;  // 1M elements
+    
+    // Allocate device memory
+    int* d_intermediate;
+    float* d_output;
+    hip_check(hipMalloc(&d_intermediate, n_elements * sizeof(int)));
+    hip_check(hipMalloc(&d_output, n_elements * sizeof(float)));
+
+    // Create streams and event
+    hipStream_t producer_stream, consumer_stream;
+    hipEvent_t data_ready;
+    hip_check(hipStreamCreate(&producer_stream));
+    hip_check(hipStreamCreate(&consumer_stream));
+    hip_check(hipEventCreate(&data_ready));
+
+    // Launch configuration
+    const int n_threads = 256;
+    const int n_blocks = (n_elements + n_threads - 1) / n_threads;
+
+    // Stage 1: Producer generates data
+    producer_kernel<<<n_blocks, n_threads, 0, producer_stream>>>(
+      d_intermediate, n_elements);
+    hip_check(hipGetLastError());
+    hip_check(hipEventRecord(data_ready, producer_stream));
+
+    // Stage 2: Consumer waits for data and processes it
+    hip_check(hipStreamWaitEvent(consumer_stream, data_ready));
+    consumer_kernel<<<n_blocks, n_threads, 0, consumer_stream>>>(
+      d_intermediate, d_output, n_elements);
+    hip_check(hipGetLastError());
+
+    // Get result and validate
+    std::vector<float> result(n_elements);
+    std::vector<float> reference(n_elements);
+    hip_check(hipMemcpyAsync(result.data(), d_output, n_elements * sizeof(float),
+                            hipMemcpyDeviceToHost, consumer_stream));
+    hip_check(hipStreamSynchronize(consumer_stream));
+
+    // Compute reference results
+    for (int i = 0; i < n_elements; i++) {
+      reference[i] = std::sqrt(static_cast<float>(i * i));
+    }
+
+    // Validate
+    bool passed = true;
+    for (int i = 0; i < n_elements; i++) {
+      if (std::abs(result[i] - reference[i]) > 1e-5f) {
+        std::cerr << "Validation failed at " << i << ": "
+                  << result[i] << " != " << reference[i] << std::endl;
+        passed = false;
+        break;
+      }
+    }
+
+    // Cleanup
+    hip_check(hipFree(d_intermediate));
+    hip_check(hipFree(d_output));
+    hip_check(hipEventDestroy(data_ready));
+    hip_check(hipStreamDestroy(producer_stream));
+    hip_check(hipStreamDestroy(consumer_stream));
+
+    std::cout << "Producer-consumer example " << (passed ? "PASSED" : "FAILED") << std::endl;
+    return passed ? 0 : 1;
+  }
+
+These asynchronous activities call for stream management strategies. In the case of the single stream, the only management would be the synchronization of the stream when the work was complete. However, with multiple streams, you have overlapping execution of operations, and synchronization becomes more complex. You need to manage the activities of each stream, evaluating the availability of results, evaluate the critical path of the tasks, allocate resources on the hardware, and manage the execution order. 
 
 Multi-GPU and Load Balancing
 ----------------------------

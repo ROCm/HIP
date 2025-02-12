@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 300">
+    <!-- Background -->
+    <rect width="600" height="300" fill="#2D2D2D"/>
+    
+    <!-- Title -->
+    <text x="300" y="30" text-anchor="middle" fill="white" font-family="Arial" font-size="18">Memory Access Patterns</text>
+    
+    <!-- Uncoalesced Section -->
+    <text x="150" y="60" text-anchor="middle" fill="white" font-family="Arial" font-size="14">Uncoalesced Access</text>
+    
+    <!-- Threads -->
+    <g transform="translate(50,80)">
+        <rect width="200" height="80" fill="#444444" stroke="white" stroke-width="1"/>
+        <text x="100" y="20" text-anchor="middle" fill="white" font-family="Arial" font-size="12">Threads in Warp</text>
+        <line x1="50" y1="0" x2="50" y2="80" stroke="white" stroke-width="1"/>
+        <line x1="100" y1="0" x2="100" y2="80" stroke="white" stroke-width="1"/>
+        <line x1="150" y1="0" x2="150" y2="80" stroke="white" stroke-width="1"/>
+    </g>
+    
+    <!-- Memory Transactions Uncoalesced -->
+    <g transform="translate(50,200)">
+        <rect width="200" height="40" fill="#8B1538" stroke="white" stroke-width="1"/>
+        <text x="100" y="25" text-anchor="middle" fill="white" font-family="Arial" font-size="12">Memory</text>
+        <line x1="40" y1="0" x2="40" y2="40" stroke="white" stroke-width="1"/>
+        <line x1="80" y1="0" x2="80" y2="40" stroke="white" stroke-width="1"/>
+        <line x1="120" y1="0" x2="120" y2="40" stroke="white" stroke-width="1"/>
+        <line x1="160" y1="0" x2="160" y2="40" stroke="white" stroke-width="1"/>
+    </g>
+    
+    <!-- Uncoalesced Access Arrows -->
+    <path d="M 75 160 L 75 200" stroke="white" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <path d="M 125 160 L 165 200" stroke="white" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <path d="M 175 160 L 90 200" stroke="white" stroke-width="2" marker-end="url(#arrowhead)"/>
+    
+    <!-- Coalesced Section -->
+    <text x="450" y="60" text-anchor="middle" fill="white" font-family="Arial" font-size="14">Coalesced Access</text>
+    
+    <!-- Threads -->
+    <g transform="translate(350,80)">
+        <rect width="200" height="80" fill="#444444" stroke="white" stroke-width="1"/>
+        <text x="100" y="20" text-anchor="middle" fill="white" font-family="Arial" font-size="12">Threads in Warp</text>
+        <line x1="50" y1="0" x2="50" y2="80" stroke="white" stroke-width="1"/>
+        <line x1="100" y1="0" x2="100" y2="80" stroke="white" stroke-width="1"/>
+        <line x1="150" y1="0" x2="150" y2="80" stroke="white" stroke-width="1"/>
+    </g>
+    
+    <!-- Memory Transactions Coalesced -->
+    <g transform="translate(350,200)">
+        <rect width="200" height="40" fill="#8B1538" stroke="white" stroke-width="1"/>
+        <text x="100" y="25" text-anchor="middle" fill="white" font-family="Arial" font-size="12">Memory</text>
+        <line x1="40" y1="0" x2="40" y2="40" stroke="white" stroke-width="1"/>
+        <line x1="80" y1="0" x2="80" y2="40" stroke="white" stroke-width="1"/>
+        <line x1="120" y1="0" x2="120" y2="40" stroke="white" stroke-width="1"/>
+        <line x1="160" y1="0" x2="160" y2="40" stroke="white" stroke-width="1"/>
+    </g>
+    
+    <!-- Coalesced Access Arrows -->
+    <path d="M 375 160 L 375 200" stroke="white" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <path d="M 425 160 L 425 200" stroke="white" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <path d="M 475 160 L 475 200" stroke="white" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <path d="M 525 160 L 525 200" stroke="white" stroke-width="2" marker-end="url(#arrowhead)"/>
+    
+    <!-- Arrow Marker -->
+    <defs>
+        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="white"/>
+        </marker>
+    </defs>
+</svg>

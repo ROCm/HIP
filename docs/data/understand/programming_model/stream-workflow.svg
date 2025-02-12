@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 300">
+    <!-- Background -->
+    <rect width="600" height="300" fill="#2D2D2D"/>
+    
+    <!-- Title -->
+    <text x="300" y="30" text-anchor="middle" fill="white" font-family="Arial" font-size="18">Stream and Event Workflow</text>
+    
+    <!-- Timeline base -->
+    <line x1="50" y1="100" x2="550" y2="100" stroke="white" stroke-width="1"/>
+    <line x1="50" y1="180" x2="550" y2="180" stroke="white" stroke-width="1"/>
+    <line x1="50" y1="260" x2="550" y2="260" stroke="white" stroke-width="1"/>
+    
+    <!-- Stream Labels -->
+    <text x="30" y="105" text-anchor="end" fill="white" font-family="Arial" font-size="14">Stream 1</text>
+    <text x="30" y="185" text-anchor="end" fill="white" font-family="Arial" font-size="14">Stream 2</text>
+    <text x="30" y="265" text-anchor="end" fill="white" font-family="Arial" font-size="14">Stream 3</text>
+    
+    <!-- Stream 1 Operations -->
+    <rect x="60" y="80" width="100" height="40" fill="#8B1538" stroke="white" stroke-width="1"/>
+    <rect x="180" y="80" width="150" height="40" fill="#8B1538" stroke="white" stroke-width="1"/>
+    <rect x="350" y="80" width="80" height="40" fill="#8B1538" stroke="white" stroke-width="1"/>
+    
+    <!-- Stream 2 Operations -->
+    <rect x="120" y="160" width="120" height="40" fill="#8B1538" stroke="white" stroke-width="1"/>
+    <rect x="260" y="160" width="100" height="40" fill="#8B1538" stroke="white" stroke-width="1"/>
+    
+    <!-- Stream 3 Operations -->
+    <rect x="200" y="240" width="140" height="40" fill="#8B1538" stroke="white" stroke-width="1"/>
+    <rect x="380" y="240" width="120" height="40" fill="#8B1538" stroke="white" stroke-width="1"/>
+    
+    <!-- Event Markers -->
+    <circle cx="350" cy="100" r="5" fill="white"/>
+    <circle cx="260" cy="180" r="5" fill="white"/>
+    <circle cx="380" cy="260" r="5" fill="white"/>
+    
+    <!-- Event Dependencies -->
+    <path d="M 350 100 L 260 180" stroke="white" stroke-width="1" stroke-dasharray="4"/>
+    <path d="M 260 180 L 380 260" stroke="white" stroke-width="1" stroke-dasharray="4"/>
+    
+    <!-- Legend -->
+    <rect x="450" y="30" width="20" height="10" fill="#8B1538" stroke="white" stroke-width="1"/>
+    <text x="480" y="38" fill="white" font-family="Arial" font-size="10">Operation</text>
+    <circle cx="450" cy="50" r="5" fill="white"/>
+    <text x="480" y="53" fill="white" font-family="Arial" font-size="10">Event</text>
+</svg>

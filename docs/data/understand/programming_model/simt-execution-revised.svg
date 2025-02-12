@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 300">
+    <!-- Background -->
+    <rect width="600" height="300" fill="#2D2D2D"/>
+    
+    <!-- Title -->
+    <text x="300" y="30" text-anchor="middle" fill="white" font-family="Arial" font-size="18">SIMT Execution Model</text>
+    
+    <!-- Instruction -->
+    <rect x="200" y="50" width="200" height="40" fill="#8B1538" stroke="white" stroke-width="2"/>
+    <text x="300" y="75" text-anchor="middle" fill="white" font-family="Arial" font-size="14">a[i] = b[i] + c[i]</text>
+    
+    <!-- Distribution arrows -->
+    <path d="M 300 90 L 110 140" stroke="white" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <path d="M 300 90 L 240 140" stroke="white" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <path d="M 300 90 L 370 140" stroke="white" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <path d="M 300 90 L 500 140" stroke="white" stroke-width="2" marker-end="url(#arrowhead)"/>
+    
+    <!-- SIMD Lanes -->
+    <g id="simd-lane">
+        <rect x="50" y="140" width="120" height="120" fill="#444444" stroke="white" stroke-width="2"/>
+        <text x="110" y="160" text-anchor="middle" fill="white" font-family="Arial" font-size="12">Thread 0</text>
+        <line x1="50" y1="170" x2="170" y2="170" stroke="white" stroke-width="1"/>
+        <text x="110" y="190" text-anchor="middle" fill="white" font-family="Arial" font-size="10">b[0] = 5</text>
+        <text x="110" y="210" text-anchor="middle" fill="white" font-family="Arial" font-size="10">c[0] = 3</text>
+        <text x="110" y="240" text-anchor="middle" fill="white" font-family="Arial" font-size="10">a[0] = 8</text>
+    </g>
+    
+    <!-- Copy SIMD Lanes with different data -->
+    <g transform="translate(130,0)">
+        <rect x="50" y="140" width="120" height="120" fill="#444444" stroke="white" stroke-width="2"/>
+        <text x="110" y="160" text-anchor="middle" fill="white" font-family="Arial" font-size="12">Thread 1</text>
+        <line x1="50" y1="170" x2="170" y2="170" stroke="white" stroke-width="1"/>
+        <text x="110" y="190" text-anchor="middle" fill="white" font-family="Arial" font-size="10">b[1] = 2</text>
+        <text x="110" y="210" text-anchor="middle" fill="white" font-family="Arial" font-size="10">c[1] = 4</text>
+        <text x="110" y="240" text-anchor="middle" fill="white" font-family="Arial" font-size="10">a[1] = 6</text>
+    </g>
+    
+    <g transform="translate(260,0)">
+        <rect x="50" y="140" width="120" height="120" fill="#444444" stroke="white" stroke-width="2"/>
+        <text x="110" y="160" text-anchor="middle" fill="white" font-family="Arial" font-size="12">Thread 2</text>
+        <line x1="50" y1="170" x2="170" y2="170" stroke="white" stroke-width="1"/>
+        <text x="110" y="190" text-anchor="middle" fill="white" font-family="Arial" font-size="10">b[2] = 7</text>
+        <text x="110" y="210" text-anchor="middle" fill="white" font-family="Arial" font-size="10">c[2] = 1</text>
+        <text x="110" y="240" text-anchor="middle" fill="white" font-family="Arial" font-size="10">a[2] = 8</text>
+    </g>
+    
+    <g transform="translate(390,0)">
+        <rect x="50" y="140" width="120" height="120" fill="#444444" stroke="white" stroke-width="2"/>
+        <text x="110" y="160" text-anchor="middle" fill="white" font-family="Arial" font-size="12">Thread 3</text>
+        <line x1="50" y1="170" x2="170" y2="170" stroke="white" stroke-width="1"/>
+        <text x="110" y="190" text-anchor="middle" fill="white" font-family="Arial" font-size="10">b[3] = 3</text>
+        <text x="110" y="210" text-anchor="middle" fill="white" font-family="Arial" font-size="10">c[3] = 5</text>
+        <text x="110" y="240" text-anchor="middle" fill="white" font-family="Arial" font-size="10">a[3] = 8</text>
+    </g>
+    
+    <!-- Arrow Marker -->
+    <defs>
+        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="white"/>
+        </marker>
+    </defs>
+</svg>

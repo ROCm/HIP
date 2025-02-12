@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 300">
+    <!-- Background -->
+    <rect width="600" height="300" fill="#2D2D2D"/>
+    
+    <!-- Title -->
+    <text x="300" y="30" text-anchor="middle" fill="white" font-family="Arial" font-size="18">Host-Device Data Flow</text>
+    
+    <!-- Host (CPU) -->
+    <rect x="50" y="70" width="150" height="180" fill="#444444" stroke="white" stroke-width="2"/>
+    <text x="125" y="100" text-anchor="middle" fill="white" font-family="Arial" font-size="16">Host (CPU)</text>
+    
+    <!-- Device (GPU) -->
+    <rect x="400" y="70" width="150" height="180" fill="#8B1538" stroke="white" stroke-width="2"/>
+    <text x="475" y="100" text-anchor="middle" fill="white" font-family="Arial" font-size="16">Device (GPU)</text>
+    
+    <!-- Data Flow Arrows -->
+    <!-- Initialize -->
+    <path d="M 200 120 L 400 120" stroke="white" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <text x="300" y="110" text-anchor="middle" fill="white" font-family="Arial" font-size="12">1. Initialize</text>
+    
+    <!-- Transfer Data -->
+    <path d="M 200 160 L 400 160" stroke="white" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <text x="300" y="150" text-anchor="middle" fill="white" font-family="Arial" font-size="12">2. Transfer Data</text>
+    
+    <!-- Execute -->
+    <path d="M 200 200 L 400 200" stroke="white" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <text x="300" y="190" text-anchor="middle" fill="white" font-family="Arial" font-size="12">3. Execute Kernel</text>
+    
+    <!-- Return Results -->
+    <path d="M 400 240 L 200 240" stroke="white" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <text x="300" y="230" text-anchor="middle" fill="white" font-family="Arial" font-size="12">4. Return Results</text>
+    
+    <!-- Arrow Marker -->
+    <defs>
+        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="white"/>
+        </marker>
+    </defs>
+</svg>
