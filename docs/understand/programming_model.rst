@@ -10,10 +10,10 @@
 Introduction to HIP programming model
 *******************************************************************************
 
-The HIP programming model makes it easy to map data-parallel C/C++ algorithms to
-massively parallel, wide single instruction, multiple data (SIMD) architectures,
-such as GPUs. HIP supports many imperative languages, such as Python via PyHIP,
-but this document focuses on the original C/C++ API of HIP.
+The HIP programming model enables mapping data-parallel C/C++ algorithms to massively
+parallel SIMD (Single Instruction, Multiple Data) architectures like GPUs. HIP
+supports many imperative languages, such as Python via PyHIP, but this document
+focuses on the original C/C++ API of HIP.
 
 While GPUs may be capable of running applications written for CPUs if properly ported
 and compiled, it would not be an efficient use of GPU resources. GPUs are different
@@ -43,9 +43,9 @@ wait for previous instructions to finish.
 
 On CPUs the goal is to quickly process operations. CPUs provide low latency processing for
 serial instructions. On the other hand, GPUs have been designed to execute many similar commands, or threads,
-in parallel, achieving higher throughput. Latency is the delay from when an operation
-is started to when it returns, such as 2 ns, while throughput is the number of operations completed
-in a period of time, such as ten thousand threads completed.
+in parallel, achieving higher throughput. Latency is the time between starting an
+operation and receiving its result, such as 2 ns, while throughput is the rate of
+completed operations, for example operations per second.
 
 For the GPU, the objective is to process as many operations in parallel, rather
 than to finish a single instruction quickly. GPUs in general are made up of basic
@@ -164,7 +164,7 @@ The device or kernel program acts as workers on the GPU application, distributin
 4.	Computation: Threads perform the required computations on the input data, and generate any needed output. Each thread of the kernel runs the same instruction simultaneously on the different datasets. This sometimes require multiple iterations when the number of operations exceeds the resources of the CU. 
 5.	Synchronization: When needed, threads synchronize within their block to ensure correct results when working with shared memory.
 
-Kernels can be simple single instruction programs deployed across multiple threads in wavefronts, as described below and as demonstrated in the `Hello World tutorial <https://github.com/ROCm/rocm-examples/tree/develop/HIP-Basic/hello_world>`_ or :doc:`../tutorial/saxpy`. However, heterogeneous GPU applications can also become quite complex, managing hundreds, thousands, or hundreds of thousands of operations with repeated data transfers between host and device to support massive parallelization, using multiple streams to manage concurrent asynchronous operations, using rich libraries of functions optimized for GPU hardware as described in the `ROCm documentation <https://rocm.docs.amd.com/en/latest/>`_. 
+Kernels are parallel programs that execute the same instruction set across multiple threads, organized in wavefronts, as described below and as demonstrated in the `Hello World tutorial <https://github.com/ROCm/rocm-examples/tree/develop/HIP-Basic/hello_world>`_ or :doc:`../tutorial/saxpy`. However, heterogeneous GPU applications can also become quite complex, managing hundreds, thousands, or hundreds of thousands of operations with repeated data transfers between host and device to support massive parallelization, using multiple streams to manage concurrent asynchronous operations, using rich libraries of functions optimized for GPU hardware as described in the `ROCm documentation <https://rocm.docs.amd.com/en/latest/>`_. 
 
 .. _programming_model_simt:
 
@@ -346,10 +346,12 @@ For further information, see :doc:`Cooperative groups </how-to/hip_runtime_api/c
 Memory model
 ============
 
-The thread structure of the :ref:`inherent_thread_model` is supported by the memory
-subsystem of GPUs. The following figure summarizes the memory namespaces and how
-they relate to the various levels of the threading model.
-
+The GPU memory architecture is designed to support parallel execution across the
+thread hierarchy. Understanding the following memory spaces and their relationships
+to thread groupings is crucial for efficient GPU programming. The choice of memory
+type and access patterns significantly impacts kernel performance. The following figure
+summarizes the memory namespaces and how they relate to the various levels of the
+threading model. 
 
 .. figure:: ../data/understand/programming_model/memory_hierarchy.svg
   :alt: Diagram depicting nested rectangles of varying color. The outermost one
@@ -733,8 +735,10 @@ These asynchronous activities call for stream management strategies. In the case
 Multi-GPU and Load Balancing
 ----------------------------
 
-Large-scale applications that need more compute power can use multiple GPUs in
-the system. This requires distributing workloads across multiple GPUs to balance
-the load to prevent GPUs from being overutilized while others are idle.
+For applications requiring additional computational power beyond a single device,
+HIP supports utilizing multiple GPUs within a system. Large-scale applications
+that need more compute power can use multiple GPUs in the system. This requires
+distributing workloads across multiple GPUs to balance the load to prevent GPUs
+from being over-utilized while others are idle.
 
 For more information, see :ref:`multi-device` .
