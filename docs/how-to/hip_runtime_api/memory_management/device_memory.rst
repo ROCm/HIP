@@ -69,34 +69,34 @@ better option, but is also limited in size.
 .. code-block:: cpp
 
   __global__ void kernel_memory_allocation(TYPE* pointer){
-  // The pointer is stored in shared memory, so that all
-  // threads of the block can access the pointer
-  __shared__ int *memory;
+    // The pointer is stored in shared memory, so that all
+    // threads of the block can access the pointer
+    __shared__ int *memory;
 
-  size_t blockSize = blockDim.x;
-  constexpr size_t elementsPerThread = 1024;
-  if(threadIdx.x == 0){
-    // allocate memory in one contiguous block
-    memory = new int[blockDim.x * elementsPerThread];
+    size_t blockSize = blockDim.x;
+    constexpr size_t elementsPerThread = 1024;
+    if(threadIdx.x == 0){
+      // allocate memory in one contiguous block
+      memory = new int[blockDim.x * elementsPerThread];
+    }
+    __syncthreads();
+
+    // load pointer into thread-local variable to avoid
+    // unnecessary accesses to shared memory
+    int *localPtr = memory;
+
+    // work with allocated memory, e.g. initialization
+    for(int i = 0; i < elementsPerThread; ++i){
+      // access in a contiguous way
+      localPtr[i * blockSize + threadIdx.x] = i;
+    }
+
+    // synchronize to make sure no thread is accessing the memory before freeing
+    __syncthreads();
+    if(threadIdx.x == 0){
+      delete[] memory;
+    }
   }
-  __syncthreads();
-
-  // load pointer into thread-local variable to avoid
-  // unnecessary accesses to shared memory
-  int *localPtr = memory;
-
-  // work with allocated memory, e.g. initialization
-  for(int i = 0; i < elementsPerThread; ++i){
-    // access in a contiguous way
-    localPtr[i * blockSize + threadIdx.x] = i;
-  }
-
-  // synchronize to make sure no thread is accessing the memory before freeing
-  __syncthreads();
-  if(threadIdx.x == 0){
-    delete[] memory;
-  }
-}
 
 Copying between device and host
 --------------------------------------------------------------------------------
