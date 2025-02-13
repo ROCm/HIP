@@ -14,10 +14,22 @@ suggestions on how to port CUDA code and work through common issues.
 Porting a CUDA Project
 ********************************************************************************
 
+Mixing HIP and CUDA code results in valid CUDA code. This enables users to
+incrementally port CUDA to HIP, and still compile and test the code during the
+transition.
+
+The only notable exception is ``hipError_t``, which is not just an alias to
+``cudaError_t``. In these cases HIP provides functions to convert between the
+error code spaces:
+
+:cpp:func:`hipErrorToCudaError`
+:cpp:func:`hipErrorToCUResult`
+:cpp:func:`hipCUDAErrorTohipError`
+:cpp:func:`hipCUResultTohipError`
+
 General Tips
 ================================================================================
 
-* You can incrementally port pieces of the code to HIP while leaving the rest in CUDA. HIP is just a thin layer over CUDA, so the two languages can interoperate.
 * Starting to port on an NVIDIA machine is often the easiest approach, as the code can be tested for functionality and performance even if not fully ported to HIP.
 * Once the CUDA code is ported to HIP and is running on the CUDA machine, compile the HIP code for an AMD machine.
 * You can handle platform-specific features through conditional compilation or by adding them to the open-source HIP infrastructure.
@@ -534,16 +546,6 @@ supports, together with the corresponding macros and device properties.
    - Ability to launch a kernel from within a kernel
 
 ********************************************************************************
-Finding HIP
-********************************************************************************
-
-Makefiles can use the following syntax to conditionally provide a default HIP_PATH if one does not exist:
-
-.. code-block:: shell
-
-  HIP_PATH ?= $(shell hipconfig --path)
-
-********************************************************************************
 Compilation
 ********************************************************************************
 
@@ -554,6 +556,12 @@ options are appropriate for the target compiler.
 
 ``hipconfig`` is a helpful tool in identifying the current systems platform,
 compiler and runtime. It can also help set options appropriately.
+
+As an example, it can provide a path to HIP, in Makefiles for example:
+
+.. code-block:: shell
+
+  HIP_PATH ?= $(shell hipconfig --path)
 
 HIP Headers
 ================================================================================
@@ -602,3 +610,41 @@ platforms and architectures. The ``warpSize`` built-in should be used in device
 code, while the host can query it during runtime via the device properties. See
 the :ref:`HIP language extension for warpSize <warp_size>` for information on
 how to write portable wave-aware code.
+
+********************************************************************************
+Porting from CUDA __launch_bounds__
+********************************************************************************
+
+CUDA also defines a ``__launch_bounds__`` qualifier which works similar to HIP's
+implementation, however it uses different parameters:
+
+.. code-block:: cpp
+
+  __launch_bounds__(MAX_THREADS_PER_BLOCK, MIN_BLOCKS_PER_MULTIPROCESSOR)
+
+The first parameter is the same as HIP's implementation, but
+``MIN_BLOCKS_PER_MULTIPROCESSOR`` must  be converted to
+``MIN_WARPS_PER_EXECUTION``, which uses warps and execution units rather than
+blocks and multiprocessors. This conversion is performed automatically by
+:doc:`HIPIFY <hipify:index>`, or can be done manually with the following
+equation.
+
+.. code-block:: cpp
+
+  MIN_WARPS_PER_EXECUTION_UNIT = (MIN_BLOCKS_PER_MULTIPROCESSOR * MAX_THREADS_PER_BLOCK) / warpSize
+
+Directly controlling the warps per execution unit makes it easier to reason
+about the occupancy, unlike with blocks, where the occupancy depends on the
+block size.
+
+The use of execution units rather than multiprocessors also provides support for
+architectures with multiple execution units per multiprocessor. For example, the
+AMD GCN architecture has 4 execution units per multiprocessor.
+
+maxregcount
+================================================================================
+
+Unlike ``nvcc``, ``amdclang++`` does not support the ``--maxregcount`` option.
+Instead, users are encouraged to use the ``__launch_bounds__`` directive since
+the parameters are more intuitive and portable than micro-architecture details
+like registers. The directive allows per-kernel control.
