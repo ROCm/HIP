@@ -41,7 +41,7 @@ With CPUs, the goal is to quickly process operations. CPUs provide low-latency p
 serial instructions. On the other hand, GPUs have been designed to execute many similar commands, or threads,
 in parallel, achieving higher throughput. Latency is the time between starting an
 operation and receiving its result, such as 2 ns, while throughput is the rate of
-completed operations, for example operations per second.
+completed operations, for example, operations per second.
 
 For the GPU, the objective is to process as many operations in parallel, rather
 than to finish a single instruction quickly. GPUs in general are made up of basic
