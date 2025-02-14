@@ -316,9 +316,9 @@ Grid
 The three-dimensional thread hierarchy available to a kernel program lends itself to solutions
 that align closely to the computational problem. The following are some examples: 
 
-* 1 dimensional: array processing, linear data structures, or sequential data transformation
-* 2 dimensional: Image processing, matrix operations, 2 dimensional simulations
-* 3 dimensions: Volume rendering, 3D scientific simulations, spatial algorithms
+* 1-dimensional: array processing, linear data structures, or sequential data transformation
+* 2-dimensional: Image processing, matrix operations, 2 dimensional simulations
+* 3-dimensional: Volume rendering, 3D scientific simulations, spatial algorithms
 
 Cooperative groups thread model
 -------------------------------
