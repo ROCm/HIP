@@ -468,7 +468,7 @@ stream until the operation related to the event completes. After the event compl
 side effects of the operation will be visible to subsequent commands even if those
 side effects manifest on different devices.
 
-.. figure:: ../data/understand/programming_model/stream-workflow.svg
+.. figure:: ../data/understand/programming_model/stream-workflow.sv
   :alt: Diagram depicting the stream and event workflow, with an example of
         multiple streams working together. The diagram shows operations as red
         rectangles, and events as white dots. There are three streams labelled
