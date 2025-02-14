@@ -225,7 +225,7 @@ Inside the angle brackets, provide the following:
 .. note::
   The kernel can also be launched through other methods, such as the ``hipLaunchKernel()`` function. 
 
-Here the total number of threads launched for the ``AddKernel`` program is defined by
+Here, the total number of threads launched for the ``AddKernel`` program is defined by
 ``number_of_blocks *  threads_per_block``. You define these values when launching the
 kernel program to address the problem to be solved with the available resources within
 the system. In other words, the thread configuration is customized to the needs of the
