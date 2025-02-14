@@ -16,8 +16,8 @@ supports many imperative languages, such as Python via PyHIP, but this document
 focuses on the original C/C++ API of HIP.
 
 While GPUs may be capable of running applications written for CPUs if properly ported
-and compiled, it would not be an efficient use of GPU resources. GPUs are different
-from CPUs in fundamental ways, and should be used accordingly to achieve optimum
+and compiled, it would not be an efficient use of GPU resources. GPUs fundamentally differ
+from CPUs and should be used accordingly to achieve optimum
 performance. A basic understanding of the underlying device architecture helps you
 make efficient use of HIP and general purpose graphics processing unit (GPGPU)
 programming in general. The following topics introduce you to the key concepts of 
