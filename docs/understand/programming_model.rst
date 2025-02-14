@@ -461,7 +461,7 @@ the same device and those streams may be fed from multiple concurrent host-side
 threads. Execution on multiple streams may be concurrent but isn't required to
 be.
 
-Asynchronous APIs involving a stream all return a stream event which may be
+Asynchronous APIs involving a stream all return a stream event, which can be
 used to synchronize the execution of multiple streams. A user may enqueue a
 barrier onto a stream referencing an event. The barrier will block activity on the
 stream until the operation related to the event completes. After the event completes, all
@@ -484,7 +484,7 @@ Device-side execution
 ---------------------
 
 Kernels may be launched in multiple ways, all with different syntaxes and
-intended use-cases.
+intended use cases.
 
 * Using the triple-chevron ``<<<...>>>`` operator on a ``__global__`` annotated
   function.
@@ -506,8 +506,7 @@ Asynchronous operations between the host and the kernel provide a variety of opp
 or challenges, for managing synchronization, as described in :ref:`asynchronous_how-to`.
 For instance, a basic model would be to launch an asynchronous operation on a kernel
 in a stream, create an event to track the operation, continue operations in the host
-program, and when the asynchronous operation completes synchronize the kernel to return
-the results. 
+program, and when the event shows that the asynchronous operation is complete,  synchronize the kernel to return the results. 
 
 However, one of the opportunities of asynchronous operation is the pipelining of operations
 between launching kernels and transferring memory. In this case you would be working
@@ -519,13 +518,11 @@ streams to kick off asynchronous kernels, provide data to the kernels, perform o
 and return the results for further processing in the host application. 
 
 These asynchronous activities call for stream management strategies. In the case
-of the single stream, the only management would be the synchronization of the
-stream when the work was complete. However, with multiple streams you have
+of the single stream, the only management would be the stream synchronization
+when the work was complete. However, with multiple streams you have
 overlapping execution of operations and synchronization becomes more complex, as shown
 in the variations of the example in `Programmatic dependent launch and synchronization <../how-to/hip_runtime_api/asynchronous.html#programmatic-dependent-launch-and-synchronization>`_.  
-You need to manage the activities of each stream, evaluating the availability of
-results, evaluate the critical path of the tasks, allocate resources on the hardware,
-and manage the execution order. 
+You need to manage each stream's activities, evaluate the availability of results, evaluate the critical path of the tasks, allocate resources on the hardware, and manage the execution order.
 
 Multi-GPU and load balancing
 ----------------------------
