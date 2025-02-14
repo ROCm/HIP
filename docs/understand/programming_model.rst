@@ -256,7 +256,7 @@ blocks, and grids.
 * Threads are single instances of kernel operations, running concurrently across warps
 * Blocks group threads together and enable cooperation and shared memory
 * Grids define the number of thread blocks for a single kernel launch
-* Blocks, and grids can be defined in 3 dimensions (``x``, ``y``, ``z``)
+* Blocks and grids can be defined in 3 dimensions (``x``, ``y``, ``z``)
 * By default, the Y and Z dimensions are set to 1
 
 The combined values represent the thread index, and relate to the sequence that the
