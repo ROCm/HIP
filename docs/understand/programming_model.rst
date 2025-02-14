@@ -21,7 +21,7 @@ from CPUs and should be used accordingly to achieve optimum
 performance. A basic understanding of the underlying device architecture helps you
 make efficient use of HIP and general purpose graphics processing unit (GPGPU)
 programming in general. The following topics introduce you to the key concepts of 
-GPU-based programming, and the HIP programming model. 
+GPU-based programming and the HIP programming model. 
 
 Hardware differences: CPU vs GPU
 ================================
