@@ -579,9 +579,8 @@ The HIP version number is defined as an integer:
 
   HIP_VERSION=HIP_VERSION_MAJOR * 10000000 + HIP_VERSION_MINOR * 100000 + HIP_VERSION_PATCH
 
-********************************************************************************
 CU_POINTER_ATTRIBUTE_MEMORY_TYPE
-********************************************************************************
+================================================================================
 
 To get the pointer's memory type in HIP, developers should use
 :cpp:func:`hipPointerGetAttributes`. First parameter of the function is
@@ -633,12 +632,18 @@ Looking into CUDA toolkit, it defines `cudaMemoryType` as following,
     cudaMemoryTypeManaged = 3, // Managed memory
   }
 
-In this case, memory type translation for `hipPointerGetAttributes` needs to be handled properly on NVIDIA platform to get the correct memory type in CUDA, which is done in the file `nvidia_hip_runtime_api.h`.
+In this case, memory type translation for ``hipPointerGetAttributes`` needs to
+be handled properly on NVIDIA platform to get the correct memory type in CUDA,
+which is done in the file ``nvidia_hip_runtime_api.h``.
 
-So in any HIP applications which use HIP APIs involving memory types, developers should use `#ifdef` in order to assign the correct enum values depending on NVIDIA or AMD platform.
+So in any HIP applications which use HIP APIs involving memory types, developers
+should use ``#ifdef`` in order to assign the correct enum values depending on
+NVIDIA or AMD platform.
 
 As an example, please see the code from the `link <https://github.com/ROCm/hip-tests/tree/develop/catch/unit/memory/hipMemcpyParam2D.cc>`_.
 
-With the `#ifdef` condition, HIP APIs work as expected on both AMD and NVIDIA platforms.
+With the ``#ifdef`` condition, HIP APIs work as expected on both AMD and NVIDIA
+platforms.
 
-Note, `cudaMemoryTypeUnregistered` is currently not supported as `hipMemoryType` enum, due to HIP functionality backward compatibility.
+Note, ``cudaMemoryTypeUnregistered`` is currently not supported as
+``hipMemoryType`` enum, due to HIP functionality backward compatibility.

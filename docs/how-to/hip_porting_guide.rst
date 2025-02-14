@@ -2,17 +2,16 @@
   :description: This chapter presents how to port CUDA source code to HIP.
   :keywords: AMD, ROCm, HIP, CUDA, porting, port
 
-################################################################################
+********************************************************************************
 HIP porting guide
-################################################################################
+********************************************************************************
 
 HIP is designed to ease the porting of existing CUDA code into the HIP
 environment. This page describes the available tools and provides practical
 suggestions on how to port CUDA code and work through common issues.
 
-********************************************************************************
 Porting a CUDA Project
-********************************************************************************
+================================================================================
 
 Mixing HIP and CUDA code results in valid CUDA code. This enables users to
 incrementally port CUDA to HIP, and still compile and test the code during the
@@ -22,21 +21,26 @@ The only notable exception is ``hipError_t``, which is not just an alias to
 ``cudaError_t``. In these cases HIP provides functions to convert between the
 error code spaces:
 
-:cpp:func:`hipErrorToCudaError`
-:cpp:func:`hipErrorToCUResult`
-:cpp:func:`hipCUDAErrorTohipError`
-:cpp:func:`hipCUResultTohipError`
+* :cpp:func:`hipErrorToCudaError`
+* :cpp:func:`hipErrorToCUResult`
+* :cpp:func:`hipCUDAErrorTohipError`
+* :cpp:func:`hipCUResultTohipError`
 
 General Tips
-================================================================================
+--------------------------------------------------------------------------------
 
-* Starting to port on an NVIDIA machine is often the easiest approach, as the code can be tested for functionality and performance even if not fully ported to HIP.
-* Once the CUDA code is ported to HIP and is running on the CUDA machine, compile the HIP code for an AMD machine.
-* You can handle platform-specific features through conditional compilation or by adding them to the open-source HIP infrastructure.
-* Use the `HIPIFY <https://github.com/ROCm/HIPIFY>`_ tools to automatically convert CUDA code to HIP, as described in the following section.
+* Starting to port on an NVIDIA machine is often the easiest approach, as the
+  code can be tested for functionality and performance even if not fully ported
+  to HIP.
+* Once the CUDA code is ported to HIP and is running on the CUDA machine,
+  compile the HIP code for an AMD machine.
+* You can handle platform-specific features through conditional compilation or
+  by adding them to the open-source HIP infrastructure.
+* Use the `HIPIFY <https://github.com/ROCm/HIPIFY>`_ tools to automatically
+  convert CUDA code to HIP, as described in the following section.
 
 HIPIFY
-================================================================================
+--------------------------------------------------------------------------------
 
 :doc:`HIPIFY <hipify:index>` is a collection of tools that automatically
 translate CUDA to HIP code. There are two flavours available, ``hipfiy-clang``
@@ -126,7 +130,7 @@ hipified code to ``stdout``.
 directories.
 
 Library Equivalents
-================================================================================
+--------------------------------------------------------------------------------
 
 ROCm provides libraries to ease porting of code relying on CUDA libraries.
 Most CUDA libraries have a corresponding HIP library.
@@ -213,12 +217,11 @@ corresponding CUDA library, depending on the platform, to provide compatibility.
    - Communications Primitives Library based on the MPI equivalents
      RCCL is a drop-in replacement for NCCL
 
-********************************************************************************
 Distinguishing compilers and platforms
-********************************************************************************
+================================================================================
 
 Identifying the HIP Target Platform
-================================================================================
+--------------------------------------------------------------------------------
 
 HIP projects can target either the AMD or NVIDIA platform. The platform affects
 which backend-headers are included and which libraries are used for linking. The
@@ -388,9 +391,8 @@ for the device.
 
 .. _identifying_device_architecture_features:
 
-********************************************************************************
 Identifying Device Architecture Features
-********************************************************************************
+================================================================================
 
 GPUs of different generations and architectures do not all provide the same
 level of :doc:`hardware feature support <../reference/hardware_features>`. To
@@ -398,7 +400,7 @@ guard device-code using these architecture dependent features, the
 ``__HIP_ARCH_<FEATURE>__`` C++-macros can be used.
 
 Device Code Feature Identification
-================================================================================
+--------------------------------------------------------------------------------
 
 Some CUDA code tests ``__CUDA_ARCH__`` for a specific value to determine whether
 the GPU supports a certain architectural feature, depending on its compute
@@ -422,7 +424,7 @@ For host code, the ``__HIP_ARCH_<FEATURE>__`` defines are set to 0, if
 upon in host code.
 
 Host Code Feature Identification
-================================================================================
+--------------------------------------------------------------------------------
 
 Host code must not rely on the ``__HIP_ARCH_<FEATURE>__`` macros, as the GPUs
 available to a system can not be known during compile time, and their
@@ -464,7 +466,7 @@ Host code can query architecture feature flags during runtime, by using
   }
 
 Table of Architecture Properties
-================================================================================
+--------------------------------------------------------------------------------
 
 The table below shows the full set of architectural properties that HIP
 supports, together with the corresponding macros and device properties.
@@ -545,9 +547,8 @@ supports, together with the corresponding macros and device properties.
    - ``hasDynamicParallelism``
    - Ability to launch a kernel from within a kernel
 
-********************************************************************************
 Compilation
-********************************************************************************
+================================================================================
 
 ``hipcc`` is a portable compiler driver that calls ``nvcc`` or ``amdclang++``
 and forwards the appropriate options. It passes options through
@@ -564,7 +565,7 @@ As an example, it can provide a path to HIP, in Makefiles for example:
   HIP_PATH ?= $(shell hipconfig --path)
 
 HIP Headers
-================================================================================
+--------------------------------------------------------------------------------
 
 The ``hip_runtime.h`` headers define all the necessary types, functions, macros,
 etc., needed to compile a HIP program, this includes host as well as device
@@ -575,7 +576,7 @@ need to convert hipified code to include the richer ``hip_runtime.h`` instead of
 ``hip_runtime_api.h``.
 
 Using a Standard C++ Compiler
-================================================================================
+--------------------------------------------------------------------------------
 
 You can compile ``hip_runtime_api.h`` using a standard C or C++ compiler
 (e.g., ``gcc`` or ``icc``).
@@ -601,9 +602,8 @@ The ``hipify`` tool automatically converts ``cuda_runtime.h`` to
 ``hip_runtime.h``, and it converts ``cuda_runtime_api.h`` to
 ``hip_runtime_api.h``, but it may miss nested headers or macros.
 
-********************************************************************************
 warpSize
-********************************************************************************
+================================================================================
 
 Code should not assume a warp size of 32 or 64, as that is not portable between
 platforms and architectures. The ``warpSize`` built-in should be used in device
@@ -611,9 +611,8 @@ code, while the host can query it during runtime via the device properties. See
 the :ref:`HIP language extension for warpSize <warp_size>` for information on
 how to write portable wave-aware code.
 
-********************************************************************************
 Porting from CUDA __launch_bounds__
-********************************************************************************
+================================================================================
 
 CUDA also defines a ``__launch_bounds__`` qualifier which works similar to HIP's
 implementation, however it uses different parameters:
@@ -642,7 +641,7 @@ architectures with multiple execution units per multiprocessor. For example, the
 AMD GCN architecture has 4 execution units per multiprocessor.
 
 maxregcount
-================================================================================
+--------------------------------------------------------------------------------
 
 Unlike ``nvcc``, ``amdclang++`` does not support the ``--maxregcount`` option.
 Instead, users are encouraged to use the ``__launch_bounds__`` directive since
