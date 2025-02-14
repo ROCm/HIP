@@ -509,10 +509,10 @@ in a stream, create an event to track the operation, continue operations in the 
 program, and when the event shows that the asynchronous operation is complete,  synchronize the kernel to return the results. 
 
 However, one of the opportunities of asynchronous operation is the pipelining of operations
-between launching kernels and transferring memory. In this case you would be working
+between launching kernels and transferring memory. In this case, you would be working
 with multiple streams running concurrently, or at least overlapping in some regard,
-and managing any dependencies between the streams in the host application. There is
-also the producer-consumer paradigm that can be used to convert a sequential program
+and managing any dependencies between the streams in the host application. 
+The producer-consumer paradigm can be used to convert a sequential program
 into parallel operations to improve performance. This process can employ multiple
 streams to kick off asynchronous kernels, provide data to the kernels, perform operations,
 and return the results for further processing in the host application. 
