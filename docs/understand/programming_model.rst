@@ -26,11 +26,7 @@ GPU-based programming and the HIP programming model.
 Hardware differences: CPU vs GPU
 ================================
 
-CPUs and GPUs have been designed for different purposes. CPUs have been designed
-to quickly execute a single thread, decreasing the time it takes for a single
-operation, increasing the amount of sequential instructions that can be executed.
-This includes fetching data, and reducing pipeline stalls where the ALU has to
-wait for previous instructions to finish. 
+CPUs and GPUs have been designed for different purposes. CPUs quickly execute a single thread, decreasing the time for a single operation while increasing the number of sequential instructions that can be executed. This includes fetching data and reducing pipeline stalls where the ALU has to wait for previous instructions to finish. 
 
 .. figure:: ../data/understand/programming_model/cpu-gpu-comparison-adjusted.svg
   :alt: Diagram depicting the differences between CPU and GPU hardware.
