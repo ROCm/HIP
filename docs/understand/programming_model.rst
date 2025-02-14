@@ -171,7 +171,7 @@ Kernels are parallel programs that execute the same instruction set across multi
 Single instruction multiple threads (SIMT)
 ==========================================
 
-The HIP kernel code, which is written as a series of scalar instructions for multiple
+The HIP kernel code, written as a series of scalar instructions for multiple
 threads with different thread indices, gets mapped to the SIMD units of the GPUs.
 Every single instruction, which is executed for every participating thread of a
 kernel, gets mapped to the SIMD.
