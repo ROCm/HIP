@@ -7,7 +7,7 @@
 .. _programming_model:
 
 *******************************************************************************
-Introduction to HIP programming model
+Introduction to the HIP programming model
 *******************************************************************************
 
 The HIP programming model enables mapping data-parallel C/C++ algorithms to massively
