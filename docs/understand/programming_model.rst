@@ -178,7 +178,7 @@ kernel, gets mapped to the SIMD.
 
 This is done by grouping threads into warps, which contain as many threads as there
 are physical lanes in a SIMD, and issuing that instruction to the SIMD for every
-warp of a kernel. Ideally the SIMD is always fully utilized, however if the number of threads
+warp of a kernel. Ideally, the SIMD is always fully utilized. However, if the number of threads
 can't be evenly divided by the warpSize, then the unused lanes are masked out
 from the corresponding SIMD execution.
 
