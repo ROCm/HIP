@@ -50,7 +50,7 @@ As described in :ref:`hardware_implementation`, these CUs provide the necessary
 resources for the threads: the Arithmetic Logical Units (ALUs), register files,
 caches and shared memory for efficient communication between the threads.
 
-The following defines a few hardware differences between CPUs and GPUs: 
+The following describes a few hardware differences between CPUs and GPUs: 
 
 * CPU:
 
