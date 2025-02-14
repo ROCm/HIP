@@ -454,7 +454,7 @@ All asynchronous APIs, such as kernel execution, data movement and potentially d
 allocation/freeing all happen in the context of device streams, as described in `Managing streams <../how-to/hip_runtime_api/asynchronous.html#managing-streams>`_.
 
 Streams are FIFO buffers of commands to execute relating to a given device.
-Operations which enqueue tasks on a stream all return promptly and the command is
+Operations that enqueue tasks on a stream all return promptly, and the command is
 executed asynchronously. All side effects of a command on a stream are visible
 to all subsequent commands on the same stream. Multiple streams may point to
 the same device and those streams may be fed from multiple concurrent host-side
