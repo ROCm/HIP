@@ -37,7 +37,7 @@ CPUs and GPUs have been designed for different purposes. CPUs quickly execute a 
 
   Differences in CPUs and GPUs
 
-On CPUs the goal is to quickly process operations. CPUs provide low latency processing for
+With CPUs, the goal is to quickly process operations. CPUs provide low-latency processing for
 serial instructions. On the other hand, GPUs have been designed to execute many similar commands, or threads,
 in parallel, achieving higher throughput. Latency is the time between starting an
 operation and receiving its result, such as 2 ns, while throughput is the rate of
