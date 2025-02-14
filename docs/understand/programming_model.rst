@@ -215,7 +215,7 @@ called the triple chevron syntax, which looks like the following:
 
   AddKernel<<<number_of_blocks, threads_per_block>>>(a, b);
 
-Inside the angle brackets you provide the following:
+Inside the angle brackets, provide the following:
 
 * The number of blocks to launch, which defines the grid size (relating to blockDim). 
 * The number of threads in a block, which defines the block size (relating to blockIdx). 
