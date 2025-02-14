@@ -91,7 +91,7 @@ across large datasets, with little branching, where the volume of operations is 
 
 .. _heterogeneous_programming:
 
-Heterogeneous Programming
+Heterogeneous programming
 =========================
 
 The HIP programming model has two execution contexts. The main application starts on the CPU, or
@@ -455,7 +455,7 @@ Host-side execution
 
 The host-side API dealing with device management and their queries are synchronous.
 All asynchronous APIs, such as kernel execution, data movement and potentially data
-allocation/freeing all happen in the context of device streams.
+allocation/freeing all happen in the context of device streams, as described in `Managing streams <../how-to/hip_runtime_api/asynchronous.html#managing-streams>`_.
 
 Streams are FIFO buffers of commands to execute relating to a given device.
 Operations which enqueue tasks on a stream all return promptly and the command is
@@ -506,233 +506,32 @@ intended use-cases.
 Asynchronous execution
 ----------------------
 
-Asynchronous operations between the host and the kernel provide a variety of opportunities, or challenges, for managing synchronization. For instance, a basic model would be to launch an asynchronous operation on a kernel in a stream, create an event to track the operation, continue operations in the host program, and when the asynchronous operation completes synchronize the kernel to return the results. This basic example might look something like the following: 
+Asynchronous operations between the host and the kernel provide a variety of opportunities,
+or challenges, for managing synchronization, as described in :ref:`asynchronous_how-to`.
+For instance, a basic model would be to launch an asynchronous operation on a kernel
+in a stream, create an event to track the operation, continue operations in the host
+program, and when the asynchronous operation completes synchronize the kernel to return
+the results. 
 
-.. code_block:: cpp
+However, one of the opportunities of asynchronous operation is the pipelining of operations
+between launching kernels and transferring memory. In this case you would be working
+with multiple streams running concurrently, or at least overlapping in some regard,
+and managing any dependencies between the streams in the host application. There is
+also the producer-consumer paradigm that can be used to convert a sequential program
+into parallel operations to improve performance. This process can employ multiple
+streams to kick off asynchronous kernels, provide data to the kernels, perform operations,
+and return the results for further processing in the host application. 
 
-  // Create a HIP stream  
-  hipStream_t stream;  
-  hipStreamCreate(&stream);  
+These asynchronous activities call for stream management strategies. In the case
+of the single stream, the only management would be the synchronization of the
+stream when the work was complete. However, with multiple streams you have
+overlapping execution of operations and synchronization becomes more complex, as shown
+in the variations of the example in `Programmatic dependent launch and synchronization <../how-to/hip_runtime_api/asynchronous.html#programmatic-dependent-launch-and-synchronization>`_.  
+You need to manage the activities of each stream, evaluating the availability of
+results, evaluate the critical path of the tasks, allocate resources on the hardware,
+and manage the execution order. 
 
-  // Launch the kernel asynchronously  
-  myKernel<<<dataSize / 256, 256, 0, stream>>>(d_data);  
-
-  // Perform continued host processing here  
-  // This could be any CPU-bound work that doesn't depend on the kernel's result  
-  doHostProcessing();  
-
-  // Synchronize the stream to ensure kernel execution is complete  
-  hipStreamSynchronize(stream);  
-
-  // Any host processing that depends on the kernel's result should occur after synchronization  
-  processKernelResults();  
-
-  // Copy the result back to the host  
-  hipMemcpy(...);  
-
-However, one of the opportunities of asynchronous operation is the pipelining of operations between launching kernels and transferring memory. In this case you would be working with multiple streams running concurrently, or at least overlapping in some regard, and managing any dependencies between the streams in the host application. 
-
-.. code_block:: cpp
-
-  #include <hip/hip_runtime.h>
-  #include <iostream>
-  #include <vector>
-
-  #define hip_check(hip_call)                                                   \
-  {                                                                             \
-    auto hip_res = hip_call;                                                    \
-    if (hip_res != hipSuccess) {                                                \
-        std::cerr << "Failed in hip call: " << #hip_call                        \
-                  << " with error: " << hipGetErrorName(hip_res) << std::endl;  \
-        std::abort();                                                           \
-    }                                                                           \
-  }
-
-
-  __global__ void vector_add(const float* a, const float* b, float* c, int n_elements) {
-      int idx = blockDim.x * blockIdx.x + threadIdx.x;
-      if (idx < n_elements) {
-          c[idx] = a[idx] + b[idx];
-      }
-  }
-
-  int main() {
-    const int n_elements = 1 << 20;  // 1M elements
-    const int n_streams = 4;
-    const int elements_per_stream = n_elements / n_streams;
-
-    // Create streams
-    std::vector<hipStream_t> streams(n_streams);
-    for (int i = 0; i < n_streams; i++) {
-        hip_check(hipStreamCreate(&streams[i]));
-    }
-
-    // Allocate and initialize memory
-    std::vector<float> h_a(n_elements), h_b(n_elements), h_c(n_elements);
-    std::vector<float> h_ref(n_elements);  // For validation
-    for (int i = 0; i < n_elements; i++) {
-        h_a[i] = static_cast<float>(i);
-        h_b[i] = static_cast<float>(i * 2);
-        h_ref[i] = h_a[i] + h_b[i];
-    }
-
-    float *d_a, *d_b, *d_c;
-    hip_check(hipMalloc(&d_a, n_elements * sizeof(float)));
-    hip_check(hipMalloc(&d_b, n_elements * sizeof(float)));
-    hip_check(hipMalloc(&d_c, n_elements * sizeof(float)));
-
-    // Pipeline operations across streams
-    for (int i = 0; i < n_streams; i++) {
-      int offset = i * elements_per_stream;
-      int bytes = elements_per_stream * sizeof(float);
-      
-      // Stage 1: Copy input data
-      hip_check(hipMemcpyAsync(d_a + offset, h_a.data() + offset, bytes, 
-                              hipMemcpyHostToDevice, streams[i]));
-      hip_check(hipMemcpyAsync(d_b + offset, h_b.data() + offset, bytes, 
-                              hipMemcpyHostToDevice, streams[i]));
-
-      // Stage 2: Launch kernel
-      const int n_threads = 256;
-      const int n_blocks = (elements_per_stream + n_threads - 1) / n_threads;
-      vector_add<<<n_blocks, n_threads, 0, streams[i]>>>(
-          d_a + offset, d_b + offset, d_c + offset, elements_per_stream);
-      hip_check(hipGetLastError());
-
-      // Stage 3: Copy result back
-      hip_check(hipMemcpyAsync(h_c.data() + offset, d_c + offset, bytes, 
-                              hipMemcpyDeviceToHost, streams[i]));
-    }
-
-    // Wait for completion and validate
-    for (auto stream : streams) {
-      hip_check(hipStreamSynchronize(stream));
-    }
-
-    bool passed = true;
-    for (int i = 0; i < n_elements; i++) {
-      if (std::abs(h_c[i] - h_ref[i]) > 1e-5f) {
-        std::cerr << "Validation failed at " << i << ": "
-                  << h_c[i] << " != " << h_ref[i] << std::endl;
-        passed = false;
-        break;
-      }
-    }
-
-    // Cleanup
-    for (auto stream : streams) {
-      hip_check(hipStreamDestroy(stream));
-    }
-    hip_check(hipFree(d_a));
-    hip_check(hipFree(d_b));
-    hip_check(hipFree(d_c));
-
-    std::cout << "Pipeline example " << (passed ? "PASSED" : "FAILED") << std::endl;
-    return passed ? 0 : 1;
-  }
-
-There is also the producer-consumer paradigm that can be used to convert a sequential program into parallel operations to improve performance. This process can employ multiple streams to kick off asynchronous kernels, provide data to the kernels, perform operations, and return the results for further processing in the host application. 
-
-.. code_block:: cpp
-
-  #include <hip/hip_runtime.h>
-  #include <iostream>
-  #include <vector>
-  #include <cmath>
-
-  #define hip_check(hip_call)                                                   \
-  {                                                                             \
-    auto hip_res = hip_call;                                                    \
-    if (hip_res != hipSuccess) {                                                \
-        std::cerr << "Failed in hip call: " << #hip_call                        \
-                  << " with error: " << hipGetErrorName(hip_res) << std::endl;  \
-        std::abort();                                                           \
-    }                                                                           \
-  }
-
-  __global__ void producer_kernel(int* data, int n_elements) {
-    int idx = blockDim.x * blockIdx.x + threadIdx.x;
-    if (idx < n_elements) {
-      data[idx] = idx * idx;  // Generate data
-    }
-  }
-
-  __global__ void consumer_kernel(const int* input, float* output, int n_elements) {
-    int idx = blockDim.x * blockIdx.x + threadIdx.x;
-    if (idx < n_elements) {
-      output[idx] = sqrt(static_cast<float>(input[idx]));  // Process data
-    }
-  }
-
-  int main() {
-    const int n_elements = 1 << 20;  // 1M elements
-    
-    // Allocate device memory
-    int* d_intermediate;
-    float* d_output;
-    hip_check(hipMalloc(&d_intermediate, n_elements * sizeof(int)));
-    hip_check(hipMalloc(&d_output, n_elements * sizeof(float)));
-
-    // Create streams and event
-    hipStream_t producer_stream, consumer_stream;
-    hipEvent_t data_ready;
-    hip_check(hipStreamCreate(&producer_stream));
-    hip_check(hipStreamCreate(&consumer_stream));
-    hip_check(hipEventCreate(&data_ready));
-
-    // Launch configuration
-    const int n_threads = 256;
-    const int n_blocks = (n_elements + n_threads - 1) / n_threads;
-
-    // Stage 1: Producer generates data
-    producer_kernel<<<n_blocks, n_threads, 0, producer_stream>>>(
-      d_intermediate, n_elements);
-    hip_check(hipGetLastError());
-    hip_check(hipEventRecord(data_ready, producer_stream));
-
-    // Stage 2: Consumer waits for data and processes it
-    hip_check(hipStreamWaitEvent(consumer_stream, data_ready));
-    consumer_kernel<<<n_blocks, n_threads, 0, consumer_stream>>>(
-      d_intermediate, d_output, n_elements);
-    hip_check(hipGetLastError());
-
-    // Get result and validate
-    std::vector<float> result(n_elements);
-    std::vector<float> reference(n_elements);
-    hip_check(hipMemcpyAsync(result.data(), d_output, n_elements * sizeof(float),
-                            hipMemcpyDeviceToHost, consumer_stream));
-    hip_check(hipStreamSynchronize(consumer_stream));
-
-    // Compute reference results
-    for (int i = 0; i < n_elements; i++) {
-      reference[i] = std::sqrt(static_cast<float>(i * i));
-    }
-
-    // Validate
-    bool passed = true;
-    for (int i = 0; i < n_elements; i++) {
-      if (std::abs(result[i] - reference[i]) > 1e-5f) {
-        std::cerr << "Validation failed at " << i << ": "
-                  << result[i] << " != " << reference[i] << std::endl;
-        passed = false;
-        break;
-      }
-    }
-
-    // Cleanup
-    hip_check(hipFree(d_intermediate));
-    hip_check(hipFree(d_output));
-    hip_check(hipEventDestroy(data_ready));
-    hip_check(hipStreamDestroy(producer_stream));
-    hip_check(hipStreamDestroy(consumer_stream));
-
-    std::cout << "Producer-consumer example " << (passed ? "PASSED" : "FAILED") << std::endl;
-    return passed ? 0 : 1;
-  }
-
-These asynchronous activities call for stream management strategies. In the case of the single stream, the only management would be the synchronization of the stream when the work was complete. However, with multiple streams, you have overlapping execution of operations, and synchronization becomes more complex. You need to manage the activities of each stream, evaluating the availability of results, evaluate the critical path of the tasks, allocate resources on the hardware, and manage the execution order. 
-
-Multi-GPU and Load Balancing
+Multi-GPU and load balancing
 ----------------------------
 
 For applications requiring additional computational power beyond a single device,
