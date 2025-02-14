@@ -325,11 +325,10 @@ Cooperative groups thread model
 
 The Cooperative groups API introduces new functions to launch, group, subdivide,
 synchronize and identify threads, as well as some predefined group-collective
-algorithms. Most importantly it offers a matching thread model to think of the
-cooperative groups in terms of. It relaxes some restrictions of the :ref:`inherent_thread_model`
-imposed by the strict 1:1 mapping of architectural details to the programming model.
-Cooperative groups let you define your own set of thread groups which may better
-fit your use-case than the defaults defined by the hardware.
+algorithms.  Cooperative groups let you define your own set of thread groups which
+may fit your use-cases better than those defined by the hardware. It relaxes some
+restrictions of the :ref:`inherent_thread_model` imposed by the strict 1:1 mapping
+of architectural details to the programming model.
 
 .. note::
   The implicit groups defined by kernel launch parameters are still available
