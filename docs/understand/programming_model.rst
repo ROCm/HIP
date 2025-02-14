@@ -74,7 +74,7 @@ The following defines a few hardware differences between CPUs and GPUs:
   - Register files are shared among threads. The number of threads that can be run in parallel depends on the registers needed per thread.
   - Multiple ALUs execute a collection of threads having the same operations, also known as a wavefront or warp. This is called single-instruction, multiple threads (SIMT) operation as described in :ref:`programming_model_simt`. 
 
-    - The collection of ALUs is called SIMD. SIMDs are an extension to the hardware architecture, that allows a `single instruction` to concurrently operate on `multiple data` inputs. 
+    - The collection of ALUs is called SIMD. SIMDs are an extension to the hardware architecture that allows a `single instruction` to concurrently operate on `multiple data` inputs. 
     - For branching threads where conditional instructions lead to thread divergence, ALUs still processes the full wavefront, but the result for divergent threads is masked out. This leads to wasted ALU cycles, and should be a consideration in your programming. Keep instructions consistent, and leave conditionals out of threads.
 
   - The advantage for GPUs is that context switching is easy. All threads that run on a core/compute unit have their registers on the compute unit, so they don't need to be stored to global memory, and each cycle one instruction from any wavefront that resides on the compute unit can be issued.
