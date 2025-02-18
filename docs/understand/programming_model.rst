@@ -400,7 +400,7 @@ Memory optimizations and best practices
 
 .. figure:: ../data/understand/programming_model/memory-access.svg
   :alt: Diagram depicting an example memory access pattern for coalesced memory. 
-        The diagram has uncoalesced access on the left side, with consecutive
+        The diagram has un-coalesced access on the left side, with consecutive
         threads accessing memory in a random pattern. With coalesced access on the
         right showing consecutive threads accessing consecutive memory addresses. 
 
