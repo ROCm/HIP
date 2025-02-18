@@ -33,7 +33,7 @@ CPUs and GPUs have been designed for different purposes. CPUs quickly execute a 
         The CPU block shows four large processing cores, lists Large Cache per
         Core, and High Clock Speed of 3 to 5 gigahertz. The GPU block shows 42
         smaller processing cores, lists Shared Memory across Cores, and Lower
-        Clock SPeeds of 1 to 2 gigahertz.  
+        Clock Speeds of 1 to 2 gigahertz.  
 
   Differences in CPUs and GPUs
 
