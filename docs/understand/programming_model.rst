@@ -532,4 +532,4 @@ that need more compute power can use multiple GPUs in the system. This requires
 distributing workloads across multiple GPUs to balance the load to prevent GPUs
 from being over-utilized while others are idle.
 
-For more information, see :ref:`multi-device` .
+For more information, see :ref:`multi-device`.
