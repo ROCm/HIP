@@ -173,6 +173,7 @@ transfering
 typedefs
 unintuitive
 UMM
+uncoalesced
 unmap
 unmapped
 unmapping
