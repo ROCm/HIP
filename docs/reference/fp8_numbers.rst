@@ -42,7 +42,7 @@ Supported Devices
     * - Host
       - Yes
       - Yes
-    * - gfx940/gfx941/gfx942
+    * - gfx942
       - Yes
       - No
     * - gfx1200/gfx1201
