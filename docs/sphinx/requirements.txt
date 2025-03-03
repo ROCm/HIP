@@ -252,7 +252,7 @@ sphinxcontrib-applehelp==2.0.0
     # via sphinx
 sphinxcontrib-devhelp==2.0.0
     # via sphinx
-sphinxcontrib-doxylink==1.12.4
+sphinxcontrib-doxylink==1.13.0
     # via -r requirements.in
 sphinxcontrib-htmlhelp==2.1.0
     # via sphinx
