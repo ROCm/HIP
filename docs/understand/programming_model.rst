@@ -528,8 +528,8 @@ Multi-GPU and load balancing
 
 For applications requiring additional computational power beyond a single device,
 HIP supports utilizing multiple GPUs within a system. Large-scale applications
-that need more compute power can use multiple GPUs in the system. This requires
-distributing workloads across multiple GPUs to balance the load to prevent GPUs
-from being over-utilized while others are idle.
+that need more compute power can use multiple GPUs in the system. This enables
+the runtime to distribute workloads across multiple GPUs to balance the load and prevent some GPUs
+from being over-utilized while others are idle. 
 
 For more information, see :ref:`multi-device`.
