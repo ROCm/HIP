@@ -492,7 +492,7 @@ intended use cases.
 
   .. tip::
 
-    This name by default is a macro expanding to triple-chevron. In cases where
+    This name, by default, is a macro expanding to the triple-chevron syntax. In cases where
     language syntax extensions are undesirable, or where launching templated
     and/or overloaded kernel functions define the
     ``HIP_TEMPLATE_KERNEL_LAUNCH`` preprocessor macro before including the HIP
