@@ -16,11 +16,6 @@ This section documents:
 - Maximum error bounds for supported HIP math functions
 - Currently unsupported functions
 
-For a comprehensive analysis of mathematical function accuracy—including detailed evaluations
-in single, double, and quadruple precision and a discussion of the IEEE 754 standard's recommendations
-on correct rounding — see the paper
-`Accuracy of Mathematical Functions <https://members.loria.fr/PZimmermann/papers/accuracy.pdf>`_.
-
 Error bounds on this page are measured in units in the last place (ULPs), representing the absolute
 difference between a HIP math function result and its corresponding C++ standard library function
 (e.g., comparing HIP's sinf with C++'s sinf).
