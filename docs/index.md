@@ -22,7 +22,6 @@ The HIP documentation is organized into the following categories:
 
 :::{grid-item-card} Programming guide
 
-* [Introduction](./programming_guide)
 * {doc}`./understand/programming_model`
 * {doc}`./understand/hardware_implementation`
 * {doc}`./understand/compilers`

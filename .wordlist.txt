@@ -9,6 +9,7 @@ AXPY
 asm
 Asynchronicity
 Asynchrony
+asynchrony
 backtrace
 bfloat
 Bitcode
@@ -93,7 +94,6 @@ iteratively
 Lapack
 latencies
 libc
-libhipcxx
 libstdc
 lifecycle
 linearizing
@@ -176,6 +176,7 @@ ULP
 ULPs
 unintuitive
 UMM
+uncoalesced
 unmap
 unmapped
 unmapping
