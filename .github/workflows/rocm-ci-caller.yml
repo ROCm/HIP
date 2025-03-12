@@ -1,7 +1,7 @@
 name: ROCm CI Caller
 on:
   pull_request:
-    branches: [amd-staging, amd-npi, release/rocm-rel-*, amd-mainline]
+    branches: [amd-staging, amd-npi-next, release/rocm-rel-*, amd-mainline]
     types: [opened, reopened, synchronize]
   push:
     branches: [amd-mainline]
