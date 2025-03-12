@@ -1,0 +1,15 @@
+name: Rocm Validation Suite KWS
+on:
+  push:
+    branches: [amd-staging]
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+jobs:
+  kws:
+    if: ${{ github.event_name == 'pull_request' }}
+    uses: AMD-ROCm-Internal/rocm_ci_infra/.github/workflows/kws.yml@mainline
+    secrets: inherit
+    with:
+      pr_number: ${{github.event.pull_request.number}}
+      base_branch: ${{github.base_ref}}
