@@ -1,0 +1,24 @@
+name: ROCm CI Caller
+on:
+  pull_request:
+    branches: [amd-staging, amd-npi, release/rocm-rel-*, amd-mainline]
+    types: [opened, reopened, synchronize]
+  push:
+    branches: [amd-mainline]
+  workflow_dispatch:
+  issue_comment:
+    types: [created]
+
+jobs:
+  call-workflow:
+    if: ${{ github.event_name != 'issue_comment' || github.event.comment.body == '!verify' }}
+    uses: AMD-ROCm-Internal/rocm_ci_infra/.github/workflows/rocm_ci.yml@mainline
+    secrets: inherit
+    with:
+      input_sha: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+      input_pr_num: ${{ github.event_name == 'pull_request' && github.event.pull_request.number || 0 }}
+      input_pr_url: ${{ github.event_name == 'pull_request' && github.event.pull_request.html_url || '' }}
+      input_pr_title: ${{ github.event_name == 'pull_request' && github.event.pull_request.title || '' }}
+      repository_name: ${{ github.repository }}
+      base_ref: ${{ github.event_name == 'pull_request' && github.base_ref || github.ref }}
+      trigger_event_type: ${{ github.event_name }}
