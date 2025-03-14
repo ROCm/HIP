@@ -51,6 +51,13 @@ and :doc:`GPU isolation <rocm:conceptual/gpu-isolation>`.
         | 0x80000: Timestamp details.
         | 0xFFFFFFFF: Log always even mask flag is zero.
 
+    * - | ``HIP_FORCE_DEV_KERNARG``
+        | Forces kernel arguments to be stored in device memory to reduce latency.
+        | Can improve performance by 2-3 µs for some kernels.
+      - ``1``
+      - | 0: Disable
+        | 1: Enable
+
     * - | ``HIP_LAUNCH_BLOCKING``
         | Used for serialization on kernel execution.
       - ``0``
