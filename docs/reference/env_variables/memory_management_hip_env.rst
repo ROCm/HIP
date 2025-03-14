@@ -55,6 +55,12 @@ pages:
       - | 0: Disable
         | 1: Enable
 
+    * - | ``GPU_SINGLE_ALLOC_PERCENT``
+        | Limits the maximum size of a single memory allocation as a percentage of GPU memory.
+      - ``100``
+      - | Unit: Percentage
+        | Prevents single allocations from consuming all available GPU memory.
+
     * - | ``GPU_MAX_HEAP_SIZE``
         | Set maximum size of the GPU heap to % of board memory.
       - ``100``
