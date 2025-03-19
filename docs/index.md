@@ -30,6 +30,8 @@ The HIP documentation is organized into the following categories:
 * [Debugging with HIP](./how-to/debugging)
 * {doc}`./how-to/logging`
 * {doc}`./how-to/hip_runtime_api`
+* {doc}`./how-to/hip_cpp_language_extensions`
+* {doc}`./how-to/kernel_language_cpp_support`
 * [HIP porting guide](./how-to/hip_porting_guide)
 * [HIP porting: driver API guide](./how-to/hip_porting_driver_api)
 * {doc}`./how-to/hip_rtc`
@@ -41,11 +43,9 @@ The HIP documentation is organized into the following categories:
 
 * [HIP runtime API](./reference/hip_runtime_api_reference)
 * [HSA runtime API for ROCm](./reference/virtual_rocr)
-* [C++ language extensions](./reference/cpp_language_extensions)
-* [C++ language support](./reference/cpp_language_support)
 * [HIP math API](./reference/math_api)
 * [HIP environment variables](./reference/env_variables)
-* [Comparing syntax for different APIs](./reference/terms)
+* [CUDA to HIP API Function Comparison](./reference/api_syntax)
 * [List of deprecated APIs](./reference/deprecated_api_list)
 * [FP8 numbers in HIP](./reference/fp8_numbers)
 * {doc}`./reference/hardware_features`
@@ -55,8 +55,7 @@ The HIP documentation is organized into the following categories:
 :::{grid-item-card} Tutorial
 
 * [HIP basic examples](https://github.com/ROCm/rocm-examples/tree/develop/HIP-Basic)
-* [HIP examples](https://github.com/ROCm/HIP-Examples)
-* [HIP test samples](https://github.com/ROCm/hip-tests/tree/develop/samples)
+* [HIP examples](https://github.com/ROCm/rocm-examples)
 * [SAXPY tutorial](./tutorial/saxpy)
 * [Reduction tutorial](./tutorial/reduction)
 * [Cooperative groups tutorial](./tutorial/cooperative_groups_tutorial)

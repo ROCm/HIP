@@ -47,7 +47,7 @@ The :doc:`HIP API documentation <doxygen/html/index>` describes each API and
 its limitations, if any, compared with the equivalent CUDA API.
 
 The kernel language features are documented in the
-:doc:`/reference/cpp_language_extensions` page.
+:doc:`/how-to/hip_cpp_language_extensions` page.
 
 Relation to other GPGPU frameworks
 ==================================
@@ -65,39 +65,8 @@ platforms.
 Additional porting might be required to deal with architecture feature
 queries or CUDA capabilities that HIP doesn't support.
 
-How does HIP compare with OpenCL?
----------------------------------
-
-HIP offers several benefits over OpenCL:
-
-* Device code can be written in modern C++, including templates, lambdas,
-  classes and so on.
-* Host and device code can be mixed in the source files.
-* The HIP API is less verbose than OpenCL and is familiar to CUDA developers.
-* Porting from CUDA to HIP is significantly easier than from CUDA to OpenCL.
-* HIP uses development tools specialized for each platform: :doc:`amdclang++ <llvm-project:index>`
-  for AMD GPUs or `nvcc <https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html>`_
-  for NVIDIA GPUs, and profilers like :doc:`ROCm Compute Profiler <rocprofiler-compute:index>` or
-  `Nsight Systems <https://developer.nvidia.com/nsight-systems>`_.
-* HIP provides
-  * pointers and host-side pointer arithmetic.
-  * device-level control over memory allocation and placement.
-  * an offline compilation model.
-
-How does porting CUDA to HIP compare to porting CUDA to OpenCL?
----------------------------------------------------------------
-
-OpenCL differs from HIP and CUDA when considering the host runtime,
-but even more so when considering the kernel code.
-The HIP device code is a C++ dialect, while OpenCL is C99-based.
-OpenCL does not support single-source compilation.
-
-As a result, the OpenCL syntax differs significantly from HIP, and porting tools
-must perform complex transformations, especially regarding templates or other
-C++ features in kernels.
-
-To better understand the syntax differences, see :doc:`here<reference/terms>` or
-the :doc:`HIP porting guide <how-to/hip_porting_guide>`.
+To better understand the syntax differences, see :doc:`CUDA to HIP API Function Comparison <reference/api_syntax>`
+or the :doc:`HIP porting guide <how-to/hip_porting_guide>`.
 
 Can I install CUDA and ROCm on the same machine?
 ------------------------------------------------

@@ -1,5 +1,6 @@
 .*
 !.gitignore
+!.spellcheck.local.yaml
 *.o
 *.exe
 *.swp

@@ -12,6 +12,9 @@ Key features include:
 
 New projects can be developed directly in the portable HIP C++ language and can run on either NVIDIA or AMD platforms.  Additionally, HIP provides porting tools which make it easy to port existing CUDA codes to the HIP layer, with no loss of performance as compared to the original CUDA application.  HIP is not intended to be a drop-in replacement for CUDA, and developers should expect to do some manual coding and performance tuning work to complete the port.
 
+> [!NOTE]
+> The published documentation is available at [HIP documentation](https://rocm.docs.amd.com/projects/HIP/en/latest/index.html) in an organized, easy-to-read format, with search and a table of contents. The documentation source files reside in the `HIP/docs` folder of this GitHub repository. As with all ROCm projects, the documentation is open source. For more information on contributing to the documentation, see [Contribute to ROCm documentation](https://rocm.docs.amd.com/en/latest/contribute/contributing.html).
+
 ## DISCLAIMER
 
 The information presented in this document is for informational purposes only and may contain technical inaccuracies, omissions, and typographical errors. The information contained herein is subject to change and may be rendered inaccurate for many reasons, including but not limited to product and roadmap changes, component and motherboard versionchanges, new model and/or product releases, product differences between differing manufacturers, software changes, BIOS flashes, firmware upgrades, or the like. Any computer system has risks of security vulnerabilities that cannot be completely prevented or mitigated.AMD assumes no obligation to update or otherwise correct or revise this information. However, AMD reserves the right to revise this information and to make changes from time to time to the content hereof without obligation of AMD to notify any person of such revisions or changes.THIS INFORMATION IS PROVIDED ‘AS IS.” AMD MAKES NO REPRESENTATIONS OR WARRANTIES WITH RESPECT TO THE CONTENTS HEREOF AND ASSUMES NO RESPONSIBILITY FOR ANY INACCURACIES, ERRORS, OR OMISSIONS THAT MAY APPEAR IN THIS INFORMATION. AMD SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR ANY PARTICULAR PURPOSE. IN NO EVENT WILL AMD BE LIABLE TO ANY PERSON FOR ANY RELIANCE, DIRECT, INDIRECT, SPECIAL, OR OTHER CONSEQUENTIAL DAMAGES ARISING FROM THE USE OF ANY INFORMATION CONTAINED HEREIN, EVEN IF AMD IS EXPRESSLY ADVISED OF THE POSSIBILITY OF SUCH DAMAGES. AMD, the AMD Arrow logo, and combinations thereof are trademarks of Advanced Micro Devices, Inc. Other product names used in this publication are for identification purposes only and may be trademarks of their respective companies.
@@ -39,8 +42,8 @@ HIP releases are typically naming convention for each ROCM release to help diffe
 * [HIP FAQ](docs/faq.rst)
 * [HIP C++ Language Extensions](docs/reference/cpp_language_extensions.rst)
 * [HIP Porting Guide](docs/how-to/hip_porting_guide.md)
-* [HIP Porting Driver Guide](docs/how-to/hip_porting_driver_api.md)
-* [HIP Programming Guide](docs/how-to/programming_manual.md)
+* [HIP Porting Driver Guide](docs/how-to/hip_porting_driver_api.rst)
+* [HIP Programming Guide](docs/programming_guide.rst)
 * [HIP Logging](docs/how-to/logging.rst)
 * [Building HIP From Source](docs/install/build.rst)
 * [HIP Debugging](docs/how-to/debugging.rst)
@@ -48,15 +51,15 @@ HIP releases are typically naming convention for each ROCM release to help diffe
 * [HIP Terminology](docs/reference/terms.md) (including Rosetta Stone of GPU computing terms across CUDA/HIP/OpenCL)
 * [HIPIFY](https://github.com/ROCm/HIPIFY/blob/amd-staging/README.md)
 * Supported CUDA APIs:
-  * [Runtime API](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/tables/CUDA_Runtime_API_functions_supported_by_HIP.md)
-  * [Driver API](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/tables/CUDA_Driver_API_functions_supported_by_HIP.md)
-  * [cuComplex API](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/tables/cuComplex_API_supported_by_HIP.md)
-  * [Device API](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/tables/CUDA_Device_API_supported_by_HIP.md)
-  * [cuBLAS](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/tables/CUBLAS_API_supported_by_ROC.md)
-  * [cuRAND](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/tables/CURAND_API_supported_by_HIP.md)
-  * [cuDNN](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/tables/CUDNN_API_supported_by_HIP.md)
-  * [cuFFT](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/tables/CUFFT_API_supported_by_HIP.md)
-  * [cuSPARSE](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/tables/CUSPARSE_API_supported_by_HIP.md)
+  * [Runtime API](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/reference/tables/CUDA_Runtime_API_functions_supported_by_HIP.md)
+  * [Driver API](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/reference/tables/CUDA_Driver_API_functions_supported_by_HIP.md)
+  * [cuComplex API](https://github.com/ROCm/HIPIFY/blob/amd-staging/reference/docs/tables/cuComplex_API_supported_by_HIP.md)
+  * [Device API](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/reference/tables/CUDA_Device_API_supported_by_HIP.md)
+  * [cuBLAS](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/reference/tables/CUBLAS_API_supported_by_ROC.md)
+  * [cuRAND](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/reference/tables/CURAND_API_supported_by_HIP.md)
+  * [cuDNN](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/reference/tables/CUDNN_API_supported_by_HIP.md)
+  * [cuFFT](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/reference/tables/CUFFT_API_supported_by_HIP.md)
+  * [cuSPARSE](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/reference/tables/CUSPARSE_API_supported_by_HIP.md)
 * [Developer/CONTRIBUTING Info](CONTRIBUTING.md)
 * [Release Notes](RELEASE.md)
 
@@ -124,19 +127,9 @@ provides source portability to either platform.   HIP provides the _hipcc_ compi
 
 ## Examples and Getting Started
 
-* A sample and [blog](https://github.com/ROCm/hip-tests/tree/develop/samples/0_Intro/square) that uses any of [HIPIFY](https://github.com/ROCm/HIPIFY/blob/amd-staging/README.md) tools to convert a simple app from CUDA to HIP:
+* The [ROCm-examples](https://github.com/ROCm/rocm-examples) repository includes many examples with explanations that help users getting started with HIP, as well as providing advanced examples for HIP and its libraries.
 
-  ```shell
-  cd samples/01_Intro/square
-  # follow README / blog steps to hipify the application.
-  ```
-
-* Guide to [Porting a New Cuda Project](https://rocm.docs.amd.com/projects/HIP/en/latest/how-to/hip_porting_guide.html#porting-a-new-cuda-project)
-
-## More Examples
-
-The GitHub repository [HIP-Examples](https://github.com/ROCm/HIP-Examples) contains a hipified version of benchmark suite.
-Besides, there are more samples in Github [HIP samples](https://github.com/ROCm/hip-tests/tree/develop/samples), showing how to program with different features, build and run.
+* HIP's documentation includes a guide for [Porting a New Cuda Project](https://rocm.docs.amd.com/projects/HIP/en/latest/how-to/hip_porting_guide.html#porting-a-new-cuda-project).
 
 ## Tour of the HIP Directories
 

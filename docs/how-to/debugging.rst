@@ -273,7 +273,8 @@ HIP environment variable summary
 
 Here are some of the more commonly used environment variables:
 
-.. include:: ../how-to/debugging_env.rst
+.. include-table:: data/env_variables_hip.rst
+    :table: hip-env-debug
 
 General debugging tips
 ======================================================

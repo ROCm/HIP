@@ -6,3 +6,4 @@
 /doxygen/html
 /doxygen/xml
 /sphinx/_toc.yml
+__pycache__

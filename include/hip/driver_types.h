@@ -401,7 +401,7 @@ typedef struct hipExtent {
     size_t depth;
 }hipExtent;
 /**
- *  HIP position   
+ *  HIP position
  */
 typedef struct hipPos {
     size_t x; ///< X coordinate

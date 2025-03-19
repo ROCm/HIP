@@ -111,8 +111,7 @@ allocator can be used.
 ❌: **Unsupported**
 
 :sup:`1` Works only with ``HSA_XNACK=1`` and kernels with HMM support. First GPU
-access causes recoverable page-fault. For more details, visit `GPU memory
-<https://rocm.docs.amd.com/en/latest/conceptual/gpu-memory.html#xnack>`_.
+access causes recoverable page-fault.
 
 .. _unified memory allocators:
 
@@ -144,8 +143,7 @@ GPUs, it is essential to set the environment variable ``HSA_XNACK=1`` and use
 a GPU kernel mode driver that supports HMM
 <https://www.kernel.org/doc/html/latest/mm/hmm.html>`_. Without this
 configuration, the behavior will be similar to that of systems without HMM
-support. For more details, visit
-`GPU memory <https://rocm.docs.amd.com/en/latest/conceptual/gpu-memory.html#xnack>`_.
+support.
 
 The table below illustrates the expected behavior of managed and unified memory
 functions on ROCm and CUDA, both with and without HMM support.

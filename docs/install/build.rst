@@ -238,4 +238,4 @@ Run HIP
 =================================================
 
 After installation and building HIP, you can compile your application and run.
-A simple example is `square sample <https://github.com/ROCm/hip-tests/tree/develop/samples/0_Intro/square>`_.
+Simple examples can be found in the `ROCm-examples repository <https://github.com/ROCm/rocm-examples>`_.

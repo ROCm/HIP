@@ -1,6 +1,6 @@
 .. meta::
-  :description: This chapter lists types and device API wrappers related to the 
-                Cooperative Group feature. Programmers can directly use these 
+  :description: This chapter lists types and device API wrappers related to the
+                Cooperative Group feature. Programmers can directly use these
                 API features in their kernels.
   :keywords: AMD, ROCm, HIP, cooperative groups
 
@@ -42,7 +42,7 @@ The following cooperative groups classes can be used on the device side.
 
 .. doxygenclass:: cooperative_groups::multi_grid_group
    :members:
- 
+
 .. _thread_block_tile_ref:
 
 .. doxygenclass:: cooperative_groups::thread_block_tile
