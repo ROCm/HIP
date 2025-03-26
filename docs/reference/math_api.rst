@@ -1483,7 +1483,7 @@ since they only apply to floating-point operations, not integer arithmetic.
         | Returns the position of the first set bit in a 64 bit signed integer.
         | Note: if ``x`` is ``0``, will return ``0``
 
-    * - | ``unsigned int __fns32(unsigned long long mask, unsigned int base, int offset)``
+    * - | ``unsigned int __fns32(unsigned int mask, unsigned int base, int offset)``
         | Find the position of the n-th set to 1 bit in a 32-bit integer.
         | Note: this intrinsic is emulated via software, so performance can be potentially slower
 
