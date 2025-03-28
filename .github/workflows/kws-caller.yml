@@ -1,7 +1,7 @@
 name: Rocm Validation Suite KWS
 on:
   push:
-    branches: [amd-staging]
+    branches: [amd-staging, amd-mainline]
   pull_request:
     types: [opened, synchronize, reopened]
   workflow_dispatch:
