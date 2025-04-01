@@ -12,7 +12,7 @@ on:
 jobs:  
   call-workflow:  
     if: github.event_name != 'issue_comment' ||(github.event_name == 'issue_comment' && github.event.issue.pull_request && (startsWith(github.event.comment.body, '!verify') || startsWith(github.event.comment.body, '!linux-hip-psdb') || startsWith(github.event.comment.body, '!verify release') || startsWith(github.event.comment.body, '!verify retest')))  
-    uses: AMD-ROCm-Internal/rocm_ci_infra/.github/workflows/rocm_ci.yml@verifyfunc
+    uses: AMD-ROCm-Internal/rocm_ci_infra/.github/workflows/rocm_ci.yml@mainline
     secrets: inherit  
     with:  
       input_sha: ${{github.event_name == 'pull_request' && github.event.pull_request.head.sha || (github.event_name == 'push' && github.sha) || (github.event_name == 'issue_comment' && github.event.issue.pull_request.head.sha) || github.sha}}  
