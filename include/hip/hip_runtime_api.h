@@ -1150,9 +1150,9 @@ typedef struct hipMemPoolPtrExportData {
  * @warning On AMD devices and some Nvidia devices, these hints and controls are ignored.
  */
 typedef enum hipFuncAttribute {
-    hipFuncAttributeMaxDynamicSharedMemorySize = 8,
-    hipFuncAttributePreferredSharedMemoryCarveout = 9,
-    hipFuncAttributeMax
+  hipFuncAttributeMaxDynamicSharedMemorySize = 8,          ///< The maximum number of bytes requested for dynamically allocated shared memory
+  hipFuncAttributePreferredSharedMemoryCarveout = 9,       ///< Sets the percentage of total shared memory allocated as the shared memory carveout
+  hipFuncAttributeMax
 } hipFuncAttribute;
 /**
  * @warning On AMD devices and some Nvidia devices, these hints and controls are ignored.
@@ -1429,20 +1429,21 @@ typedef struct hipAccessPolicyWindow {
  *  Launch Attribute ID
  */
 typedef enum hipLaunchAttributeID {
-    hipLaunchAttributeAccessPolicyWindow = 1, /**< Valid for Streams, graph nodes, launches*/
-    hipLaunchAttributeCooperative = 2, /**< Valid for graph nodes, launches */
-    hipLaunchAttributePriority = 8, /**< Valid for graph node, streams, launches */
+  hipLaunchAttributeAccessPolicyWindow = 1,                ///< Valid for Streams, graph nodes, launches
+  hipLaunchAttributeCooperative = 2,                       ///< Valid for graph nodes, launches
+  hipLaunchAttributePriority = 8,                          ///< Valid for graph node, streams, launches
+  hipLaunchAttributeMax
 } hipLaunchAttributeID;
+
 
 /**
  *  Launch Attribute Value
  */
 typedef union hipLaunchAttributeValue {
-    hipAccessPolicyWindow accessPolicyWindow; /**< Value of launch attribute::
-                          hipLaunchAttributePolicyWindow. */
-    int cooperative; /**< Value of launch attribute ::hipLaunchAttributeCooperative */
-    int priority; /**< Value of launch attribute :: hipLaunchAttributePriority. Execution
-                      priority of kernel. */
+    char pad[64];                              ///< 64 byte padding
+    hipAccessPolicyWindow accessPolicyWindow;  ///< Value of launch attribute ::hipLaunchAttributePolicyWindow.
+    int cooperative;                           ///< Value of launch attribute ::hipLaunchAttributeCooperative. Indicates whether the kernel is cooperative.
+    int priority;                              ///< Value of launch attribute :: hipLaunchAttributePriority. Execution priority of kernel
 } hipLaunchAttributeValue;
 
 /**
@@ -1790,6 +1791,47 @@ typedef struct hipGraphEdgeData {
       to_port;  ///< Currently no node types define non-zero ports. This field must be set to zero.
   unsigned char type;  ///< This should be populated with a value from hipGraphDependencyType
 } hipGraphEdgeData;
+
+
+/**
+ * Used to specify custom attributes for launching kernels
+ */
+typedef struct hipLaunchAttribute_st {
+  hipLaunchAttributeID id;                        ///< Identifier of the launch attribute
+  char pad[8 - sizeof(hipLaunchAttributeID)];     ///< Padding to align the structure to 8 bytes
+  union {
+    hipLaunchAttributeValue val;                  ///< Value associated with the launch attribute
+    hipLaunchAttributeValue value;                ///< Value associated with the launch attribute
+  };
+} hipLaunchAttribute;
+
+/**
+ * HIP extensible launch configuration
+ */
+typedef struct hipLaunchConfig_st {
+  dim3 gridDim;              ///< Grid dimensions
+  dim3 blockDim;             ///< Block dimensions
+  size_t dynamicSmemBytes;   ///< Dynamic shared-memory size per thread block
+  hipStream_t stream;        ///< Stream identifier
+  hipLaunchAttribute* attrs; ///< Attributes list
+  unsigned int numAttrs;     ///< Number of attributes
+} hipLaunchConfig_t;
+
+/**
+ * HIP driver extensible launch configuration
+ */
+typedef struct HIP_LAUNCH_CONFIG_st {
+  unsigned int gridDimX;        ///< Grid width in blocks
+  unsigned int gridDimY;        ///< Grid height in blocks
+  unsigned int gridDimZ;        ///< Grid depth in blocks
+  unsigned int blockDimX;       ///< Thread block dimension in X
+  unsigned int blockDimY;       ///< Thread block dimension in Y
+  unsigned int blockDimZ;       ///< Thread block dimension in Z
+  unsigned int sharedMemBytes;  ///< Dynamic shared-memory size in bytes per block
+  hipStream_t hStream;          ///< HIP stream identifier
+  hipLaunchAttribute* attrs;    ///< Attribute list
+  unsigned int numAttrs;        ///< Number of attributes
+} HIP_LAUNCH_CONFIG;
 
 // Doxygen end group GlobalDefs
 /**
@@ -6111,6 +6153,37 @@ hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsLi
  */
 hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
                                               int  numDevices, unsigned int  flags);
+/**
+ * @brief Launches a HIP kernel using a generic function pointer and the specified configuration.
+ * @ingroup Execution
+ *
+ * This function is equivalent to hipLaunchKernelEx but accepts the kernel as a generic function
+ * pointer.
+ *
+ * @param [in] config                 Pointer to the kernel launch configuration structure.
+ * @param [in] fPtr                   Pointer to the device kernel function.
+ * @param [in] args                   Array of pointers to the kernel arguments.
+ *
+ * @returns #hipSuccess if the kernel is launched successfully, otherwise an appropriate error code.
+ */
+hipError_t hipLaunchKernelExC(const hipLaunchConfig_t* config, const void* fPtr, void** args);
+/**
+ * @brief Launches a HIP kernel using the driver API with the specified configuration.
+ * @ingroup Execution
+ *
+ * This function dispatches the device kernel represented by a HIP function object.
+ * It passes both the kernel parameters and any extra configuration arguments to the kernel launch.
+ *
+ * @param [in] config  Pointer to the kernel launch configuration structure.
+ * @param [in] f       HIP function object representing the device kernel to be launched.
+ * @param [in] params  Array of pointers to the kernel parameters.
+ * @param [in] extra   Array of pointers for additional launch parameters or extra configuration
+ * data.
+ *
+ * @returns #hipSuccess if the kernel is launched successfully, otherwise an appropriate error code.
+ */
+hipError_t hipDrvLaunchKernelEx(const HIP_LAUNCH_CONFIG* config, hipFunction_t f, void** params,
+                                void** extra);
 // doxygen end Module
 /**
  * @}
