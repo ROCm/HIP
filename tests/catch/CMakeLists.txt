@@ -151,9 +151,9 @@ if(HIP_PLATFORM MATCHES "amd" AND HIP_COMPILER MATCHES "clang")
 endif()
 
 cmake_policy(PUSH)
-if(POLICY CMP0037)
-    cmake_policy(SET CMP0037 OLD)
-endif()
+# if(POLICY CMP0037)
+#     cmake_policy(SET CMP0037 OLD)
+# endif()
 
 # Turn off CMAKE_HIP_ARCHITECTURES Feature if cmake version is 3.21+
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.21.0)
