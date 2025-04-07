@@ -9806,6 +9806,28 @@ static inline hipError_t hipMallocFromPoolAsync(
   return hipMallocFromPoolAsync(reinterpret_cast<void**>(dev_ptr), size, mem_pool, stream);
 }
 /**
+ * @brief Launches a HIP kernel using the specified configuration.
+ * @ingroup Execution
+ *
+ * This function dispatches the provided kernel with the given launch configuration and forwards the
+ * kernel arguments.
+ *
+ * @param [in] config                 Pointer to the kernel launch configuration structure.
+ * @param [in] kernel                 Pointer to the device kernel function to be launched.
+ * @param [in] args                   Variadic list of arguments to be passed to the kernel.
+ *
+ * @returns #hipSuccess if the kernel is launched successfully, otherwise an appropriate error code.
+ */
+template <typename... KernelArgs, typename... Params>
+static inline __host__ hipError_t hipLaunchKernelEx(const hipLaunchConfig_t* config,
+                                                    void (*kernel)(KernelArgs...),
+                                                    Params&&... args) {
+  return [&](KernelArgs... convertedArgs) {
+    void* pArgs[] = {&convertedArgs...};
+    return ::hipLaunchKernelExC(config, reinterpret_cast<void*>(kernel), pArgs);
+  }(std::forward<Params>(args)...);
+}
+/**
 * @}
 */
 
