@@ -160,13 +160,13 @@ page.
         - 3
         - 3
       *
-        - Maximum x-, y- or z-dimension of a grid
-        - :math:`2^{32} - 1`
-        - :math:`2^{32} - 1`
-        - :math:`2^{32} - 1`
-        - :math:`2^{32} - 1`
-        - :math:`2^{32} - 1`
-        - :math:`2^{32} - 1`
+        - Maximum x-, y- and z-dimension of a grid
+        - x - :math:`2^{32}-1` y - :math:`2^{16}-1` z - :math:`2^{16}-1`
+        - x - :math:`2^{32}-1` y - :math:`2^{16}-1` z - :math:`2^{16}-1`
+        - x - :math:`2^{32}-1` y - :math:`2^{16}-1` z - :math:`2^{16}-1`
+        - x - :math:`2^{32}-1` y - :math:`2^{16}-1` z - :math:`2^{16}-1`
+        - x - :math:`2^{32}-1` y - :math:`2^{16}-1` z - :math:`2^{16}-1`
+        - x - :math:`2^{32}-1` y - :math:`2^{16}-1` z - :math:`2^{16}-1`
       *
         - Maximum number of threads per grid
         - :math:`2^{32} - 1`
@@ -176,7 +176,7 @@ page.
         - :math:`2^{32} - 1`
         - :math:`2^{32} - 1`
       *
-        - Maximum x-, y- or z-dimension of a block
+        - Maximum x-, y- and z-dimension of a block
         - :math:`1024`
         - :math:`1024`
         - :math:`1024`
