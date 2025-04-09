@@ -5939,7 +5939,7 @@ hipError_t hipModuleLoadData(hipModule_t* module, const void* image);
 hipError_t hipModuleLoadDataEx(hipModule_t* module, const void* image, unsigned int numOptions,
                                hipJitOption* options, void** optionValues);
 /**
- * @brief Completes the linking of the given program.
+ * @brief Adds bitcode data to be linked with options.
  * @param [in] state hip link state
  * @param [in] type  Type of the input data or bitcode
  * @param [in] data  Input data which is null terminated
@@ -5961,7 +5961,7 @@ hipError_t hipLinkAddData(hipLinkState_t state, hipJitInputType type, void* data
                                 void** optionValues);
 
 /**
- * @brief Adds a file with bit code to be linked with options
+ * @brief Adds a file with bitcode to be linked with options.
  * @param [in] state hip link state
  * @param [in] type  Type of the input data or bitcode
  * @param [in] path  Path to the input file where bitcode is present
@@ -5996,7 +5996,7 @@ hipError_t hipLinkAddFile(hipLinkState_t state, hipJitInputType type, const char
 hipError_t hipLinkComplete(hipLinkState_t state, void** hipBinOut, size_t* sizeOut);
 
 /**
- * @brief Creates the link instance via hip APIs.
+ * @brief Creates a linker instance with options.
  * @param [in] numOptions  Number of options
  * @param [in] option  Array of options
  * @param [in] optionValues  Array of option values cast to void*
@@ -6009,7 +6009,7 @@ hipError_t hipLinkComplete(hipLinkState_t state, void** hipBinOut, size_t* sizeO
 hipError_t hipLinkCreate(unsigned int numOptions, hipJitOption* options,
                             void** optionValues, hipLinkState_t* stateOut);
 /**
- * @brief Deletes the link instance via hip APIs.
+ * @brief Deletes the linker instance.
  * @param [in] state link state instance
  *
  * @returns #hipSuccess #hipErrorInvalidValue
