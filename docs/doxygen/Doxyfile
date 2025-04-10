@@ -834,7 +834,8 @@ INPUT                  = ../../include/hip \
                          ../../../clr/hipamd/include/hip/amd_detail/amd_hip_gl_interop.h \
                          ../../../clr/hipamd/include/hip/amd_detail/amd_surface_functions.h \
                          ../../../clr/hipamd/include/hip/amd_detail/amd_hip_cooperative_groups.h \
-                         ../../../ROCR-Runtime/src/inc/hsa_ext_amd.h
+                         ../../../ROCR-Runtime/runtime/hsa-runtime/inc/hsa_ext_amd.h
+                         # ../../../ROCR-Runtime/src/inc/hsa_ext_amd.h
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses
@@ -2210,7 +2211,8 @@ PREDEFINED             = "__HIP_PLATFORM_AMD__" \
                          "HIP_PUBLIC_API" \
                          "HIP_ENABLE_WARP_SYNC_BUILTINS" \
                          "__HOST_DEVICE__" \
-                         "__forceinline__"
+                         "__forceinline__" \
+                         "__HIP_NODISCARD=[[nodiscard]]"
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The

@@ -262,7 +262,9 @@ For example, when the control condition depends on ``threadIdx`` or ``warpSize``
 warp doesn't diverge. The compiler might optimize loops, short ifs, or switch
 blocks using branch predication, which prevents warp divergence. With branch
 predication, instructions associated with a false predicate are scheduled but
-not executed, which avoids unnecessary operations.
+not executed, which avoids unnecessary operations. For control conditions where
+one outcome is significantly more likely than the other, use `__builtin_expect <https://clang.llvm.org/docs/LanguageExtensions.html#builtin-expect>`_
+or ``[[likely]]`` to indicate the likely condition result.
 
 Avoiding divergent warps
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
