@@ -240,10 +240,12 @@ page.
         - 106
         - 104
 
-.. [1] RDNA architectures have a configurable wavefront size. The native
-   wavefront size is 32, but they can run in "CU mode", which has an effective
-   wavefront size of 64. This affects the number of resident wavefronts and
-   blocks per compute Unit.
+.. [1] The RDNA architectures feature an experimental compiler option called 
+   ``mwavefrontsize64``, which determines the wavefront size for kernel code
+   generation. When this option is disabled, the native wavefront size of 32 is
+   used, when enabled wavefront size 64 is used. This option is not supported by
+   the HIP runtime.
+
 .. [2] RDNA architectures expand the concept of the traditional compute unit
    with the so-called work group processor, which effectively includes two
    compute units, within which all threads can cooperate.

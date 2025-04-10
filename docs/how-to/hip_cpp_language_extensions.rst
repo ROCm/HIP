@@ -411,9 +411,7 @@ warpSize
 ================================================================================
 
 The ``warpSize`` constant contains the number of threads per warp for the given
-target device. It can differ between different architectures, and on RDNA
-architectures it can even differ between kernel launches, depending on whether
-they run in CU or WGP mode. See the
+target device. It can differ between different architectures, see the
 :doc:`hardware features <../reference/hardware_features>` for more
 information.
 
