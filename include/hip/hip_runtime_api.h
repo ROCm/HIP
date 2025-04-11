@@ -4338,7 +4338,7 @@ hipError_t hipHostFree(void* ptr);
  *  For multi-gpu or peer-to-peer configurations, it is recommended to set the current device to the
  *  device where the src data is physically located. For optimal peer-to-peer copies, the copy device
  *  must be able to access the src and dst pointers (by calling hipDeviceEnablePeerAccess with copy
- *  agent as the current device and src/dest as the peerDevice argument.  if this is not done, the
+ *  agent as the current device and src/dst as the peerDevice argument.  if this is not done, the
  *  hipMemcpy will still work, but will perform the copy using a staging buffer on the host.
  *  Calling hipMemcpy with dst and src pointers that do not match the hipMemcpyKind results in
  *  undefined behavior.
@@ -4729,20 +4729,19 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbol,
                                     hipMemcpyKind kind,
                                     hipStream_t stream __dparm(0));
 /**
- *  @brief Copy data from src to dst asynchronously.
+ *  @brief Copies data from src to dst asynchronously.
  *
- *  @warning If host or dest are not pinned, the memory copy will be performed synchronously.  For
+ *  The copy is always performed by the device associated with the specified stream.
+ *
+ *  For multi-gpu or peer-to-peer configurations, it is recommended to use a stream which is
+ * attached to the device where the src data is physically located.
+ *  For optimal peer-to-peer copies, the copy device must be able to access the src and dst
+ * pointers (by calling hipDeviceEnablePeerAccess) with copy agent as the current device and
+ * src/dest as the peerDevice argument. If enabling device peer access is not done, the memory copy
+ * will still work, but will perform the copy using a staging buffer on the host.
+ *
+ *  @note If host or dst are not pinned, the memory copy will be performed synchronously. For
  * best performance, use hipHostMalloc to allocate host memory that is transferred asynchronously.
- *
- *  @warning on HCC hipMemcpyAsync does not support overlapped H2D and D2H copies.
- *  For hipMemcpy, the copy is always performed by the device associated with the specified stream.
- *
- *  For multi-gpu or peer-to-peer configurations, it is recommended to use a stream which is a
- * attached to the device where the src data is physically located. For optimal peer-to-peer copies,
- * the copy device must be able to access the src and dst pointers (by calling
- * hipDeviceEnablePeerAccess with copy agent as the current device and src/dest as the peerDevice
- * argument.  if this is not done, the hipMemcpy will still work, but will perform the copy using a
- * staging buffer on the host.
  *
  *  @param[out] dst Data being copy to
  *  @param[in]  src Data being copy from
@@ -4867,11 +4866,11 @@ hipError_t hipMemsetD32Async(hipDeviceptr_t dst, int value, size_t count,
 /**
  *  @brief Fills the memory area pointed to by dst with the constant value.
  *
- *  @param[out] dst Pointer to device memory
- *  @param[in]  pitch  Data size in bytes
- *  @param[in]  value  Constant value to be set
- *  @param[in]  width
- *  @param[in]  height
+ *  @param[out] dst Pointer to 2D device memory
+ *  @param[in]  pitch  Pitch size in bytes of 2D device memory, unused if height equals 1
+ *  @param[in]  value  Constant value to set for each byte of specified memory
+ *  @param[in]  width  Width size in bytes in 2D memory
+ *  @param[in]  height  Height size in bytes in 2D memory
  *  @returns #hipSuccess, #hipErrorInvalidValue
  */
 hipError_t hipMemset2D(void* dst, size_t pitch, int value, size_t width, size_t height);
@@ -4879,10 +4878,10 @@ hipError_t hipMemset2D(void* dst, size_t pitch, int value, size_t width, size_t 
  *  @brief Fills asynchronously the memory area pointed to by dst with the constant value.
  *
  *  @param[in]  dst Pointer to 2D device memory
- *  @param[in]  pitch  Pitch size in bytes
- *  @param[in]  value  Value to be set for each byte of specified memory
- *  @param[in]  width  Width of matrix set columns in bytes
- *  @param[in]  height  Height of matrix set rows in bytes
+ *  @param[in]  pitch  Pitch size in bytes of 2D device memory, unused if height equals 1
+ *  @param[in]  value  Value to set for each byte of specified memory
+ *  @param[in]  width  Width size in bytes in 2D memory
+ *  @param[in]  height  Height size in bytes in 2D memory
  *  @param[in]  stream  Stream identifier
  *  @returns #hipSuccess, #hipErrorInvalidValue
  */
@@ -5068,12 +5067,30 @@ hipError_t hipArray3DGetDescriptor(HIP_ARRAY3D_DESCRIPTOR* pArrayDescriptor, hip
 /**
  *  @brief Copies data between host and device.
  *
+ * hipMemcpy2D supports memory matrix copy from the pointed area src to the pointed area dst.
+ * The copy direction is defined by kind which must be one of #hipMemcpyHostToDevice,
+ * #hipMemcpyHostToDevice, #hipMemcpyDeviceToHost #hipMemcpyDeviceToDevice or #hipMemcpyDefault.
+ * Device to Device copies don't need to wait for host synchronization.
+ * The copy is executed on the default null tream. The src and dst must not overlap.
+ * dpitch and spitch are the widths in bytes in memory matrix, width cannot exceed dpitch or
+ * spitch.
+ *
+ * For hipMemcpy2D, the copy is always performed by the current device (set by hipSetDevice).
+ * For multi-gpu or peer-to-peer configurations, it is recommended to set the current device to the
+ * device where the src data is physically located. For optimal peer-to-peer copies, the copy device
+ * must be able to access the src and dst pointers (by calling hipDeviceEnablePeerAccess with copy
+ * agent as the current device and src/dst as the peerDevice argument.  if this is not done, the
+ * hipMemcpy2D will still work, but will perform the copy using a staging buffer on the host.
+ *
+ *  @warning  Calling hipMemcpy2D with dst and src pointers that do not match the hipMemcpyKind results in
+ * undefined behavior.
+ *
  *  @param[in]   dst    Destination memory address
- *  @param[in]   dpitch Pitch of destination memory
+ *  @param[in]   dpitch Pitch size in bytes of destination memory
  *  @param[in]   src    Source memory address
- *  @param[in]   spitch Pitch of source memory
- *  @param[in]   width  Width of matrix transfer (columns in bytes)
- *  @param[in]   height Height of matrix transfer (rows)
+ *  @param[in]   spitch Pitch size in bytes of source memory
+ *  @param[in]   width  Width size in bytes of matrix transfer (columns)
+ *  @param[in]   height Height size in bytes of matrix transfer (rows)
  *  @param[in]   kind   Type of transfer
  *  @returns     #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
  * #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
@@ -5105,12 +5122,35 @@ hipError_t hipMemcpyParam2D(const hip_Memcpy2D* pCopy);
 */
 hipError_t hipMemcpyParam2DAsync(const hip_Memcpy2D* pCopy, hipStream_t stream __dparm(0));
 /**
- *  @brief Copies data between host and device.
+ *  @brief Copies data between host and device asynchronously.
  *
- *  @param[in]   dst    Destination memory address
- *  @param[in]   dpitch Pitch of destination memory
- *  @param[in]   src    Source memory address
- *  @param[in]   spitch Pitch of source memory
+ *  hipMemcpy2DAsync supports memory matrix copy from the pointed area src to the pointed area dst.
+ * The copy direction is defined by kind which must be one of #hipMemcpyHostToDevice,
+ * #hipMemcpyDeviceToHost, #hipMemcpyDeviceToDevice or #hipMemcpyDefault.
+ * dpitch and spitch are the widths in bytes for memory matrix corresponds to dst and src.
+ * width cannot exceed dpitch or spitch.
+ *
+ * The copy is always performed by the device associated with the specified stream.
+ * The API is asynchronous with respect to the host, so the call may return before the copy is
+ * complete. The copy can optionally be excuted in a specific stream by passing a non-zero stream
+ * argument, for HostToDevice or DeviceToHost copies, the copy can overlap with operations
+ * in other streams.
+ *
+ * For multi-gpu or peer-to-peer configurations, it is recommended to use a stream which is
+ * attached to the device where the src data is physically located.
+ *
+ * For optimal peer-to-peer copies, the copy device must be able to access the src and dst pointers
+ * (by calling hipDeviceEnablePeerAccess) with copy agent as the current device and src/dst as the
+ * peerDevice argument. If enabling device peer access is not done, the API will still work, but
+ * will perform the copy using a staging buffer on the host.
+ *
+ *  @note If host or dst are not pinned, the memory copy will be performed synchronously.  For
+ * best performance, use hipHostMalloc to allocate host memory that is transferred asynchronously.
+ *
+ *  @param[in]   dst    Pointer to destination memory address
+ *  @param[in]   dpitch Pitch size in bytes of destination memory
+ *  @param[in]   src    Pointer to source memory address
+ *  @param[in]   spitch Pitch size in bytes of source memory
  *  @param[in]   width  Width of matrix transfer (columns in bytes)
  *  @param[in]   height Height of matrix transfer (rows)
  *  @param[in]   kind   Type of transfer
