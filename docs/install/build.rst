@@ -238,4 +238,5 @@ Run HIP
 =================================================
 
 After installation and building HIP, you can compile your application and run.
-Simple examples can be found in the `ROCm-examples repository <https://github.com/ROCm/rocm-examples>`_.
+A simple SAXPY example can be found in the `ROCm-examples repository <https://github.com/ROCm/rocm-examples/tree/amd-staging/HIP-Basic/saxpy>`_
+and the guide on how to build and run it is in the :doc:`SAXPY tutorial <../tutorial/saxpy>`
