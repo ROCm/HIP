@@ -1460,6 +1460,15 @@ typedef union hipLaunchAttributeValue {
 #define hipKernelNodeAttrValue hipLaunchAttributeValue
 
 /**
+ * hip Drv attributes
+ */
+#define hipDrvLaunchAttributeCooperative  hipLaunchAttributeCooperative
+
+#define hipDrvLaunchAttributeID hipLaunchAttributeID
+#define hipDrvLaunchAttributeValue hipLaunchAttributeValue
+#define hipDrvLaunchAttribute hipLaunchAttribute
+
+/**
  * Memset node params
  */
 typedef struct HIP_MEMSET_NODE_PARAMS {
