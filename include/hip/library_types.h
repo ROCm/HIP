@@ -60,9 +60,13 @@ typedef enum hipDataType {
   HIP_C_64U   = 27,
   HIP_R_8F_E4M3 = 28,
   HIP_R_8F_E5M2 = 29,
+  HIP_R_8F_UE8M0 = 30,
+  HIP_R_6F_E2M3  = 31,
+  HIP_R_6F_E3M2  = 32,
+  HIP_R_4F_E2M1  = 33,
   // HIP specific Data Types
   HIP_R_8F_E4M3_FNUZ = 1000,
-  HIP_R_8F_E5M2_FNUZ = 1001
+  HIP_R_8F_E5M2_FNUZ = 1001,
 } hipDataType;
 
 typedef enum hipLibraryPropertyType {
