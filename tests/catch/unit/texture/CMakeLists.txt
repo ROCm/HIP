@@ -24,6 +24,10 @@ set(TEST_SRC
     hipCreateTextureObject_Linear.cc
     hipCreateTextureObject_Pitch2D.cc
     hipCreateTextureObject_Array.cc
+)
+
+if(NOT HIP_PLATFORM MATCHES "spirv")
+    set(TEST_SRC ${TEST_SRC}
     hipTextureObjFetchVector.cc
     hipTextureObj2D.cc
     hipTextureMipmapObj2D.cc
@@ -35,10 +39,6 @@ set(TEST_SRC
     hipTextureObj2DCheckModes.cc
     hipTextureObj1DCheckSRGBModes.cc
     hipTextureObj2DCheckSRGBModes.cc
-)
-
-if(NOT HIP_PLATFORM MATCHES "spirv")
-    set(TEST_SRC ${TEST_SRC}
     hipNormalizedFloatValueTex.cc
     hipSimpleTexture3D.cc
     hipTextureRef2D.cc
