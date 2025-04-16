@@ -664,8 +664,17 @@ enum hipLimit_t {
                                     ///< device. Currently not supported
     hipLimitMallocHeapSize = 0x02,  ///< Limit of heap size in bytes on the current device, should
                                     ///< be less than the global memory size on the device
+    hipExtLimitScratchMin = 0x1000, ///< Minimum allowed value in bytes for scratch limit on this
+                                    ///< device. Valid only on Rocm device. This is read only.
+    hipExtLimitScratchMax = 0x1001, ///< Maximum allowed value in bytes for scratch limit on this
+                                    ///< device. Valid only on Rocm device. This is read only.
+    hipExtLimitScratchCurrent = 0x1002, ///< Current scratch limit threshold in bytes on this
+                                        ///< device. Must be between hipExtLimitScratchMin and
+                                        ///< hipExtLimitScratchMaxValid values. Valid only on Rocm
+                                        ///< device. This can be modified.
     hipLimitRange                   ///< Supported limit range
 };
+
 /**
  * Flags that can be used with hipStreamCreateWithFlags.
  */
