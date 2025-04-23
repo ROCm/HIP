@@ -1,0 +1,6 @@
+disabled: false
+scmId: gh-emu-rocm
+branchesToScan:
+  - amd-staging
+  - amd-mainline
+jenkinsUrl: https://palamidajenkinsvm.amd.com/job/palamida/job/pci/job/ScanInitiatorGitHub
