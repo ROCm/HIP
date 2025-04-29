@@ -180,6 +180,11 @@ Set the repository branch using the variable: ``ROCM_BRANCH``. For example, for 
            make -j$(nproc)
            sudo make install
 
+.. note::
+
+   HIP runtime is not buildable on Windows as it depends on closed source
+   components.
+
 Build HIP tests
 =================================================
 
