@@ -99,7 +99,7 @@ if(NOT APPLE)
         # Search in user specified path first
         find_path(
             HIP_ROOT_DIR
-            NAMES bin/hipconfig
+            NAMES bin/hipconfig${CMAKE_EXECUTABLE_SUFFIX}
             PATHS
             "$ENV{ROCM_PATH}"
             "$ENV{ROCM_PATH}/hip"
@@ -134,6 +134,7 @@ if(NOT APPLE)
         # Now search in default paths
         find_program(HIP_HIPCC_EXECUTABLE hipcc)
     endif()
+    mark_as_advanced(HIP_HIPCC_EXECUTABLE)
 
     # Find HIPCONFIG executable
     find_program(
@@ -150,15 +151,7 @@ if(NOT APPLE)
         # Now search in default paths
         find_program(HIP_HIPCONFIG_EXECUTABLE hipconfig)
     endif()
-    if(NOT UNIX)
-        get_filename_component(HIPCONFIG_EXECUTABLE_EXT ${HIP_HIPCONFIG_EXECUTABLE} EXT)
-        if(NOT HIPCONFIG_EXECUTABLE_EXT STREQUAL ".bat")
-          set(HIP_HIPCONFIG_EXECUTABLE "${HIP_HIPCONFIG_EXECUTABLE}.bat")
-          set(HIP_HIPCC_EXECUTABLE "${HIP_HIPCC_EXECUTABLE}.bat")
-        endif()
-    endif()
     mark_as_advanced(HIP_HIPCONFIG_EXECUTABLE)
-    mark_as_advanced(HIP_HIPCC_EXECUTABLE)
 
     # Find HIPCC_CMAKE_LINKER_HELPER executable
     find_program(
