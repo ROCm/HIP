@@ -182,8 +182,7 @@ Set the repository branch using the variable: ``ROCM_BRANCH``. For example, for 
 
 .. note::
 
-   HIP runtime is not buildable on Windows as it depends on closed source
-   components.
+   The HIP runtime is only buildable on Linux.
 
 Build HIP tests
 =================================================
