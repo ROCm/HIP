@@ -64,6 +64,8 @@ To check the availability of fine- and coarse-grained memory pools, use
   Segment:                 GLOBAL; FLAGS: COARSE GRAINED
   ...
 
+.. _hip-memory-coherence-table:
+
 The APIs, flags and respective memory coherence control are listed in the
 following table:
 
