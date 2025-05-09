@@ -57,7 +57,7 @@ exclude_patterns = [
     "doxygen/mainpage.md",
     "understand/glossary.md",
     'how-to/debugging_env.rst',
-    "data/env_variables_hip.rst"
+    "data/reference/env_variables"
 ]
 
 git_url = subprocess.check_output(['git', 'config', '--get', 'remote.origin.url']).strip().decode('ascii')
