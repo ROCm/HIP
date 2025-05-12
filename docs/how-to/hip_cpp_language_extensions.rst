@@ -411,9 +411,9 @@ warpSize
 ================================================================================
 
 The ``warpSize`` constant contains the number of threads per warp for the given
-target device. It can differ between different architectures, see the
-:doc:`hardware features <../reference/hardware_features>` for more
-information.
+target device. On AMD hardware, this is referred to as ``wavefront size``, which 
+may vary depending on the architecture. For more details, see the
+:doc:`hardware features <../reference/hardware_features>`.
 
 Since ``warpSize`` can differ between devices, it can not be assumed to be a
 compile-time constant on the host. It has to be queried using
@@ -421,8 +421,8 @@ compile-time constant on the host. It has to be queried using
 
 .. code-block:: cpp
 
-    int val;
-    hipDeviceGetAttribute(&val, hipDeviceAttributeWarpSize, deviceId);
+    int warpSizeHost;
+    hipDeviceGetAttribute(&warpSizeHost, hipDeviceAttributeWarpSize, deviceId);
 
 .. note::
 
@@ -432,6 +432,130 @@ compile-time constant on the host. It has to be queried using
   64 on gfx10 and above. While code that assumes a ``warpSize``
   of 32 can run on devices with a ``warpSize`` of 64, it only utilizes half of
   the compute resources.
+
+The ``warpSize`` parameter will no longer be a compile-time constant in a future
+release of ROCm, however it will be still early folded by the compiler, which
+means it can be used for loop bounds and supports loop unrolling similarly to
+compile-time warp size.
+
+If the compile time warp size is still required, for example to select the correct
+mask type or code path at compile time, the recommended approach is to determine
+the warp size of the GPU on host side and setup the kernel accordingly, as shown
+in the following block reduce example.
+
+The ``block_reduce`` kernel has a template parameter for warp size and performs
+a reduction operation in two main phases:
+
+- Shared memory reduction: Reduction is performed iteratively, halving the
+  number of active threads each step until only a warp remains
+  (32 or 64 threads, depending on the device).
+
+- Warp-level reduction: Once the shared memory reduction completes, the
+  remaining threads use warp-level shuffling to sum the remaining values. This
+  is done efficiently with the ``__shfl_down`` intrinsic, which allows threads within
+  the warp to exchange values without explicit synchronization.
+
+.. tab-set::
+
+    .. tab-item:: WarpSize Template Parameter
+       :sync: template-warpsize
+
+       .. literalinclude:: ../tools/example_codes/template_warp_size_reduction.hip
+          :start-after: // [Sphinx template warp size block reduction kernel start]
+          :end-before: // [Sphinx template warp size block reduction kernel end]
+          :language: cpp
+
+
+    .. tab-item:: HIP warpSize
+       :sync: hip-warpsize
+
+       .. literalinclude:: ../tools/example_codes/warp_size_reduction.hip
+          :start-after: // [Sphinx HIP warp size block reduction kernel start]
+          :end-before: // [Sphinx HIP warp size block reduction kernel end]
+          :language: cpp
+
+The host code with the main function:
+
+- Retrieves the warp size of the GPU (``warpSizeHost``) to determine the optimal
+  kernel configuration.
+
+- Allocates device memory (``d_data`` for input, ``d_results`` for block-wise
+  output) and initializes the input vector to 1.
+
+- Generates the mask variables for every warp and copies them to the device.
+
+  .. tab-set::
+
+      .. tab-item:: Compile-time WarpSize
+         :sync: template-warpsize
+
+         .. literalinclude:: ../tools/example_codes/template_warp_size_reduction.hip
+            :start-after: // [Sphinx template warp size mask generation start]
+            :end-before: // [Sphinx template warp size mask generation end]
+            :language: cpp
+
+
+      .. tab-item:: HIP warpSize
+         :sync: hip-warpsize
+
+         .. literalinclude:: ../tools/example_codes/warp_size_reduction.hip
+            :start-after:  // [Sphinx HIP warp size mask generation start]
+            :end-before:  // [Sphinx HIP warp size mask generation end]
+            :language: cpp
+
+- Selects the appropriate kernel specialization based on the warp
+  size (either 32 or 64) and launches the kernel.
+
+  .. tab-set::
+
+      .. tab-item:: Compile-time WarpSize
+         :sync: template-warpsize
+
+         .. literalinclude:: ../tools/example_codes/template_warp_size_reduction.hip
+            :start-after: // [Sphinx template warp size select kernel start]
+            :end-before: // [Sphinx template warp size select kernel end]
+            :language: cpp
+
+
+      .. tab-item:: HIP warpSize
+         :sync: hip-warpsize
+
+         .. literalinclude:: ../tools/example_codes/warp_size_reduction.hip
+            :start-after: // [Sphinx HIP warp size select kernel start]
+            :end-before: // [Sphinx HIP warp size select kernel end]
+            :language: cpp
+
+- Synchronizes the device and copies the results back to the host.
+
+- Checks that each block's sum is equal with the expected mask bit count, 
+  verifying the reduction's correctness.
+
+- Frees the device memory to prevent memory leaks.
+
+.. note::
+
+  The ``warpSize`` runtime example code is also provided for comparison purposes
+  and the full example codes are located in the `tools folder <https://github.com/ROCm/hip/tree/docs/develop/docs/tools/example_codes>`_.
+
+  The variable ``warpSize`` can be used for loop bounds and supports 
+  loop unrolling similarly to the template parameter ``WarpSize``.
+
+For users who still require a compile-time constant warp size as a macro on the
+device side, it can be defined manually based on the target device architecture,
+as shown in the following example.
+
+.. code-block:: cpp
+
+  #if defined(__GFX8__) || defined(__GFX9__)
+    #define WarpSize 64
+  #else
+    #define WarpSize 32
+  #endif
+
+.. note:: 
+
+  ``mwavefrontsize64`` compiler option is not supported by HIP runtime, that's
+  why the architecture based compile time selector is an acceptable approach.
 
 ********************************************************************************
 Vector types
@@ -855,7 +979,7 @@ The different shuffle functions behave as following:
   of range, the thread returns its own ``var``.
 
 ``__shfl_down``
-  The thread reads ``var`` from lane ``laneIdx - delta``, thereby "shuffling"
+  The thread reads ``var`` from lane ``laneIdx + delta``, thereby "shuffling"
   the values of the lanes of the warp "down". If the resulting source lane is
   out of range, the thread returns its own ``var``.
 
