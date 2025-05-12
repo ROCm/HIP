@@ -421,8 +421,8 @@ compile-time constant on the host. It has to be queried using
 
 .. code-block:: cpp
 
-    int val;
-    hipDeviceGetAttribute(&val, hipDeviceAttributeWarpSize, deviceId);
+    int warpSizeHost;
+    hipDeviceGetAttribute(&warpSizeHost, hipDeviceAttributeWarpSize, deviceId);
 
 .. note::
 
@@ -431,6 +431,147 @@ compile-time constant on the host. It has to be queried using
   64 for gfx9 and 32 for gfx10 and above. While code that assumes a ``warpSize``
   of 32 can run on devices with a ``warpSize`` of 64, it only utilizes half of
   the compute resources.
+
+The warpSize parameter will no longer be a compile-time constant starting from
+ROCm 7.0, and it has never been a compile-time variable in the CUDA SDK. The
+recommended approach for handling different warp sizes is to determine the warp
+size on the host side and select the appropriate kernel accordingly, which shown
+in the following example.
+
+.. code-block:: cpp
+
+  #include <hip/hip_runtime.h>
+  #include <iostream>
+
+  #define HIP_CHECK(expression)                \
+  {                                            \
+      const hipError_t status = expression;    \
+      if(status != hipSuccess){                \
+              std::cerr << "HIP error "        \
+                  << status << ": "            \
+                  << hipGetErrorString(status) \
+                  << " at " << __FILE__ << ":" \
+                  << __LINE__ << std::endl;    \
+      }                                        \
+  }
+
+  template<uint32_t WarpSize>
+  __global__ void block_reduce(int* input, int* output, size_t size){
+    extern __shared__ T shared[];
+
+    // Overindex-safe read of input
+    auto read_global_safe = [&](const uint32_t i)
+    {
+      return i < size ? input[i] : 0.f;
+    };
+
+    const uint32_t tid = threadIdx.x,
+                   bid = blockIdx.x,
+                   gid = bid * blockDim.x + tid;
+
+    // Read input buffer to shared
+    shared[tid] = read_global_safe(gid);
+    __syncthreads();
+
+    // Shared reduction
+    for (uint32_t i = blockDim.x / 2; i >= WarpSize; i /= 2)
+    {
+      if (tid < i)
+        shared[tid] = shared[tid] + shared[tid + i];
+      __syncthreads();
+    }
+
+    int result =  shared[tid];
+    __syncthreads();
+
+    for (uint32_t i = WarpSize/2; i > 0; i /= 2) {
+      if (tid < i)
+        result = result + __shfl_down(result, i);
+    }
+
+    // Write result to output buffer
+    if (tid == 0)
+      output[bid] = result;
+  };
+
+  int main() {
+
+    int deviceId = 0;
+
+    int warpSizeHost;
+    hipDeviceGetAttribute(&warpSizeHost, hipDeviceAttributeWarpSize, deviceId);
+
+    constexpr int numOfBlocks = 1024;
+    constexpr int threadsPerBlock = 1024;
+    constexpr size_t arraySize = numOfBlocks * threadsPerBlock;
+    int *d_data, *d_results;
+    int initValue = 1.0;
+
+    std::vector<int> vectorInput(threadsPerBlock, initValue);
+    std::vector<int> vectorOutput(numOfBlocks);
+
+    // Allocate device memory
+    HIP_CHECK(hipMalloc(&d_data, arraySize * sizeof(*d_data)));
+    HIP_CHECK(hipMalloc(&d_results, numOfBlocks * sizeof(*d_results)));
+
+    // Host to Device copy of the input array
+    HIP_CHECK(hipMemcpy(d_data, vectorInput.data(), arraySize * sizeof(*d_data), hipMemcpyHostToDevice));
+
+    if(warpSizeHost == 32) {
+      block_reduce<32><<<dim3(numOfBlocks), dim3(threadsPerBlock), 0, 0>>>(d_data, d_results, arraySize);
+    } else if(warpSizeHost == 64) {
+      block_reduce<64><<<dim3(numOfBlocks), dim3(threadsPerBlock), 0, 0>>>(d_data, d_results, arraySize);
+    } else {
+      std::cerr << "Unsupported warp size." << std::endl;
+      return 0;
+    }
+
+    // Check the kernel launch
+    HIP_CHECK(hipGetLastError());
+    // Check for kernel execution error
+    HIP_CHECK(hipDeviceSynchronize());
+    // Device to Host copy of the result
+    HIP_CHECK(hipMemcpy(d_results, vectorOutput.data(), numOfBlocks * sizeof(*d_results), hipMemcpyDeviceToHost));
+
+    // Verify results
+    bool passed = true;
+    for(size_t i = 0; i < numOfBlocks; ++i){
+      if(d_results[i] != threadsPerBlock){
+        passed = false;
+        std::cerr << "Validation failed! Expected " << threadsPerBlock << " got " << d_results[i] << " at index: " << i << std::endl;
+        break;
+      }
+    }
+
+    if(passed){
+      std::cout << "Sequential execution completed successfully." << std::endl;
+    }else{
+      std::cerr << "Sequential execution failed." << std::endl;
+    }
+
+    // Cleanup
+    HIP_CHECK(hipFree(d_dataA));
+    HIP_CHECK(hipFree(d_dataB));
+
+    return 0;
+  }
+
+For users who still require a compile-time constant variable on the device side,
+it can be defined manually based on the target device architecture, as shown in
+the following example.
+
+.. code-block:: cpp
+
+  #if defined(__GFX8__) || defined(__GFX9__)
+  #define WarpSize 64
+  #else
+  #define WarpSize 32
+  #endif
+
+.. note:: 
+
+  ``mwavefrontsize64`` compiler option is not supported by HIP runtime, that's
+  why the architecture based compile time selector is an acceptable approach.
 
 ********************************************************************************
 Vector types
