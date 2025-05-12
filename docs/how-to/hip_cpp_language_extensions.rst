@@ -499,7 +499,7 @@ in the following example.
     int deviceId = 0;
 
     int warpSizeHost;
-    hipDeviceGetAttribute(&warpSizeHost, hipDeviceAttributeWarpSize, deviceId);
+    HIP_CHECK(hipDeviceGetAttribute(&warpSizeHost, hipDeviceAttributeWarpSize, deviceId));
 
     constexpr int numOfBlocks = 1024;
     constexpr int threadsPerBlock = 1024;
