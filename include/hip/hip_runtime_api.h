@@ -21,7 +21,8 @@ THE SOFTWARE.
 */
 
 /**
- * @file hip_runtime_api.h
+
+* @file hip_runtime_api.h
  *
  * @brief Defines the API signatures for HIP runtime.
  * This file can be compiled with a standard compiler.
@@ -2595,19 +2596,21 @@ hipError_t hipDrvGetErrorString(hipError_t hipError, const char** errorString);
  *  This section describes the stream management functions of HIP runtime API.
  *  The following Stream APIs are not (yet) supported in HIP:
  *  - hipStreamAttachMemAsync is a nop
+ *  - hipDeviceGetStreamPriorityRange returns #hipSuccess
  */
 
 /**
- * @brief Create an asynchronous stream.
+ * @brief Creates an asynchronous stream.
  *
- * @param[in, out] stream Valid pointer to hipStream_t.  This function writes the memory with the
+ * @param[in, out] stream  Valid pointer to hipStream_t.  This function writes the memory with the
  * newly created stream.
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
- * Create a new asynchronous stream.  @p stream returns an opaque handle that can be used to
- * reference the newly created stream in subsequent hipStream* commands.  The stream is allocated on
- * the heap and will remain allocated even if the handle goes out-of-scope.  To release the memory
- * used by the stream, application must call hipStreamDestroy.
+ * Creates a new asynchronous stream with its associated current device. The @p stream returns an
+ * opaque handle that can be used to reference the newly created stream in subsequent hipStream*
+ * commands. The stream is allocated on the heap and will remain allocated even if the handle goes
+ * out-of-scope. To release the memory used by the stream, the application must call
+ * hipStreamDestroy.
  *
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
@@ -2615,59 +2618,70 @@ hipError_t hipDrvGetErrorString(hipError_t hipError, const char** errorString);
  */
 hipError_t hipStreamCreate(hipStream_t* stream);
 /**
- * @brief Create an asynchronous stream.
+ * @brief Creates an asynchronous stream with flag.
  *
- * @param[in, out] stream Pointer to new stream
- * @param[in ] flags to control stream creation.
+ * @param[in, out] stream  Pointer to new stream
+ * @param[in] flags  Parameters to control stream creation
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
- * Create a new asynchronous stream.  @p stream returns an opaque handle that can be used to
- * reference the newly created stream in subsequent hipStream* commands.  The stream is allocated on
- * the heap and will remain allocated even if the handle goes out-of-scope.  To release the memory
- * used by the stream, application must call hipStreamDestroy. Flags controls behavior of the
- * stream.  See #hipStreamDefault, #hipStreamNonBlocking.
+ * Creates a new asynchronous stream with its associated current device. @p stream returns an
+ * opaque handle that can be used to reference the newly created stream in subsequent hipStream*
+ * commands. The stream is allocated on the heap and will remain allocated even if the handle
+ * goes out-of-scope. To release the memory used by the stream, application must call
+ * hipStreamDestroy.
  *
+ * The @p flags parameter controls behavior of the stream. The valid values are #hipStreamDefault and
+ * #hipStreamNonBlocking.
  *
- * @see hipStreamCreate, hipStreamCreateWithPriority, hipStreamSynchronize, hipStreamWaitEvent, hipStreamDestroy
+ * @see hipStreamCreate, hipStreamCreateWithPriority, hipStreamSynchronize, hipStreamWaitEvent,
+ * hipStreamDestroy.
+ *
  */
 hipError_t hipStreamCreateWithFlags(hipStream_t* stream, unsigned int flags);
 /**
- * @brief Create an asynchronous stream with the specified priority.
+ * @brief Creates an asynchronous stream with the specified priority.
  *
- * @param[in, out] stream Pointer to new stream
- * @param[in ] flags to control stream creation.
- * @param[in ] priority of the stream. Lower numbers represent higher priorities.
+ * @param[in, out] stream  Pointer to new stream
+ * @param[in] flags  Parameters to control stream creation
+ * @param[in] priority  Priority of the stream. Lower numbers represent higher priorities.
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
- * Create a new asynchronous stream with the specified priority.  @p stream returns an opaque handle
- * that can be used to reference the newly created stream in subsequent hipStream* commands.  The
- * stream is allocated on the heap and will remain allocated even if the handle goes out-of-scope.
- * To release the memory used by the stream, application must call hipStreamDestroy. Flags controls
- * behavior of the stream.  See #hipStreamDefault, #hipStreamNonBlocking.
- *
+ * Creates a new asynchronous stream with the specified priority, with its associated current device.
+ * @p stream returns an opaque handle that can be used to reference the newly created stream in
+ * subsequent hipStream* commands. The stream is allocated on the heap and will remain allocated
+ * even if the handle goes out-of-scope. To release the memory used by the stream, application must
+ * call hipStreamDestroy.
+ * 
+ * The @p flags parameter controls behavior of the stream. The valid values are #hipStreamDefault
+ * and #hipStreamNonBlocking.
  *
  * @see hipStreamCreate, hipStreamSynchronize, hipStreamWaitEvent, hipStreamDestroy
+ *
  */
 hipError_t hipStreamCreateWithPriority(hipStream_t* stream, unsigned int flags, int priority);
 /**
  * @brief Returns numerical values that correspond to the least and greatest stream priority.
  *
- * @param[in, out] leastPriority pointer in which value corresponding to least priority is returned.
- * @param[in, out] greatestPriority pointer in which value corresponding to greatest priority is returned.
+ * @param[in, out] leastPriority  Pointer in which a value corresponding to least priority
+ * is returned.
+ * @param[in, out] greatestPriority  Pointer in which a value corresponding to greatest priority
+ * is returned.
  * @returns #hipSuccess
  *
- * Returns in *leastPriority and *greatestPriority the numerical values that correspond to the least
- * and greatest stream priority respectively. Stream priorities follow a convention where lower numbers
- * imply greater priorities. The range of meaningful stream priorities is given by
- * [*greatestPriority, *leastPriority]. If the user attempts to create a stream with a priority value
- * that is outside the meaningful range as specified by this API, the priority is automatically
- * clamped to within the valid range.
+ * Returns in *leastPriority and *greatestPriority the numerical values that correspond to the
+ * least and greatest stream priority respectively. Stream priorities follow a convention where
+ * lower numbers imply greater priorities. The range of meaningful stream priorities is given by
+ * [*leastPriority,*greatestPriority]. If the user attempts to create a stream with a priority
+ * value that is outside the meaningful range as specified by this API, the priority is
+ * automatically clamped to within the valid range.
+ *
+ * @warning This API is under development on AMD GPUs and simply returns #hipSuccess.
  */
 hipError_t hipDeviceGetStreamPriorityRange(int* leastPriority, int* greatestPriority);
 /**
  * @brief Destroys the specified stream.
  *
- * @param[in] stream stream identifier.
+ * @param[in] stream  Stream identifier
  * @returns #hipSuccess #hipErrorInvalidHandle
  *
  * Destroys the specified stream.
@@ -2683,10 +2697,10 @@ hipError_t hipDeviceGetStreamPriorityRange(int* leastPriority, int* greatestPrio
  */
 hipError_t hipStreamDestroy(hipStream_t stream);
 /**
- * @brief Return #hipSuccess if all of the operations in the specified @p stream have completed, or
+ * @brief Returns #hipSuccess if all of the operations in the specified @p stream have completed, or
  * #hipErrorNotReady if not.
  *
- * @param[in] stream stream to query
+ * @param[in] stream  Stream to query
  *
  * @returns #hipSuccess, #hipErrorNotReady, #hipErrorInvalidHandle
  *
@@ -2699,20 +2713,21 @@ hipError_t hipStreamDestroy(hipStream_t stream);
  */
 hipError_t hipStreamQuery(hipStream_t stream);
 /**
- * @brief Wait for all commands in stream to complete.
+ * @brief Waits for all commands in the stream to complete.
  *
- * @param[in] stream stream identifier.
+ * @param[in] stream  Stream identifier.
  *
  * @returns #hipSuccess, #hipErrorInvalidHandle
  *
- * This command is host-synchronous : the host will block until the specified stream is empty.
+ * This command is host-synchronous : the host will block until all operations on the specified
+ * stream with its associated device are completed. On multiple device systems, the @p stream is
+ * associated with its device, no need to call hipSetDevice before this API.
  *
- * This command follows standard null-stream semantics.  Specifically, specifying the null stream
- * will cause the command to wait for other streams on the same device to complete all pending
- * operations.
+ * This command follows standard null-stream semantics. Specifying the null stream will cause the
+ * command to wait for other streams on the same device to complete all pending operations.
  *
- * This command honors the hipDeviceLaunchBlocking flag, which controls whether the wait is active
- * or blocking.
+ * This command honors the #hipDeviceScheduleBlockingSync flag, which controls whether the wait is
+ * active or blocking.
  *
  * @see hipStreamCreate, hipStreamCreateWithFlags, hipStreamCreateWithPriority, hipStreamWaitEvent,
  * hipStreamDestroy
@@ -2720,11 +2735,11 @@ hipError_t hipStreamQuery(hipStream_t stream);
  */
 hipError_t hipStreamSynchronize(hipStream_t stream);
 /**
- * @brief Make the specified compute stream wait for an event
+ * @brief Makes the specified compute stream wait for the specified event
  *
- * @param[in] stream stream to make wait.
- * @param[in] event event to wait on
- * @param[in] flags control operation [must be 0]
+ * @param[in] stream  Stream to make wait
+ * @param[in] event  Event to wait on
+ * @param[in] flags  Parameters to control the operation [must be 0]
  *
  * @returns #hipSuccess, #hipErrorInvalidHandle
  *
@@ -2736,42 +2751,36 @@ hipError_t hipStreamSynchronize(hipStream_t stream);
  * does not implicitly wait for commands in the default stream to complete, even if the specified
  * stream is created with hipStreamNonBlocking = 0.
  *
- * @see hipStreamCreate, hipStreamCreateWithFlags, hipStreamCreateWithPriority, hipStreamSynchronize, hipStreamDestroy
+ * @see hipStreamCreate, hipStreamCreateWithFlags, hipStreamCreateWithPriority, hipStreamSynchronize,
+ * hipStreamDestroy
  */
 hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int flags __dparm(0));
 /**
- * @brief Return flags associated with this stream.
+ * @brief Returns flags associated with this stream.
  *
- * @param[in] stream stream to be queried
- * @param[in,out] flags Pointer to an unsigned integer in which the stream's flags are returned
- * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidHandle
- *
- * @returns #hipSuccess #hipErrorInvalidValue #hipErrorInvalidHandle
- *
- * Return flags associated with this stream in *@p flags.
+ * @param[in] stream  Stream to be queried
+ * @param[in,out] flags  Pointer to an unsigned integer in which the stream's flags are returned
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidHandle.
  *
  * @see hipStreamCreateWithFlags
  */
 hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int* flags);
 /**
- * @brief Query the priority of a stream.
+ * @brief Queries the priority of a stream.
  *
- * @param[in] stream stream to be queried
- * @param[in,out] priority Pointer to an unsigned integer in which the stream's priority is returned
- * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidHandle
+ * @param[in] stream  Stream to be queried
+ * @param[in,out] priority  Pointer to an unsigned integer in which the stream's priority is returned
  *
- * @returns #hipSuccess #hipErrorInvalidValue #hipErrorInvalidHandle
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidHandle.
  *
- * Query the priority of a stream. The priority is returned in in priority.
- *
- * @see hipStreamCreateWithFlags
+ * @see hipStreamCreateWithPriority
  */
 hipError_t hipStreamGetPriority(hipStream_t stream, int* priority);
 /**
- * @brief Get the device assocaited with the stream
+ * @brief Gets the device associated with the stream.
  *
- * @param[in] stream stream to be queried
- * @param[out] device device associated with the stream
+ * @param[in] stream  Stream to be queried
+ * @param[out] device  Device associated with the stream
  * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorContextIsDestroyed, #hipErrorInvalidHandle,
  * #hipErrorNotInitialized, #hipErrorDeinitialized, #hipErrorInvalidContext
  *
@@ -2779,33 +2788,32 @@ hipError_t hipStreamGetPriority(hipStream_t stream, int* priority);
  */
 hipError_t hipStreamGetDevice(hipStream_t stream, hipDevice_t* device);
 /**
- * @brief Create an asynchronous stream with the specified CU mask.
+ * @brief Creates an asynchronous stream with the specified CU mask.
  *
- * @param[in, out] stream Pointer to new stream
- * @param[in ] cuMaskSize Size of CU mask bit array passed in.
- * @param[in ] cuMask Bit-vector representing the CU mask. Each active bit represents using one CU.
+ * @param[in, out] stream  Pointer to new stream
+ * @param[in] cuMaskSize  Size of CU mask bit array passed in.
+ * @param[in] cuMask Bit-vector representing the CU mask. Each active bit represents using one CU.
  * The first 32 bits represent the first 32 CUs, and so on. If its size is greater than physical
  * CU number (i.e., multiProcessorCount member of hipDeviceProp_t), the extra elements are ignored.
  * It is user's responsibility to make sure the input is meaningful.
  * @returns #hipSuccess, #hipErrorInvalidHandle, #hipErrorInvalidValue
  *
- * Create a new asynchronous stream with the specified CU mask.  @p stream returns an opaque handle
+ * Creates  a new asynchronous stream with the specified CU mask.  @p stream returns an opaque handle
  * that can be used to reference the newly created stream in subsequent hipStream* commands.  The
  * stream is allocated on the heap and will remain allocated even if the handle goes out-of-scope.
  * To release the memory used by the stream, application must call hipStreamDestroy.
- *
  *
  * @see hipStreamCreate, hipStreamSynchronize, hipStreamWaitEvent, hipStreamDestroy
  */
 hipError_t hipExtStreamCreateWithCUMask(hipStream_t* stream, uint32_t cuMaskSize, const uint32_t* cuMask);
 /**
- * @brief Get CU mask associated with an asynchronous stream
+ * @brief Gets CU mask associated with an asynchronous stream
  *
- * @param[in] stream stream to be queried
- * @param[in] cuMaskSize number of the block of memories (uint32_t *) allocated by user
- * @param[out] cuMask Pointer to a pre-allocated block of memories (uint32_t *) in which
+ * @param[in] stream  Stream to be queried
+ * @param[in] cuMaskSize  Number of the block of memories (uint32_t *) allocated by user
+ * @param[out] cuMask  Pointer to a pre-allocated block of memories (uint32_t *) in which
  * the stream's CU mask is returned. The CU mask is returned in a chunck of 32 bits where
- * each active bit represents one active CU
+ * each active bit represents one active CU.
  * @returns #hipSuccess, #hipErrorInvalidHandle, #hipErrorInvalidValue
  *
  * @see hipStreamCreate, hipStreamSynchronize, hipStreamWaitEvent, hipStreamDestroy
@@ -2816,10 +2824,10 @@ hipError_t hipExtStreamGetCUMask(hipStream_t stream, uint32_t cuMaskSize, uint32
  */
 typedef void (*hipStreamCallback_t)(hipStream_t stream, hipError_t status, void* userData);
 /**
- * @brief Adds a callback to be called on the host after all currently enqueued
- * items in the stream have completed.  For each
- * hipStreamAddCallback call, a callback will be executed exactly once.
+ * @brief Adds a callback to be called on the host after all currently enqueued items in the stream
+ * have completed.  For each hipStreamAddCallback call, a callback will be executed exactly once.
  * The callback will block later work in the stream until it is finished.
+ *
  * @param[in] stream   - Stream to add callback to
  * @param[in] callback - The function to call once preceding stream operations are complete
  * @param[in] userData - User specified data to be passed to the callback function
