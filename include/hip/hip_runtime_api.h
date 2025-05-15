@@ -1852,6 +1852,22 @@ typedef struct HIP_LAUNCH_CONFIG_st {
   unsigned int numAttrs;        ///< Number of attributes
 } HIP_LAUNCH_CONFIG;
 
+/**
+ * Requested handle type for address range.
+ */
+typedef enum hipMemRangeHandleType {
+  hipMemRangeHandleTypeDmaBufFd = 0x1,
+  hipMemRangeHandleTypeMax = 0x7fffffff
+} hipMemRangeHandleType;
+
+/**
+ * Mem Range Flags used in hipMemGetHandleForAddressRange.
+ */
+typedef enum hipMemRangeFlags {
+  hipMemRangeFlagDmaBufMappingTypePcie = 0x1,
+  hipMemRangeFlagsMax = 0x7fffffff
+} hipMemRangeFlags;
+
 // Doxygen end group GlobalDefs
 /**
 * @}
@@ -6250,10 +6266,28 @@ hipError_t hipLaunchKernelExC(const hipLaunchConfig_t* config, const void* fPtr,
  */
 hipError_t hipDrvLaunchKernelEx(const HIP_LAUNCH_CONFIG* config, hipFunction_t f, void** params,
                                 void** extra);
+/**
+ * @brief Returns a handle for the address range requested.
+ *
+ * This function returns a handle to a device pointer created using either hipMalloc set of APIs
+ * or through hipMemAddressReserve (as long as the ptr is mapped).
+ *
+ * @param [out] handle     Ptr to the handle where the fd or other types will be returned.
+ * @param [in] dptr        Device ptr for which we get the handle.
+ * @param [in] size        Size of the address range.
+ * @param [in] handleType  Type of the handle requested for the address range.
+ * @param [in] flags       Any flags set regarding the handle requested.
+ *
+ * @returns #hipSuccess if the kernel is launched successfully, otherwise an appropriate error code.
+ */
+ hipError_t hipMemGetHandleForAddressRange(void* handle, hipDeviceptr_t dptr, size_t size, 
+                                           hipMemRangeHandleType handleType,
+                                           unsigned long long flags);
 // doxygen end Module
 /**
  * @}
  */
+
 
 /**
  *-------------------------------------------------------------------------------------------------
