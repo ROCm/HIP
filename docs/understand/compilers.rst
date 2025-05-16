@@ -8,20 +8,9 @@
 HIP compilers
 ********************************************************************************
 
-ROCm provides the compiler driver ``hipcc``, that can be used on AMD ROCm and
-NVIDIA CUDA platforms.
+ROCm provides the compiler tools used to compile HIP applications for use on AMD GPUs. 
 
-On ROCm, ``hipcc`` takes care of the following:
-
-- Setting the default library and include paths for HIP
-- Setting some environment variables
-- Invoking the appropriate compiler - ``amdclang++``
-
-On NVIDIA CUDA platform, ``hipcc`` takes care of invoking compiler ``nvcc``.
-``amdclang++`` is based on the ``clang++`` compiler. For more
-details, see the :doc:`llvm project<llvm-project:index>`.
-
-HIP compilation workflow
+Compilation workflow
 ================================================================================
 
 HIP provides a flexible compilation workflow that supports both offline
@@ -41,24 +30,17 @@ Offline compilation
 --------------------------------------------------------------------------------
 
 The HIP code compilation is performed in two stages: host and  device code
-compilation stage.
+compilation stage. For more information, see the `ROCm compiler reference <https://rocm.docs.amd.com/projects/llvm-project/en/latest/reference/rocmcc.html>`_.
 
 - Device-code compilation stage: The compiled device code is embedded into the
   host object file. Depending on the platform, the device code can be compiled
-  into assembly or binary. ``nvcc`` and ``amdclang++`` target different
-  architectures and use different code object formats. ``nvcc`` uses the binary
-  ``cubin`` or the assembly PTX files, while the ``amdclang++`` path is the
-  binary ``hsaco`` format. On CUDA platforms, the driver compiles the PTX files
-  to executable code during runtime.
+  into assembly or binary. 
 
 - Host-code compilation stage: On the host side, ``hipcc`` or ``amdclang++`` can
-  compile the host code in one step without other C++ compilers. On the other
-  hand, ``nvcc`` only replaces the ``<<<...>>>`` kernel launch syntax with the
-  appropriate CUDA runtime function call and the modified host code is passed to
-  the default host compiler.
+  compile the host code in one step without other C++ compilers. 
 
 For an example on how to compile HIP from the command line, see :ref:`SAXPY
-tutorial<compiling_on_the_command_line>` .
+tutorial <compiling_on_the_command_line>` .
 
 Runtime compilation
 --------------------------------------------------------------------------------
