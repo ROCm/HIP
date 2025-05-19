@@ -30,7 +30,7 @@ Offline compilation
 --------------------------------------------------------------------------------
 
 The HIP code compilation is performed in two stages: host and  device code
-compilation stage. For more information, see the `ROCm compiler reference <https://rocm.docs.amd.com/projects/llvm-project/en/latest/reference/rocmcc.html>`_.
+compilation stage. For more information, see the :doc:`ROCm compiler reference <llvm-project:reference/rocmcc`.
 
 - Device-code compilation stage: The compiled device code is embedded into the
   host object file. Depending on the platform, the device code can be compiled
