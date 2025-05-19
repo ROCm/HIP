@@ -55,21 +55,21 @@ For more details, see
 Static libraries
 ================================================================================
 
-``hipcc`` supports generating two types of static libraries.
+Both ``amdclang++`` and ``hipcc`` support generating two types of static libraries.
 
 - The first type of static library only exports and launches host functions
   within the same library and not the device functions. This library type offers
-  the ability to link with a non-hipcc compiler such as ``gcc``. Additionally,
+  the ability to link with another compiler such as ``gcc``. Additionally,
   this library type contains host objects with device code embedded as fat
   binaries. This library type is generated using the flag ``--emit-static-lib``:
 
   .. code-block:: shell
 
-    hipcc hipOptLibrary.cpp --emit-static-lib -fPIC -o libHipOptLibrary.a
+    amdclang++ hipOptLibrary.cpp --emit-static-lib -fPIC -o libHipOptLibrary.a
     gcc test.cpp -L. -lhipOptLibrary -L/path/to/hip/lib -lamdhip64 -o test.out
 
 - The second type of static library exports device functions to be linked by
-  other code objects by using ``hipcc`` as the linker. This library type
+  other code objects by using ``amdclang++`` or ``hipcc`` as the linker. This library type
   contains relocatable device objects and is generated using ``ar``:
 
   .. code-block:: shell
@@ -78,6 +78,6 @@ Static libraries
     ar rcsD libHipDevice.a hipDevice.o
     hipcc libHipDevice.a test.cpp -fgpu-rdc -o test.out
 
-A full example for this can be found in the ROCm-examples, see the examples for
+Examples for this can be found in the ROCm-examples as
 `static host libraries <https://github.com/ROCm/rocm-examples/tree/develop/HIP-Basic/static_host_library>`_
 or `static device libraries <https://github.com/ROCm/rocm-examples/tree/develop/HIP-Basic/static_device_library>`_.
