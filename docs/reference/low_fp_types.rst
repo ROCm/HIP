@@ -12,6 +12,382 @@ and FP16 (Half Precision), which reduce memory and bandwidth requirements compar
 32-bit or 64-bit formats. The following sections detail their specifications, variants, and provide
 practical guidance for implementation in HIP.
 
+FP4 (4-bit Precision)
+=======================
+
+FP4 (Floating Point 4-bit) numbers represent the current extreme in low-precision formats,
+pushing the boundaries of memory optimization for specialized AI workloads. This ultra-compact
+format is designed for scenarios where model size and computational efficiency are paramount
+constraints, even at the cost of significant precision reduction.
+
+FP4 is particularly valuable in weight storage for large language models (LLMs) and vision
+transformers, where aggressive quantization can dramatically reduce model size while
+maintaining acceptable inference quality. By reducing memory footprint to a quarter of FP16,
+FP4 enables deployment of larger models in memory-constrained environments or higher throughput
+in existing hardware.
+
+The supported FP4 format is:
+
+- **E2M1 Format**
+
+  - Sign: 1 bit
+  - Exponent: 2 bits
+  - Mantissa: 1 bit
+
+The E2M1 format offers a balance between minimal precision and a reasonable dynamic range,
+optimized for weight storage in neural network applications.
+
+HIP Header
+----------
+
+The `HIP FP4 header <https://github.com/ROCm/clr/blob/amd-staging/hipamd/include/hip/amd_detail/amd_hip_fp4.h>`_
+defines the FP4 numbers.
+
+Supported Devices
+-----------------
+
+Different GPU models support different FP4 formats. Here's a breakdown:
+
+.. list-table:: Supported devices for fp4 numbers
+    :header-rows: 1
+
+    * - Device Type
+      - E2M1
+    * - Host
+      - Yes
+    * - CDNA1
+      - No
+    * - CDNA2
+      - No
+    * - CDNA3
+      - Yes
+    * - RDNA2
+      - No
+    * - RDNA3
+      - No
+
+Using FP4 Numbers in HIP Programs
+---------------------------------
+
+To use the FP4 numbers inside HIP programs:
+
+.. code-block:: cpp
+
+    #include <hip/hip_fp4.h>
+
+FP4 numbers can be used on CPU side:
+
+.. code-block:: cpp
+
+    __hip_fp4_storage_t convert_float_to_fp4(
+      float in, /* Input val */
+      __hip_saturation_t sat /* Saturation behavior */
+      ) {
+      return __hip_cvt_float_to_fp4(in, __HIP_E2M1, sat);
+    }
+
+The same can be done in kernels as well:
+
+.. code-block:: cpp
+
+    __device__ __hip_fp4_storage_t d_convert_float_to_fp4(
+      float in,
+      __hip_saturation_t sat) {
+      return __hip_cvt_float_to_fp4(in, __HIP_E2M1, sat);
+    }
+
+The following code example demonstrates a simple roundtrip conversion using FP4 types:
+
+.. code-block:: cpp
+
+    #include <hip/hip_fp4.h>
+    #include <hip/hip_runtime.h>
+    #include <iostream>
+    #include <vector>
+
+    #define hip_check(hip_call)                                                    \
+    {                                                                              \
+        auto hip_res = hip_call;                                                   \
+        if (hip_res != hipSuccess) {                                               \
+          std::cerr << "Failed in HIP call: " << #hip_call \
+                    << " at " << __FILE__ << ":" << __LINE__ \
+                    << " with error: " << hipGetErrorString(hip_res) << std::endl; \
+          std::abort();                                                            \
+        }                                                                          \
+    }
+
+    __global__ void float_to_fp4_to_float(float *in,
+                                        __hip_saturation_t sat, float *out,
+                                        size_t size) {
+        int i = threadIdx.x;
+        if (i < size) {
+            auto fp4 = __hip_cvt_float_to_fp4(in[i], __HIP_E2M1, sat);
+            out[i] = __hip_cvt_fp4_to_halfraw(fp4, __HIP_E2M1);
+        }
+    }
+
+    int main() {
+        constexpr size_t size = 16;
+        hipDeviceProp_t prop;
+        hip_check(hipGetDeviceProperties(&prop, 0));
+        bool is_supported = (std::string(prop.gcnArchName).find("gfx94") != std::string::npos);
+        if(!is_supported) {
+            std::cerr << "Need a gfx94x, but found: " << prop.gcnArchName << std::endl;
+            std::cerr << "Device conversions are not supported on this hardware." << std::endl;
+            return -1;
+        }
+
+        constexpr __hip_saturation_t sat = __HIP_SATFINITE;
+
+        // Create test data
+        std::vector<float> in;
+        in.reserve(size);
+        for (size_t i = 0; i < size; i++) {
+            in.push_back(i * 0.5f);
+        }
+
+        // Allocate device memory
+        float *d_in, *d_out;
+        hip_check(hipMalloc(&d_in, sizeof(float) * size));
+        hip_check(hipMalloc(&d_out, sizeof(float) * size));
+        hip_check(hipMemcpy(d_in, in.data(), sizeof(float) * size, hipMemcpyHostToDevice));
+
+        // Run conversion kernel
+        float_to_fp4_to_float<<<1, size>>>(d_in, sat, d_out, size);
+
+        // Get results
+        std::vector<float> result(size);
+        hip_check(hipMemcpy(result.data(), d_out, sizeof(float) * size, hipMemcpyDeviceToHost));
+
+        // Clean up
+        hip_check(hipFree(d_in));
+        hip_check(hipFree(d_out));
+
+        // Display results
+        std::cout << "FP4 Roundtrip Results:" << std::endl;
+        for (size_t i = 0; i < size; i++) {
+            std::cout << "Original: " << in[i] << " -> FP4 roundtrip: " << result[i] << std::endl;
+        }
+
+        return 0;
+    }
+
+There are C++ style classes available as well:
+
+.. code-block:: cpp
+
+    __hip_fp4_e2m1 fp4_val(1.0f);
+
+FP4 type has its own class:
+
+- __hip_fp4_e2m1
+
+There is support of vector of FP4 types:
+
+- __hip_fp4x2_e2m1: holds 2 values of FP4 e2m1 numbers
+- __hip_fp4x4_e2m1: holds 4 values of FP4 e2m1 numbers
+
+FP6 (6-bit Precision)
+========================
+
+FP6 (Floating Point 6-bit) numbers represent an even more aggressive memory optimization
+compared to FP8, designed specifically for ultra-efficient deep learning inference and
+specialized AI applications. This extremely compact format delivers significant memory
+and bandwidth savings at the cost of reduced dynamic range and precision.
+
+The primary advantage of FP6 is enabling higher computational throughput in
+hardware-constrained environments, particularly for AI model deployment on edge devices
+and applications where model size is a critical constraint. While offering less precision
+than FP8, FP6 maintains sufficient accuracy for many inference tasks, especially when
+used with carefully quantized models.
+
+There are two primary FP6 formats:
+
+- **E3M2 Format**
+
+  - Sign: 1 bit
+  - Exponent: 3 bits
+  - Mantissa: 2 bits
+
+- **E2M3 Format**
+
+  - Sign: 1 bit
+  - Exponent: 2 bits
+  - Mantissa: 3 bits
+
+The E3M2 format provides a wider numeric range with less precision, while the E2M3 format
+offers higher precision within a narrower range.
+
+HIP Header
+----------
+
+The `HIP FP6 header <https://github.com/ROCm/clr/blob/amd-staging/hipamd/include/hip/amd_detail/amd_hip_fp6.h>`_
+defines the FP6 numbers.
+
+Supported Devices
+-----------------
+
+Different GPU models support different FP6 formats. Here's a breakdown:
+
+.. list-table:: Supported devices for fp6 numbers
+    :header-rows: 1
+
+    * - Device Type
+      - E3M2
+      - E2M3
+    * - Host
+      - Yes
+      - Yes
+    * - CDNA1
+      - No
+      - No
+    * - CDNA2
+      - No
+      - No
+    * - CDNA3
+      - Yes
+      - Yes
+    * - RDNA2
+      - No
+      - No
+    * - RDNA3
+      - No
+      - No
+
+Using FP6 Numbers in HIP Programs
+---------------------------------
+
+To use the FP6 numbers inside HIP programs:
+
+.. code-block:: cpp
+
+    #include <hip/hip_fp6.h>
+
+FP6 numbers can be used on CPU side:
+
+.. code-block:: cpp
+
+    __hip_fp6_storage_t convert_float_to_fp6(
+      float in, /* Input val */
+      __hip_fp6_interpretation_t interpret, /* interpretation of number E3M2/E2M3 */
+      __hip_saturation_t sat /* Saturation behavior */
+      ) {
+      return __hip_cvt_float_to_fp6(in, interpret, sat);
+    }
+
+The same can be done in kernels as well:
+
+.. code-block:: cpp
+
+    __device__ __hip_fp6_storage_t d_convert_float_to_fp6(
+      float in,
+      __hip_fp6_interpretation_t interpret,
+      __hip_saturation_t sat) {
+      return __hip_cvt_float_to_fp6(in, interpret, sat);
+    }
+
+The following code example demonstrates a roundtrip conversion using FP6 types:
+
+.. code-block:: cpp
+
+    #include <hip/hip_fp6.h>
+    #include <hip/hip_runtime.h>
+    #include <iostream>
+    #include <vector>
+
+    #define hip_check(hip_call)                                                    \
+    {                                                                              \
+        auto hip_res = hip_call;                                                   \
+        if (hip_res != hipSuccess) {                                               \
+          std::cerr << "Failed in HIP call: " << #hip_call \
+                    << " at " << __FILE__ << ":" << __LINE__ \
+                    << " with error: " << hipGetErrorString(hip_res) << std::endl; \
+          std::abort();                                                            \
+        }                                                                          \
+    }
+
+    __global__ void float_to_fp6_to_float(float *in,
+                                        __hip_fp6_interpretation_t interpret,
+                                        __hip_saturation_t sat, float *out,
+                                        size_t size) {
+        int i = threadIdx.x;
+        if (i < size) {
+            auto fp6 = __hip_cvt_float_to_fp6(in[i], interpret, sat);
+            out[i] = __hip_cvt_fp6_to_halfraw(fp6, interpret);
+        }
+    }
+
+    int main() {
+        constexpr size_t size = 16;
+        hipDeviceProp_t prop;
+        hip_check(hipGetDeviceProperties(&prop, 0));
+        bool is_supported = (std::string(prop.gcnArchName).find("gfx94") != std::string::npos);
+        if(!is_supported) {
+            std::cerr << "Need a gfx94x, but found: " << prop.gcnArchName << std::endl;
+            std::cerr << "Device conversions are not supported on this hardware." << std::endl;
+            return -1;
+        }
+
+        // Test both formats
+        const __hip_saturation_t sat = __HIP_SATFINITE;
+
+        // Create test vectors
+        std::vector<float> in(size);
+        for (size_t i = 0; i < size; i++) {
+            in[i] = i * 0.5f;
+        }
+
+        std::vector<float> out_e2m3(size);
+        std::vector<float> out_e3m2(size);
+
+        // Allocate device memory
+        float *d_in, *d_out;
+        hip_check(hipMalloc(&d_in, sizeof(float) * size));
+        hip_check(hipMalloc(&d_out, sizeof(float) * size));
+        hip_check(hipMemcpy(d_in, in.data(), sizeof(float) * size, hipMemcpyHostToDevice));
+
+        // Test E2M3 format
+        float_to_fp6_to_float<<<1, size>>>(d_in, __HIP_E2M3, sat, d_out, size);
+        hip_check(hipMemcpy(out_e2m3.data(), d_out, sizeof(float) * size, hipMemcpyDeviceToHost));
+
+        // Test E3M2 format
+        float_to_fp6_to_float<<<1, size>>>(d_in, __HIP_E3M2, sat, d_out, size);
+        hip_check(hipMemcpy(out_e3m2.data(), d_out, sizeof(float) * size, hipMemcpyDeviceToHost));
+
+        // Display results
+        std::cout << "FP6 Roundtrip Results:" << std::endl;
+        for (size_t i = 0; i < size; i++) {
+            std::cout << "Original: " << in[i]
+                      << " -> E2M3: " << out_e2m3[i]
+                      << " -> E3M2: " << out_e3m2[i] << std::endl;
+        }
+
+        // Clean up
+        hip_check(hipFree(d_in));
+        hip_check(hipFree(d_out));
+
+        return 0;
+    }
+
+There are C++ style classes available as well:
+
+.. code-block:: cpp
+
+    __hip_fp6_e2m3 fp6_val_e2m3(1.1f);
+    __hip_fp6_e3m2 fp6_val_e3m2(1.1f);
+
+Each type of FP6 number has its own class:
+
+- __hip_fp6_e2m3
+- __hip_fp6_e3m2
+
+There is support of vector of FP6 types:
+
+- __hip_fp6x2_e2m3: holds 2 values of FP6 e2m3 numbers
+- __hip_fp6x4_e2m3: holds 4 values of FP6 e2m3 numbers
+- __hip_fp6x2_e3m2: holds 2 values of FP6 e3m2 numbers
+- __hip_fp6x4_e3m2: holds 4 values of FP6 e3m2 numbers
+
 FP8 (Quarter Precision)
 =======================
 
@@ -65,7 +441,7 @@ numbers compared to standard FP8 formats.
 HIP Header
 ----------
 
-The `HIP FP8 header <https://github.com/ROCm/clr/blob/develop/hipamd/include/hip/amd_detail/amd_hip_fp8.h>`_
+The `HIP FP8 header <https://github.com/ROCm/clr/blob/amd-staging/hipamd/include/hip/amd_detail/amd_hip_fp8.h>`_
 defines the FP8 ocp/fnuz numbers.
 
 Supported Devices
@@ -317,10 +693,10 @@ supported with its two main formats, float16 and bfloat16.
 HIP Header
 ----------
 
-The `HIP FP16 header <https://github.com/ROCm/clr/blob/develop/hipamd/include/hip/amd_detail/amd_hip_fp16.h>`_
+The `HIP FP16 header <https://github.com/ROCm/clr/blob/amd-staging/hipamd/include/hip/amd_detail/amd_hip_fp16.h>`_
 defines the float16 format.
 
-The `HIP BF16 header <https://github.com/ROCm/clr/blob/develop/hipamd/include/hip/amd_detail/amd_hip_bf16.h>`_
+The `HIP BF16 header <https://github.com/ROCm/clr/blob/amd-staging/hipamd/include/hip/amd_detail/amd_hip_bf16.h>`_
 defines the bfloat16 format.
 
 Supported Devices
