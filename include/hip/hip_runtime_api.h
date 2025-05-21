@@ -1480,18 +1480,6 @@ typedef union hipLaunchAttributeValue {
 #define hipDrvLaunchAttribute hipLaunchAttribute
 
 /**
- * Memset node params
- */
-typedef struct HIP_MEMSET_NODE_PARAMS {
-    hipDeviceptr_t dst;                  ///< Destination pointer on device
-    size_t pitch;                        ///< Destination device pointer pitch. Unused if height equals 1
-    unsigned int value;                  ///< Value of memset to be set
-    unsigned int elementSize;            ///< Element in bytes. Must be 1, 2, or 4.
-    size_t width;                        ///< Width of a row
-    size_t height;                       ///< Number of rows
-} HIP_MEMSET_NODE_PARAMS;
-
-/**
  * Graph execution update result
  */
 typedef enum hipGraphExecUpdateResult {
@@ -8889,7 +8877,7 @@ hipError_t hipDrvGraphMemcpyNodeSetParams(hipGraphNode_t hNode, const HIP_MEMCPY
  */
 hipError_t hipDrvGraphAddMemsetNode(hipGraphNode_t* phGraphNode, hipGraph_t hGraph,
                                  const hipGraphNode_t* dependencies, size_t numDependencies,
-                                 const HIP_MEMSET_NODE_PARAMS* memsetParams, hipCtx_t ctx);
+                                 const hipMemsetParams* memsetParams, hipCtx_t ctx);
 
 /**
  * @brief Creates a memory free node and adds it to a graph
@@ -8933,7 +8921,7 @@ hipError_t hipDrvGraphExecMemcpyNodeSetParams(hipGraphExec_t hGraphExec, hipGrap
  *          change and might have outstanding issues.
  */
 hipError_t hipDrvGraphExecMemsetNodeSetParams(hipGraphExec_t hGraphExec, hipGraphNode_t hNode,
-                                   const HIP_MEMSET_NODE_PARAMS* memsetParams, hipCtx_t ctx);
+                                   const hipMemsetParams* memsetParams, hipCtx_t ctx);
 
 // doxygen end graph API
 /**
