@@ -9,6 +9,9 @@ HIP compilers
 ********************************************************************************
 
 ROCm provides the compiler tools used to compile HIP applications for use on AMD GPUs. 
+The compilers setup the default libraries and include paths for the HIP and ROCm
+libraries, and some needed environment variables. For more information, see the
+:doc:`ROCm compiler reference <llvm-project:reference/rocmcc>`.
 
 Compilation workflow
 ================================================================================
@@ -29,15 +32,15 @@ performance overhead.
 Offline compilation
 --------------------------------------------------------------------------------
 
-The HIP code compilation is performed in two stages: host and  device code
-compilation stage. For more information, see the :doc:`ROCm compiler reference <llvm-project:reference/rocmcc>`.
+Offline compilation is performed in two steps: host and  device code
+compilation. 
 
-- Device-code compilation stage: The compiled device code is embedded into the
+- Host-code compilation: On the host side, ``amdclang++`` or ``hipcc`` can
+  compile the host code in one step without other C++ compilers. 
+
+- Device-code compilation: The compiled device code is embedded into the
   host object file. Depending on the platform, the device code can be compiled
   into assembly or binary. 
-
-- Host-code compilation stage: On the host side, ``hipcc`` or ``amdclang++`` can
-  compile the host code in one step without other C++ compilers. 
 
 For an example on how to compile HIP from the command line, see :ref:`SAXPY
 tutorial <compiling_on_the_command_line>` .
@@ -49,8 +52,7 @@ HIP allows you to compile kernels at runtime using the ``hiprtc*`` API. Kernels
 are stored as a text string, which is passed to HIPRTC alongside options to
 guide the compilation.
 
-For more details, see
-:doc:`HIP runtime compiler <../how-to/hip_rtc>`.
+For more information, see :doc:`HIP runtime compiler <../how-to/hip_rtc>`.
 
 Static libraries
 ================================================================================
