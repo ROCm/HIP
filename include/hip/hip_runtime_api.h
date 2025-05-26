@@ -5666,7 +5666,7 @@ hipError_t hipCtxGetDevice(hipDevice_t* device);
  * NVIDIA platform.
  */
 HIP_DEPRECATED(HIP_DEPRECATED_MSG)
-hipError_t hipCtxGetApiVersion(hipCtx_t ctx, int* apiVersion);
+hipError_t hipCtxGetApiVersion(hipCtx_t ctx, unsigned int* apiVersion);
 /**
  * @brief Get Cache configuration for a specific function [Deprecated]
  *
