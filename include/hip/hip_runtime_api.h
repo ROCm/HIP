@@ -31,7 +31,16 @@ THE SOFTWARE.
 #ifndef HIP_INCLUDE_HIP_HIP_RUNTIME_API_H
 #define HIP_INCLUDE_HIP_HIP_RUNTIME_API_H
 
-#include <string.h>  // for getDeviceProp
+#if __cplusplus
+#include <climits>
+#include <cstdint>
+#include <cstdlib>
+#else
+#include <limits.h>
+#include <stdint.h>
+#include <stdlib.h>
+#endif
+
 #include <hip/hip_version.h>
 #include <hip/hip_common.h>
 #include <hip/linker_types.h>
@@ -574,8 +583,6 @@ enum hipGPUDirectRDMAWritesOrdering {
 
 #if defined(__HIP_PLATFORM_AMD__) && !defined(__HIP_PLATFORM_NVIDIA__)
 
-#include <stdint.h>
-#include <stddef.h>
 #ifndef GENERIC_GRID_LAUNCH
 #define GENERIC_GRID_LAUNCH 1
 #endif

@@ -29,10 +29,14 @@ THE SOFTWARE.
 #elif defined(__HIP_PLATFORM_AMD__) && !defined(__HIP_PLATFORM_NVIDIA__)
 
 #ifdef __cplusplus
+#include <cstdlib>
+#else
+#include <stdlib.h>
+#endif
+
+#ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-
-#include <stdlib.h>
 
 #if !defined(_WIN32)
 #pragma GCC visibility push(default)

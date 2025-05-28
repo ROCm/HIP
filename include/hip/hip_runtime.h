@@ -45,14 +45,13 @@ THE SOFTWARE.
 // Some standard header files, these are included by hc.hpp and so want to make them avail on both
 // paths to provide a consistent include env and avoid "missing symbol" errors that only appears
 // on NVCC path:
+#if __cplusplus
+#include <cstdint>
+#include <cstdlib>
+#else
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
-
-#if __cplusplus > 199711L
-#include <thread>
-#endif
+#endif // __cplusplus
 #endif // !defined(__HIPCC_RTC__)
 
 #include <hip/hip_version.h>

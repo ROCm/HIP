@@ -25,17 +25,16 @@ THE SOFTWARE.
 
 #if !defined(__HIPCC_RTC__)
 #include <hip/hip_common.h>
+#if __cplusplus
+#include <cstdlib>
+#else
+#include <stdlib.h> // size_t
+#endif
 #endif
 
 #if !defined(__HIP_PLATFORM_AMD__) && defined(__HIP_PLATFORM_NVIDIA__)
 #include "driver_types.h"
 #elif defined(__HIP_PLATFORM_AMD__) && !defined(__HIP_PLATFORM_NVIDIA__)
-
-#if !defined(__HIPCC_RTC__)
-#ifndef __cplusplus
-#include <stdbool.h>
-#endif
-#endif // !defined(__HIPCC_RTC__)
 
 /**
  *  @defgroup DriverTypes Driver Types
