@@ -4428,7 +4428,7 @@ hipError_t hipMemcpyWithStream(void* dst, const void* src, size_t sizeBytes,
  * hipMemcpyHtoDAsync, hipMemFree, hipMemFreeHost, hipMemGetAddressRange, hipMemGetInfo,
  * hipMemHostAlloc, hipMemHostGetDevicePointer
  */
-hipError_t hipMemcpyHtoD(hipDeviceptr_t dst, void* src, size_t sizeBytes);
+hipError_t hipMemcpyHtoD(hipDeviceptr_t dst, const void* src, size_t sizeBytes);
 /**
  *  @brief Copy data from Device to Host
  *
@@ -4545,7 +4545,8 @@ hipError_t hipMemcpyAtoA(hipArray_t dstArray, size_t dstOffset, hipArray_t srcAr
  * hipMemcpyHtoDAsync, hipMemFree, hipMemFreeHost, hipMemGetAddressRange, hipMemGetInfo,
  * hipMemHostAlloc, hipMemHostGetDevicePointer
  */
-hipError_t hipMemcpyHtoDAsync(hipDeviceptr_t dst, void* src, size_t sizeBytes, hipStream_t stream);
+hipError_t hipMemcpyHtoDAsync(hipDeviceptr_t dst, const void* src, size_t sizeBytes,
+                              hipStream_t stream);
 /**
  *  @brief Copy data from Device to Host asynchronously
  *
@@ -4604,7 +4605,7 @@ hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst, hipDeviceptr_t src, size_t siz
  * hipMemcpyHtoDAsync, hipMemFree, hipMemFreeHost, hipMemGetAddressRange, hipMemGetInfo,
  * hipMemHostAlloc, hipMemHostGetDevicePointer
  */
-hipError_t hipMemcpyAtoHAsync(void* dstHost, hipArray_t srcArray, size_t srcOffset,
+hipError_t hipMemcpyAtoHAsync(void* dstHost, const hipArray_t srcArray, size_t srcOffset,
                               size_t ByteCount, hipStream_t stream);
 /**
  * @brief Copies from host memory to a 1D array.
