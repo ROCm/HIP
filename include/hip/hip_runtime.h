@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015 - 2021 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -36,10 +36,6 @@ THE SOFTWARE.
 
 #ifndef HIP_INCLUDE_HIP_HIP_RUNTIME_H
 #define HIP_INCLUDE_HIP_HIP_RUNTIME_H
-
-#if __HIP_DEVICE_COMPILE__ && !__GFX7__ && !__GFX8__ && !__GFX9__ && __AMDGCN_WAVEFRONT_SIZE == 64
-#error HIP is not supported on the specified GPU ARCH with wavefront size 64
-#endif
 
 #if !defined(__HIPCC_RTC__)
 // Some standard header files, these are included by hc.hpp and so want to make them avail on both

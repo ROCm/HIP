@@ -467,7 +467,8 @@ compile-time constant on the host. It has to be queried using
 
   ``warpSize`` should not be assumed to be a specific value in portable HIP
   applications. NVIDIA devices return 32 for this variable; AMD devices return
-  64 for gfx9 and 32 for gfx10 and above. While code that assumes a ``warpSize``
+  64 for gfx9 and 32 for gfx10 and above. HIP doesn't support ``warpSize`` of
+  64 on gfx10 and above. While code that assumes a ``warpSize``
   of 32 can run on devices with a ``warpSize`` of 64, it only utilizes half of
   the the compute resources.
 
