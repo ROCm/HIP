@@ -97,7 +97,7 @@ typedef struct hipUUID_t {
 } hipUUID;
 
 //---
-// Common headers for both NVCC and HCC paths:
+// Common headers for both NVCC and HIP-Clang paths:
 
 #define hipGetDeviceProperties hipGetDevicePropertiesR0600
 #define hipDeviceProp_t hipDeviceProp_tR0600
@@ -296,7 +296,7 @@ typedef struct hipPointerAttribute_t {
  *
  */
 // Developer note - when updating these, update the hipErrorName and hipErrorString functions in
-// NVCC and HCC paths Also update the hipCUDAErrorTohipError function in NVCC path.
+// NVCC and HIP-Clang paths Also update the hipCUDAErrorTohipError function in NVCC path.
 
 typedef enum __HIP_NODISCARD hipError_t {
     hipSuccess = 0,  ///< Successful completion.
@@ -2178,9 +2178,9 @@ hipError_t hipDeviceGetMemPool(hipMemPool_t* mem_pool, int device);
  * @param [in]  deviceId which device to query for information
  *
  * @returns #hipSuccess, #hipErrorInvalidDevice
- * @bug HCC always returns 0 for maxThreadsPerMultiProcessor
- * @bug HCC always returns 0 for regsPerBlock
- * @bug HCC always returns 0 for l2CacheSize
+ * @bug HIP-Clang always returns 0 for maxThreadsPerMultiProcessor
+ * @bug HIP-Clang always returns 0 for regsPerBlock
+ * @bug HIP-Clang always returns 0 for l2CacheSize
  *
  * Populates hipGetDeviceProperties with information for the specified device.
  */
@@ -4323,7 +4323,7 @@ hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height
 hipError_t hipMemAllocPitch(hipDeviceptr_t* dptr, size_t* pitch, size_t widthInBytes, size_t height,
    unsigned int elementSizeBytes);
 /**
- *  @brief Free memory allocated by the hcc hip memory allocation API.
+ *  @brief Free memory allocated by the HIP-Clang hip memory allocation API.
  *  This API performs an implicit hipDeviceSynchronize() call.
  *  If pointer is NULL, the hip runtime is initialized and hipSuccess is returned.
  *
@@ -4349,7 +4349,7 @@ hipError_t hipFree(void* ptr);
  */
 hipError_t hipFreeHost(void* ptr);
 /**
- *  @brief Free memory allocated by the hcc hip host memory allocation API
+ *  @brief Free memory allocated by the HIP-Clang hip host memory allocation API
  *  This API performs an implicit hipDeviceSynchronize() call.
  *  If pointer is NULL, the hip runtime is initialized and hipSuccess is returned.
  *
