@@ -36,33 +36,6 @@ HIP releases are typically naming convention for each ROCM release to help diffe
 * rocm x.yy: These are the stable releases based on the ROCM release.
   This type of release is typically made once a month.*
 
-## More Info
-
-* [Installation](docs/install/install.rst)
-* [HIP FAQ](docs/faq.rst)
-* [HIP C++ Language Extensions](docs/reference/cpp_language_extensions.rst)
-* [HIP Porting Guide](docs/how-to/hip_porting_guide.md)
-* [HIP Porting Driver Guide](docs/how-to/hip_porting_driver_api.rst)
-* [HIP Programming Guide](docs/programming_guide.rst)
-* [HIP Logging](docs/how-to/logging.rst)
-* [Building HIP From Source](docs/install/build.rst)
-* [HIP Debugging](docs/how-to/debugging.rst)
-* [HIP RTC](docs/how-to/hip_rtc.md)
-* [HIP Terminology](docs/reference/terms.md) (including Rosetta Stone of GPU computing terms across CUDA/HIP/OpenCL)
-* [HIPIFY](https://github.com/ROCm/HIPIFY/blob/amd-staging/README.md)
-* Supported CUDA APIs:
-  * [Runtime API](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/reference/tables/CUDA_Runtime_API_functions_supported_by_HIP.md)
-  * [Driver API](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/reference/tables/CUDA_Driver_API_functions_supported_by_HIP.md)
-  * [cuComplex API](https://github.com/ROCm/HIPIFY/blob/amd-staging/reference/docs/tables/cuComplex_API_supported_by_HIP.md)
-  * [Device API](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/reference/tables/CUDA_Device_API_supported_by_HIP.md)
-  * [cuBLAS](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/reference/tables/CUBLAS_API_supported_by_ROC.md)
-  * [cuRAND](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/reference/tables/CURAND_API_supported_by_HIP.md)
-  * [cuDNN](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/reference/tables/CUDNN_API_supported_by_HIP.md)
-  * [cuFFT](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/reference/tables/CUFFT_API_supported_by_HIP.md)
-  * [cuSPARSE](https://github.com/ROCm/HIPIFY/blob/amd-staging/docs/reference/tables/CUSPARSE_API_supported_by_HIP.md)
-* [Developer/CONTRIBUTING Info](CONTRIBUTING.md)
-* [Release Notes](RELEASE.md)
-
 ## How do I get set up?
 
 See the [Installation](docs/install/install.rst) notes.
@@ -91,7 +64,7 @@ hipMemcpy(C_h, C_d, Nbytes, hipMemcpyDeviceToHost);
 
 The HIP kernel language defines builtins for determining grid and block coordinates, math functions, short vectors,
 atomics, and timer functions.
-It also specifies additional defines and keywords for function types, address spaces, and optimization controls (See the [HIP C++ Language Extensions](docs/reference/cpp_language_extensions.rst) for a full description).
+It also specifies additional defines and keywords for function types, address spaces, and optimization controls (See the [HIP C++ Language Extensions](docs/how-to/hip_cpp_language_extensions.rst) for a full description).
 Here's an example of defining a simple 'vector_square' kernel.
 
 ```cpp

@@ -22,7 +22,6 @@ The HIP documentation is organized into the following categories:
 
 :::{grid-item-card} Programming guide
 
-* [Introduction](./programming_guide)
 * {doc}`./understand/programming_model`
 * {doc}`./understand/hardware_implementation`
 * {doc}`./understand/compilers`
@@ -42,12 +41,13 @@ The HIP documentation is organized into the following categories:
 :::{grid-item-card} Reference
 
 * [HIP runtime API](./reference/hip_runtime_api_reference)
-* [HSA runtime API for ROCm](./reference/virtual_rocr)
 * [HIP math API](./reference/math_api)
+* [HIP complex math API](./reference/complex_math_api)
 * [HIP environment variables](./reference/env_variables)
+* [HIP error codes](./reference/error_codes)
 * [CUDA to HIP API Function Comparison](./reference/api_syntax)
 * [List of deprecated APIs](./reference/deprecated_api_list)
-* [FP8 numbers in HIP](./reference/fp8_numbers)
+* [Low Precision Floating Point Types](./reference/low_fp_types)
 * {doc}`./reference/hardware_features`
 
 :::

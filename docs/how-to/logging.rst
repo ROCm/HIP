@@ -240,3 +240,16 @@ information when calling the backend runtime.
   :3:C:\constructicon\builds\gfx\two\22.40\drivers\compute\hipamd\src\hip_memory.cpp:681 : 605414524092 us: 29864: [tid:0x9298] hipMemGetInfo: Returned hipSuccess :
   memInfo.total:                    12.06 GB
   memInfo.free:                     11.93 GB (99%)
+
+Logging hipcc commands
+================================================================================
+
+To see the detailed commands that hipcc issues, set the environment variable
+``HIPCC_VERBOSE``. Doing so will print the HIP-clang (or NVCC) commands that
+hipcc generates to ``stderr``.
+
+.. code-block:: shell
+
+  export HIPCC_VERBOSE=1
+  hipcc main.cpp
+  hipcc-cmd: /opt/rocm/lib/llvm/bin/clang++ --offload-arch=gfx90a --driver-mode=g++ -O3 --hip-link -x hip main.cpp

@@ -7,8 +7,11 @@ APUs
 AQL
 AXPY
 asm
+Asynchronicity
+Asynchrony
 asynchrony
 backtrace
+bfloat
 Bitcode
 bitcode
 bitcodes
@@ -24,7 +27,8 @@ coroutines
 Ctx
 cuBLASLt
 cuCtx
-CUDA's
+CUDA
+cuda
 cuDNN
 cuModule
 dataflow
@@ -32,10 +36,10 @@ deallocate
 decompositions
 denormal
 Dereferencing
+DFT
 dll
 DirectX
 EIGEN
-EIGEN's
 enqueue
 enqueues
 entrypoint
@@ -61,7 +65,6 @@ hardcoded
 HC
 hcBLAS
 HIP-Clang
-HIP's
 hipcc
 hipCtx
 hipexamine
@@ -71,6 +74,7 @@ hipModule
 hipModuleLaunchKernel
 hipother
 HIPRTC
+hyperthreading
 icc
 IILE
 iGPU
@@ -91,7 +95,6 @@ iteratively
 Lapack
 latencies
 libc
-libhipcxx
 libstdc
 lifecycle
 linearizing
@@ -116,6 +119,7 @@ NDRange
 nonnegative
 NOP
 Numa
+ns
 Nsight
 ocp
 omnitrace
@@ -124,6 +128,7 @@ overindexing
 oversubscription
 overutilized
 parallelizable
+pipelining
 parallelized
 pixelated
 pragmas
@@ -142,7 +147,6 @@ quad
 representable
 RMW
 rocgdb
-ROCm's
 rocTX
 roundtrip
 rst
@@ -155,10 +159,10 @@ sceneries
 shaders
 SIMT
 sinewave
+sinf
 SOMA
 SPMV
 structs
-struct's
 SYCL
 syntaxes
 texel
@@ -169,8 +173,11 @@ templated
 toolkits
 transfering
 typedefs
+ULP
+ULPs
 unintuitive
 UMM
+uncoalesced
 unmap
 unmapped
 unmapping
