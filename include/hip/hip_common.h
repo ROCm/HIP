@@ -60,6 +60,13 @@ THE SOFTWARE.
 #define __HIP_DEVICE_COMPILE__ 1
 #endif
 
+// For chipStar, __HIP_DEVICE_COMPILE__ should only be defined
+// during device compilation passes. The macro should be undefined during host compilation.
+// This is handled by the compiler during separate compilation phases.
+
+// Note: __HIP_DEVICE_COMPILE__ is intentionally left undefined during host compilation
+// to match HIP specification and allow proper conditional compilation with #ifdef
+
 #ifdef __GNUC__
 #define HIP_PUBLIC_API __attribute__((visibility("default")))
 #define HIP_INTERNAL_EXPORTED_API __attribute__((visibility("default")))
@@ -68,7 +75,7 @@ THE SOFTWARE.
 #define HIP_INTERNAL_EXPORTED_API
 #endif
 
-#if __HIP_DEVICE_COMPILE__ == 0
+#if !defined(__HIP_DEVICE_COMPILE__) || __HIP_DEVICE_COMPILE__ == 0
 // 32-bit Atomics
 #define __HIP_ARCH_HAS_GLOBAL_INT32_ATOMICS__ (0)
 #define __HIP_ARCH_HAS_GLOBAL_FLOAT_ATOMIC_EXCH__ (0)
