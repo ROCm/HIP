@@ -31,7 +31,16 @@ THE SOFTWARE.
 #ifndef HIP_INCLUDE_HIP_HIP_RUNTIME_API_H
 #define HIP_INCLUDE_HIP_HIP_RUNTIME_API_H
 
-#include <string.h>  // for getDeviceProp
+#if __cplusplus
+#include <climits>
+#include <cstdint>
+#include <cstdlib>
+#else
+#include <limits.h>
+#include <stdint.h>
+#include <stdlib.h>
+#endif
+
 #include <hip/hip_version.h>
 #include <hip/hip_common.h>
 #include <hip/linker_types.h>
@@ -88,7 +97,7 @@ typedef struct hipUUID_t {
 } hipUUID;
 
 //---
-// Common headers for both NVCC and HCC paths:
+// Common headers for both NVCC and HIP-Clang paths:
 
 #define hipGetDeviceProperties hipGetDevicePropertiesR0600
 #define hipDeviceProp_t hipDeviceProp_tR0600
@@ -287,7 +296,7 @@ typedef struct hipPointerAttribute_t {
  *
  */
 // Developer note - when updating these, update the hipErrorName and hipErrorString functions in
-// NVCC and HCC paths Also update the hipCUDAErrorTohipError function in NVCC path.
+// NVCC and HIP-Clang paths Also update the hipCUDAErrorTohipError function in NVCC path.
 
 typedef enum __HIP_NODISCARD hipError_t {
     hipSuccess = 0,  ///< Successful completion.
@@ -574,8 +583,6 @@ enum hipGPUDirectRDMAWritesOrdering {
 
 #if defined(__HIP_PLATFORM_AMD__) && !defined(__HIP_PLATFORM_NVIDIA__)
 
-#include <stdint.h>
-#include <stddef.h>
 #ifndef GENERIC_GRID_LAUNCH
 #define GENERIC_GRID_LAUNCH 1
 #endif
@@ -2171,9 +2178,9 @@ hipError_t hipDeviceGetMemPool(hipMemPool_t* mem_pool, int device);
  * @param [in]  deviceId which device to query for information
  *
  * @returns #hipSuccess, #hipErrorInvalidDevice
- * @bug HCC always returns 0 for maxThreadsPerMultiProcessor
- * @bug HCC always returns 0 for regsPerBlock
- * @bug HCC always returns 0 for l2CacheSize
+ * @bug HIP-Clang always returns 0 for maxThreadsPerMultiProcessor
+ * @bug HIP-Clang always returns 0 for regsPerBlock
+ * @bug HIP-Clang always returns 0 for l2CacheSize
  *
  * Populates hipGetDeviceProperties with information for the specified device.
  */
@@ -4316,7 +4323,7 @@ hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height
 hipError_t hipMemAllocPitch(hipDeviceptr_t* dptr, size_t* pitch, size_t widthInBytes, size_t height,
    unsigned int elementSizeBytes);
 /**
- *  @brief Free memory allocated by the hcc hip memory allocation API.
+ *  @brief Free memory allocated by the HIP-Clang hip memory allocation API.
  *  This API performs an implicit hipDeviceSynchronize() call.
  *  If pointer is NULL, the hip runtime is initialized and hipSuccess is returned.
  *
@@ -4342,7 +4349,7 @@ hipError_t hipFree(void* ptr);
  */
 hipError_t hipFreeHost(void* ptr);
 /**
- *  @brief Free memory allocated by the hcc hip host memory allocation API
+ *  @brief Free memory allocated by the HIP-Clang hip host memory allocation API
  *  This API performs an implicit hipDeviceSynchronize() call.
  *  If pointer is NULL, the hip runtime is initialized and hipSuccess is returned.
  *
@@ -4421,7 +4428,7 @@ hipError_t hipMemcpyWithStream(void* dst, const void* src, size_t sizeBytes,
  * hipMemcpyHtoDAsync, hipMemFree, hipMemFreeHost, hipMemGetAddressRange, hipMemGetInfo,
  * hipMemHostAlloc, hipMemHostGetDevicePointer
  */
-hipError_t hipMemcpyHtoD(hipDeviceptr_t dst, void* src, size_t sizeBytes);
+hipError_t hipMemcpyHtoD(hipDeviceptr_t dst, const void* src, size_t sizeBytes);
 /**
  *  @brief Copy data from Device to Host
  *
@@ -4538,7 +4545,8 @@ hipError_t hipMemcpyAtoA(hipArray_t dstArray, size_t dstOffset, hipArray_t srcAr
  * hipMemcpyHtoDAsync, hipMemFree, hipMemFreeHost, hipMemGetAddressRange, hipMemGetInfo,
  * hipMemHostAlloc, hipMemHostGetDevicePointer
  */
-hipError_t hipMemcpyHtoDAsync(hipDeviceptr_t dst, void* src, size_t sizeBytes, hipStream_t stream);
+hipError_t hipMemcpyHtoDAsync(hipDeviceptr_t dst, const void* src, size_t sizeBytes,
+                              hipStream_t stream);
 /**
  *  @brief Copy data from Device to Host asynchronously
  *
@@ -4597,7 +4605,7 @@ hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst, hipDeviceptr_t src, size_t siz
  * hipMemcpyHtoDAsync, hipMemFree, hipMemFreeHost, hipMemGetAddressRange, hipMemGetInfo,
  * hipMemHostAlloc, hipMemHostGetDevicePointer
  */
-hipError_t hipMemcpyAtoHAsync(void* dstHost, hipArray_t srcArray, size_t srcOffset,
+hipError_t hipMemcpyAtoHAsync(void* dstHost, const hipArray_t srcArray, size_t srcOffset,
                               size_t ByteCount, hipStream_t stream);
 /**
  * @brief Copies from host memory to a 1D array.

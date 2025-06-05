@@ -136,7 +136,7 @@ This overlap of computation and data transfer ensures that the GPU is not idle
 while waiting for data. :cpp:func:`hipMemcpyPeerAsync` enables data transfers
 between different GPUs, facilitating multi-GPU communication.
 
-:ref:`async_example`` include launching kernels in one stream while performing
+:ref:`async_example` include launching kernels in one stream while performing
 data transfers in another. This technique is especially useful in applications
 with large data sets that need to be processed quickly.
 

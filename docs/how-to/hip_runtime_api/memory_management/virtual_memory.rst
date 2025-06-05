@@ -25,6 +25,10 @@ issue of reallocation when the extra buffer runs out.
 Virtual memory management solves these memory management problems. It helps to
 reduce memory usage and unnecessary ``memcpy`` calls.
 
+HIP virtual memory management is built on top of HSA, which provides low-level
+access to AMD GPU memory. For more details on the underlying HSA runtime,
+see :doc:`ROCr documentation <rocr-runtime:index>`
+
 .. _memory_allocation_virtual_memory:
 
 Memory allocation

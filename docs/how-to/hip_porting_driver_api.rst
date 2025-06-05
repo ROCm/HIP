@@ -1,6 +1,6 @@
 .. meta::
   :description: This chapter presents how to port the CUDA driver API and showcases equivalent operations in HIP.
-  :keywords: AMD, ROCm, HIP, CUDA, driver API
+  :keywords: AMD, ROCm, HIP, CUDA, driver API, porting, port
 
 .. _porting_driver_api:
 
@@ -8,26 +8,25 @@
 Porting CUDA driver API
 *******************************************************************************
 
-NVIDIA provides separate CUDA driver and runtime APIs. The two APIs have
-significant overlap in functionality:
-
-* Both APIs support events, streams, memory management, memory copy, and error
-  handling.
-
-* Both APIs deliver similar performance.
+CUDA provides separate driver and runtime APIs. The two APIs generally provide
+the similar functionality and mostly can be used interchangeably, however the
+driver API allows for more fine-grained control over the kernel level
+initialization, contexts and module management. This is all taken care of
+implicitly by the runtime API.
 
 * Driver API calls begin with the prefix ``cu``, while runtime API calls begin
   with the prefix ``cuda``. For example, the driver API contains
   ``cuEventCreate``, while the runtime API contains ``cudaEventCreate``, which
   has similar functionality.
 
-* The driver API defines a different, but largely overlapping, error code space
-  than the runtime API and uses a different coding convention. For example, the
-  driver API defines ``CUDA_ERROR_INVALID_VALUE``, while the runtime API defines
-  ``cudaErrorInvalidValue``.
+* The driver API offers two additional low-level functionalities not exposed by
+  the runtime API: module management ``cuModule*`` and context management
+  ``cuCtx*`` APIs.
 
-The driver API offers two additional functionalities not provided by the runtime
-API: ``cuModule`` and ``cuCtx`` APIs.
+HIP does not explicitly provide two different APIs, the corresponding functions
+for the CUDA driver API are available in the HIP runtime API, and are usually
+prefixed with ``hipDrv``. The module and context functionality is available with
+the ``hipModule`` and ``hipCtx`` prefix.
 
 cuModule API
 ================================================================================
@@ -120,12 +119,21 @@ For context reference, visit :ref:`context_management_reference`.
 HIPIFY translation of CUDA driver API
 ================================================================================
 
-The HIPIFY tools convert CUDA driver APIs for streams, events, modules, devices, memory management, context, and the profiler to the equivalent HIP calls. For example, ``cuEventCreate`` is translated to ``hipEventCreate``.
-HIPIFY tools also convert error codes from the driver namespace and coding conventions to the equivalent HIP error code. HIP unifies the APIs for these common functions.
+The HIPIFY tools convert CUDA driver APIs such as streams, events, modules,
+devices, memory management, context, and the profiler to the equivalent HIP
+calls. For example, ``cuEventCreate`` is translated to :cpp:func:`hipEventCreate`.
+HIPIFY tools also convert error codes from the driver namespace and coding
+conventions to the equivalent HIP error code. HIP unifies the APIs for these
+common functions.
 
-The memory copy API requires additional explanation. The CUDA driver includes the memory direction in the name of the API (``cuMemcpyH2D``), while the CUDA driver API provides a single memory copy API with a parameter that specifies the direction. It also supports a "default" direction where the runtime determines the direction automatically.
-HIP provides APIs with both styles, for example, ``hipMemcpyH2D`` as well as ``hipMemcpy``.
-The first version might be faster in some cases because it avoids any host overhead to detect the different memory directions.
+The memory copy API requires additional explanation. The CUDA driver includes
+the memory direction in the name of the API (``cuMemcpyHtoD``), while the CUDA
+runtime API provides a single memory copy API with a parameter that specifies
+the direction. It also supports a "default" direction where the runtime
+determines the direction automatically.
+HIP provides both versions, for example, :cpp:func:`hipMemcpyHtoD` as well as
+:cpp:func:`hipMemcpy`. The first version might be faster in some cases because
+it avoids any host overhead to detect the different memory directions.
 
 HIP defines a single error space and uses camel case for all errors (i.e. ``hipErrorInvalidValue``).
 
@@ -134,16 +142,25 @@ For further information, visit the :doc:`hipify:index`.
 Address spaces
 --------------------------------------------------------------------------------
 
-HIP-Clang defines a process-wide address space where the CPU and all devices allocate addresses from a single unified pool.
-This means addresses can be shared between contexts. Unlike the original CUDA implementation, a new context does not create a new address space for the device.
+HIP-Clang defines a process-wide address space where the CPU and all devices
+allocate addresses from a single unified pool.
+This means addresses can be shared between contexts. Unlike the original CUDA
+implementation, a new context does not create a new address space for the device.
 
 Using hipModuleLaunchKernel
 --------------------------------------------------------------------------------
 
-Both CUDA driver and runtime APIs define a function for launching kernels, called ``cuLaunchKernel`` or ``cudaLaunchKernel``. The equivalent API in HIP is ``hipModuleLaunchKernel``.
-The kernel arguments and the execution configuration (grid dimensions, group dimensions, dynamic shared memory, and stream) are passed as arguments to the launch function.
-The runtime API additionally provides the ``<<< >>>`` syntax for launching kernels, which resembles a special function call and is easier to use than the explicit launch API, especially when handling kernel arguments.
-However, this syntax is not standard C++ and is available only when NVCC is used to compile the host code.
+Both CUDA driver and runtime APIs define a function for launching kernels,
+called ``cuLaunchKernel`` or ``cudaLaunchKernel``. The equivalent API in HIP is
+``hipModuleLaunchKernel``.
+The kernel arguments and the execution configuration (grid dimensions, group
+dimensions, dynamic shared memory, and stream) are passed as arguments to the
+launch function.
+The runtime API additionally provides the ``<<< >>>`` syntax for launching
+kernels, which resembles a special function call and is easier to use than the
+explicit launch API, especially when handling kernel arguments.
+However, this syntax is not standard C++ and is available only when NVCC is used
+to compile the host code.
 
 Additional information
 --------------------------------------------------------------------------------
@@ -186,12 +203,24 @@ functions.
 Kernel launching
 --------------------------------------------------------------------------------
 
-HIP-Clang supports kernel launching using either the CUDA ``<<<>>>`` syntax, ``hipLaunchKernel``, or ``hipLaunchKernelGGL``. The last option is a macro which expands to the CUDA ``<<<>>>`` syntax by default. It can also be turned into a template by defining ``HIP_TEMPLATE_KERNEL_LAUNCH``.
+HIP-Clang supports kernel launching using either the CUDA ``<<<>>>`` syntax,
+``hipLaunchKernel``, or ``hipLaunchKernelGGL``. The last option is a macro which
+expands to the CUDA ``<<<>>>`` syntax by default. It can also be turned into a
+template by defining ``HIP_TEMPLATE_KERNEL_LAUNCH``.
 
-When the executable or shared library is loaded by the dynamic linker, the initialization functions are called. In the initialization functions, the code objects containing all kernels are loaded when ``__hipRegisterFatBinary`` is called. When ``__hipRegisterFunction`` is called, the stub functions are associated with the corresponding kernels in the code objects.
+When the executable or shared library is loaded by the dynamic linker, the
+initialization functions are called. In the initialization functions, the code
+objects containing all kernels are loaded when ``__hipRegisterFatBinary`` is
+called. When ``__hipRegisterFunction`` is called, the stub functions are
+associated with the corresponding kernels in the code objects.
 
 HIP-Clang implements two sets of APIs for launching kernels.
-By default, when HIP-Clang encounters the ``<<<>>>`` statement in the host code, it first calls ``hipConfigureCall`` to set up the threads and grids. It then calls the stub function with the given arguments. The stub function calls ``hipSetupArgument`` for each kernel argument, then calls ``hipLaunchByPtr`` with a function pointer to the stub function. In ``hipLaunchByPtr``, the actual kernel associated with the stub function is launched.
+By default, when HIP-Clang encounters the ``<<<>>>`` statement in the host code,
+it first calls ``hipConfigureCall`` to set up the threads and grids. It then
+calls the stub function with the given arguments. The stub function calls
+``hipSetupArgument`` for each kernel argument, then calls ``hipLaunchByPtr``
+with a function pointer to the stub function. In ``hipLaunchByPtr``, the actual
+kernel associated with the stub function is launched.
 
 NVCC implementation notes
 ================================================================================
@@ -199,7 +228,9 @@ NVCC implementation notes
 Interoperation between HIP and CUDA driver
 --------------------------------------------------------------------------------
 
-CUDA applications might want to mix CUDA driver code with HIP code (see the example below). This table shows the equivalence between CUDA and HIP types required to implement this interaction.
+CUDA applications might want to mix CUDA driver code with HIP code (see the
+example below). This table shows the equivalence between CUDA and HIP types
+required to implement this interaction.
 
 .. list-table:: Equivalence table between HIP and CUDA types
    :header-rows: 1
@@ -547,3 +578,72 @@ The HIP version number is defined as an integer:
 .. code-block:: cpp
 
   HIP_VERSION=HIP_VERSION_MAJOR * 10000000 + HIP_VERSION_MINOR * 100000 + HIP_VERSION_PATCH
+
+CU_POINTER_ATTRIBUTE_MEMORY_TYPE
+================================================================================
+
+To get the pointer's memory type in HIP, developers should use
+:cpp:func:`hipPointerGetAttributes`. First parameter of the function is
+`hipPointerAttribute_t`. Its ``type`` member variable indicates whether the
+memory pointed to is allocated on the device or the host.
+
+For example:
+
+.. code-block:: cpp
+
+  double * ptr;
+  hipMalloc(&ptr, sizeof(double));
+  hipPointerAttribute_t attr;
+  hipPointerGetAttributes(&attr, ptr); /*attr.type is hipMemoryTypeDevice*/
+  if(attr.type == hipMemoryTypeDevice)
+    std::cout << "ptr is of type hipMemoryTypeDevice" << std::endl;
+
+  double* ptrHost;
+  hipHostMalloc(&ptrHost, sizeof(double));
+  hipPointerAttribute_t attr;
+  hipPointerGetAttributes(&attr, ptrHost); /*attr.type is hipMemoryTypeHost*/
+  if(attr.type == hipMemorTypeHost)
+    std::cout << "ptrHost is of type hipMemoryTypeHost" << std::endl;
+
+Note that ``hipMemoryType`` enum values are different from the
+``cudaMemoryType`` enum values.
+
+For example, on AMD platform, `hipMemoryType` is defined in `hip_runtime_api.h`,
+
+.. code-block:: cpp
+
+  typedef enum hipMemoryType {
+      hipMemoryTypeHost = 0,    ///< Memory is physically located on host
+      hipMemoryTypeDevice = 1,  ///< Memory is physically located on device. (see deviceId for specific device)
+      hipMemoryTypeArray = 2,   ///< Array memory, physically located on device. (see deviceId for specific device)
+      hipMemoryTypeUnified = 3, ///< Not used currently
+      hipMemoryTypeManaged = 4  ///< Managed memory, automaticallly managed by the unified memory system
+  } hipMemoryType;
+
+Looking into CUDA toolkit, it defines `cudaMemoryType` as following,
+
+.. code-block:: cpp
+
+  enum cudaMemoryType
+  {
+    cudaMemoryTypeUnregistered = 0, // Unregistered memory.
+    cudaMemoryTypeHost = 1, // Host memory.
+    cudaMemoryTypeDevice = 2, // Device memory.
+    cudaMemoryTypeManaged = 3, // Managed memory
+  }
+
+In this case, memory type translation for ``hipPointerGetAttributes`` needs to
+be handled properly on NVIDIA platform to get the correct memory type in CUDA,
+which is done in the file ``nvidia_hip_runtime_api.h``.
+
+So in any HIP applications which use HIP APIs involving memory types, developers
+should use ``#ifdef`` in order to assign the correct enum values depending on
+NVIDIA or AMD platform.
+
+As an example, please see the code from the `link <https://github.com/ROCm/hip-tests/tree/develop/catch/unit/memory/hipMemcpyParam2D.cc>`_.
+
+With the ``#ifdef`` condition, HIP APIs work as expected on both AMD and NVIDIA
+platforms.
+
+Note, ``cudaMemoryTypeUnregistered`` is currently not supported as
+``hipMemoryType`` enum, due to HIP functionality backward compatibility.

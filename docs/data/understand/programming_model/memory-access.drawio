@@ -1,0 +1,237 @@
+<mxfile host="65bd71144e" scale="1" border="20">
+    <diagram name="Memory Access Patterns" id="memory-patterns">
+        <mxGraphModel dx="739" dy="990" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="600" pageHeight="300" background="#5E5B61" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="title" value="Memory Access Patterns" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontFamily=Arial;fontColor=#FFFFFF;" parent="1" vertex="1">
+                    <mxGeometry x="200" y="10" width="200" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="uncoalesced-title" value="Uncoalesced Access" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;fontFamily=Arial;fontColor=#FFFFFF;" parent="1" vertex="1">
+                    <mxGeometry x="75" y="40" width="150" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="uncoalesced-threads" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#585556;strokeColor=#FFFFFF;strokeWidth=2;" parent="1" vertex="1">
+                    <mxGeometry x="50" y="80" width="200" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="uncoalesced-threads-title" value="Threads" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontFamily=Arial;fontColor=#FFFFFF;" parent="1" vertex="1">
+                    <mxGeometry x="100" y="62" width="100" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="uncoalesced-div1" value="" style="endArrow=none;html=1;strokeColor=#FFFFFF;strokeWidth=2;" parent="1" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="100" y="80" as="sourcePoint"/>
+                        <mxPoint x="100" y="160" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="uncoalesced-div2" value="" style="endArrow=none;html=1;strokeColor=#FFFFFF;strokeWidth=2;" parent="1" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="150" y="80" as="sourcePoint"/>
+                        <mxPoint x="150" y="160" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="uncoalesced-div3" value="" style="endArrow=none;html=1;strokeColor=#FFFFFF;strokeWidth=2;" parent="1" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="200" y="80" as="sourcePoint"/>
+                        <mxPoint x="200" y="160" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="uncoalesced-memory" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C23555;strokeColor=#FFFFFF;strokeWidth=2;" parent="1" vertex="1">
+                    <mxGeometry x="50" y="200" width="200" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="uncoalesced-memory-title" value="Memory" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontFamily=Arial;fontColor=#FFFFFF;" parent="1" vertex="1">
+                    <mxGeometry x="100" y="240" width="100" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="uncoalesced-mem-div1" value="" style="endArrow=none;html=1;strokeColor=#FFFFFF;strokeWidth=2;" parent="1" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="100" y="200" as="sourcePoint"/>
+                        <mxPoint x="100" y="240" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="uncoalesced-mem-div2" value="" style="endArrow=none;html=1;strokeColor=#FFFFFF;strokeWidth=2;" parent="1" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="150" y="200" as="sourcePoint"/>
+                        <mxPoint x="150" y="240" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="uncoalesced-mem-div3" value="" style="endArrow=none;html=1;strokeColor=#FFFFFF;strokeWidth=2;" parent="1" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="200" y="200" as="sourcePoint"/>
+                        <mxPoint x="200" y="240" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="uncoalesced-arrow1" value="" style="endArrow=classic;html=1;strokeColor=#FFFFFF;strokeWidth=2;" parent="1" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="75" y="160" as="sourcePoint"/>
+                        <mxPoint x="75" y="200" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="uncoalesced-arrow2" value="" style="endArrow=classic;html=1;strokeColor=#FFFFFF;strokeWidth=2;" parent="1" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="125" y="160" as="sourcePoint"/>
+                        <mxPoint x="175" y="200" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="uncoalesced-arrow3" value="" style="endArrow=classic;html=1;strokeColor=#FFFFFF;strokeWidth=2;" parent="1" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="175" y="160" as="sourcePoint"/>
+                        <mxPoint x="125" y="200" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="coalesced-title" value="Coalesced Access" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;fontFamily=Arial;fontColor=#FFFFFF;" parent="1" vertex="1">
+                    <mxGeometry x="375" y="40" width="150" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="coalesced-threads" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#585556;strokeColor=#FFFFFF;strokeWidth=2;" parent="1" vertex="1">
+                    <mxGeometry x="350" y="80" width="200" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="coalesced-threads-title" value="Threads" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontFamily=Arial;fontColor=#FFFFFF;" parent="1" vertex="1">
+                    <mxGeometry x="400" y="62" width="100" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="coalesced-div1" value="" style="endArrow=none;html=1;strokeColor=#FFFFFF;strokeWidth=2;" parent="1" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="400" y="80" as="sourcePoint"/>
+                        <mxPoint x="400" y="160" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="coalesced-div2" value="" style="endArrow=none;html=1;strokeColor=#FFFFFF;strokeWidth=2;" parent="1" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="450" y="79" as="sourcePoint"/>
+                        <mxPoint x="450" y="159" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="coalesced-div3" value="" style="endArrow=none;html=1;strokeColor=#FFFFFF;strokeWidth=2;" parent="1" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="500" y="80" as="sourcePoint"/>
+                        <mxPoint x="500" y="160" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="coalesced-memory" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C23555;strokeColor=#FFFFFF;strokeWidth=2;" parent="1" vertex="1">
+                    <mxGeometry x="350" y="200" width="200" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="coalesced-memory-title" value="Memory" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontFamily=Arial;fontColor=#FFFFFF;" parent="1" vertex="1">
+                    <mxGeometry x="400" y="240" width="100" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="coalesced-mem-div1" value="" style="endArrow=none;html=1;strokeColor=#FFFFFF;strokeWidth=2;" parent="1" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="400" y="200" as="sourcePoint"/>
+                        <mxPoint x="400" y="240" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="coalesced-mem-div2" value="" style="endArrow=none;html=1;strokeColor=#FFFFFF;strokeWidth=2;" parent="1" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="450" y="200" as="sourcePoint"/>
+                        <mxPoint x="450" y="240" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="coalesced-mem-div3" value="" style="endArrow=none;html=1;strokeColor=#FFFFFF;strokeWidth=2;" parent="1" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="500" y="200" as="sourcePoint"/>
+                        <mxPoint x="500" y="240" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="coalesced-arrow1" value="" style="endArrow=classic;html=1;strokeColor=#FFFFFF;strokeWidth=2;" parent="1" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="375" y="160" as="sourcePoint"/>
+                        <mxPoint x="375" y="200" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="coalesced-arrow2" value="" style="endArrow=classic;html=1;strokeColor=#FFFFFF;strokeWidth=2;" parent="1" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="425" y="160" as="sourcePoint"/>
+                        <mxPoint x="425" y="200" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="coalesced-arrow3" value="" style="endArrow=classic;html=1;strokeColor=#FFFFFF;strokeWidth=2;" parent="1" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="475" y="160" as="sourcePoint"/>
+                        <mxPoint x="475" y="200" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="coalesced-arrow4" value="" style="endArrow=classic;html=1;strokeColor=#FFFFFF;strokeWidth=2;" parent="1" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="525" y="160" as="sourcePoint"/>
+                        <mxPoint x="525" y="200" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <UserObject label="0" placeholders="1" name="Variable" id="2">
+                    <mxCell style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontColor=light-dark(#FFFFFF,#121212);" parent="1" vertex="1">
+                        <mxGeometry x="65" y="110" width="20" height="20" as="geometry"/>
+                    </mxCell>
+                </UserObject>
+                <UserObject label="..." placeholders="1" name="Variable" id="3">
+                    <mxCell style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontColor=light-dark(#FFFFFF,#121212);" parent="1" vertex="1">
+                        <mxGeometry x="115" y="110" width="20" height="20" as="geometry"/>
+                    </mxCell>
+                </UserObject>
+                <UserObject label="..." placeholders="1" name="Variable" id="4">
+                    <mxCell style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontColor=light-dark(#FFFFFF,#121212);" parent="1" vertex="1">
+                        <mxGeometry x="165" y="110" width="20" height="20" as="geometry"/>
+                    </mxCell>
+                </UserObject>
+                <UserObject label="63" placeholders="1" name="Variable" id="5">
+                    <mxCell style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontColor=light-dark(#FFFFFF,#121212);" parent="1" vertex="1">
+                        <mxGeometry x="215" y="110" width="20" height="20" as="geometry"/>
+                    </mxCell>
+                </UserObject>
+                <UserObject label="0" placeholders="1" name="Variable" id="6">
+                    <mxCell style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontColor=light-dark(#FFFFFF,#121212);" parent="1" vertex="1">
+                        <mxGeometry x="365" y="110" width="20" height="20" as="geometry"/>
+                    </mxCell>
+                </UserObject>
+                <UserObject label="..." placeholders="1" name="Variable" id="7">
+                    <mxCell style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontColor=light-dark(#FFFFFF,#121212);" parent="1" vertex="1">
+                        <mxGeometry x="415" y="110" width="20" height="20" as="geometry"/>
+                    </mxCell>
+                </UserObject>
+                <UserObject label="..." placeholders="1" name="Variable" id="8">
+                    <mxCell style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontColor=light-dark(#FFFFFF,#121212);" parent="1" vertex="1">
+                        <mxGeometry x="465" y="110" width="20" height="20" as="geometry"/>
+                    </mxCell>
+                </UserObject>
+                <UserObject label="63" placeholders="1" name="Variable" id="9">
+                    <mxCell style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontColor=light-dark(#FFFFFF,#121212);" parent="1" vertex="1">
+                        <mxGeometry x="515" y="110" width="20" height="20" as="geometry"/>
+                    </mxCell>
+                </UserObject>
+                <UserObject label="0" placeholders="1" name="Variable" id="10">
+                    <mxCell style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontColor=light-dark(#FFFFFF,#121212);" parent="1" vertex="1">
+                        <mxGeometry x="65" y="210" width="20" height="20" as="geometry"/>
+                    </mxCell>
+                </UserObject>
+                <UserObject label="..." placeholders="1" name="Variable" id="11">
+                    <mxCell style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontColor=light-dark(#FFFFFF,#121212);" parent="1" vertex="1">
+                        <mxGeometry x="115" y="210" width="20" height="20" as="geometry"/>
+                    </mxCell>
+                </UserObject>
+                <UserObject label="..." placeholders="1" name="Variable" id="12">
+                    <mxCell style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontColor=light-dark(#FFFFFF,#121212);" parent="1" vertex="1">
+                        <mxGeometry x="165" y="210" width="20" height="20" as="geometry"/>
+                    </mxCell>
+                </UserObject>
+                <UserObject label="63" placeholders="1" name="Variable" id="13">
+                    <mxCell style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontColor=light-dark(#FFFFFF,#121212);" parent="1" vertex="1">
+                        <mxGeometry x="215" y="210" width="20" height="20" as="geometry"/>
+                    </mxCell>
+                </UserObject>
+                <UserObject label="0" placeholders="1" name="Variable" id="14">
+                    <mxCell style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontColor=light-dark(#FFFFFF,#121212);" parent="1" vertex="1">
+                        <mxGeometry x="365" y="210" width="20" height="20" as="geometry"/>
+                    </mxCell>
+                </UserObject>
+                <UserObject label="..." placeholders="1" name="Variable" id="15">
+                    <mxCell style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontColor=light-dark(#FFFFFF,#121212);" parent="1" vertex="1">
+                        <mxGeometry x="415" y="210" width="20" height="20" as="geometry"/>
+                    </mxCell>
+                </UserObject>
+                <UserObject label="..." placeholders="1" name="Variable" id="16">
+                    <mxCell style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontColor=light-dark(#FFFFFF,#121212);" parent="1" vertex="1">
+                        <mxGeometry x="465" y="210" width="20" height="20" as="geometry"/>
+                    </mxCell>
+                </UserObject>
+                <UserObject label="63" placeholders="1" name="Variable" id="17">
+                    <mxCell style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontColor=light-dark(#FFFFFF,#121212);" parent="1" vertex="1">
+                        <mxGeometry x="515" y="210" width="20" height="20" as="geometry"/>
+                    </mxCell>
+                </UserObject>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

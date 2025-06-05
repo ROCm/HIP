@@ -6,6 +6,7 @@
 
 import re
 import sys
+import subprocess
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -58,3 +59,7 @@ exclude_patterns = [
     'how-to/debugging_env.rst',
     "data/env_variables_hip.rst"
 ]
+
+git_url = subprocess.check_output(['git', 'config', '--get', 'remote.origin.url']).strip().decode('ascii')
+if git_url.find("git:") != -1:
+    html_theme_options = {"repository_url": "https://github.com/ROCm/hip"}

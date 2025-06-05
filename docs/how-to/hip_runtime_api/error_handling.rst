@@ -37,6 +37,8 @@ Best practices of HIP error handling:
 For more details on the error handling functions, see :ref:`error handling
 functions reference page <error_handling_reference>`.
 
+For a list of all error codes, see :ref:`HIP error codes <hip_error_codes>`.
+
 .. _hip_check_macros:
 
 HIP check macros
