@@ -17,9 +17,14 @@ alongside options to guide the compilation.
   * This library can be used for compilation on systems without AMD GPU drivers
     installed (offline compilation). However, running the compiled code still
     requires both the HIP runtime library and GPU drivers on the target system.
-  * This library depends on Code Object Manager (comgr). You can try to
-    statically link comgr into HIPRTC to avoid ambiguity.
   * Developers can bundle this library with their application.
+  * HIPRTC leverages AMD's Code Object Manager API (``Comgr``) internally, which
+    is designed to simplify linking, compiling, and inspecting code objects. For
+    more information, see the `llvm-project/amd/comgr/README <https://github.com/ROCm/llvm-project/blob/amd-staging/amd/comgr/README.md>`_.
+  * Comgr may cache HIPRTC compilations. To force full recompilation for each HIPRTC API invocation, set AMD_COMGR_CACHE=0.
+
+    - When viewing the *README* in the Comgr GitHub repository you should look at a
+      specific branch of interest, such as ``docs/6.3.0`` or ``docs/6.4.1``, rather than the default branch.
 
 Compilation APIs
 ===============================================================================
@@ -250,45 +255,6 @@ The full example is below:
     HIP_CHECK(hipFree(doutput));
   }
 
-
-Kernel Compilation Cache
-===============================================================================
-
-HIPRTC incorporates a cache to avoid recompiling kernels between program
-executions. The contents of the cache include the kernel source code (including
-the contents of any ``#include`` headers), the compilation flags, and the
-compiler version. After a ROCm version update, the kernels are progressively
-recompiled, and the new results are cached. When the cache is disabled, each
-kernel is recompiled every time it is requested.
-
-Use the following environment variables to manage the cache status as enabled or
-disabled, the location for storing the cache contents, and the cache eviction
-policy:
-
-* ``AMD_COMGR_CACHE`` By default this variable is unset and the
-  compilation cache feature is enabled. To disable the feature set the
-  environment variable to a value of ``0``.
-
-* ``AMD_COMGR_CACHE_DIR``: By default the value of this environment variable is
-  defined as ``$XDG_CACHE_HOME/comgr``, which defaults to
-  ``$USER/.cache/comgr`` on Linux, and ``%LOCALAPPDATA%\cache\comgr``
-  on Windows. You can specify a different directory for the environment variable
-  to change the path for cache storage. If the runtime fails to access the
-  specified cache directory the cache is disabled. If the environment variable
-  is set to an empty string (``""``), the default directory is used.
-
-* ``AMD_COMGR_CACHE_POLICY``: If assigned a value, the string is interpreted and
-  applied to the cache pruning policy. The string format is consistent with
-  `Clang's ThinLTO cache pruning policy <https://rocm.docs.amd.com/projects/llvm-project/en/latest/LLVM/clang/html/ThinLTO.html#cache-pruning>`_.
-  The default policy is defined as:
-  ``prune_interval=1h:prune_expiration=0h:cache_size=75%:cache_size_bytes=30g:cache_size_files=0``.
-  If the runtime fails to parse the defined string, or the environment variable
-  is set to an empty string (""), the cache is disabled.
-
-.. note::
-
-  This cache is also shared with the OpenCL runtime shipped with ROCm.
-
 HIPRTC specific options
 ===============================================================================
 
@@ -484,13 +450,17 @@ application requires the ingestion of bitcode/IR not derived from the currently
 installed AMD compiler, it must run with HIPRTC and comgr dynamic libraries that
 are compatible with the version of the bitcode/IR.
 
-`Comgr <https://github.com/ROCm/llvm-project/tree/amd-staging/amd/comgr>`_ is a
+`Comgr <https://github.com/ROCm/llvm-project/tree/amd-staging/amd/comgr/README.md>`_ is a
 shared library that incorporates the LLVM/Clang compiler that HIPRTC relies on.
 To identify the bitcode/IR version that comgr is compatible with, one can
 execute "clang -v" using the clang binary from the same ROCm or HIP SDK package.
 For instance, if compiling bitcode/IR version 14, the HIPRTC and comgr libraries
 released by AMD around mid 2022 would be the best choice, assuming the
 LLVM/Clang version included in the package is also version 14.
+
+.. note:: 
+  When viewing the *README* in the Comgr GitHub repository you should look at a
+  specific branch of interest, such as ``docs/6.3.0`` or ``docs/6.4.1``, rather than the default branch.
 
 To ensure smooth operation and compatibility, an application may choose to ship
 the specific versions of HIPRTC and comgr dynamic libraries, or it may opt to
