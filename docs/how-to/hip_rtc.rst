@@ -20,6 +20,7 @@ alongside options to guide the compilation.
   * This library depends on Code Object Manager (comgr). You can try to
     statically link comgr into HIPRTC to avoid ambiguity.
   * Developers can bundle this library with their application.
+  * hipRTC leverages AMD's Code Object Manager API (``Comgr``) internally, which is designed to simplify linking, compiling, and inspecting code objects. For more information, see the `llvm-project/amd/comgr/README <https://github.com/ROCm/llvm-project/blob/amd-staging/amd/comgr/README.md>`_.
 
 Compilation APIs
 ===============================================================================
@@ -265,9 +266,9 @@ Use the following environment variables to manage the cache status as enabled or
 disabled, the location for storing the cache contents, and the cache eviction
 policy:
 
-* ``AMD_COMGR_CACHE`` By default this variable is unset and the
-  compilation cache feature is enabled. To disable the feature set the
-  environment variable to a value of ``0``.
+* ``AMD_COMGR_CACHE`` By default this variable has a value of ``1`` and the compilation
+cache feature is enabled. To disable the feature set the environment variable to
+a value of ``0``.
 
 * ``AMD_COMGR_CACHE_DIR``: By default the value of this environment variable is
   defined as ``$XDG_CACHE_HOME/comgr``, which defaults to
@@ -484,13 +485,17 @@ application requires the ingestion of bitcode/IR not derived from the currently
 installed AMD compiler, it must run with HIPRTC and comgr dynamic libraries that
 are compatible with the version of the bitcode/IR.
 
-`Comgr <https://github.com/ROCm/llvm-project/tree/amd-staging/amd/comgr>`_ is a
+`Comgr <https://github.com/ROCm/llvm-project/tree/amd-staging/amd/comgr/README.md>`_ is a
 shared library that incorporates the LLVM/Clang compiler that HIPRTC relies on.
 To identify the bitcode/IR version that comgr is compatible with, one can
 execute "clang -v" using the clang binary from the same ROCm or HIP SDK package.
 For instance, if compiling bitcode/IR version 14, the HIPRTC and comgr libraries
 released by AMD around mid 2022 would be the best choice, assuming the
 LLVM/Clang version included in the package is also version 14.
+
+.. note:: 
+  When viewing the Comgr GitHub respository, you should look at a specific
+  release of interest rather than the default branch. 
 
 To ensure smooth operation and compatibility, an application may choose to ship
 the specific versions of HIPRTC and comgr dynamic libraries, or it may opt to
