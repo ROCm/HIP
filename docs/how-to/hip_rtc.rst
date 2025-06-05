@@ -17,10 +17,12 @@ alongside options to guide the compilation.
   * This library can be used for compilation on systems without AMD GPU drivers
     installed (offline compilation). However, running the compiled code still
     requires both the HIP runtime library and GPU drivers on the target system.
-  * This library depends on Code Object Manager (comgr). You can try to
-    statically link comgr into HIPRTC to avoid ambiguity.
   * Developers can bundle this library with their application.
-  * hipRTC leverages AMD's Code Object Manager API (``Comgr``) internally, which is designed to simplify linking, compiling, and inspecting code objects. For more information, see the `llvm-project/amd/comgr/README <https://github.com/ROCm/llvm-project/blob/amd-staging/amd/comgr/README.md>`_.
+  * hipRTC leverages AMD's Code Object Manager API (``Comgr``) internally, which is designed to simplify linking, compiling, and inspecting code objects. For more information, see the `llvm-project/amd/comgr/README <https://github.com/ROCm/llvm-project/amd-staging/amd/comgr/README.md>`_.
+
+.. note:: 
+  When viewing the *README* in Comgr GitHub repository you should look at a specific
+  release of interest rather than the default branch. 
 
 Compilation APIs
 ===============================================================================
@@ -267,8 +269,8 @@ disabled, the location for storing the cache contents, and the cache eviction
 policy:
 
 * ``AMD_COMGR_CACHE`` By default this variable has a value of ``1`` and the compilation
-cache feature is enabled. To disable the feature set the environment variable to
-a value of ``0``.
+  cache feature is enabled. To disable the feature set the environment variable to
+  a value of ``0``.
 
 * ``AMD_COMGR_CACHE_DIR``: By default the value of this environment variable is
   defined as ``$XDG_CACHE_HOME/comgr``, which defaults to
@@ -494,7 +496,7 @@ released by AMD around mid 2022 would be the best choice, assuming the
 LLVM/Clang version included in the package is also version 14.
 
 .. note:: 
-  When viewing the Comgr GitHub respository, you should look at a specific
+  When viewing the *README* in Comgr GitHub respository, you should look at a specific
   release of interest rather than the default branch. 
 
 To ensure smooth operation and compatibility, an application may choose to ship
