@@ -20,7 +20,7 @@ alongside options to guide the compilation.
   * Developers can bundle this library with their application.
   * HIPRTC leverages AMD's Code Object Manager API (``Comgr``) internally, which
     is designed to simplify linking, compiling, and inspecting code objects. For
-    more information, see the `llvm-project/amd/comgr/README <https://github.com/ROCm/llvm-project/blob/amd-staging/README.md>`_.
+    more information, see the `llvm-project/amd/comgr/README <https://github.com/ROCm/llvm-project/blob/amd-staging/amd/comgr/README.md>`_.
   * Comgr may cache HIPRTC compilations. To force full recompilation for each HIPRTC API invocation, set AMD_COMGR_CACHE=0.
 
     - When viewing the *README* in the Comgr GitHub repository you should look at a
