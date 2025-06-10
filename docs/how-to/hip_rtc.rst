@@ -18,7 +18,7 @@ alongside options to guide the compilation.
     installed (offline compilation). However, running the compiled code still
     requires both the HIP runtime library and GPU drivers on the target system.
   * Developers can bundle this library with their application.
-  * hipRTC leverages AMD's Code Object Manager API (``Comgr``) internally, which
+  * HIPRTC leverages AMD's Code Object Manager API (``Comgr``) internally, which
     is designed to simplify linking, compiling, and inspecting code objects. For
     more information, see the `llvm-project/amd/comgr/README <https://github.com/ROCm/llvm-project/amd-staging/amd/comgr/README.md>`_.
 * Comgr may cache hipRTC compilations. To force full recompilation for each hipRTC API invocation, set AMD_COMGR_CACHE=0.
