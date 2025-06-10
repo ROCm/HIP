@@ -22,6 +22,7 @@ alongside options to guide the compilation.
     is designed to simplify linking, compiling, and inspecting code objects. For
     more information, see the `llvm-project/amd/comgr/README <https://github.com/ROCm/llvm-project/amd-staging/amd/comgr/README.md>`_.
   * Comgr may cache HIPRTC compilations. To force full recompilation for each HIPRTC API invocation, set AMD_COMGR_CACHE=0.
+
     - When viewing the *README* in the Comgr GitHub repository you should look at a
       specific release of interest rather than the default branch.
 
@@ -253,45 +254,6 @@ The full example is below:
     HIP_CHECK(hipFree(dinput2));
     HIP_CHECK(hipFree(doutput));
   }
-
-
-Kernel Compilation Cache
-===============================================================================
-
-HIPRTC incorporates a cache to avoid recompiling kernels between program
-executions. The contents of the cache include the kernel source code (including
-the contents of any ``#include`` headers), the compilation flags, and the
-compiler version. After a ROCm version update, the kernels are progressively
-recompiled, and the new results are cached. When the cache is disabled, each
-kernel is recompiled every time it is requested.
-
-Use the following environment variables to manage the cache status as enabled or
-disabled, the location for storing the cache contents, and the cache eviction
-policy:
-
-* ``AMD_COMGR_CACHE`` By default this variable has a value of ``1`` and the compilation
-  cache feature is enabled. To disable the feature set the environment variable to
-  a value of ``0``.
-
-* ``AMD_COMGR_CACHE_DIR``: By default the value of this environment variable is
-  defined as ``$XDG_CACHE_HOME/comgr``, which defaults to
-  ``$USER/.cache/comgr`` on Linux, and ``%LOCALAPPDATA%\cache\comgr``
-  on Windows. You can specify a different directory for the environment variable
-  to change the path for cache storage. If the runtime fails to access the
-  specified cache directory the cache is disabled. If the environment variable
-  is set to an empty string (``""``), the default directory is used.
-
-* ``AMD_COMGR_CACHE_POLICY``: If assigned a value, the string is interpreted and
-  applied to the cache pruning policy. The string format is consistent with
-  `Clang's ThinLTO cache pruning policy <https://rocm.docs.amd.com/projects/llvm-project/en/latest/LLVM/clang/html/ThinLTO.html#cache-pruning>`_.
-  The default policy is defined as:
-  ``prune_interval=1h:prune_expiration=0h:cache_size=75%:cache_size_bytes=30g:cache_size_files=0``.
-  If the runtime fails to parse the defined string, or the environment variable
-  is set to an empty string (""), the cache is disabled.
-
-.. note::
-
-  This cache is also shared with the OpenCL runtime shipped with ROCm.
 
 HIPRTC specific options
 ===============================================================================
