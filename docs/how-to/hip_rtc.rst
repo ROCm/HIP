@@ -460,7 +460,7 @@ LLVM/Clang version included in the package is also version 14.
 
 .. note:: 
   When viewing the *README* in the Comgr GitHub repository you should look at a
-  specific release of interest, such as docs/6.3.0 or docs/6.4.1, rather than the default branch.
+  specific branch of interest, such as ``docs/6.3.0`` or ``docs/6.4.1``, rather than the default branch.
 
 To ensure smooth operation and compatibility, an application may choose to ship
 the specific versions of HIPRTC and comgr dynamic libraries, or it may opt to
