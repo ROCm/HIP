@@ -24,7 +24,7 @@ alongside options to guide the compilation.
   * Comgr may cache HIPRTC compilations. To force full recompilation for each HIPRTC API invocation, set AMD_COMGR_CACHE=0.
 
     - When viewing the *README* in the Comgr GitHub repository you should look at a
-      specific branch of interest, such as docs/6.3.0 or docs/6.4.1, rather than the default branch.
+      specific branch of interest, such as ``docs/6.3.0`` or ``docs/6.4.1``, rather than the default branch.
 
 Compilation APIs
 ===============================================================================
