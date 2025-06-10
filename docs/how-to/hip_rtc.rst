@@ -21,7 +21,7 @@ alongside options to guide the compilation.
   * hipRTC leverages AMD's Code Object Manager API (``Comgr``) internally, which
     is designed to simplify linking, compiling, and inspecting code objects. For
     more information, see the `llvm-project/amd/comgr/README <https://github.com/ROCm/llvm-project/amd-staging/amd/comgr/README.md>`_.
-
+* Comgr may cache hipRTC compilations. To force full recompilation for each hipRTC API invocation, set AMD_COMGR_CACHE=0.
     - When viewing the *README* in the Comgr GitHub repository you should look at a
       specific release of interest rather than the default branch.
 
