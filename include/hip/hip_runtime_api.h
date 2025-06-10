@@ -2663,7 +2663,7 @@ hipError_t hipStreamCreateWithFlags(hipStream_t* stream, unsigned int flags);
  * subsequent hipStream* commands. The stream is allocated on the heap and will remain allocated
  * even if the handle goes out-of-scope. To release the memory used by the stream, application must
  * call hipStreamDestroy.
- * 
+ *
  * The @p flags parameter controls behavior of the stream. The valid values are #hipStreamDefault
  * and #hipStreamNonBlocking.
  *
@@ -4605,7 +4605,7 @@ hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst, hipDeviceptr_t src, size_t siz
  * hipMemcpyHtoDAsync, hipMemFree, hipMemFreeHost, hipMemGetAddressRange, hipMemGetInfo,
  * hipMemHostAlloc, hipMemHostGetDevicePointer
  */
-hipError_t hipMemcpyAtoHAsync(void* dstHost, const hipArray_t srcArray, size_t srcOffset,
+hipError_t hipMemcpyAtoHAsync(void* dstHost, hipArray_t srcArray, size_t srcOffset,
                               size_t ByteCount, hipStream_t stream);
 /**
  * @brief Copies from host memory to a 1D array.
@@ -6277,7 +6277,7 @@ hipError_t hipDrvLaunchKernelEx(const HIP_LAUNCH_CONFIG* config, hipFunction_t f
  *
  * @returns #hipSuccess if the kernel is launched successfully, otherwise an appropriate error code.
  */
- hipError_t hipMemGetHandleForAddressRange(void* handle, hipDeviceptr_t dptr, size_t size, 
+ hipError_t hipMemGetHandleForAddressRange(void* handle, hipDeviceptr_t dptr, size_t size,
                                            hipMemRangeHandleType handleType,
                                            unsigned long long flags);
 // doxygen end Module

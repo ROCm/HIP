@@ -1,0 +1,22 @@
+name: Clang format check
+
+on:
+  push:
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install clang-format
+        run: |
+          sudo apt update && sudo apt install -y clang-format
+
+      - name: Run clang-format-check
+        id: clang-format
+        run: |
+          chmod +x .github/hooks/clang-format-check.sh
+          ./.github/hooks/clang-format-check.sh --range "${{ github.event.before }}..${{ github.sha }}"
