@@ -5,7 +5,7 @@ on:
 
 jobs:
   format:
-    runs-on: ubuntu-latest
+    runs-on: hip-clr-dev1
     steps:
       - uses: actions/checkout@v4
         with:
