@@ -9,7 +9,7 @@ on:
 
 jobs:
   check-keywords:
-    runs-on: hip-clr-dev1
+    runs-on: AMD-ROCm-Internal-dev1
     env:
       KEYWORDS: ${{ vars.KEYWORDS }}
 

@@ -21,7 +21,7 @@ jobs:
           fi
 
   validate-commit-messages:
-    runs-on: hip-clr-dev1
+    runs-on: AMD-ROCm-Internal-dev1
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -35,8 +35,12 @@ jobs:
           echo "$COMMITS"
           echo "$COMMITS" | while read -r hash message; do
             echo -e "$hash $message\n "
-            if [[ ! "$message" =~ ^SWDEV-[0-9]+ ]]; then
-              echo "::error:: $hash commit should start with Jira ticket ID, SWDEV-<num>"
+            if [[ "$message" =~ ^SWDEV-[0-9]+ ]]; then
+              echo "Valid JIRA ticket format"
+            elif [[ "$message" =~ ^Merge\ branch ]]; then
+              echo "Merge commits are allowed"
+            else
+              echo "::error:: $hash commit should start with Jira ticket ID, SWDEV-<num> or be a merge commit"
               exit 1
             fi
           done

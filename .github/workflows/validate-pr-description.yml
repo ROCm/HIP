@@ -6,7 +6,7 @@ on:
 
 jobs:
   validate-pr-description:
-    runs-on: hip-clr-dev1
+    runs-on: AMD-ROCm-Internal-dev1
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
