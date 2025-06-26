@@ -5851,7 +5851,7 @@ hipError_t hipDevicePrimaryCtxGetState(hipDevice_t dev, unsigned int* flags, int
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  * @warning This function return #hipSuccess though doesn't release the primaryCtx by design on
- * HIP/HCC path.
+ * HIP/HIP-CLANG path.
  *
  * @warning  This API is deprecated on the AMD platform, only for equivalent driver API on the NVIDIA
  * platform.
