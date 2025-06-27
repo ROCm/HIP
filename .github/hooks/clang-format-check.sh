@@ -36,4 +36,21 @@ if ! command -v "$clang_bin" >/dev/null 2>&1; then
   fi
 fi
 
-"$clang_bin" -style=file --dry-run -fallback-style=none -n -Werror $files
+clang_format_diff="${CLANG_FORMAT_DIFF:-clang-format-diff}"
+if ! command -v "$clang_format_diff" >/dev/null 2>&1; then
+  if [[ -x "/c/Program Files/LLVM/share/clang/clang-format-diff.py" ]]; then
+    clang_format_diff="/c/Program Files/LLVM/share/clang/clang-format-diff.py"
+  fi
+fi
+
+for file in $files; do
+  echo "Checking lines of $file"
+
+  if [[ -n $RANGE ]]; then
+    diff_output=$(git diff -U0 "$RANGE" -- "$file")
+  else
+    diff_output=$(git diff -U0 --cached -- "$file")
+  fi
+
+  echo "$diff_output" | "$clang_format_diff" -style=file -fallback-style=none -p1
+done
