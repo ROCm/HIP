@@ -719,6 +719,21 @@ enum hipLimit_t {
 #define hipHostMallocWriteCombined 0x4
 #define hipHostAllocWriteCombined 0x4
 
+/** Allocates the memory as write-combined. On some system configurations, write-combined allocation
+ * may be transferred faster across the PCI Express bus, however, could have low read efficiency by
+ * most CPUs. It's a good option for data transfer from host to device via mapped pinned memory.
+ * @note  This flag is the same definition as #hipHostAllocWriteCombined which is equivalent to
+ * cudaHostAllocWriteCombined.*/
+#define hipHostMallocWriteCombined 0x4
+
+/**
+* Host memory will be forcedly allocated on extended fine grained system memory
+* pool which is with MTYPE_UC.
+* @note  This allocation flag is applicable on AMD devices in Linux only.
+*/
+#define hipHostMallocUncached  0x10000000
+#define hipHostAllocUncached   hipHostMallocUncached
+
 /**
 * Host memory allocation will follow numa policy set by user.
 * @note  This numa allocation flag is applicable on Linux, under development on Windows.
@@ -773,6 +788,11 @@ enum hipLimit_t {
 
 /** Coarse Grained host memory lock.*/
 #define hipExtHostRegisterCoarseGrained 0x8
+
+/** Map host memory onto extended fine grained access host memory pool when enabled.
+ * It is applicable on AMD devices in Linux only
+ */
+#define hipExtHostRegisterUncached 0x80000000
 
 /** Automatically select between Spin and Yield.*/
 #define hipDeviceScheduleAuto 0x0
@@ -3811,6 +3831,8 @@ hipError_t hipMemPoolImportPointer(
  *  - #hipHostAllocPortable  Memory is considered allocated by all contexts.
  *  - #hipHostAllocMapped    Map the allocation into the address space for the current device.
  *  - #hipHostAllocWriteCombined  Allocates the memory as write-combined.
+ *  - #hipHostAllocUncached  Allocate the host memory on extended fine grained access system
+ *                           memory pool
  *
  *  @return #hipSuccess, #hipErrorOutOfMemory, #hipErrorInvalidValue
  */
@@ -3850,7 +3872,8 @@ hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr);
  * one context so this is always assumed true.
  *  - #hipHostRegisterMapped    Map the allocation into the address space for the current device.
  * The device pointer can be obtained with #hipHostGetDevicePointer.
- *
+ *  - #hipExtHostRegisterUncached  Map the host memory onto extended fine grained access system
+ * memory pool.
  *
  *  After registering the memory, use #hipHostGetDevicePointer to obtain the mapped device pointer.
  *  On many systems, the mapped device pointer will have a different value than the mapped host
