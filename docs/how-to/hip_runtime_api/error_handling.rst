@@ -27,6 +27,7 @@ without changing it. To get a human readable version of the errors,
     host thread. :cpp:func:`hipGetLastError` behavior will be matched with
     ``cudaGetLastError`` in ROCm release 7.0.
 
+
 Best practices of HIP error handling:
 
 1. Check errors after each API call - Avoid error propagation.
