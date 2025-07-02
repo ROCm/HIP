@@ -433,15 +433,15 @@ compile-time constant on the host. It has to be queried using
   of 32 can run on devices with a ``warpSize`` of 64, it only utilizes half of
   the compute resources.
 
-The ``warpSize`` parameter will no longer be a compile-time constant in a future
-release of ROCm, however it will be still early folded by the compiler, which
-means it can be used for loop bounds and supports loop unrolling similarly to
-compile-time warp size.
+Prior to ROCm 7.0, the warpSize parameter was a compile-time constant. Starting
+with ROCm 7.0, it is early folded by the compiler, allowing it to be used in
+loop bounds and enabling loop unrolling in a manner similar to a compile-time
+constant warp size.
 
-If the compile time warp size is still required, for example to select the correct
-mask type or code path at compile time, the recommended approach is to determine
-the warp size of the GPU on host side and setup the kernel accordingly, as shown
-in the following block reduce example.
+If compile time warp size is required, for example to select the correct mask
+type or code path at compile time, the recommended approach is to determine the
+warp size of the GPU on host side and setup the kernel accordingly, as shown in
+the following block reduce example.
 
 The ``block_reduce`` kernel has a template parameter for warp size and performs
 a reduction operation in two main phases:
@@ -457,7 +457,7 @@ a reduction operation in two main phases:
 
 .. tab-set::
 
-    .. tab-item:: WarpSize Template Parameter
+    .. tab-item:: WarpSize template parameter
        :sync: template-warpsize
 
        .. literalinclude:: ../tools/example_codes/template_warp_size_reduction.hip
@@ -486,7 +486,7 @@ The host code with the main function:
 
   .. tab-set::
 
-      .. tab-item:: Compile-time WarpSize
+      .. tab-item:: WarpSize template parameter
          :sync: template-warpsize
 
          .. literalinclude:: ../tools/example_codes/template_warp_size_reduction.hip
@@ -508,7 +508,7 @@ The host code with the main function:
 
   .. tab-set::
 
-      .. tab-item:: Compile-time WarpSize
+      .. tab-item:: WarpSize template parameter
          :sync: template-warpsize
 
          .. literalinclude:: ../tools/example_codes/template_warp_size_reduction.hip
