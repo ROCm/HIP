@@ -1473,7 +1473,7 @@ typedef enum hipLaunchAttributeID {
  */
 typedef union hipLaunchAttributeValue {
     char pad[64];                              ///< 64 byte padding
-    hipAccessPolicyWindow accessPolicyWindow;  ///< Value of launch attribute ::hipLaunchAttributePolicyWindow.
+    hipAccessPolicyWindow accessPolicyWindow;  ///< Value of launch attribute ::hipLaunchAttributeAccessPolicyWindow.
     int cooperative;                           ///< Value of launch attribute ::hipLaunchAttributeCooperative. Indicates whether the kernel is cooperative.
     int priority;                              ///< Value of launch attribute :: hipLaunchAttributePriority. Execution priority of kernel
 } hipLaunchAttributeValue;
@@ -6094,7 +6094,7 @@ hipError_t hipLinkComplete(hipLinkState_t state, void** hipBinOut, size_t* sizeO
 /**
  * @brief Creates a linker instance with options.
  * @param [in] numOptions  Number of options
- * @param [in] option  Array of options
+ * @param [in] options  Array of options
  * @param [in] optionValues  Array of option values cast to void*
  * @param [out] stateOut  hip link state created upon success
  *
