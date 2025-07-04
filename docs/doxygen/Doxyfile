@@ -2211,7 +2211,8 @@ PREDEFINED             = "__HIP_PLATFORM_AMD__" \
                          "HIP_PUBLIC_API" \
                          "HIP_ENABLE_WARP_SYNC_BUILTINS" \
                          "__HOST_DEVICE__" \
-                         "__forceinline__"
+                         "__forceinline__" \
+                         "__HIP_NODISCARD=[[nodiscard]]"
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The
