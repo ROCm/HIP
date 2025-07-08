@@ -551,6 +551,8 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeFineGrainSupport,                         ///< '1' if Device supports fine grain, '0' otherwise
     hipDeviceAttributeWallClockRate,                            ///< Constant frequency of wall clock in kilohertz.
     hipDeviceAttributeNumberOfXccs,                             ///< The number of XCC(s) on the device
+    hipDeviceAttributeMaxAvailableVgprsPerThread,               ///< Max number of available (directly or indirectly
+                                                                ///< addressable) VGPRs per thread in DWORDs.
 
     hipDeviceAttributeAmdSpecificEnd = 19999,
     hipDeviceAttributeVendorSpecificBegin = 20000,
