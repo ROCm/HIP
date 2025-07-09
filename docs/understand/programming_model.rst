@@ -243,7 +243,7 @@ multiple threads via the thread ID constants ``threadIdx.x``, ``blockIdx.x``, et
 .. _inherent_thread_model:
 
 Hierarchical thread model
----------------------
+-------------------------
 
 As previously discussed, all threads of a kernel are uniquely identified by a set
 of integral values called thread IDs. The hierarchy consists of three levels: thread,
