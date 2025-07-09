@@ -66,39 +66,36 @@ subtrees:
   - file: reference/hip_runtime_api_reference
     subtrees:
     - entries:
-      - file: reference/hip_runtime_api/modules
+      - file: reference/hip_runtime_api/modules/initialization_and_version
+      - file: reference/hip_runtime_api/modules/device_management
+      - file: reference/hip_runtime_api/modules/execution_control
+      - file: reference/hip_runtime_api/modules/error_handling
+      - file: reference/hip_runtime_api/modules/stream_management
+      - file: reference/hip_runtime_api/modules/stream_memory_operations
+      - file: reference/hip_runtime_api/modules/event_management
+      - file: reference/hip_runtime_api/modules/memory_management
         subtrees:
         - entries:
-          - file: reference/hip_runtime_api/modules/initialization_and_version
-          - file: reference/hip_runtime_api/modules/device_management
-          - file: reference/hip_runtime_api/modules/execution_control
-          - file: reference/hip_runtime_api/modules/error_handling
-          - file: reference/hip_runtime_api/modules/stream_management
-          - file: reference/hip_runtime_api/modules/stream_memory_operations
-          - file: reference/hip_runtime_api/modules/event_management
-          - file: reference/hip_runtime_api/modules/memory_management
-            subtrees:
-            - entries:
-              - file: reference/hip_runtime_api/modules/memory_management/memory_management_deprecated
-              - file: reference/hip_runtime_api/modules/memory_management/external_resource_interoperability
-              - file: reference/hip_runtime_api/modules/memory_management/stream_ordered_memory_allocator
-              - file: reference/hip_runtime_api/modules/memory_management/unified_memory_reference
-              - file: reference/hip_runtime_api/modules/memory_management/virtual_memory_reference
-              - file: reference/hip_runtime_api/modules/memory_management/texture_management
-              - file: reference/hip_runtime_api/modules/memory_management/texture_management_deprecated
-              - file: reference/hip_runtime_api/modules/memory_management/surface_object
-          - file: reference/hip_runtime_api/modules/peer_to_peer_device_memory_access
-          - file: reference/hip_runtime_api/modules/context_management
-          - file: reference/hip_runtime_api/modules/module_management
-          - file: reference/hip_runtime_api/modules/occupancy
-          - file: reference/hip_runtime_api/modules/profiler_control
-          - file: reference/hip_runtime_api/modules/launch_api
-          - file: reference/hip_runtime_api/modules/runtime_compilation
-          - file: reference/hip_runtime_api/modules/callback_activity_apis
-          - file: reference/hip_runtime_api/modules/graph_management
-          - file: reference/hip_runtime_api/modules/graphics_interoperability
-          - file: reference/hip_runtime_api/modules/opengl_interoperability
-          - file: reference/hip_runtime_api/modules/cooperative_groups_reference
+          - file: reference/hip_runtime_api/modules/memory_management/memory_management_deprecated
+          - file: reference/hip_runtime_api/modules/memory_management/external_resource_interoperability
+          - file: reference/hip_runtime_api/modules/memory_management/stream_ordered_memory_allocator
+          - file: reference/hip_runtime_api/modules/memory_management/unified_memory_reference
+          - file: reference/hip_runtime_api/modules/memory_management/virtual_memory_reference
+          - file: reference/hip_runtime_api/modules/memory_management/texture_management
+          - file: reference/hip_runtime_api/modules/memory_management/texture_management_deprecated
+          - file: reference/hip_runtime_api/modules/memory_management/surface_object
+      - file: reference/hip_runtime_api/modules/peer_to_peer_device_memory_access
+      - file: reference/hip_runtime_api/modules/context_management
+      - file: reference/hip_runtime_api/modules/module_management
+      - file: reference/hip_runtime_api/modules/occupancy
+      - file: reference/hip_runtime_api/modules/profiler_control
+      - file: reference/hip_runtime_api/modules/launch_api
+      - file: reference/hip_runtime_api/modules/runtime_compilation
+      - file: reference/hip_runtime_api/modules/callback_activity_apis
+      - file: reference/hip_runtime_api/modules/graph_management
+      - file: reference/hip_runtime_api/modules/graphics_interoperability
+      - file: reference/hip_runtime_api/modules/opengl_interoperability
+      - file: reference/hip_runtime_api/modules/cooperative_groups_reference
       - file: reference/hip_runtime_api/global_defines_enums_structs_files
         subtrees:
         - entries:
