@@ -21,7 +21,7 @@ and AMD GPUs use different approaches. NVIDIA GPUs have the independent thread
 scheduling feature where each thread has its own call stack and effective
 program counter. On AMD GPUs threads are grouped; each warp has its own call
 stack and program counter. Warps are described and explained in the
-:ref:`inherent_thread_hierarchy`
+:ref:`inherent_thread_model`
 
 If a thread or warp exceeds its stack size, a stack overflow occurs, causing
 kernel failure. This can be detected using debuggers.
