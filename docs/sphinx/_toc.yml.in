@@ -24,8 +24,6 @@ subtrees:
 
 - caption: Programming guide
   entries:
-  - file: programming_guide
-    title: Introduction
   - file: understand/programming_model
   - file: understand/hardware_implementation
   - file: understand/compilers
@@ -108,14 +106,15 @@ subtrees:
           - file: reference/hip_runtime_api/global_defines_enums_structs_files/driver_types
           - file: doxygen/html/annotated
           - file: doxygen/html/files
-  - file: reference/virtual_rocr
   - file: reference/math_api
+  - file: reference/complex_math_api
   - file: reference/env_variables
+  - file: reference/error_codes
   - file: reference/api_syntax
   - file: reference/deprecated_api_list
     title: List of deprecated APIs
-  - file: reference/fp8_numbers
-    title: FP8 numbers in HIP
+  - file: reference/low_fp_types
+    title: Low Precision Floating Point Types
   - file: reference/hardware_features
 
 - caption: Tutorials

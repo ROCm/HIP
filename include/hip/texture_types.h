@@ -43,7 +43,6 @@ THE SOFTWARE.
  *                                                                              *
  *******************************************************************************/
 #if !defined(__HIPCC_RTC__)
-#include <limits.h>
 #include <hip/channel_descriptor.h>
 #include <hip/driver_types.h>
 #endif // !defined(__HIPCC_RTC__)

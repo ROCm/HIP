@@ -31,7 +31,16 @@ THE SOFTWARE.
 #ifndef HIP_INCLUDE_HIP_HIP_RUNTIME_API_H
 #define HIP_INCLUDE_HIP_HIP_RUNTIME_API_H
 
-#include <string.h>  // for getDeviceProp
+#if __cplusplus
+#include <climits>
+#include <cstdint>
+#include <cstdlib>
+#else
+#include <limits.h>
+#include <stdint.h>
+#include <stdlib.h>
+#endif
+
 #include <hip/hip_version.h>
 #include <hip/hip_common.h>
 #include <hip/linker_types.h>
@@ -88,7 +97,7 @@ typedef struct hipUUID_t {
 } hipUUID;
 
 //---
-// Common headers for both NVCC and HCC paths:
+// Common headers for both NVCC and HIP-Clang paths:
 
 #define hipGetDeviceProperties hipGetDevicePropertiesR0600
 #define hipDeviceProp_t hipDeviceProp_tR0600
@@ -287,7 +296,7 @@ typedef struct hipPointerAttribute_t {
  *
  */
 // Developer note - when updating these, update the hipErrorName and hipErrorString functions in
-// NVCC and HCC paths Also update the hipCUDAErrorTohipError function in NVCC path.
+// NVCC and HIP-Clang paths Also update the hipCUDAErrorTohipError function in NVCC path.
 
 typedef enum __HIP_NODISCARD hipError_t {
     hipSuccess = 0,  ///< Successful completion.
@@ -541,6 +550,9 @@ typedef enum hipDeviceAttribute_t {
                                                                 ///< units for the device
     hipDeviceAttributeFineGrainSupport,                         ///< '1' if Device supports fine grain, '0' otherwise
     hipDeviceAttributeWallClockRate,                            ///< Constant frequency of wall clock in kilohertz.
+    hipDeviceAttributeNumberOfXccs,                             ///< The number of XCC(s) on the device
+    hipDeviceAttributeMaxAvailableVgprsPerThread,               ///< Max number of available (directly or indirectly
+                                                                ///< addressable) VGPRs per thread in DWORDs.
 
     hipDeviceAttributeAmdSpecificEnd = 19999,
     hipDeviceAttributeVendorSpecificBegin = 20000,
@@ -573,8 +585,6 @@ enum hipGPUDirectRDMAWritesOrdering {
 
 #if defined(__HIP_PLATFORM_AMD__) && !defined(__HIP_PLATFORM_NVIDIA__)
 
-#include <stdint.h>
-#include <stddef.h>
 #ifndef GENERIC_GRID_LAUNCH
 #define GENERIC_GRID_LAUNCH 1
 #endif
@@ -759,6 +769,15 @@ enum hipLimit_t {
  * @note  This flag is the same definition as #hipHostAllocWriteCombined which is equivalent to
  * cudaHostAllocWriteCombined.*/
 #define hipHostMallocWriteCombined 0x4
+
+/**
+* Host memory will be forcedly allocated on extended fine grained system memory
+* pool which is with MTYPE_UC.
+* @note  This allocation flag is applicable on AMD devices in Linux only.
+*/
+#define hipHostMallocUncached  0x10000000
+#define hipHostAllocUncached   hipHostMallocUncached
+
 /**
 * Host memory allocation will follow numa policy set by user.
 * @note  This numa allocation flag is applicable on Linux, under development on Windows.
@@ -813,6 +832,11 @@ enum hipLimit_t {
 
 /** Coarse Grained host memory lock.*/
 #define hipExtHostRegisterCoarseGrained 0x8
+
+/** Map host memory onto extended fine grained access host memory pool when enabled.
+ * It is applicable on AMD devices in Linux only
+ */
+#define hipExtHostRegisterUncached 0x80000000
 
 /** Automatically select between Spin and Yield.*/
 #define hipDeviceScheduleAuto 0x0
@@ -1477,18 +1501,6 @@ typedef union hipLaunchAttributeValue {
 #define hipDrvLaunchAttributeID hipLaunchAttributeID
 #define hipDrvLaunchAttributeValue hipLaunchAttributeValue
 #define hipDrvLaunchAttribute hipLaunchAttribute
-
-/**
- * Memset node params
- */
-typedef struct HIP_MEMSET_NODE_PARAMS {
-    hipDeviceptr_t dst;                  ///< Destination pointer on device
-    size_t pitch;                        ///< Destination device pointer pitch. Unused if height equals 1
-    unsigned int value;                  ///< Value of memset to be set
-    unsigned int elementSize;            ///< Element in bytes. Must be 1, 2, or 4.
-    size_t width;                        ///< Width of a row
-    size_t height;                       ///< Number of rows
-} HIP_MEMSET_NODE_PARAMS;
 
 /**
  * Graph execution update result
@@ -2182,9 +2194,9 @@ hipError_t hipDeviceGetMemPool(hipMemPool_t* mem_pool, int device);
  * @param [in]  deviceId which device to query for information
  *
  * @returns #hipSuccess, #hipErrorInvalidDevice
- * @bug HCC always returns 0 for maxThreadsPerMultiProcessor
- * @bug HCC always returns 0 for regsPerBlock
- * @bug HCC always returns 0 for l2CacheSize
+ * @bug HIP-Clang always returns 0 for maxThreadsPerMultiProcessor
+ * @bug HIP-Clang always returns 0 for regsPerBlock
+ * @bug HIP-Clang always returns 0 for l2CacheSize
  *
  * Populates hipGetDeviceProperties with information for the specified device.
  */
@@ -2667,7 +2679,7 @@ hipError_t hipStreamCreateWithFlags(hipStream_t* stream, unsigned int flags);
  * subsequent hipStream* commands. The stream is allocated on the heap and will remain allocated
  * even if the handle goes out-of-scope. To release the memory used by the stream, application must
  * call hipStreamDestroy.
- * 
+ *
  * The @p flags parameter controls behavior of the stream. The valid values are #hipStreamDefault
  * and #hipStreamNonBlocking.
  *
@@ -4211,6 +4223,8 @@ hipError_t hipMemPoolImportPointer(
  *  - #hipHostAllocPortable  Memory is considered allocated by all contexts.
  *  - #hipHostAllocMapped    Map the allocation into the address space for the current device.
  *  - #hipHostAllocWriteCombined  Allocates the memory as write-combined.
+ *  - #hipHostAllocUncached  Allocate the host memory on extended fine grained access system
+ *                           memory pool
  *
  *  @return #hipSuccess, #hipErrorOutOfMemory, #hipErrorInvalidValue
  */
@@ -4250,7 +4264,8 @@ hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr);
  * one context so this is always assumed true.
  *  - #hipHostRegisterMapped    Map the allocation into the address space for the current device.
  * The device pointer can be obtained with #hipHostGetDevicePointer.
- *
+ *  - #hipExtHostRegisterUncached  Map the host memory onto extended fine grained access system
+ * memory pool.
  *
  *  After registering the memory, use #hipHostGetDevicePointer to obtain the mapped device pointer.
  *  On many systems, the mapped device pointer will have a different value than the mapped host
@@ -4327,7 +4342,7 @@ hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height
 hipError_t hipMemAllocPitch(hipDeviceptr_t* dptr, size_t* pitch, size_t widthInBytes, size_t height,
    unsigned int elementSizeBytes);
 /**
- *  @brief Free memory allocated by the hcc hip memory allocation API.
+ *  @brief Free memory allocated by the HIP-Clang hip memory allocation API.
  *  This API performs an implicit hipDeviceSynchronize() call.
  *  If pointer is NULL, the hip runtime is initialized and hipSuccess is returned.
  *
@@ -4353,7 +4368,7 @@ hipError_t hipFree(void* ptr);
  */
 hipError_t hipFreeHost(void* ptr);
 /**
- *  @brief Free memory allocated by the hcc hip host memory allocation API
+ *  @brief Free memory allocated by the HIP-Clang hip host memory allocation API
  *  This API performs an implicit hipDeviceSynchronize() call.
  *  If pointer is NULL, the hip runtime is initialized and hipSuccess is returned.
  *
@@ -4432,7 +4447,7 @@ hipError_t hipMemcpyWithStream(void* dst, const void* src, size_t sizeBytes,
  * hipMemcpyHtoDAsync, hipMemFree, hipMemFreeHost, hipMemGetAddressRange, hipMemGetInfo,
  * hipMemHostAlloc, hipMemHostGetDevicePointer
  */
-hipError_t hipMemcpyHtoD(hipDeviceptr_t dst, void* src, size_t sizeBytes);
+hipError_t hipMemcpyHtoD(hipDeviceptr_t dst, const void* src, size_t sizeBytes);
 /**
  *  @brief Copy data from Device to Host
  *
@@ -4549,7 +4564,8 @@ hipError_t hipMemcpyAtoA(hipArray_t dstArray, size_t dstOffset, hipArray_t srcAr
  * hipMemcpyHtoDAsync, hipMemFree, hipMemFreeHost, hipMemGetAddressRange, hipMemGetInfo,
  * hipMemHostAlloc, hipMemHostGetDevicePointer
  */
-hipError_t hipMemcpyHtoDAsync(hipDeviceptr_t dst, void* src, size_t sizeBytes, hipStream_t stream);
+hipError_t hipMemcpyHtoDAsync(hipDeviceptr_t dst, const void* src, size_t sizeBytes,
+                              hipStream_t stream);
 /**
  *  @brief Copy data from Device to Host asynchronously
  *
@@ -5677,7 +5693,7 @@ hipError_t hipCtxGetDevice(hipDevice_t* device);
  * NVIDIA platform.
  */
 HIP_DEPRECATED(HIP_DEPRECATED_MSG)
-hipError_t hipCtxGetApiVersion(hipCtx_t ctx, int* apiVersion);
+hipError_t hipCtxGetApiVersion(hipCtx_t ctx, unsigned int* apiVersion);
 /**
  * @brief Get Cache configuration for a specific function [Deprecated]
  *
@@ -5854,7 +5870,7 @@ hipError_t hipDevicePrimaryCtxGetState(hipDevice_t dev, unsigned int* flags, int
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  * @warning This function return #hipSuccess though doesn't release the primaryCtx by design on
- * HIP/HCC path.
+ * HIP/HIP-CLANG path.
  *
  * @warning  This API is deprecated on the AMD platform, only for equivalent driver API on the NVIDIA
  * platform.
@@ -6280,7 +6296,7 @@ hipError_t hipDrvLaunchKernelEx(const HIP_LAUNCH_CONFIG* config, hipFunction_t f
  *
  * @returns #hipSuccess if the kernel is launched successfully, otherwise an appropriate error code.
  */
- hipError_t hipMemGetHandleForAddressRange(void* handle, hipDeviceptr_t dptr, size_t size, 
+ hipError_t hipMemGetHandleForAddressRange(void* handle, hipDeviceptr_t dptr, size_t size,
                                            hipMemRangeHandleType handleType,
                                            unsigned long long flags);
 // doxygen end Module
@@ -8888,7 +8904,7 @@ hipError_t hipDrvGraphMemcpyNodeSetParams(hipGraphNode_t hNode, const HIP_MEMCPY
  */
 hipError_t hipDrvGraphAddMemsetNode(hipGraphNode_t* phGraphNode, hipGraph_t hGraph,
                                  const hipGraphNode_t* dependencies, size_t numDependencies,
-                                 const HIP_MEMSET_NODE_PARAMS* memsetParams, hipCtx_t ctx);
+                                 const hipMemsetParams* memsetParams, hipCtx_t ctx);
 
 /**
  * @brief Creates a memory free node and adds it to a graph
@@ -8932,7 +8948,7 @@ hipError_t hipDrvGraphExecMemcpyNodeSetParams(hipGraphExec_t hGraphExec, hipGrap
  *          change and might have outstanding issues.
  */
 hipError_t hipDrvGraphExecMemsetNodeSetParams(hipGraphExec_t hGraphExec, hipGraphNode_t hNode,
-                                   const HIP_MEMSET_NODE_PARAMS* memsetParams, hipCtx_t ctx);
+                                   const hipMemsetParams* memsetParams, hipCtx_t ctx);
 
 // doxygen end graph API
 /**

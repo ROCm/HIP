@@ -250,43 +250,6 @@ Units, also known as SIMDs, each with their own register file. For more
 information see :doc:`../understand/hardware_implementation`.
 :cpp:struct:`hipDeviceProp_t` also has a field ``executionUnitsPerMultiprocessor``.
 
-Porting from CUDA __launch_bounds__
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-CUDA also defines a ``__launch_bounds__`` qualifier which works similar to HIP's
-implementation, however it uses different parameters:
-
-.. code-block:: cpp
-
-  __launch_bounds__(MAX_THREADS_PER_BLOCK, MIN_BLOCKS_PER_MULTIPROCESSOR)
-
-The first parameter is the same as HIP's implementation, but
-``MIN_BLOCKS_PER_MULTIPROCESSOR`` must  be converted to
-``MIN_WARPS_PER_EXECUTION``, which uses warps and execution units rather than
-blocks and multiprocessors. This conversion is performed automatically by
-:doc:`HIPIFY <hipify:index>`, or can be done manually with the following
-equation.
-
-.. code-block:: cpp
-
-  MIN_WARPS_PER_EXECUTION_UNIT = (MIN_BLOCKS_PER_MULTIPROCESSOR * MAX_THREADS_PER_BLOCK) / warpSize
-
-Directly controlling the warps per execution unit makes it easier to reason
-about the occupancy, unlike with blocks, where the occupancy depends on the
-block size.
-
-The use of execution units rather than multiprocessors also provides support for
-architectures with multiple execution units per multiprocessor. For example, the
-AMD GCN architecture has 4 execution units per multiprocessor.
-
-maxregcount
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-
-Unlike ``nvcc``, ``amdclang++`` does not support the ``--maxregcount`` option.
-Instead, users are encouraged to use the ``__launch_bounds__`` directive since
-the parameters are more intuitive and portable than micro-architecture details
-like registers. The directive allows per-kernel control.
-
 Memory space qualifiers
 ================================================================================
 
@@ -467,9 +430,10 @@ compile-time constant on the host. It has to be queried using
 
   ``warpSize`` should not be assumed to be a specific value in portable HIP
   applications. NVIDIA devices return 32 for this variable; AMD devices return
-  64 for gfx9 and 32 for gfx10 and above. While code that assumes a ``warpSize``
+  64 for gfx9 and 32 for gfx10 and above. HIP doesn't support ``warpSize`` of
+  64 on gfx10 and above. While code that assumes a ``warpSize``
   of 32 can run on devices with a ``warpSize`` of 64, it only utilizes half of
-  the the compute resources.
+  the compute resources.
 
 ********************************************************************************
 Vector types

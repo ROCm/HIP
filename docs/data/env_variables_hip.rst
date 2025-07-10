@@ -2,6 +2,9 @@
     :description: HIP environment variables
     :keywords: AMD, HIP, environment variables, environment
 
+HIP GPU isolation variables
+--------------------------------------------------------------------------------
+
 The GPU isolation environment variables in HIP are collected in the following table.
 
 .. _hip-env-isolation:
@@ -23,6 +26,9 @@ The GPU isolation environment variables in HIP are collected in the following ta
     * - | ``HIP_VISIBLE_DEVICES`` or ``CUDA_VISIBLE_DEVICES``
         | Device indices exposed to HIP applications.
       - Example: ``0,2``
+
+HIP profiling variables
+--------------------------------------------------------------------------------
 
 The profiling environment variables in HIP are collected in the following table.
 
@@ -49,6 +55,9 @@ The profiling environment variables in HIP are collected in the following table.
         | profiling on by default.
       - | 0: Disable
         | 1: Enable
+
+HIP debug variables
+--------------------------------------------------------------------------------
 
 The debugging environment variables in HIP are collected in the following table.
 
@@ -149,6 +158,9 @@ The debugging environment variables in HIP are collected in the following table.
         number does not apply to hardware queues that are created for CU-masked HIP streams, or
         cooperative queues for HIP Cooperative Groups (single queue per device).
 
+HIP memory management related variables
+--------------------------------------------------------------------------------
+
 The memory management related environment variables in HIP are collected in the
 following table.
 
@@ -244,6 +256,9 @@ following table.
       - ``0``
       - | 0: Disable
         | 1: Enable
+
+HIP miscellaneous variables
+--------------------------------------------------------------------------------
 
 The following table lists environment variables that are useful but relate to
 different features in HIP.
