@@ -247,7 +247,6 @@ functions on ROCm and CUDA, both with and without HMM support.
         making an explicit copy, like a normal memory access, hence the term
         "zero copy".
 
-
 .. _checking unified memory support:
 
 Checking unified memory support
