@@ -9,8 +9,8 @@ HIP compilers
 ********************************************************************************
 
 ROCm provides the compiler tools used to compile HIP applications for use on AMD GPUs. 
-The compilers setup the default libraries and include paths for the HIP and ROCm
-libraries, and some needed environment variables. For more information, see the
+The compilers set up the default libraries and include paths for the HIP and ROCm
+libraries and some needed environment variables. For more information, see the
 :doc:`ROCm compiler reference <llvm-project:reference/rocmcc>`.
 
 Compilation workflow
