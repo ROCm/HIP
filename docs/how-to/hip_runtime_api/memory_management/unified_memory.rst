@@ -158,8 +158,7 @@ system requirements` and :ref:`checking unified memory support`.
 
   :cpp:func:`hipMalloc()` and :cpp:func:`hipHostMalloc()` are dynamic memory
   allocators available on all GPUs with unified memory support. Memory
-  allocated by these allocators is not migrated between device and host memory
-  unless explicitly requested via HIP APIs; e.g., :cpp:func:`hipMemcpy()`
+  allocated by these allocators is not migrated between device and host memory.
 
 The table below illustrates the expected behavior of managed and unified memory
 functions on ROCm and CUDA, both with and without HMM support.
