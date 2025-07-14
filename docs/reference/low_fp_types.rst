@@ -43,27 +43,31 @@ HIP Header
 The `HIP FP4 header <https://github.com/ROCm/clr/blob/amd-staging/hipamd/include/hip/amd_detail/amd_hip_fp4.h>`_
 defines the FP4 numbers.
 
-Supported Devices
------------------
+Device Compatibility
+--------------------
 
-Different GPU models support different FP4 formats. Here's a breakdown:
+The following table shows hardware support for this precision format by GPU architecture. "Yes"
+indicates native hardware acceleration is available, while "No" indicates hardware acceleration
+is not available.
 
-.. list-table:: Supported devices for fp4 numbers
+.. list-table::
     :header-rows: 1
 
     * - Device Type
       - E2M1
-    * - Host
-      - Yes
     * - CDNA1
       - No
     * - CDNA2
       - No
     * - CDNA3
+      - No
+    * - CDNA4
       - Yes
     * - RDNA2
       - No
     * - RDNA3
+      - No
+    * - RDNA4
       - No
 
 Using FP4 Numbers in HIP Programs
@@ -130,9 +134,9 @@ The following code example demonstrates a simple roundtrip conversion using FP4 
         constexpr size_t size = 16;
         hipDeviceProp_t prop;
         hip_check(hipGetDeviceProperties(&prop, 0));
-        bool is_supported = (std::string(prop.gcnArchName).find("gfx94") != std::string::npos);
+        bool is_supported = (std::string(prop.gcnArchName).find("gfx950") != std::string::npos);
         if(!is_supported) {
-            std::cerr << "Need a gfx94x, but found: " << prop.gcnArchName << std::endl;
+            std::cerr << "Need gfx950, but found: " << prop.gcnArchName << std::endl;
             std::cerr << "Device conversions are not supported on this hardware." << std::endl;
             return -1;
         }
@@ -180,12 +184,12 @@ There are C++ style classes available as well:
 
 FP4 type has its own class:
 
-- __hip_fp4_e2m1
+- ``__hip_fp4_e2m1``
 
 There is support of vector of FP4 types:
 
-- __hip_fp4x2_e2m1: holds 2 values of FP4 e2m1 numbers
-- __hip_fp4x4_e2m1: holds 4 values of FP4 e2m1 numbers
+- ``__hip_fp4x2_e2m1``: holds 2 values of FP4 e2m1 numbers
+- ``__hip_fp4x4_e2m1``: holds 4 values of FP4 e2m1 numbers
 
 FP6 (6-bit Precision)
 ========================
@@ -224,20 +228,19 @@ HIP Header
 The `HIP FP6 header <https://github.com/ROCm/clr/blob/amd-staging/hipamd/include/hip/amd_detail/amd_hip_fp6.h>`_
 defines the FP6 numbers.
 
-Supported Devices
------------------
+Device Compatibility
+--------------------
 
-Different GPU models support different FP6 formats. Here's a breakdown:
+The following table shows hardware support for this precision format by GPU architecture. "Yes"
+indicates native hardware acceleration is available, while "No" indicates hardware acceleration
+is not available.
 
-.. list-table:: Supported devices for fp6 numbers
+.. list-table::
     :header-rows: 1
 
     * - Device Type
       - E3M2
       - E2M3
-    * - Host
-      - Yes
-      - Yes
     * - CDNA1
       - No
       - No
@@ -245,12 +248,18 @@ Different GPU models support different FP6 formats. Here's a breakdown:
       - No
       - No
     * - CDNA3
+      - No
+      - No
+    * - CDNA4
       - Yes
       - Yes
     * - RDNA2
       - No
       - No
     * - RDNA3
+      - No
+      - No
+    * - RDNA4
       - No
       - No
 
@@ -321,9 +330,9 @@ The following code example demonstrates a roundtrip conversion using FP6 types:
         constexpr size_t size = 16;
         hipDeviceProp_t prop;
         hip_check(hipGetDeviceProperties(&prop, 0));
-        bool is_supported = (std::string(prop.gcnArchName).find("gfx94") != std::string::npos);
+        bool is_supported = (std::string(prop.gcnArchName).find("gfx950") != std::string::npos);
         if(!is_supported) {
-            std::cerr << "Need a gfx94x, but found: " << prop.gcnArchName << std::endl;
+            std::cerr << "Need gfx950, but found: " << prop.gcnArchName << std::endl;
             std::cerr << "Device conversions are not supported on this hardware." << std::endl;
             return -1;
         }
@@ -378,15 +387,15 @@ There are C++ style classes available as well:
 
 Each type of FP6 number has its own class:
 
-- __hip_fp6_e2m3
-- __hip_fp6_e3m2
+- ``__hip_fp6_e2m3``
+- ``__hip_fp6_e3m2``
 
 There is support of vector of FP6 types:
 
-- __hip_fp6x2_e2m3: holds 2 values of FP6 e2m3 numbers
-- __hip_fp6x4_e2m3: holds 4 values of FP6 e2m3 numbers
-- __hip_fp6x2_e3m2: holds 2 values of FP6 e3m2 numbers
-- __hip_fp6x4_e3m2: holds 4 values of FP6 e3m2 numbers
+- ``__hip_fp6x2_e2m3``: holds 2 values of FP6 e2m3 numbers
+- ``__hip_fp6x4_e2m3``: holds 4 values of FP6 e2m3 numbers
+- ``__hip_fp6x2_e3m2``: holds 2 values of FP6 e3m2 numbers
+- ``__hip_fp6x4_e3m2``: holds 4 values of FP6 e3m2 numbers
 
 FP8 (Quarter Precision)
 =======================
@@ -444,10 +453,12 @@ HIP Header
 The `HIP FP8 header <https://github.com/ROCm/clr/blob/amd-staging/hipamd/include/hip/amd_detail/amd_hip_fp8.h>`_
 defines the FP8 ocp/fnuz numbers.
 
-Supported Devices
------------------
+Device Compatibility
+--------------------
 
-Different GPU models support different FP8 formats. Here's a breakdown:
+The following table shows hardware support for this precision format by GPU architecture. "Yes"
+indicates native hardware acceleration is available, while "No" indicates hardware acceleration
+is not available.
 
 .. list-table:: Supported devices for fp8 numbers
     :header-rows: 1
@@ -455,9 +466,6 @@ Different GPU models support different FP8 formats. Here's a breakdown:
     * - Device Type
       - FNUZ FP8
       - OCP FP8
-    * - Host
-      - Yes
-      - Yes
     * - CDNA1
       - No
       - No
@@ -467,12 +475,18 @@ Different GPU models support different FP8 formats. Here's a breakdown:
     * - CDNA3
       - Yes
       - No
+    * - CDNA4
+      - No
+      - Yes
     * - RDNA2
       - No
       - No
     * - RDNA3
       - No
       - No
+    * - RDNA4
+      - No
+      - Yes
 
 Using FP8 Numbers in HIP Programs
 ---------------------------------
@@ -535,7 +549,7 @@ The following code example does roundtrip FP8 conversions on both the CPU and GP
 
       __device__ float d_convert_fp8_to_float(float in,
                                               __hip_fp8_interpretation_t interpret) {
-          __half hf = __hip_cvt_fp8_to_halfraw(in, interpret);
+          float hf = __hip_cvt_fp8_to_float(in, interpret);
           return hf;
       }
 
@@ -572,9 +586,11 @@ The following code example does roundtrip FP8 conversions on both the CPU and GP
           constexpr size_t size = 32;
           hipDeviceProp_t prop;
           hip_check(hipGetDeviceProperties(&prop, 0));
-          bool is_supported = (std::string(prop.gcnArchName).find("gfx94") != std::string::npos); // gfx94x
+          bool is_supported = (std::string(prop.gcnArchName).find("gfx94") != std::string::npos)
+                              || (std::string(prop.gcnArchName).find("gfx950") != std::string::npos)
+                              || (std::string(prop.gcnArchName).find("gfx12") != std::string::npos);
           if(!is_supported) {
-              std::cerr << "Need a gfx94x, but found: " << prop.gcnArchName << std::endl;
+              std::cerr << "Need a gfx94x, gfx950 or gfx12xx, but found: " << prop.gcnArchName << std::endl;
               std::cerr << "No device conversions are supported, only host conversions are supported." << std::endl;
               return -1;
           }
@@ -625,6 +641,8 @@ The following code example does roundtrip FP8 conversions on both the CPU and GP
               }
           }
           std::cout << "...CPU and GPU round trip convert matches." << std::endl;
+
+          return 0;
       }
 
 There are C++ style classes available as well.
@@ -636,110 +654,72 @@ There are C++ style classes available as well.
 
 Each type of FP8 number has its own class:
 
-- __hip_fp8_e4m3
-- __hip_fp8_e5m2
-- __hip_fp8_e4m3_fnuz
-- __hip_fp8_e5m2_fnuz
+- ``__hip_fp8_e4m3``
+- ``__hip_fp8_e5m2``
+- ``__hip_fp8_e4m3_fnuz``
+- ``__hip_fp8_e5m2_fnuz``
 
 There is support of vector of FP8 types.
 
-- __hip_fp8x2_e4m3:      holds 2 values of OCP FP8 e4m3 numbers
-- __hip_fp8x4_e4m3:      holds 4 values of OCP FP8 e4m3 numbers
-- __hip_fp8x2_e5m2:      holds 2 values of OCP FP8 e5m2 numbers
-- __hip_fp8x4_e5m2:      holds 4 values of OCP FP8 e5m2 numbers
-- __hip_fp8x2_e4m3_fnuz: holds 2 values of FP8 fnuz e4m3 numbers
-- __hip_fp8x4_e4m3_fnuz: holds 4 values of FP8 fnuz e4m3 numbers
-- __hip_fp8x2_e5m2_fnuz: holds 2 values of FP8 fnuz e5m2 numbers
-- __hip_fp8x4_e5m2_fnuz: holds 4 values of FP8 fnuz e5m2 numbers
+- ``__hip_fp8x2_e4m3``:      holds 2 values of OCP FP8 e4m3 numbers
+- ``__hip_fp8x4_e4m3``:      holds 4 values of OCP FP8 e4m3 numbers
+- ``__hip_fp8x2_e5m2``:      holds 2 values of OCP FP8 e5m2 numbers
+- ``__hip_fp8x4_e5m2``:      holds 4 values of OCP FP8 e5m2 numbers
+- ``__hip_fp8x2_e4m3_fnuz``: holds 2 values of FP8 fnuz e4m3 numbers
+- ``__hip_fp8x4_e4m3_fnuz``: holds 4 values of FP8 fnuz e4m3 numbers
+- ``__hip_fp8x2_e5m2_fnuz``: holds 2 values of FP8 fnuz e5m2 numbers
+- ``__hip_fp8x4_e5m2_fnuz``: holds 4 values of FP8 fnuz e5m2 numbers
 
 FNUZ extensions will be available on gfx94x only.
 
-FP16 (Half Precision)
-=====================
+Float16 (Half Precision)
+========================
 
-FP16 (Floating Point 16-bit) numbers offer a balance between precision and
+``float16`` (Floating Point 16-bit) numbers offer a balance between precision and
 efficiency, making them a widely adopted standard for accelerating deep learning
 inference. With higher precision than FP8 but lower memory requirements than FP32,
-FP16 enables faster computations while preserving model accuracy.
+``float16`` enables faster computations while preserving model accuracy.
 
 Deep learning workloads often involve massive datasets and complex calculations,
-making FP32 computationally expensive. FP16 helps mitigate these costs by reducing
+making FP32 computationally expensive. ``float16`` helps mitigate these costs by reducing
 storage and bandwidth demands, allowing for increased throughput without significant
 loss of numerical stability. This format is particularly useful for training and
 inference in GPUs and TPUs optimized for half-precision arithmetic.
 
-There are two primary FP16 formats:
+Float16 Format
+--------------
 
-- **float16 Format**
+The ``float16`` format uses the following bit allocation:
 
-  - Sign: 1 bit
-  - Exponent: 5 bits
-  - Mantissa: 10 bits
+- **Sign**: 1 bit
+- **Exponent**: 5 bits
+- **Mantissa**: 10 bits
 
-- **bfloat16 Format**
-
-  - Sign: 1 bit
-  - Exponent: 8 bits
-  - Mantissa: 7 bits
-
-The float16 format offers higher precision with a narrower range, while the bfloat16
-format provides a wider range at the cost of some precision.
-
-Additionally, FP16 numbers have standardized representations developed by industry
-initiatives to ensure compatibility across various hardware and software implementations.
-Unlike FP8, which has specific representations like OCP and FNUZ, FP16 is more uniformly
-supported with its two main formats, float16 and bfloat16.
+This format offers higher precision with a narrower range compared to ``bfloat16``.
 
 HIP Header
 ----------
 
 The `HIP FP16 header <https://github.com/ROCm/clr/blob/amd-staging/hipamd/include/hip/amd_detail/amd_hip_fp16.h>`_
-defines the float16 format.
+defines the ``float16`` format.
 
-The `HIP BF16 header <https://github.com/ROCm/clr/blob/amd-staging/hipamd/include/hip/amd_detail/amd_hip_bf16.h>`_
-defines the bfloat16 format.
+Device Compatibility
+--------------------
 
-Supported Devices
------------------
+This precision format is supported across all GPU architectures. The HIP types and functions
+are available for use in both host and device code, with implementation handled by the
+compiler and device libraries.
 
-Different GPU models support different FP16 formats. Here's a breakdown:
+Using Float16 Numbers in HIP Programs
+-------------------------------------
 
-.. list-table:: Supported devices for fp16 numbers
-    :header-rows: 1
-
-    * - Device Type
-      - float16
-      - bfloat16
-    * - Host
-      - Yes
-      - Yes
-    * - CDNA1
-      - Yes
-      - Yes
-    * - CDNA2
-      - Yes
-      - Yes
-    * - CDNA3
-      - Yes
-      - Yes
-    * - RDNA2
-      - Yes
-      - Yes
-    * - RDNA3
-      - Yes
-      - Yes
-
-Using FP16 Numbers in HIP Programs
-----------------------------------
-
-To use the FP16 numbers inside HIP programs.
+To use ``float16`` numbers inside HIP programs:
 
 .. code-block:: cpp
 
     #include <hip/hip_fp16.h> // for float16
-    #include <hip/hip_bf16.h> // for bfloat16
 
-The following code example adds two float16 values on the GPU and compares the results
+The following code example adds two ``float16`` values on the GPU and compares the results
 against summed float values on the CPU.
 
 .. code-block:: cpp
@@ -764,8 +744,8 @@ against summed float values on the CPU.
           int idx = threadIdx.x;
           if (idx < size) {
               // Load as half, perform addition in float, store as float
-              float sum = __half2float(in1[idx] + in2[idx]);
-              out[idx] = sum;
+              __half sum = in1[idx] + in2[idx];
+              out[idx] = __half2float(sum);
           }
       }
 
@@ -776,8 +756,8 @@ against summed float values on the CPU.
           // Initialize input vectors as floats
           std::vector<float> in1(size), in2(size);
           for (size_t i = 0; i < size; i++) {
-              in1[i] = i + 1.1f;
-              in2[i] = i + 2.2f;
+              in1[i] = i + 0.5f;
+              in2[i] = i + 0.5f;
           }
 
           // Compute expected results in full precision on CPU
@@ -825,22 +805,173 @@ against summed float values on the CPU.
           }
 
           std::cout << "Success: CPU and GPU half-precision addition match within tolerance!" << std::endl;
+
+          return 0;
       }
 
+C++ Style Classes
+-----------------
 
-There are C++ style classes available as well.
+Float16 numbers can be used with C++ style classes:
 
 .. code-block:: cpp
 
     __half fp16_val(1.1f);           // float16
-    __hip_bfloat16 fp16_val(1.1f);   // bfloat16
 
-Each type of FP16 number has its own class:
+Vector Support
+--------------
 
-- __half
-- __hip_bfloat16
+There is support for vectors of float16 types:
 
-There is support of vector of FP16 types.
+- ``__half2``: holds 2 values of float16 numbers
 
-- __half2:              holds 2 values of float16 numbers
-- __hip_bfloat162:      holds 2 values of bfloat16 numbers
+BFloat16 (Brain float 16-bit precision)
+=======================================
+
+``bfloat16`` (Brain Floating Point 16-bit) is a truncated version of the 32-bit IEEE 754
+single-precision floating-point format. Originally developed by Google for machine
+learning applications, ``bfloat16`` provides a good balance between range and precision
+for neural network computations.
+
+``bfloat16`` is particularly well-suited for deep learning workloads because it maintains
+the same exponent range as FP32, making it less prone to overflow and underflow issues
+during training. This format sacrifices some precision compared to float16 but offers
+better numerical stability for many AI applications.
+
+BFloat16 Format
+---------------
+
+The ``bfloat16`` format uses the following bit allocation:
+
+- **Sign**: 1 bit
+- **Exponent**: 8 bits
+- **Mantissa**: 7 bits
+
+This format provides a wider range at the cost of some precision compared to ``float16``.
+
+HIP Header
+----------
+
+The `HIP BF16 header <https://github.com/ROCm/clr/blob/amd-staging/hipamd/include/hip/amd_detail/amd_hip_bf16.h>`_
+defines the ``bfloat16`` format.
+
+Device Compatibility
+--------------------
+
+This precision format is supported across all GPU architectures. The HIP types and functions
+are available for use in both host and device code, with implementation handled by the
+compiler and device libraries.
+
+Using ``bfloat16`` Numbers in HIP Programs
+------------------------------------------
+
+To use ``bfloat16`` numbers inside HIP programs:
+
+.. code-block:: cpp
+
+    #include <hip/hip_bf16.h> // for bfloat16
+
+The following code example demonstrates basic ``bfloat16`` operations:
+
+.. code-block:: cpp
+
+      #include <hip/hip_bf16.h>
+      #include <hip/hip_runtime.h>
+      #include <iostream>
+      #include <vector>
+
+      #define hip_check(hip_call)                                                    \
+      {                                                                              \
+          auto hip_res = hip_call;                                                   \
+          if (hip_res != hipSuccess) {                                               \
+              std::cerr << "Failed in HIP call: " << #hip_call \
+                        << " at " << __FILE__ << ":" << __LINE__ \
+                        << " with error: " << hipGetErrorString(hip_res) << std::endl; \
+              std::abort();                                                            \
+          }                                                                          \
+      }
+
+      __global__ void add_bfloat16(__hip_bfloat16* in1, __hip_bfloat16* in2, float* out, size_t size) {
+          int idx = threadIdx.x;
+          if (idx < size) {
+              // Load as bfloat16, perform addition, convert to float for output
+              __hip_bfloat16 sum = in1[idx] + in2[idx];
+              out[idx] = __bfloat162float(sum);
+          }
+      }
+
+      int main() {
+          constexpr size_t size = 32;
+          constexpr float tolerance = 1e-1f;  // Allowable numerical difference
+
+          // Initialize input vectors as floats
+          std::vector<float> in1(size), in2(size);
+          for (size_t i = 0; i < size; i++) {
+              in1[i] = i + 0.5f;
+              in2[i] = i + 0.5f;
+          }
+
+          // Compute expected results in full precision on CPU
+          std::vector<float> cpu_out(size);
+          for (size_t i = 0; i < size; i++) {
+              cpu_out[i] = in1[i] + in2[i];  // Direct float addition
+          }
+
+          // Allocate device memory (store input as bfloat16, output as float)
+          __hip_bfloat16 *d_in1, *d_in2;
+          float *d_out;
+          hip_check(hipMalloc(&d_in1, sizeof(__hip_bfloat16) * size));
+          hip_check(hipMalloc(&d_in2, sizeof(__hip_bfloat16) * size));
+          hip_check(hipMalloc(&d_out, sizeof(float) * size));
+
+          // Convert input to bfloat16 and copy to device
+          std::vector<__hip_bfloat16> in1_bf16(size), in2_bf16(size);
+          for (size_t i = 0; i < size; i++) {
+              in1_bf16[i] = __float2bfloat16(in1[i]);
+              in2_bf16[i] = __float2bfloat16(in2[i]);
+          }
+
+          hip_check(hipMemcpy(d_in1, in1_bf16.data(), sizeof(__hip_bfloat16) * size, hipMemcpyHostToDevice));
+          hip_check(hipMemcpy(d_in2, in2_bf16.data(), sizeof(__hip_bfloat16) * size, hipMemcpyHostToDevice));
+
+          // Launch kernel
+          add_bfloat16<<<1, size>>>(d_in1, d_in2, d_out, size);
+
+          // Copy result back to host
+          std::vector<float> gpu_out(size, 0.0f);
+          hip_check(hipMemcpy(gpu_out.data(), d_out, sizeof(float) * size, hipMemcpyDeviceToHost));
+
+          // Free device memory
+          hip_check(hipFree(d_in1));
+          hip_check(hipFree(d_in2));
+          hip_check(hipFree(d_out));
+
+          // Validation with tolerance
+          for (size_t i = 0; i < size; i++) {
+              if (std::fabs(cpu_out[i] - gpu_out[i]) > tolerance) {
+                  std::cerr << "Mismatch at index " << i << ": CPU result = " << cpu_out[i]
+                            << ", GPU result = " << gpu_out[i] << std::endl;
+                  std::abort();
+              }
+          }
+
+          std::cout << "Success: CPU and GPU bfloat16 addition match within tolerance!" << std::endl;
+
+          return 0;
+      }
+
+C++ Style Classes
+-----------------
+
+``bfloat16`` numbers can be used with C++ style classes:
+
+.. code-block:: cpp
+
+    __hip_bfloat16 bf16_val(1.1f);   // bfloat16
+
+Vector Support
+--------------
+
+There is support for vectors of bfloat16 types:
+
+- ``__hip_bfloat162``: holds 2 values of bfloat16 numbers
