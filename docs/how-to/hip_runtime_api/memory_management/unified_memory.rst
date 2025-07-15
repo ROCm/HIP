@@ -41,48 +41,64 @@ Unified memory enables the access to memory located on other devices via
 several methods, depending on whether hardware support is available or has to be
 managed by the driver.
 
-Hardware supported on-demand page migration
---------------------------------------------------------------------------------
+Managed memory
+================================================================================
 
-When a kernel on the device tries to access a memory address that is not in its
-memory, a page-fault is triggered. The GPU then in turn requests the page from
-the host or an other device, on which the memory is located. The page is then
-unmapped from the source, sent to the device and mapped to the device's memory.
-The requested memory is then available to the processes running on the device.
+Managed Memory is an extension of the unified memory architecture in which HIP
+monitors memory access and intelligently migrates data between device and
+system memories, thereby improving performance and resource efficiency.
 
-In case the device's memory is at capacity, a page is unmapped from the device's
-memory first and sent and mapped to host memory. This enables more memory to be
-allocated and used for a GPU, than the GPU itself has physically available.
+When a kernel on the device tries to access a managed memory address that is
+not in its local device memory, a page-fault is triggered.  The GPU then in
+turn requests the page from the host or other device on which the memory is
+located. The page is then unmapped from the source, sent to the device and
+mapped to the device's memory.  The requested memory is then available locally
+to the processes running on the device, which improves performance as local
+memory access outperforms remote memory access.
 
-This level of unified memory support can be very beneficial for sparse accesses
-to an array, that is not often used on the device.
-
-Driver managed page migration
---------------------------------------------------------------------------------
-
-If the hardware does not support on-demand page migration, then all the pages
-accessed by a kernel have to be resident on the device, so they have to be
-migrated before the kernel is running. Since the driver can not know beforehand,
-what parts of an array are going to be accessed, all pages of all accessed
-arrays have to be migrated. This can lead to significant delays on the first run
-of a kernel, on top of possibly copying more memory than is actually accessed by
-the kernel.
+Managed memory also expands the memory capacity available to a GPU kernel. When
+migrating memory into the device on page-fault, if the device's memory is
+already at capacity, a page is unmapped from the device's memory first and sent
+and mapped to host memory.  This enables more memory to be allocated and used
+for a GPU than the GPU itself has physically available. This level of support
+can be very beneficial, for example, for sparse accesses to an array that is
+not often used on the device.
 
 .. _unified memory system requirements:
 
-System requirements
-================================================================================
+System requirements for managed memory
+--------------------------------------------------------------------------------
 
-Unified memory is supported on Linux by all modern AMD GPUs from the Vega
-series onward, as shown in the following table. Unified memory management can
-be achieved by explicitly allocating managed memory using
-:cpp:func:`hipMallocManaged` or marking variables with the ``__managed__``
-attribute. For the latest GPUs, with a Linux kernel that supports
-`Heterogeneous Memory Management (HMM)
+Some AMD GPUs do not support page-faults, and thus do not support on-demand
+page-fault driven migration. On these architectures, if the programmer prefers
+all GPU memory accesses to be local, all pages have to migrated before the
+kernel is dispatched, as the driver cannot know beforehand which parts of a
+dataset are going to be accessed. This can lead to significant delays on the
+first run of a kernel, and, in the example of a sparsely accessed array, can
+also lead to copying more memory than is actually accessed by the kernel.
+
+Note that on systems which do not support page-faults, managed memory APIs are
+still accessible to the programmer, but managed memory operates in a degraded
+fashion due to the lack of demand-driven migration. Furthermore, on these
+systems it is still possible to use other unified memory allocators that do not
+provide managed memory features.
+
+Managed memory is supported on Linux by all modern AMD GPUs from the Vega
+series onward, as shown in the following table. Managed memory can be
+explicitly allocated using :cpp:func:`hipMallocManaged()` or marking variables
+with the ``__managed__`` attribute. For the latest GPUs, with a Linux kernel
+that supports `Heterogeneous Memory Management (HMM)
 <https://www.kernel.org/doc/html/latest/mm/hmm.html>`_, the normal system
-allocator can be used.
+allocators can be used.
 
-.. list-table:: Supported Unified Memory Allocators by GPU architecture
+Note: to ensure the proper functioning of managed memory on supported GPUs, it
+is __essential__ to set the environment variable ``HSA_XNACK=1`` and use a GPU
+kernel mode driver that supports HMM
+<https://www.kernel.org/doc/html/latest/mm/hmm.html>`_. Without this
+configuration, access-driven memory migration will be disabled, and the
+behavior will be similar to that of systems without HMM support.
+
+.. list-table:: Managed Memory Support by GPU Architecture
     :widths: 40, 25, 25
     :header-rows: 1
     :align: center
@@ -98,7 +114,7 @@ allocator can be used.
       - ✅ :sup:`1`
     * - CDNA1
       - ✅
-      - ✅ :sup:`1`
+      - ❌
     * - RDNA1
       - ✅
       - ❌
@@ -138,12 +154,11 @@ system requirements` and :ref:`checking unified memory support`.
   offers an easy transition for code written for CPUs to HIP code as the
   same system allocation API is used.
 
-To ensure the proper functioning of system allocated unified memory on supported
-GPUs, it is essential to set the environment variable ``HSA_XNACK=1`` and use
-a GPU kernel mode driver that supports HMM
-<https://www.kernel.org/doc/html/latest/mm/hmm.html>`_. Without this
-configuration, the behavior will be similar to that of systems without HMM
-support.
+- **HIP allocated non-managed memory**
+
+  :cpp:func:`hipMalloc()` and :cpp:func:`hipHostMalloc()` are dynamic memory
+  allocators available on all GPUs with unified memory support. Memory
+  allocated by these allocators is not migrated between device and host memory.
 
 The table below illustrates the expected behavior of managed and unified memory
 functions on ROCm and CUDA, both with and without HMM support.
@@ -177,10 +192,10 @@ functions on ROCm and CUDA, both with and without HMM support.
         - host
         - page-fault migration
       * - :cpp:func:`hipHostRegister()`
+        - pinned host
+        - zero copy [zc]_
         - undefined behavior
         - undefined behavior
-        - host
-        - page-fault migration
       * - :cpp:func:`hipHostMalloc()`
         - pinned host
         - zero copy [zc]_
