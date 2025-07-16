@@ -91,12 +91,13 @@ that supports `Heterogeneous Memory Management (HMM)
 <https://www.kernel.org/doc/html/latest/mm/hmm.html>`_, the normal system
 allocators can be used.
 
-Note: to ensure the proper functioning of managed memory on supported GPUs, it
-is __essential__ to set the environment variable ``HSA_XNACK=1`` and use a GPU
-kernel mode driver that supports HMM
-<https://www.kernel.org/doc/html/latest/mm/hmm.html>`_. Without this
-configuration, access-driven memory migration will be disabled, and the
-behavior will be similar to that of systems without HMM support.
+.. note:: 
+
+  To ensure the proper functioning of managed memory on supported GPUs,
+  it is __essential__ to set the environment variable ``HSA_XNACK=1`` and use a GPU
+  kernel mode driver that supports `HMM <https://www.kernel.org/doc/html/latest/mm/hmm.html>`_.
+  Without this configuration, access-driven memory migration will be disabled,
+  and the behavior will be similar to that of systems without HMM support.
 
 .. list-table:: Managed Memory Support by GPU Architecture
     :widths: 40, 25, 25
