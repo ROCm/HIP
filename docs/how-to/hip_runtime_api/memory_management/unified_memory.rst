@@ -80,8 +80,9 @@ also lead to copying more memory than is actually accessed by the kernel.
 Note that on systems which do not support page-faults, managed memory APIs are
 still accessible to the programmer, but managed memory operates in a degraded
 fashion due to the lack of demand-driven migration. Furthermore, on these
-systems it is still possible to use other unified memory allocators that do not
-provide managed memory features.
+systems it is still possible to use unified memory allocators that do not
+provide managed memory features; see :ref:`unified memory allocators` for
+more details.
 
 Managed memory is supported on Linux by all modern AMD GPUs from the Vega
 series onward, as shown in the following table. Managed memory can be
@@ -89,15 +90,15 @@ explicitly allocated using :cpp:func:`hipMallocManaged()` or marking variables
 with the ``__managed__`` attribute. For the latest GPUs, with a Linux kernel
 that supports `Heterogeneous Memory Management (HMM)
 <https://www.kernel.org/doc/html/latest/mm/hmm.html>`_, the normal system
-allocators can be used.
+allocators (e.g., ``new``, ``malloc()``) can be used.
 
-.. note:: 
-
-  To ensure the proper functioning of managed memory on supported GPUs,
-  it is __essential__ to set the environment variable ``HSA_XNACK=1`` and use a GPU
-  kernel mode driver that supports `HMM <https://www.kernel.org/doc/html/latest/mm/hmm.html>`_.
-  Without this configuration, access-driven memory migration will be disabled,
-  and the behavior will be similar to that of systems without HMM support.
+.. note::
+    To ensure the proper functioning of managed memory on supported GPUs, it
+    is **essential** to set the environment variable ``HSA_XNACK=1`` and use a
+    GPU kernel mode driver that supports `HMM
+    <https://www.kernel.org/doc/html/latest/mm/hmm.html>`_. Without this
+    configuration, access-driven memory migration will be disabled, and the
+    behavior will be similar to that of systems without HMM support.
 
 .. list-table:: Managed Memory Support by GPU Architecture
     :widths: 40, 25, 25
@@ -107,6 +108,9 @@ allocators can be used.
     * - Architecture
       - :cpp:func:`hipMallocManaged()`, ``__managed__``
       - ``new``, ``malloc()``
+    * - CDNA4
+      - ✅
+      - ✅ :sup:`1`
     * - CDNA3
       - ✅
       - ✅ :sup:`1`
