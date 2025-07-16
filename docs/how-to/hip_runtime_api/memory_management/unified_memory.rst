@@ -51,7 +51,7 @@ system memories, thereby improving performance and resource efficiency.
 When a kernel on the device tries to access a managed memory address that is
 not in its local device memory, a page-fault is triggered.  The GPU then in
 turn requests the page from the host or other device on which the memory is
-located. The page is then unmapped from the source, sent to the device and
+located. The page is unmapped from the source, sent to the device and
 mapped to the device's memory.  The requested memory is then available locally
 to the processes running on the device, which improves performance as local
 memory access outperforms remote memory access.
