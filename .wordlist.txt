@@ -70,6 +70,7 @@ HIP-Clang
 hipcc
 hipCtx
 hipexamine
+hipExt
 hipified
 HIPify
 hipModule
@@ -110,6 +111,7 @@ MALU
 maxregcount
 MiB
 memset
+microscaling
 multicore
 multigrid
 multithreading
@@ -165,6 +167,7 @@ sinewave
 sinf
 SOMA
 SPMV
+sr
 structs
 SYCL
 syntaxes
