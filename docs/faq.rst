@@ -40,10 +40,10 @@ for the full list.
 What NVIDIA CUDA features does HIP support?
 -------------------------------------------
 
-The :doc:`NVIDIA CUDA runtime API supported by HIP<hipify:tables/CUDA_Runtime_API_functions_supported_by_HIP>`
-and :doc:`NVIDIA CUDA driver API supported by HIP<hipify:tables/CUDA_Driver_API_functions_supported_by_HIP>`
+The :doc:`NVIDIA CUDA runtime API supported by HIP<hipify:reference/tables/CUDA_Runtime_API_functions_supported_by_HIP>`
+and :doc:`NVIDIA CUDA driver API supported by HIP<hipify:reference/tables/CUDA_Driver_API_functions_supported_by_HIP>`
 pages describe which NVIDIA CUDA APIs are supported and what the equivalents are.
-The :doc:`HIP API documentation <reference/hip_runtime_api_reference>` describes each API and
+The :ref:`HIP runtime API reference<runtime_api_reference>` describes each API and
 its limitations, if any, compared with the equivalent CUDA API.
 
 The kernel language features are documented in the
