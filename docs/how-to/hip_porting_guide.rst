@@ -46,16 +46,16 @@ HIPIFY
 translate CUDA to HIP code. There are two flavours available, ``hipfiy-clang``
 and ``hipify-perl``.
 
-:doc:`hipify-clang <hipify:hipify-clang>` is, as the name implies, a Clang-based
+:doc:`hipify-clang <hipify:how-to/hipify-clang>` is, as the name implies, a Clang-based
 tool, and actually parses the code, translates it into an Abstract Syntax Tree,
 from which it then generates the HIP source. For this, ``hipify-clang`` needs to
 be able to actually compile the code, so the CUDA code needs to be correct, and
 a CUDA install with all necessary headers must be provided.
 
-:doc:`hipify-perl <hipify:hipify-perl>` uses pattern matching, to translate the
+:doc:`hipify-perl <hipify:how-to/hipify-perl>` uses pattern matching, to translate the
 CUDA code to HIP. It does not require a working CUDA installation, and can also
 convert CUDA code, that is not syntactically correct. It is therefore easier to
-set up and use, but is not as powerful as ``hipfiy-clang``.
+set up and use, but is not as powerful as ``hipify-clang``.
 
 Scanning existing CUDA code to scope the porting effort
 --------------------------------------------------------------------------------
