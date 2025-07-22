@@ -88,7 +88,7 @@ developer may have to reduce the block size of the kernels. The kernel runtimes
 can be misleading for concurrent kernel runs, that is why during optimization
 it is a good practice to check the trace files, to see if one kernel is blocking
 another kernel, while they are running in parallel. For more information about
-the application tracing, check::doc:`rocprofiler:/how-to/using-rocprof`.
+the application tracing, check::doc:`rocprofiler:how-to/using-rocprof`.
 
 When running kernels in parallel, the execution time can increase due to
 contention for shared resources. This is because multiple kernels may attempt
