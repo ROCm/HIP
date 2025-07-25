@@ -2,9 +2,9 @@ The memory management related environment variables in HIP are collected in the
 following table. The ``HIP_HOST_COHERENT`` variable linked at the following
 pages:
 
-- :ref:`Coherence control <coherence_control>`
+- :ref:`Coherence control <hip:coherence_control>`
 
-- :ref:`Memory allocation flags <memory_allocation_flags>`
+- :ref:`Memory allocation flags <hip:memory_allocation_flags>`
 
 .. _hip-env-memory:
 .. list-table::
