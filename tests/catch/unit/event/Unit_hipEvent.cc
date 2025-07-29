@@ -104,9 +104,11 @@ void test(unsigned testMask, int* C_d, int* C_h, int64_t numElements, hipStream_
             assert(0);
     };
 
-    float t;
+    float t; hipError_t e;
 
-    hipError_t e = hipEventElapsedTime(&t, start, start);
+    printf("start, start event\n");
+    e = hipEventElapsedTime(&t, start, start);
+    printf("start, start event. Expected %s, was %s\n", hipGetErrorName(hipSuccess), hipGetErrorName(e));
     if ((e != hipSuccess) && (e != hipErrorNotReady || syncMode != syncNone)) {
         printf("start event not in expected state, was %d=%s\n", e, hipGetErrorName(e));
         REQUIRE(false);
@@ -115,17 +117,23 @@ void test(unsigned testMask, int* C_d, int* C_h, int64_t numElements, hipStream_
     if (e == hipSuccess) HIP_ASSERT(t == 0.0f);
 
     // stop usually ready unless we skipped the synchronization (syncNone)
+    printf("stop, stop event\n");
     e = hipEventElapsedTime(&t, stop, stop);
+    printf("stop, stop event. Expected %s, was %s\n", hipGetErrorName(expectedStopError), hipGetErrorName(e));
     HIP_ASSERT(e == expectedStopError || (e == hipErrorNotReady && syncMode == syncNone));
     if (e == hipSuccess) assert(t == 0.0f);
 
+    printf("start, stop event\n");
     e = hipEventElapsedTime(&t, start, stop);
+    printf("start, stop event. Expected %s, was %s\n", hipGetErrorName(expectedStopError), hipGetErrorName(e));
     printf("Time: %f\n", t);
     HIP_ASSERT(e == expectedStopError);
     if (expectedStopError == hipSuccess) assert(t > 0.0f);
     printf("time=%6.2f error=%s\n", t, hipGetErrorName(e));
 
+    printf("stop, start event\n");
     e = hipEventElapsedTime(&t, stop, start);
+    printf("stop, start event. Expected %s, was %s\n", hipGetErrorName(expectedStopError), hipGetErrorName(e));
     HIP_ASSERT(e == expectedStopError);
     if (expectedStopError == hipSuccess) assert(t < 0.0f);
     printf("negtime=%6.2f error=%s\n", t, hipGetErrorName(e));
