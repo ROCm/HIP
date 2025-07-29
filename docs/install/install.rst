@@ -27,8 +27,8 @@ Prerequisites
 
      Refer to the Prerequisites section in the ROCm install guides:
 
-     * :doc:`rocm-install-on-linux:reference/system-requirements`
-     * :doc:`rocm-install-on-windows:reference/system-requirements`
+     * `System requirements (Linux) <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html>`_
+     * `System requirements (Windows) <https://rocm.docs.amd.com/projects/install-on-windows/en/latest/reference/system-requirements.html>`_
 
   .. tab-item:: NVIDIA
      :sync: nvidia
@@ -48,8 +48,8 @@ Installation
      HIP is automatically installed during the ROCm installation. If you haven't
      yet installed ROCm, you can find installation instructions here:
 
-     * :doc:`rocm-install-on-linux:index`
-     * :doc:`rocm-install-on-windows:index`
+     * `ROCm installation for Linux <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/index.html>`_
+     * `HIP SDK installation for Windows <https://rocm.docs.amd.com/projects/install-on-windows/en/latest/index.html>`_
 
      By default, HIP is installed into ``/opt/rocm``.
 
