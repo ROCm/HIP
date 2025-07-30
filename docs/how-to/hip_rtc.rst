@@ -14,6 +14,8 @@ alongside options to guide the compilation.
 
 .. note::
 
+  * Device code compilation via HIPRTC uses ``__hip_internal`` namespace instead
+    of the ``std`` namespace to avoid namespace collision. 
   * This library can be used for compilation on systems without AMD GPU drivers
     installed (offline compilation). However, running the compiled code still
     requires both the HIP runtime library and GPU drivers on the target system.
@@ -35,6 +37,11 @@ To use HIPRTC functionality the header needs to be included:
 
   #include <hip/hiprtc.h>
 
+.. note::
+
+  Prior to the 7.0 release, the HIP runtime included the hipRTC library. With the 7.0
+  release, the library is separate and must be specifically included as shown above. 
+  
 Kernels can be stored in a string:
 
 .. code-block:: cpp
@@ -254,6 +261,13 @@ The full example is below:
     HIP_CHECK(hipFree(dinput2));
     HIP_CHECK(hipFree(doutput));
   }
+
+.. note::
+
+  Some applications define datatypes such as ``int64_t``, ``uint64_t``, ``int32_t``, and ``uint32_t``
+  that could lead to conflicts when integrating with ``hipRTC``. To resolve these conflicts, these
+  datatypes are replaced with HIP-specific internal datatypes prefixed with ``__hip``. For example,
+  ``int64_t`` is replaced by ``__hip_int64_t``.
 
 HIPRTC specific options
 ===============================================================================
