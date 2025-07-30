@@ -11,10 +11,10 @@ and kernel language that lets you create portable applications for AMD and
 NVIDIA GPUs from a single source code. For more information, see [What is HIP?](./what_is_hip)
 
 ```{note}
-The 7.0 release of the HIP API includes backward incompatible changes to make it
-align more closely with NVIDIA CUDA. These change are incompatible with prior releases,
-and may require recompiling existing HIP applications for use in the 7.0 release.
-For more information, see [HIP API 7.0 changes](./hip-7-changes).
+HIP API 7.0 introduces changes to make it align more closely with NVIDIA CUDA.
+These change are incompatible with prior releases, and might require recompiling
+existing HIP applications for use in the ROCm 7.0 release. For more information,
+see [HIP API 7.0 changes](./hip-7-changes).
 ```
 
 Installation instructions are available from:
