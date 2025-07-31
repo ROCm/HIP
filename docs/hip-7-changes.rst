@@ -163,22 +163,12 @@ Stream capture updates
 Restrict stream capture modes
 -----------------------------
 
-Stream capture mode has been restricted in HIP APIs through the addition of the macro ``CHECK_STREAM_CAPTURE_SUPPORTED``.
-
-In the HIP enumeration ``hipStreamCaptureMode``, three capture modes were previously supported: 
-
-* Global
-* ThreadLocal
-* Relaxed 
-
-As of the 7.0 release, when checking with the ``CHECK_STREAM_CAPTURE_SUPPORTED`` macro the only supported stream capture mode is ``hipStreamCaptureModeRelaxed``. The rest are not supported, and the macro will return ``hipErrorStreamCaptureUnsupported``.
-
-This change matches the behavior of CUDA. There is no impact on any application if stream capture works correctly on the CUDA platform. However, in the HIP runtime the API will return ``hipErrorStreamCaptureUnsupported`` on unsupported stream capture modes.
-
-This update involves the following APIs. They are allowed only in relaxed stream capture mode. Not all three capture modes.
+Stream capture mode has been restricted in the following APIs to relaxed (``hipStreamCaptureModeRelaxed``) mode:
 
 * :cpp:func:`hipMallocManaged`
 * :cpp:func:`hipMemAdvise`
+
+These API are allowed only in relaxed stream capture mode. If the functions are used with stream capture, the HIP runtime the will return ``hipErrorStreamCaptureUnsupported`` on unsupported stream capture modes.
 
 Check stream capture mode
 -------------------------
