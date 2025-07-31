@@ -147,7 +147,6 @@ executed. The associated graph is returned when calling :cpp:func:`hipStreamEndC
 also stops capturing operations.
 In order to capture to an already existing graph use :cpp:func:`hipStreamBeginCaptureToGraph`.
 
-
 The functions assigned to the capturing stream are not executed, but instead are
 captured and defined as nodes in the graph, to be run when the instantiated
 graph is launched.
