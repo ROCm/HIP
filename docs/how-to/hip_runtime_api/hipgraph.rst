@@ -147,12 +147,6 @@ executed. The associated graph is returned when calling :cpp:func:`hipStreamEndC
 also stops capturing operations.
 In order to capture to an already existing graph use :cpp:func:`hipStreamBeginCaptureToGraph`.
 
-.. note::
-
-    Capturing a stream requires the ``hipStreamCaptureMode`` to be set. In the 7.0 release,
-    the only supported stream capture mode is ``hipStreamCaptureModeRelaxed``. The mode
-    is checked by the ``CHECK_STREAM_CAPTURE_SUPPORTED`` macro, and returns the
-    ``hipErrorStreamCaptureUnsupported`` error if the mode is unsupported.
 
 The functions assigned to the capturing stream are not executed, but instead are
 captured and defined as nodes in the graph, to be run when the instantiated
