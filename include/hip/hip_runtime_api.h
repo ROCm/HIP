@@ -2245,13 +2245,16 @@ hipError_t hipGetDeviceProperties(hipDeviceProp_t* prop, int deviceId);
  * limitations of the device.
  *
  * @param [out] max_width Maximum width, in elements, of 1D linear textures that the device can support
+ * @param [in] desc       Requested channel format
  * @param [in] device     Device index to query for maximum 1D texture width
  *
  * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidDevice
  *
  * @see hipDeviceGetAttribute, hipMalloc, hipTexRefSetAddressMode
  */
-hipError_t hipDeviceGetTexture1DLinearMaxWidth(hipMemPool_t* mem_pool, int device);
+hipError_t hipDeviceGetTexture1DLinearMaxWidth(size_t* max_width,
+                                               const hipChannelFormatDesc* desc,
+                                               int device);
 /**
  * @brief Set L1/Shared cache partition.
  *
