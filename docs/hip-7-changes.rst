@@ -168,7 +168,7 @@ Stream capture mode has been restricted in the following APIs to relaxed (``hipS
 * :cpp:func:`hipMallocManaged`
 * :cpp:func:`hipMemAdvise`
 
-These API are allowed only in relaxed stream capture mode. If the functions are used with stream capture, the HIP runtime the will return ``hipErrorStreamCaptureUnsupported`` on unsupported stream capture modes.
+These APIs are allowed only in relaxed stream capture mode. If the functions are used with stream capture, the HIP runtime the will return ``hipErrorStreamCaptureUnsupported`` on unsupported stream capture modes.
 
 Check stream capture mode
 -------------------------
