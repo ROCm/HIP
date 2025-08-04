@@ -809,7 +809,7 @@ Stream Capture Errors
 
   hipErrorInvalidResourceHandle
 
-    This error is returned when the input launch stream is NULL pointer, is invalid, or is ``hipStreamLegacy``.
+    This error is returned when the input launch stream is a NULL pointer, is invalid, or is ``hipStreamLegacy``.
     If you encounter this error, you should check the validity of the resource handle being used in your HIP
     API calls. Ensure that the handle was correctly obtained and has not been freed or invalidated before use.
 
