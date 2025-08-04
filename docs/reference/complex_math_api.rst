@@ -46,7 +46,7 @@ Complex Number Functions
 .. note::
 
   Changes have been made to small vector constructors for ``hipComplex`` and ``hipFloatComplex``
-  initialization, such as ``float2`` and ``int4`` for example. If your code previously relied
+  initialization, such as ``float2`` and ``int4``. If your code previously relied
   on a single value to initialize all components within a vector or complex type, you might need
   to update your code.
 
