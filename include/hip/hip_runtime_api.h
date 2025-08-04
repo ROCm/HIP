@@ -3755,6 +3755,29 @@ hipError_t hipMemAdvise(const void* dev_ptr,
                         hipMemoryAdvise advice,
                         int device);
 /**
+ * @brief Advise about the usage of a given memory range to HIP.
+ *
+ * @param [in] dev_ptr    pointer to memory to set the advice for
+ * @param [in] count      size in bytes of the memory range, it should be CPU page size alligned.
+ * @param [in] advice     advice to be applied for the specified memory range
+ * @param [in] location   location to apply the advice for
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * This HIP API advises about the usage to be applied on unified memory allocation in the
+ * range starting from the pointer address devPtr, with the size of count bytes.
+ * The memory range must refer to managed memory allocated via the API hipMallocManaged, and the
+ * range will be handled with proper round down and round up respectively in the driver to
+ * be aligned to CPU page size, the same way as corresponding CUDA API behaves in CUDA version 8.0
+ * and afterwards.
+ *
+ * @note  This API is implemented on Linux and is under development on Microsoft Windows.
+ */
+hipError_t hipMemAdvise_v2(const void* dev_ptr,
+                           size_t count,
+                           hipMemoryAdvise advice,
+                           hipMemLocation location);
+/**
  * @brief Query an attribute of a given memory range in HIP.
  *
  * @param [in,out] data   a pointer to a memory location where the result of each
