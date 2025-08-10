@@ -1,0 +1,75 @@
+resources:
+  repositories:
+  - repository: pipelines_repo
+    type: github
+    endpoint: ROCm
+    name: ROCm/ROCm
+  - repository: matching_repo
+    type: github
+    endpoint: ROCm
+    name: ROCm/clr
+    ref: $(Build.SourceBranch)
+  - repository: hipother_repo
+    type: github
+    endpoint: ROCm
+    name: ROCm/hipother
+    ref: $(Build.SourceBranch)
+  pipelines:
+  - pipeline: rocr-runtime_pipeline
+    source: \ROCR-Runtime
+    trigger:
+      branches:
+        include:
+        - amd-staging
+        - amd-mainline
+  - pipeline: rocprofiler-register_pipeline
+    source: \rocprofiler-register
+    trigger:
+      branches:
+        include:
+        - amd-staging
+        - amd-mainline
+
+variables:
+- group: common
+- template: /.azuredevops/variables-global.yml@pipelines_repo
+
+trigger:
+  batch: true
+  branches:
+    include:
+    - amd-staging
+    - amd-mainline
+  paths:
+    exclude:
+    - docs
+    - '.github'
+    - '.jenkins'
+    - '.*.yaml'
+    - CODEOWNERS
+    - Jenkinsfile
+    - LICENSE.txt
+    - '**/*.md'
+    - VERSION
+
+pr:
+  autoCancel: true
+  branches:
+    include:
+    - amd-staging
+    - amd-mainline
+  paths:
+    exclude:
+    - docs
+    - '.github'
+    - '.jenkins'
+    - '.*.yaml'
+    - CODEOWNERS
+    - Jenkinsfile
+    - LICENSE.txt
+    - '**/.md'
+    - VERSION
+  drafts: false
+
+jobs:
+  - template: ${{ variables.CI_COMPONENT_PATH }}/HIP.yml@pipelines_repo
