@@ -1,0 +1,10 @@
+matrix:
+- name: Markdown
+  sources:
+  - ['!docs/doxygen/mainpage.md']
+- name: reST
+  sources:
+  - []
+- name: Cpp
+  sources:
+  - ['include/hip/*']
