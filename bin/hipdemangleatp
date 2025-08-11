@@ -1,0 +1,38 @@
+#!/bin/bash
+# Copyright (c) 2016 - 2021 Advanced Micro Devices, Inc. All rights reserved.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
+# usage: hipdemangleatp.sh ATP_FILE
+
+# HIP kernels
+kernels=$(grep grid_launch_parm $1 | cut -d" " -f1 | sort | uniq)
+for mangled_sym in $kernels; do
+    real_sym=$(c++filt -p $(c++filt _$mangled_sym | cut -d: -f3 | sed 's/_functor//g' | sed 's/ /\\\&nbsp/g'))
+    #echo "$mangled_sym => $real_sym" >> $1.log
+    sed -i "s/$mangled_sym/$real_sym/g" $1
+done
+
+# HC kernels
+kernels=$(grep cxxamp_trampoline $1 | cut -d" " -f1 | sort | uniq)
+for mangled_sym in $kernels; do
+    real_sym=$(echo $mangled_sym |  sed "s/^/_/g; s/_EC_/$/g" | c++filt -p | cut -d\( -f1 | cut -d" " -f1 --complement | sed 's/ /\\\&nbsp/g')
+    #echo "$mangled_sym => $real_sym" >> $1.log
+    sed -i "s/$mangled_sym/$real_sym/g" $1
+done

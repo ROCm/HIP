@@ -1,0 +1,132 @@
+# Anywhere {branch} is used, the branch name will be substituted.
+# These comments will also be removed.
+defaults:
+  numbered: False
+  maxdepth: 6
+root: index
+subtrees:
+- entries:
+  - file: what_is_hip
+  - file: faq
+
+- caption: Install
+  entries:
+  - file: install/install
+    title: Installing HIP
+  - file: install/build
+    title: Building HIP from source
+  - url: https://rocm.docs.amd.com/projects/install-on-linux/en/${branch}/reference/system-requirements.html
+    title: Linux supported AMD GPUs
+  - url: https://rocm.docs.amd.com/projects/install-on-windows/en/${branch}/reference/system-requirements.html
+    title: Windows supported AMD GPUs
+  - url: https://developer.nvidia.com/cuda-gpus
+    title: NVIDIA supported GPUs
+
+- caption: Programming guide
+  entries:
+  - file: understand/programming_model
+  - file: understand/hardware_implementation
+  - file: understand/compilers
+  - file: how-to/performance_guidelines
+  - file: how-to/debugging
+  - file: how-to/logging
+  - file: how-to/hip_runtime_api
+    subtrees:
+    - entries:
+      - file: how-to/hip_runtime_api/initialization
+      - file: how-to/hip_runtime_api/memory_management
+        subtrees:
+        - entries:
+          - file: how-to/hip_runtime_api/memory_management/host_memory
+          - file: how-to/hip_runtime_api/memory_management/device_memory
+            subtrees:
+            - entries:
+              - file: how-to/hip_runtime_api/memory_management/device_memory/texture_fetching
+          - file: how-to/hip_runtime_api/memory_management/coherence_control
+          - file: how-to/hip_runtime_api/memory_management/unified_memory
+          - file: how-to/hip_runtime_api/memory_management/virtual_memory
+          - file: how-to/hip_runtime_api/memory_management/stream_ordered_allocator
+      - file: how-to/hip_runtime_api/error_handling
+      - file: how-to/hip_runtime_api/call_stack
+      - file: how-to/hip_runtime_api/asynchronous
+      - file: how-to/hip_runtime_api/hipgraph
+      - file: how-to/hip_runtime_api/cooperative_groups
+      - file: how-to/hip_runtime_api/multi_device
+      - file: how-to/hip_runtime_api/opengl_interop
+      - file: how-to/hip_runtime_api/external_interop
+  - file: how-to/hip_cpp_language_extensions
+  - file: how-to/kernel_language_cpp_support
+  - file: how-to/hip_porting_guide
+  - file: how-to/hip_porting_driver_api
+  - file: how-to/hip_rtc
+  - file: understand/amd_clr
+
+- caption: Reference
+  entries:
+  - file: reference/hip_runtime_api_reference
+    subtrees:
+    - entries:
+      - file: reference/hip_runtime_api/modules
+        subtrees:
+        - entries:
+          - file: reference/hip_runtime_api/modules/initialization_and_version
+          - file: reference/hip_runtime_api/modules/device_management
+          - file: reference/hip_runtime_api/modules/execution_control
+          - file: reference/hip_runtime_api/modules/error_handling
+          - file: reference/hip_runtime_api/modules/stream_management
+          - file: reference/hip_runtime_api/modules/stream_memory_operations
+          - file: reference/hip_runtime_api/modules/event_management
+          - file: reference/hip_runtime_api/modules/memory_management
+            subtrees:
+            - entries:
+              - file: reference/hip_runtime_api/modules/memory_management/memory_management_deprecated
+              - file: reference/hip_runtime_api/modules/memory_management/external_resource_interoperability
+              - file: reference/hip_runtime_api/modules/memory_management/stream_ordered_memory_allocator
+              - file: reference/hip_runtime_api/modules/memory_management/unified_memory_reference
+              - file: reference/hip_runtime_api/modules/memory_management/virtual_memory_reference
+              - file: reference/hip_runtime_api/modules/memory_management/texture_management
+              - file: reference/hip_runtime_api/modules/memory_management/texture_management_deprecated
+              - file: reference/hip_runtime_api/modules/memory_management/surface_object
+          - file: reference/hip_runtime_api/modules/peer_to_peer_device_memory_access
+          - file: reference/hip_runtime_api/modules/context_management
+          - file: reference/hip_runtime_api/modules/module_management
+          - file: reference/hip_runtime_api/modules/occupancy
+          - file: reference/hip_runtime_api/modules/profiler_control
+          - file: reference/hip_runtime_api/modules/launch_api
+          - file: reference/hip_runtime_api/modules/runtime_compilation
+          - file: reference/hip_runtime_api/modules/callback_activity_apis
+          - file: reference/hip_runtime_api/modules/graph_management
+          - file: reference/hip_runtime_api/modules/graphics_interoperability
+          - file: reference/hip_runtime_api/modules/opengl_interoperability
+          - file: reference/hip_runtime_api/modules/cooperative_groups_reference
+      - file: reference/hip_runtime_api/global_defines_enums_structs_files
+        subtrees:
+        - entries:
+          - file: reference/hip_runtime_api/global_defines_enums_structs_files/global_enum_and_defines
+          - file: reference/hip_runtime_api/global_defines_enums_structs_files/driver_types
+          - file: doxygen/html/annotated
+          - file: doxygen/html/files
+  - file: reference/math_api
+  - file: reference/complex_math_api
+  - file: reference/env_variables
+  - file: reference/error_codes
+  - file: reference/api_syntax
+  - file: reference/deprecated_api_list
+    title: List of deprecated APIs
+  - file: reference/low_fp_types
+    title: Low Precision Floating Point Types
+  - file: reference/hardware_features
+
+- caption: Tutorials
+  entries:
+  - url: https://github.com/ROCm/rocm-examples/tree/develop/HIP-Basic
+    title: HIP basic examples
+  - url: https://github.com/ROCm/rocm-examples
+    title: HIP examples
+  - file: tutorial/saxpy
+  - file: tutorial/reduction
+  - file: tutorial/cooperative_groups_tutorial
+
+- caption: About
+  entries:
+  - file: license.md

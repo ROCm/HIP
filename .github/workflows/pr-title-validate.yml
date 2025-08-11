@@ -1,0 +1,46 @@
+name: Validate PR Title
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  validate-pr-title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR Title
+        id: check-pr-title
+        run: |
+          PR_TITLE="${{ github.event.pull_request.title }}"
+
+          if [[ ! "$PR_TITLE" =~ ^SWDEV-[0-9]+ ]]; then
+            echo "::error::PR title must start with a Jira ticket ID, SWDEV-<num>"
+            exit 1
+          else
+            echo "PR title is valid"
+          fi
+
+  validate-commit-messages:
+    runs-on: AMD-ROCm-Internal-dev1
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+            fetch-depth: 0
+
+      - name: Check all commit messages
+        id: validate-commit-messags
+        run: |
+          COMMITS=$(git log --format="%H %s" origin/${{ github.event.pull_request.base.ref }}..origin/${{ github.event.pull_request.head.ref }})
+          echo "$COMMITS"
+          echo "$COMMITS" | while read -r hash message; do
+            echo -e "$hash $message\n "
+            if [[ "$message" =~ ^SWDEV-[0-9]+ ]]; then
+              echo "Valid JIRA ticket format"
+            elif [[ "$message" =~ ^Merge\ branch ]]; then
+              echo "Merge commits are allowed"
+            else
+              echo "::error:: $hash commit should start with Jira ticket ID, SWDEV-<num> or be a merge commit"
+              exit 1
+            fi
+          done

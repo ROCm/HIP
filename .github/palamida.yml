@@ -1,0 +1,5 @@
+disabled: false
+scmId: gh-emu-rocm
+branchesToScan:
+  - amd-staging
+  - amd-mainline
