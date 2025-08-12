@@ -35,6 +35,7 @@ THE SOFTWARE.
 #include <climits>
 #include <cstdint>
 #include <cstdlib>
+#include <utility>
 #else
 #include <limits.h>
 #include <stdint.h>
