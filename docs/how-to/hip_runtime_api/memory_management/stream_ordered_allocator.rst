@@ -121,6 +121,11 @@ Allocations are initially accessible from the device where they reside.
 Interprocess memory handling
 =============================
 
+.. attention::
+    IPC API calls are only supported on systems with an active ``amdgpu-dkms`` driver. Please refer to the
+    `AMDGPU documentation <https://instinct.docs.amd.com/projects/amdgpu-docs/en/latest/index.html>`__ for information
+    on how to install ``amdgpu-dkms``.
+
 Interprocess capable (IPC) memory pools facilitate efficient and secure sharing of GPU memory between processes.
 
 To achieve interprocess memory sharing, you can use either :ref:`device pointer <device-pointer>` or :ref:`shareable handle <shareable-handle>`. Both provide allocator (export) and consumer (import) interfaces.
