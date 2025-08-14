@@ -675,7 +675,7 @@ Stream Capture Errors
 
    * - :term:`hipErrorInvalidResourceHandle`
      - ``400``
-     - Input launch stream is NULLPTR or is ``hipStreamLegacy``
+     - Input launch stream is ``NULL`` or is ``hipStreamLegacy``
 
 .. glossary::
 
