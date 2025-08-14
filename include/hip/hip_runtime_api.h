@@ -6013,6 +6013,18 @@ hipError_t hipModuleUnload(hipModule_t module);
  * #hipErrorNotFound,
  */
 hipError_t hipModuleGetFunction(hipFunction_t* function, hipModule_t module, const char* kname);
+
+/**
+ * @brief Returns the number of functions within a module.
+ *
+ * @param [in] mod  Module to get function count from
+ * @param [out] count  function count from module
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidContext, #hipErrorNotInitialized,
+ * #hipErrorNotFound,
+ */
+hipError_t hipModuleGetFunctionCount (unsigned int* count, hipModule_t mod);
+
 /**
  * @brief Find out attributes for a given function.
  * @ingroup Execution
