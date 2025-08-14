@@ -5003,6 +5003,90 @@ hipError_t hipMemset3D(hipPitchedPtr pitchedDevPtr, int  value, hipExtent extent
  *  @returns #hipSuccess, #hipErrorInvalidValue
  */
 hipError_t hipMemset3DAsync(hipPitchedPtr pitchedDevPtr, int  value, hipExtent extent ,hipStream_t stream __dparm(0));
+
+/**
+ *  @brief Fills 2D memory range of 'width' 8-bit values synchronously to the specified char value. 
+ * Height specifies numbers of rows to set and dstPitch speicifies the number of bytes between each 
+ * row. 
+ *  @param[in] dst       Pointer to device memory
+ *  @param[in] dstPitch  Pitch of dst device pointer
+ *  @param[in] value     value to set
+ *  @param[in] width     Width of row
+ *  @param[in] height    Number of rows
+ *  @returns #hipSuccess, #hipErrorInvalidValue
+ */
+hipError_t hipMemsetD2D8(hipDeviceptr_t dst, size_t dstPitch, unsigned char value, size_t width,
+                         size_t height);
+/**
+ *  @brief Fills 2D memory range of 'width' 8-bit values asynchronously to the specified char value. 
+ * Height specifies numbers of rows to set and dstPitch speicifies the number of bytes between each 
+ * row. 
+ *  @param[in] dst       Pointer to device memory
+ *  @param[in] dstPitch  Pitch of dst device pointer
+ *  @param[in] value     value to set
+ *  @param[in] width     Width of row
+ *  @param[in] height    Number of rows
+ *  @param[in] stream    Stream Identifier
+ *  @returns #hipSuccess, #hipErrorInvalidValue
+ */
+hipError_t hipMemsetD2D8Async(hipDeviceptr_t dst, size_t dstPitch, unsigned char value, size_t width,
+                              size_t height, hipStream_t stream __dparm(0));
+
+/**
+ *  @brief Fills 2D memory range of 'width' 16-bit values synchronously to the specified short value. 
+ * Height specifies numbers of rows to set and dstPitch speicifies the number of bytes between each 
+ * row. 
+ *  @param[in] dst       Pointer to device memory
+ *  @param[in] dstPitch  Pitch of dst device pointer
+ *  @param[in] value     value to set
+ *  @param[in] width     Width of row
+ *  @param[in] height    Number of rows
+ *  @returns #hipSuccess, #hipErrorInvalidValue
+ */
+hipError_t hipMemsetD2D16(hipDeviceptr_t dst, size_t dstPitch, unsigned short value, size_t width,
+                          size_t height);
+/**
+ *  @brief Fills 2D memory range of 'width' 16-bit values asynchronously to the specified short 
+ * value. Height specifies numbers of rows to set and dstPitch speicifies the number of bytes 
+ * between each row. 
+ *  @param[in] dst       Pointer to device memory
+ *  @param[in] dstPitch  Pitch of dst device pointer
+ *  @param[in] value     value to set
+ *  @param[in] width     Width of row
+ *  @param[in] height    Number of rows
+ *  @param[in] stream    Stream Identifier
+ *  @returns #hipSuccess, #hipErrorInvalidValue
+ */
+hipError_t hipMemsetD2D16Async(hipDeviceptr_t dst, size_t dstPitch, unsigned short value,
+                               size_t width, size_t height, hipStream_t stream __dparm(0));
+/**
+ *  @brief Fills 2D memory range of 'width' 32-bit values synchronously to the specified int value. 
+ * Height specifies numbers of rows to set and dstPitch speicifies the number of bytes between each 
+ * row. 
+ *  @param[in] dst       Pointer to device memory
+ *  @param[in] dstPitch  Pitch of dst device pointer
+ *  @param[in] value     value to set
+ *  @param[in] width     Width of row
+ *  @param[in] height    Number of rows
+ *  @returns #hipSuccess, #hipErrorInvalidValue
+ */
+hipError_t hipMemsetD2D32(hipDeviceptr_t dst, size_t dstPitch, unsigned int value, size_t width,
+                          size_t height);
+/**
+ *  @brief Fills 2D memory range of 'width' 32-bit values asynchronously to the specified int 
+ * value. Height specifies numbers of rows to set and dstPitch speicifies the number of bytes 
+ * between each row. 
+ *  @param[in] dst       Pointer to device memory
+ *  @param[in] dstPitch  Pitch of dst device pointer
+ *  @param[in] value     value to set
+ *  @param[in] width     Width of row
+ *  @param[in] height    Number of rows
+ *  @param[in] stream    Stream Identifier
+ *  @returns #hipSuccess, #hipErrorInvalidValue
+ */
+hipError_t hipMemsetD2D32Async(hipDeviceptr_t dst, size_t dstPitch, unsigned int value,
+                               size_t width, size_t height, hipStream_t stream __dparm(0));
+
 /**
  * @brief Query memory info.
  *
