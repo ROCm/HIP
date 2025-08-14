@@ -14,7 +14,7 @@ alongside options to guide the compilation.
 
 .. note::
 
-  * Device code compilation via HIPRTC uses ``__hip_internal`` namespace instead
+  * Device code compilation via HIPRTC uses the ``__hip_internal`` namespace instead
     of the ``std`` namespace to avoid namespace collision. 
   * This library can be used for compilation on systems without AMD GPU drivers
     installed (offline compilation). However, running the compiled code still
