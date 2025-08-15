@@ -740,18 +740,16 @@ integer values, even when compiled for a device with 32 threads per warp. On
 such devices the higher bits are unused. CUDA code ported to HIP requires
 changes to ensure that the correct type is used.
 
-Note that the ``__sync`` variants are made available in ROCm 6.2, but disabled by
-default to help with the transition to 64-bit masks. They can be enabled by
-setting the preprocessor macro ``HIP_ENABLE_WARP_SYNC_BUILTINS``. These built-ins
-will be enabled unconditionally in the next ROCm release. Wherever possible, the
-implementation includes a static assert to check that the program source uses
-the correct type for the mask.
+Note that the ``__sync`` variants are available in ROCm 7.0 (and enabled by
+default, unlike in previous versions). They can be disabled by setting the
+preprocessor macro ``HIP_DISABLE_WARP_SYNC_BUILTINS``.
 
 The ``_sync`` variants require a 64-bit unsigned integer mask argument that
 specifies the lanes of the warp that will participate. Each participating thread
 must have its own bit set in its mask argument, and all active threads specified
 in any mask argument must execute the same call with the same mask, otherwise
-the result is undefined.
+the result is undefined. The implementation includes a static assert to check
+that the program source uses the correct type for the mask.
 
 .. _warp_vote_functions:
 
@@ -866,6 +864,53 @@ The different shuffle functions behave as following:
   smaller than ``warpSize``, the threads can read values from subgroups before
   the current subgroup. If it tries to read values from later subgroups, the
   function returns the ``var`` of the calling thread.
+
+Warp reduction functions
+-------------------------------------------------------------------------------------------------------------
+Arithmetic reduces:
+
+.. code-block:: cpp
+
+  T __reduce_add_sync (unsigned long long mask, T var);
+  T __reduce_min_sync (unsigned long long mask, T var);
+  T __reduce_max_sync (unsigned long long mask, T var);
+
+``T`` can be:
+- On Nvidia platform: ``int`` or ``unsigned int``
+- On AMD platform: ``int`` or ``unsigned int``; if the user defines the macro ``HIP_ENABLE_EXTRA_WARP_SYNC_TYPES``, then: ``unsigned long long``, ``long long``, ``half``/``single``/``double`` precision floating
+point types are also be supported.
+
+Returns the aggregated result of the arithmetic operation, where each of the participating threads
+(i.e. the ones mentioned on the mask) contribute ``var``.
+
+NOTE: for type ``half``, these intrinsics are not available in environments where the arithmetic operators are not available for
+that type.
+
+Logical reduces:
+
+.. code-block:: cpp
+
+  T __reduce_and_sync (unsigned long long mask, T var);
+  T __reduce_or_sync  (unsigned long long mask, T var);
+  T __reduce_xor_sync (unsigned long long mask, T var);
+
+``T`` can be:
+- On Nvidia platform: ``unsigned int``
+- On AMD platform: ``unsigned int``, and if the user defines the macro ``HIP_ENABLE_EXTRA_WARP_SYNC_TYPES``, then ``int``, ``unsigned long long`` or ``long long`` are also supported
+
+Returns the result of the aggregated logical AND/OR/XOR operation where each of the participating threads
+(i.e. the ones mentioned on the mask) contribute ``var``.
+
+The mask argument is a 64-bit unsigned integer that specifies the lanes in the warp that 
+participate in cross-lane communication with the calling lane. Each participating thread must have its own
+bit set in its mask argument, and all active threads specified in any mask argument must execute the same
+call with the same mask, otherwise the result is undefined.
+
+Informational note: On the AMD platform, **masks that start from lane zero and have no "holes" use faster cross-lane operations and
+exhibit better performance** than masks with "holes" (example of mask with no holes: 0xFF and with holes: 0xFB;
+the reduction with 0xFF is faster).
+
+These functiones do not provide a memory barrier on any platform.
 
 Warp matrix functions
 --------------------------------------------------------------------------------
