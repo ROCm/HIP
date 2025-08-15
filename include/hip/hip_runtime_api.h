@@ -1140,22 +1140,7 @@ typedef enum hipMemPoolAttr
      */
     hipMemPoolAttrUsedMemHigh                = 0x8
 } hipMemPoolAttr;
-/**
- * Specifies the type of location
- */
- typedef enum hipMemLocationType {
-    hipMemLocationTypeInvalid = 0,
-    hipMemLocationTypeDevice = 1    ///< Device location, thus it's HIP device ID
-} hipMemLocationType;
-/**
- * Specifies a memory location.
- *
- * To specify a gpu, set type = @p hipMemLocationTypeDevice and set id = the gpu's device ID
- */
-typedef struct hipMemLocation {
-    hipMemLocationType type;  ///< Specifies the location type, which describes the meaning of id
-    int id;                   ///< Identifier for the provided location type @p hipMemLocationType
-} hipMemLocation;
+
 /**
  * Specifies the memory protection flags for mapping
  *
@@ -5645,6 +5630,60 @@ hipError_t hipDrvMemcpy3DAsync(const HIP_MEMCPY3D* pCopy, hipStream_t stream);
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
 hipError_t hipMemGetAddressRange(hipDeviceptr_t* pbase, size_t* psize, hipDeviceptr_t dptr);
+
+/**
+ * @brief Perform Batch of 1D copies
+ *
+ * @param [in] dsts      - Array of destination pointers
+ * @param [in] srcs      - Array of source pointers.
+ * @param [in] sizes     - Array of sizes for memcpy operations
+ * @param [in] count     - Size of dsts, srcs and sizes arrays
+ * @param [in] attrs     - Array of memcpy attributes (not supported)
+ * @param [in] attrsIdxs - Array of indices to map attrs to copies (not supported)
+ * @param [in] numAttrs  - Size of attrs and attrsIdxs arrays (not supported)
+ * @param [in] failIdx   - Pointer to a location to return failure index inside the batch
+ * @param [in] stream    - stream used to enqueue operations in.
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ */
+hipError_t hipMemcpyBatchAsync(void **dsts, void **srcs, size_t *sizes, size_t count,
+                               hipMemcpyAttributes *attrs, size_t *attrsIdxs, size_t numAttrs,
+                               size_t *failIdx, hipStream_t stream __dparm(0));
+
+/**
+ * @brief Perform Batch of 3D copies
+ *
+ * @param [in] numOps  - Total number of memcpy operations.
+ * @param [in] opList  - Array of size numOps containing the actual memcpy operations.
+ * @param [in] failIdx - Pointer to a location to return the index of the copy where a failure
+ *                     - was encountered.
+ * @param [in] flags   - Flags for future use, must be zero now.
+ * @param [in] stream  - The stream to enqueue the operations in.
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ */
+hipError_t hipMemcpy3DBatchAsync(size_t numOps, struct hipMemcpy3DBatchOp *opList, size_t *failIdx,
+                                 unsigned long long flags, hipStream_t stream __dparm(0));
+
+/**
+ * @brief Performs 3D memory copies between devices
+ * This API is asynchronous with respect to host
+ *
+ * @param [in] p  - Parameters for memory copy
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue, hipErrorInvalidDevice
+ */
+hipError_t hipMemcpy3DPeer(hipMemcpy3DPeerParms *p);
+
+/**
+ * @brief Performs 3D memory copies between devices asynchronously
+ *
+ * @param [in] p  - Parameters for memory copy
+ * @param [in] stream - Stream to enqueue operation in.
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue, hipErrorInvalidDevice
+ */
+hipError_t hipMemcpy3DPeerAsync(hipMemcpy3DPeerParms *p, hipStream_t stream __dparm(0));
 // doxygen end Memory
 /**
  * @}

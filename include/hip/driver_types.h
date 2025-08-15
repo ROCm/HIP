@@ -446,6 +446,111 @@ typedef struct HIP_MEMCPY3D {
     size_t Depth;                ///< Depth in bytes of 3D memory copy
 } HIP_MEMCPY3D;
 /**
+ * Specifies the type of location
+ */
+ typedef enum hipMemLocationType {
+    hipMemLocationTypeInvalid = 0,
+    hipMemLocationTypeDevice = 1    ///< Device location, thus it's HIP device ID
+} hipMemLocationType;
+/**
+ * Specifies a memory location.
+ *
+ * To specify a gpu, set type = @p hipMemLocationTypeDevice and set id = the gpu's device ID
+ */
+typedef struct hipMemLocation {
+    hipMemLocationType type;  ///< Specifies the location type, which describes the meaning of id
+    int id;                   ///< Identifier for the provided location type @p hipMemLocationType
+} hipMemLocation;
+
+/**
+ * Flags to specify for copies within a batch. Used with hipMemcpyBatchAsync
+ */
+typedef enum hipMemcpyFlags {
+    hipMemcpyFlagDefault = 0x0,                  ///< Default flag
+    hipMemcpyFlagPreferOverlapWithCompute = 0x1  ///< Tries to overlap copy with compute work.
+} hipMemcpyFlags;
+
+/**
+ * Flags to specify order in which source pointer is accessed by Batch memcpy
+ */
+typedef enum hipMemcpySrcAccessOrder {
+    hipMemcpySrcAccessOrderInvalid       = 0x0,       ///< Default Invalid.
+    hipMemcpySrcAccessOrderStream        = 0x1,       ///< Access to source pointer must be in stream order.
+    hipMemcpySrcAccessOrderDuringApiCall = 0x2,       ///< Access to source pointer can be out of stream order and all accesses must be complete before API call returns.
+    hipMemcpySrcAccessOrderAny           = 0x3,       ///< Access to the source pointer can be out of stream order and the accesses can happen even after the API call return.
+    hipMemcpySrcAccessOrderMax           = 0x7FFFFFFF
+} hipMemcpySrcAccessOrder;
+
+/**
+ * Attributes for copies within a batch.
+ */
+typedef struct hipMemcpyAttributes {
+    hipMemcpySrcAccessOrder srcAccessOrder; ///< Source access ordering to be observed for copies with this attribute.
+    hipMemLocation srcLocHint;              ///< Location hint for src operand.
+    hipMemLocation dstLocHint;              ///< Location hint for destination operand.
+    unsigned int flags;                     ///< Additional Flags for copies. See hipMemcpyFlags.
+} hipMemcpyAttributes;
+/**
+ * Operand types for individual copies within a batch
+ */
+typedef enum hipMemcpy3DOperandType {
+  hipMemcpyOperandTypePointer = 0x1,  ///< Mempcy operand is a valid pointer.
+  hipMemcpyOperandTypeArray = 0x2,    ///< Memcpy operand is a valid hipArray.
+  hipMemcpyOperandTypeMax = 0x7FFFFFFF
+} hipMemcpy3DOperandType;
+
+/**
+ * Struct representing offset into a hipArray_t in elements.
+ */
+typedef struct hipOffset3D {
+    size_t x;
+    size_t y;
+    size_t z;
+} hipOffset3D;
+/**
+ *  Struct representing an operand for copy with hipMemcpy3DBatchAsync.
+ */
+typedef struct hipMemcpy3DOperand {
+    hipMemcpy3DOperandType type;
+    union {
+        struct {
+            void *ptr;
+            size_t rowLength;        ///< Length of each row in elements.
+            size_t layerHeight;      ///< Height of each layer in elements.
+            hipMemLocation locHint;  ///< Location Hint for the operand.
+        } ptr;
+        struct {
+            hipArray_t array;        ///< Array struct for hipMemcpyOperandTypeArray.
+            hipOffset3D offset;      ///< Offset into array in elements.
+        } array;
+    } op;
+} hipMemcy3DOperand;
+
+/**
+ * HIP 3D Batch Op
+ */
+typedef struct hipMemcpy3DBatchOp {
+    hipMemcpy3DOperand src;
+    hipMemcpy3DOperand dst;
+    hipExtent extent;
+    hipMemcpySrcAccessOrder srcAccessOrder;
+    unsigned int flags;
+} hipMemcpy3DBatchOp;
+
+typedef struct hipMemcpy3DPeerParms
+{
+    hipArray_t     srcArray;  ///< Source memory address
+    hipPos         srcPos;    ///< Source position offset
+    hipPitchedPtr  srcPtr;    ///< Pitched source memory address
+    int            srcDevice; ///< Source device
+    hipArray_t     dstArray;  ///< Destination memory address
+    hipPos         dstPos;    ///< Destination position offset
+    hipPitchedPtr  dstPtr;    ///< Pitched destination memory address
+    int            dstDevice; ///< Destination device
+    hipExtent      extent;    ///< Requested memory copy size
+} hipMemcpy3DPeerParms;
+
+/**
  * @brief Make hipPitchedPtr
  *
  * @param [in] d Pointer to the allocated memory
