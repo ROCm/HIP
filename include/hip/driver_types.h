@@ -528,7 +528,7 @@ typedef struct hipMemcpy3DOperand {
             hipOffset3D offset;      ///< Offset into array in elements.
         } array;
     } op;
-} hipMemcy3DOperand;
+} hipMemcpy3DOperand;
 
 /**
  * HIP 3D Batch Op
