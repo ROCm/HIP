@@ -435,7 +435,7 @@ Kernel and Launch Errors
 
    * - :term:`hipErrorContextIsDestroyed`
      - ``709``
-     - Invalid input stream
+     - Invalid stream handle
 
    * - :term:`hipErrorInvalidConfiguration`
      - ``9``
