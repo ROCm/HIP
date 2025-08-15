@@ -1482,19 +1482,53 @@ typedef struct hipMemAllocNodeParams {
     void*   dptr;                       ///< Returned device address of the allocation
 } hipMemAllocNodeParams;
 
-
+/**
+ * Specifies performance hint with hipAccessPolicyWindow
+ */
 typedef enum hipAccessProperty {
-    hipAccessPropertyNormal = 0,
-    hipAccessPropertyStreaming  = 1,
-    hipAccessPropertyPersisting = 2,
+    hipAccessPropertyNormal = 0,      ///< Normal cache persistence.
+    hipAccessPropertyStreaming  = 1,  ///< Streaming access is less likely to persist from cache
+    hipAccessPropertyPersisting = 2,  ///< Persisting access is more likely to persist in cache
 } hipAccessProperty;
+
+/***
+ * Specifies access policy for a window, a contiguous extent of memory
+ * beginning at base_ptr and ending at base_ptr + num_bytes.
+ */
 typedef struct hipAccessPolicyWindow {
-    void* base_ptr;
-    hipAccessProperty hitProp;
-    float hitRatio;
-    hipAccessProperty missProp;
-    size_t num_bytes;
+    void* base_ptr;              ///< Starting address of the access policy window
+    hipAccessProperty hitProp;   ///< hipAccessProperty set for hit
+    float hitRatio;              ///< hitRatio specifies percentage of lines assigned hitProp
+    hipAccessProperty missProp;  ///< hipAccessProperty set for miss
+    size_t num_bytes;            ///< Size in bytes of the window policy.
 } hipAccessPolicyWindow;
+
+/**
+ * Memory Synchronization Domain map
+ */
+typedef struct hipLaunchMemSyncDomainMap {
+    unsigned char default_;                /**< The default domain ID to use for designated kernels */
+    unsigned char remote;                  /**< The remote domain ID to use for designated kernels */
+} hipLaunchMemSyncDomainMap;
+
+/**
+ * Memory Synchronization Domain
+ */
+typedef enum hipLaunchMemSyncDomain {
+    hipLaunchMemSyncDomainDefault = 0,    /**< Launch kernels in the default domain */
+    hipLaunchMemSyncDomainRemote  = 1     /**< Launch kernels in the remote domain */
+} hipLaunchMemSyncDomain;
+
+/**
+ * Stream Synchronization Policy.
+ * Can be set with hipStreamSetAttribute
+ */
+typedef enum hipSynchronizationPolicy {
+  hipSyncPolicyAuto = 1,   /**< Default Synchronization Policy. Host thread waits actively */
+  hipSyncPolicySpin = 2,   /**< Host thread spins in tight loop waiting for completition */
+  hipSyncPolicyYield = 3,  /**< Host spins but yields to other threads, reducing CPU usage */
+  hipSyncPolicyBlockingSync = 4 /**< Host thread blocks (sleeps) until the stream completes */
+} hipSynchronizationPolicy;
 
 /**
  *  Launch Attribute ID
@@ -1502,7 +1536,10 @@ typedef struct hipAccessPolicyWindow {
 typedef enum hipLaunchAttributeID {
   hipLaunchAttributeAccessPolicyWindow = 1,                ///< Valid for Streams, graph nodes, launches
   hipLaunchAttributeCooperative = 2,                       ///< Valid for graph nodes, launches
+  hipLaunchAttributeSynchronizationPolicy = 3,             ///< Valid for streams
   hipLaunchAttributePriority = 8,                          ///< Valid for graph node, streams, launches
+  hipLaunchAttributeMemSyncDomainMap = 9,                  ///< Valid for streams, graph nodes, launches
+  hipLaunchAttributeMemSyncDomain = 10,                    ///< Valid for streams, graph nodes, launches
   hipLaunchAttributeMax
 } hipLaunchAttributeID;
 
@@ -1515,7 +1552,22 @@ typedef union hipLaunchAttributeValue {
     hipAccessPolicyWindow accessPolicyWindow;  ///< Value of launch attribute ::hipLaunchAttributePolicyWindow.
     int cooperative;                           ///< Value of launch attribute ::hipLaunchAttributeCooperative. Indicates whether the kernel is cooperative.
     int priority;                              ///< Value of launch attribute :: hipLaunchAttributePriority. Execution priority of kernel
+    hipSynchronizationPolicy syncPolicy;       ///< Value of launch attribute :: hipLaunchAttributeSynchronizationPolicy. Used to work queued up in stream
+    hipLaunchMemSyncDomainMap memSyncDomainMap; ///< Value of launch attribute hipLaunchAttributeMemSyncDomainMap
+    hipLaunchMemSyncDomain memSyncDomain;       ///< Value of launch attribute hipLaunchAttributeMemSyncDomain
 } hipLaunchAttributeValue;
+
+/**
+ * Stream attributes
+ */
+#define hipStreamAttrID hipLaunchAttributeID
+#define hipStreamAttributeAccessPolicyWindow    hipLaunchAttributeAccessPolicyWindow
+#define hipStreamAttributeSynchronizationPolicy hipLaunchAttributeSynchronizationPolicy
+#define hipStreamAttributeMemSyncDomainMap      hipLaunchAttributeMemSyncDomainMap
+#define hipStreamAttributeMemSyncDomain         hipLaunchAttributeMemSyncDomain
+#define hipStreamAttributePriority hipLaunchAttributePriority
+
+#define hipStreamAttrValue hipLaunchAttributeValue
 
 /**
  * Kernel node attributeID
@@ -2908,6 +2960,27 @@ typedef void (*hipStreamCallback_t)(hipStream_t stream, hipError_t status, void*
  */
 hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback, void* userData,
                                 unsigned int flags);
+
+/**
+ *@brief Sets stream attribute. Updated attribute is applied to work submitted to the stream.
+ * @param[in] stream - Stream to set attributes to
+ * @param[in] attr   - Attribute ID for the attribute to set
+ * @param[in] value  - Attribute value for the attribute to set
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidResourceHandle
+ */
+hipError_t hipStreamSetAttribute(hipStream_t stream, hipStreamAttrID attr,
+                                 const hipStreamAttrValue *value);
+
+/**
+ *@brief queries stream attribute.
+ * @param[in] stream - Stream to geet attributes from
+ * @param[in] attr   - Attribute ID for the attribute to query
+ * @param[out] value  - Attribute value output
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidResourceHandle
+ */
+hipError_t hipStreamGetAttribute(hipStream_t stream, hipStreamAttrID attr,
+                                 hipStreamAttrValue *value_out);
+
 // end doxygen Stream
 /**
  * @}
