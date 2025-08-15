@@ -6135,6 +6135,17 @@ hipError_t hipDevicePrimaryCtxSetFlags(hipDevice_t dev, unsigned int flags);
  *  This section describes the module management functions of HIP runtime API.
  *
  */
+ /**
+ * @brief Loads fatbin object
+ *
+ * @param [in] fatbin  fatbin to be loaded as a module
+ * @param [out] module  Module
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidContext, #hipErrorFileNotFound,
+ * #hipErrorOutOfMemory, #hipErrorSharedObjectInitFailed, #hipErrorNotInitialized
+ *
+ */
+hipError_t hipModuleLoadFatBinary(hipModule_t* module, const void* fatbin);
 /**
  * @brief Loads code object from file into a module the currrent context.
  *
@@ -6180,7 +6191,7 @@ hipError_t hipModuleGetFunction(hipFunction_t* function, hipModule_t module, con
  * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidContext, #hipErrorNotInitialized,
  * #hipErrorNotFound,
  */
-hipError_t hipModuleGetFunctionCount (unsigned int* count, hipModule_t mod);
+hipError_t hipModuleGetFunctionCount(unsigned int* count, hipModule_t mod);
 
 /**
  * @brief Find out attributes for a given function.
