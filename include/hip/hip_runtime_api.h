@@ -667,6 +667,11 @@ typedef enum hipDeviceP2PAttr {
   hipDevP2PAttrNativeAtomicSupported,
   hipDevP2PAttrHipArrayAccessSupported
 } hipDeviceP2PAttr;
+typedef enum hipDriverEntryPointQueryResult {
+  hipDriverEntryPointSuccess = 0,
+  hipDriverEntryPointSymbolNotFound = 1,
+  hipDriverEntryPointVersionNotSufficent = 2
+} hipDriverEntryPointQueryResult;
 typedef struct ihipStream_t* hipStream_t;
 #define hipIpcMemLazyEnablePeerAccess 0x01
 #define HIP_IPC_HANDLE_SIZE 64
@@ -770,6 +775,19 @@ enum hipLimit_t {
 /** Use a system-scope release when recording this event. This flag is useful to make
  * non-coherent host memory visible to the host. The flag is a no-op on CUDA platforms.*/
 #define hipEventReleaseToSystem  0x80000000
+
+// Flags that can be used with hipGetDriverEntryPoint.
+/** Default flag. Equivalent to hipEnablePerThreadDefaultStream if compiled with
+ *  -fgpu-default-stream=per-thread flag or HIP_API_PER_THREAD_DEFAULT_STREAM macro is
+ * defined.*/
+#define hipEnableDefault 0x0
+
+/** Search for all symbols except the corresponding per-thread versions.*/
+#define hipEnableLegacyStream 0x1
+
+/** Search for all symbols including the per-thread versions. If a per-thread version cannot be
+ * found, returns the legacy version.*/
+#define hipEnablePerThreadDefaultStream 0x2
 
 //Flags that can be used with hipHostMalloc/hipHostAlloc.
 /** Default pinned memory allocation on the host.*/
@@ -6300,6 +6318,19 @@ hipError_t hipFuncGetAttribute(int* value, hipFunction_attribute attrib, hipFunc
  *
  */
 hipError_t hipGetFuncBySymbol(hipFunction_t* functionPtr, const void* symbolPtr);
+/**
+ * @brief Gets function pointer of a requested HIP API
+ *
+ * @param [in]  symbol  The API base name
+ * @param [out] funcPtr  Pointer to the requested function
+ * @param [in]  flags  Flags for the search
+ * @param [out] driverStatus  Optional returned status of the search
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ */
+hipError_t hipGetDriverEntryPoint(const char* symbol, void** funcPtr, unsigned long long flags,
+                                  hipDriverEntryPointQueryResult* driverStatus);
 /**
  * @brief returns the handle of the texture reference with the name from the module.
  *
