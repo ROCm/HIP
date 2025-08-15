@@ -9354,7 +9354,9 @@ static hipError_t __host__ inline hipOccupancyMaxPotentialBlockSize(int* gridSiz
 template <typename T>
 static hipError_t __host__ inline hipOccupancyMaxPotentialBlockSizeWithFlags(int* gridSize, int* blockSize,
     T f, size_t dynSharedMemPerBlk = 0, int blockSizeLimit = 0, unsigned int  flags = 0 ) {
-    return hipOccupancyMaxPotentialBlockSize(gridSize, blockSize, reinterpret_cast<const void*>(f),dynSharedMemPerBlk,blockSizeLimit);
+  (void)flags;
+  return hipOccupancyMaxPotentialBlockSize(gridSize, blockSize, reinterpret_cast<const void*>(f),
+                                           dynSharedMemPerBlk, blockSizeLimit);
 }
 #endif // defined(__clang__) && defined(__HIP__)
 
