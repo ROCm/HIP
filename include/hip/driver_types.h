@@ -448,9 +448,13 @@ typedef struct HIP_MEMCPY3D {
 /**
  * Specifies the type of location
  */
- typedef enum hipMemLocationType {
+typedef enum hipMemLocationType {
     hipMemLocationTypeInvalid = 0,
-    hipMemLocationTypeDevice = 1    ///< Device location, thus it's HIP device ID
+    hipMemLocationTypeNone = 0,
+    hipMemLocationTypeDevice = 1,           ///< Device location, thus it's HIP device ID
+    hipMemLocationTypeHost = 2,             ///< Host location, id is ignored
+    hipMemLocationTypeHostNuma = 3,         ///< Host NUMA node location, id is host NUMA node id
+    hipMemLocationTypeHostNumaCurrent = 4   ///< Host NUMA node closest to current thread’s CPU, id is ignored
 } hipMemLocationType;
 /**
  * Specifies a memory location.

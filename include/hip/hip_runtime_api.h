@@ -3794,6 +3794,24 @@ hipError_t hipMemPrefetchAsync(const void* dev_ptr,
                                int device,
                                hipStream_t stream __dparm(0));
 /**
+ * @brief Prefetches memory to the specified destination device using HIP.
+ *
+ * @param [in] dev_ptr    pointer to be prefetched
+ * @param [in] count      size in bytes for prefetching
+ * @param [in] location   destination location to prefetch to
+ * @param [in] flags      flags for future use, must be zero now.
+ * @param [in] stream     stream to enqueue prefetch operation
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * @note  This API is implemented on Linux and is under development on Microsoft Windows.
+ */
+hipError_t hipMemPrefetchAsync_v2(const void* dev_ptr,
+                                  size_t count,
+                                  hipMemLocation location,
+                                  unsigned int flags,
+                                  hipStream_t stream __dparm(0));
+/**
  * @brief Advise about the usage of a given memory range to HIP.
  *
  * @param [in] dev_ptr  pointer to memory to set the advice for
@@ -3816,6 +3834,27 @@ hipError_t hipMemAdvise(const void* dev_ptr,
                         size_t count,
                         hipMemoryAdvise advice,
                         int device);
+/**
+ * @brief Advise about the usage of a given memory range to HIP.
+ *
+ * @param [in] dev_ptr    pointer to memory to set the advice for
+ * @param [in] count      size in bytes of the memory range, it should be CPU page size alligned.
+ * @param [in] advice     advice to be applied for the specified memory range
+ * @param [in] location   location to apply the advice for
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * This HIP API advises about the usage to be applied on unified memory allocation in the
+ * range starting from the pointer address devPtr, with the size of count bytes.
+ * The memory range must refer to managed memory allocated via the API hipMallocManaged, and the
+ * range will be handled with proper round down and round up respectively in the driver to
+ * be aligned to CPU page size, the same way as corresponding CUDA API behaves in CUDA version 8.0
+ * and afterwards.
+ *
+ * @note  This API is implemented on Linux and is under development on Microsoft Windows.
+ */
+hipError_t hipMemAdvise_v2(const void* dev_ptr, size_t count, hipMemoryAdvise advice,
+                           hipMemLocation location);
 /**
  * @brief Query an attribute of a given memory range in HIP.
  *
@@ -5063,9 +5102,9 @@ hipError_t hipMemset3D(hipPitchedPtr pitchedDevPtr, int  value, hipExtent extent
 hipError_t hipMemset3DAsync(hipPitchedPtr pitchedDevPtr, int  value, hipExtent extent ,hipStream_t stream __dparm(0));
 
 /**
- *  @brief Fills 2D memory range of 'width' 8-bit values synchronously to the specified char value. 
- * Height specifies numbers of rows to set and dstPitch speicifies the number of bytes between each 
- * row. 
+ *  @brief Fills 2D memory range of 'width' 8-bit values synchronously to the specified char value.
+ * Height specifies numbers of rows to set and dstPitch speicifies the number of bytes between each
+ * row.
  *  @param[in] dst       Pointer to device memory
  *  @param[in] dstPitch  Pitch of dst device pointer
  *  @param[in] value     value to set
@@ -5076,9 +5115,9 @@ hipError_t hipMemset3DAsync(hipPitchedPtr pitchedDevPtr, int  value, hipExtent e
 hipError_t hipMemsetD2D8(hipDeviceptr_t dst, size_t dstPitch, unsigned char value, size_t width,
                          size_t height);
 /**
- *  @brief Fills 2D memory range of 'width' 8-bit values asynchronously to the specified char value. 
- * Height specifies numbers of rows to set and dstPitch speicifies the number of bytes between each 
- * row. 
+ *  @brief Fills 2D memory range of 'width' 8-bit values asynchronously to the specified char value.
+ * Height specifies numbers of rows to set and dstPitch speicifies the number of bytes between each
+ * row.
  *  @param[in] dst       Pointer to device memory
  *  @param[in] dstPitch  Pitch of dst device pointer
  *  @param[in] value     value to set
@@ -5091,9 +5130,9 @@ hipError_t hipMemsetD2D8Async(hipDeviceptr_t dst, size_t dstPitch, unsigned char
                               size_t height, hipStream_t stream __dparm(0));
 
 /**
- *  @brief Fills 2D memory range of 'width' 16-bit values synchronously to the specified short value. 
- * Height specifies numbers of rows to set and dstPitch speicifies the number of bytes between each 
- * row. 
+ *  @brief Fills 2D memory range of 'width' 16-bit values synchronously to the specified short value.
+ * Height specifies numbers of rows to set and dstPitch speicifies the number of bytes between each
+ * row.
  *  @param[in] dst       Pointer to device memory
  *  @param[in] dstPitch  Pitch of dst device pointer
  *  @param[in] value     value to set
@@ -5104,9 +5143,9 @@ hipError_t hipMemsetD2D8Async(hipDeviceptr_t dst, size_t dstPitch, unsigned char
 hipError_t hipMemsetD2D16(hipDeviceptr_t dst, size_t dstPitch, unsigned short value, size_t width,
                           size_t height);
 /**
- *  @brief Fills 2D memory range of 'width' 16-bit values asynchronously to the specified short 
- * value. Height specifies numbers of rows to set and dstPitch speicifies the number of bytes 
- * between each row. 
+ *  @brief Fills 2D memory range of 'width' 16-bit values asynchronously to the specified short
+ * value. Height specifies numbers of rows to set and dstPitch speicifies the number of bytes
+ * between each row.
  *  @param[in] dst       Pointer to device memory
  *  @param[in] dstPitch  Pitch of dst device pointer
  *  @param[in] value     value to set
@@ -5118,9 +5157,9 @@ hipError_t hipMemsetD2D16(hipDeviceptr_t dst, size_t dstPitch, unsigned short va
 hipError_t hipMemsetD2D16Async(hipDeviceptr_t dst, size_t dstPitch, unsigned short value,
                                size_t width, size_t height, hipStream_t stream __dparm(0));
 /**
- *  @brief Fills 2D memory range of 'width' 32-bit values synchronously to the specified int value. 
- * Height specifies numbers of rows to set and dstPitch speicifies the number of bytes between each 
- * row. 
+ *  @brief Fills 2D memory range of 'width' 32-bit values synchronously to the specified int value.
+ * Height specifies numbers of rows to set and dstPitch speicifies the number of bytes between each
+ * row.
  *  @param[in] dst       Pointer to device memory
  *  @param[in] dstPitch  Pitch of dst device pointer
  *  @param[in] value     value to set
@@ -5131,9 +5170,9 @@ hipError_t hipMemsetD2D16Async(hipDeviceptr_t dst, size_t dstPitch, unsigned sho
 hipError_t hipMemsetD2D32(hipDeviceptr_t dst, size_t dstPitch, unsigned int value, size_t width,
                           size_t height);
 /**
- *  @brief Fills 2D memory range of 'width' 32-bit values asynchronously to the specified int 
- * value. Height specifies numbers of rows to set and dstPitch speicifies the number of bytes 
- * between each row. 
+ *  @brief Fills 2D memory range of 'width' 32-bit values asynchronously to the specified int
+ * value. Height specifies numbers of rows to set and dstPitch speicifies the number of bytes
+ * between each row.
  *  @param[in] dst       Pointer to device memory
  *  @param[in] dstPitch  Pitch of dst device pointer
  *  @param[in] value     value to set
