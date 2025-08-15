@@ -21,10 +21,9 @@ without changing it. To get a human readable version of the errors,
 
 .. note::
 
-    :cpp:func:`hipGetLastError` and ``cudaGetLastError`` returns the error
-    returned by any of the preceding HIP or CUDA APIs in the same host thread.
-    Before ROCm release 7.0, ``hipGetLastError`` did not match the ``cudaGetLastError`` behavior,
-    and instead returned the error code of the last HIP runtime API call even if it was ``hipSuccess``.
+    :cpp:func:`hipGetLastError` returns the last actual HIP API error caught in the current thread
+    during the application execution. Prior to ROCm 7.0, ``hipGetLastError`` might also return
+    ``hipSuccess`` or ``hipErrorNotReady`` from the last HIP runtime API call, which are not errors.
 
 
 Best practices of HIP error handling:
