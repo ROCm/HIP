@@ -1,0 +1,33 @@
+# Read the Docs configuration file
+# See https://docs.readthedocs.io/en/stable/config-file/v2.html for details
+
+version: 2
+
+sphinx:
+   configuration: docs/conf.py
+
+formats: []
+
+python:
+   install:
+   - requirements: docs/sphinx/requirements.txt
+
+conda:
+   environment: docs/environment.yml # needed until ubuntu ships doxygen >= 1.9.8
+
+build:
+   os: ubuntu-22.04
+   tools:
+      python: "mambaforge-22.9" # needed until ubuntu ships doxygen >= 1.9.8
+   apt_packages:
+     - "gfortran" # For pre-processing fortran sources
+     - "graphviz" # For dot graphs in doxygen
+   jobs:
+     post_checkout:
+       - if [ -d ../clr ]; then rm -rf ../clr; fi
+       - if [ -d ../ROCR-Runtime ]; then rm -rf ../ROCR-Runtime; fi
+       - git clone --depth=1 --single-branch --branch docs/develop https://github.com/ROCm/clr.git ../clr
+       - git clone --depth=1 --single-branch --branch master       https://github.com/ROCm/ROCR-Runtime.git ../ROCR-Runtime
+     post_build:
+       - rm -rf ../clr
+       - rm -rf ../ROCR-Runtime

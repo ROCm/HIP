@@ -1,0 +1,73 @@
+name: Keywords checker
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+    branches:
+      - amd-staging
+  workflow_dispatch:
+
+jobs:
+  check-keywords:
+    runs-on: AMD-ROCm-Internal-dev1
+    env:
+      KEYWORDS: ${{ vars.KEYWORDS }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Check keywords
+        run: |
+          set -e
+
+          if [ -z "$KEYWORDS" ]; then
+            echo "No keywords set. Skipping check"
+            exit 0
+          fi
+
+          IFS=',' read -ra KEYWORDS_ARRAY <<< "$KEYWORDS"
+          echo "Checking against list of keywords: ${KEYWORDS_ARRAY[*]}"
+
+          MATCHED=0
+          BASE_BRANCH=${{github.event.pull_request.base.ref}}
+          HEAD_BRANCH=${{github.event.pull_request.head.ref}}
+          PR_TITLE="${{ github.event.pull_request.title }}"
+
+          for file in $(git diff --name-only origin/$BASE_BRANCH..origin/$HEAD_BRANCH); do
+            if [ -f "$file" ]; then
+              for keyword in "${KEYWORDS_ARRAY[*]}"; do
+                grep -in -E "${keyword}" "$file" | while IFS= read -r line; do
+                  echo "Matched in '$file': $line"
+                  MATCHED=1
+                done
+              done
+            fi
+          done
+
+          for commit in $(git log --format=%H origin/$BASE_BRANCH..origin/$HEAD_BRANCH); do
+            msg=$(git log -1 --format=%B "$commit")
+            for keyword in "${KEYWORDS_ARRAY[*]}"; do
+              if echo "$msg" | grep -i -q "$keyword"; then
+                echo "Match in commit $commit: $msg"
+                MATCHED=1
+              fi
+            done
+          done
+
+          for keyword in "${KEYWORDS_ARRAY[*]}"; do
+            if echo "$PR_TITLE" | grep -i -q "$keyword"; then
+              echo "Match in PR title"
+              MATCHED=1
+            fi
+          done
+          
+          if [ "$MATCHED" -eq 1 ]; then
+            echo "Keywords found, please see diagnostics higher"
+            exit 1
+          else
+            echo "No keywords found"
+            exit 0
+          fi

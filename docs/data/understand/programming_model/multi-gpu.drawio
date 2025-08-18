@@ -1,0 +1,64 @@
+<mxfile host="65bd71144e" scale="1" border="20">
+    <diagram name="Multi-GPU Workload Distribution" id="multi-gpu">
+        <mxGraphModel dx="739" dy="990" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="600" pageHeight="300" background="#5E5B61" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="title" value="Multi-GPU Workload Distribution" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontFamily=Arial;fontColor=#FFFFFF;" parent="1" vertex="1">
+                    <mxGeometry x="125" y="10" width="300" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="host-cpu" value="Host CPU" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#585556;strokeColor=#FFFFFF;strokeWidth=2;fontSize=14;fontFamily=Arial;fontColor=#FFFFFF;" parent="1" vertex="1">
+                    <mxGeometry x="225" y="60" width="100" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="gpu0" value="GPU 0" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C23555;strokeColor=#FFFFFF;strokeWidth=2;fontSize=14;fontFamily=Arial;fontColor=#FFFFFF;" parent="1" vertex="1">
+                    <mxGeometry x="25" y="180" width="100" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="gpu1" value="GPU 1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C23555;strokeColor=#FFFFFF;strokeWidth=2;fontSize=14;fontFamily=Arial;fontColor=#FFFFFF;" parent="1" vertex="1">
+                    <mxGeometry x="175" y="180" width="100" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="gpu2" value="GPU 2" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C23555;strokeColor=#FFFFFF;strokeWidth=2;fontSize=14;fontFamily=Arial;fontColor=#FFFFFF;" parent="1" vertex="1">
+                    <mxGeometry x="325" y="180" width="100" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="gpu3" value="GPU 3" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#C23555;strokeColor=#FFFFFF;strokeWidth=2;fontSize=14;fontFamily=Arial;fontColor=#FFFFFF;" parent="1" vertex="1">
+                    <mxGeometry x="475" y="180" width="100" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow0" value="" style="endArrow=classic;html=1;strokeColor=#FFFFFF;strokeWidth=2;" parent="1" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="275" y="120" as="sourcePoint"/>
+                        <mxPoint x="75" y="180" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="arrow1" value="" style="endArrow=classic;html=1;strokeColor=#FFFFFF;strokeWidth=2;" parent="1" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="275" y="120" as="sourcePoint"/>
+                        <mxPoint x="225" y="180" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="arrow2" value="" style="endArrow=classic;html=1;strokeColor=#FFFFFF;strokeWidth=2;" parent="1" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="275" y="120" as="sourcePoint"/>
+                        <mxPoint x="375" y="180" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="arrow3" value="" style="endArrow=classic;html=1;strokeColor=#FFFFFF;strokeWidth=2;" parent="1" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="275" y="120" as="sourcePoint"/>
+                        <mxPoint x="525" y="180" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="label0" value="25%" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontFamily=Arial;fontColor=#FFFFFF;" parent="1" vertex="1">
+                    <mxGeometry x="45" y="250" width="60" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="label1" value="25%" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontFamily=Arial;fontColor=#FFFFFF;" parent="1" vertex="1">
+                    <mxGeometry x="195" y="250" width="60" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="label2" value="25%" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontFamily=Arial;fontColor=#FFFFFF;" parent="1" vertex="1">
+                    <mxGeometry x="345" y="250" width="60" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="label3" value="25%" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontFamily=Arial;fontColor=#FFFFFF;" parent="1" vertex="1">
+                    <mxGeometry x="495" y="250" width="60" height="20" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

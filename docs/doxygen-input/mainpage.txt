@@ -1,0 +1,19 @@
+/**
+ * @file mainpage.cpp
+ * @brief : DoxyGen Main Page.
+ * @mainpage Heterogeneous-computing Interface for Portability (HIP)
+ * @tableofcontents
+ *
+ * The HIP interface makes it very easy to port existing CUDA apps to run on AMD GPUs,
+ * or to develop new apps that can run on either CUDA or AMD GPUs from a common source base.
+ *
+ *  - HIP is very thin and has little or no performance impact over coding directly in CUDA NVCC mode.
+ *  - HIP allows developers to use the "best" development environment and tools on each target platform.
+ *  - HIP allows coding in a single-source C++ programming language including features such as templates, C++11 lambdas,and more.
+ *  - HIPIFY tools automatically convert CUDA sources to HIP.
+ *  - Developers can specialize for CUDA or HIP to tune for performance or handle tricky cases with #ifdef.
+
+ *  - See the @ref API.
+
+
+*/

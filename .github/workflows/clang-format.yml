@@ -1,0 +1,22 @@
+name: Clang format check  
+on:
+  pull_request:
+    types: [synchronize, opened]
+
+jobs:
+  format:
+    runs-on: AMD-ROCm-Internal-dev1
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install clang-format
+        run: |
+          sudo apt update && sudo apt install -y clang-format
+
+      - name: Run clang-format-check
+        id: clang-format
+        run: |
+          chmod +x .github/hooks/clang-format-check.sh
+          ./.github/hooks/clang-format-check.sh --range "${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}"
