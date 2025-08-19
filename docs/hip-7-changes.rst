@@ -306,7 +306,6 @@ In order to match the CUDA runtime behavior more closely, HIP APIs with streams 
 * Memory management related APIs
 
   * :cpp:func:`hipMemcpyPeerAsync`
-  * :cpp:func:`hipMemcpy2DValidateParams`
   * :cpp:func:`hipMallocFromPoolAsync`
   * :cpp:func:`hipFreeAsync`
   * :cpp:func:`hipMallocAsync`
@@ -334,8 +333,8 @@ Developers porting CUDA code to HIP no longer need to modify their error handlin
 if you have come to expect the HIP runtime to return the error code ``hipErrorContextIsDestroyed``,
 you might need to adjust your code.
 
-``warpSize`` Change
-===================
+warpSize Change
+===============
 
 To match the CUDA specification, ``warpSize`` is no longer a ``constexpr``.
 In general, this should be a transparent change. However, if an application was using ``warpSize``
