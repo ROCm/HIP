@@ -29,6 +29,8 @@ error code spaces:
 General Tips
 --------------------------------------------------------------------------------
 
+* ``hipDeviceptr_t`` is a ``void*`` and treated like a raw pointer, while ``CUdevicptr``
+  is an ``unsigned int`` and treated as a device memory handle. 
 * Starting to port on an NVIDIA machine is often the easiest approach, as the
   code can be tested for functionality and performance even if not fully ported
   to HIP.
