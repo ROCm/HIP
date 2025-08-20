@@ -55,8 +55,8 @@ THE SOFTWARE.
 #endif
 
 #ifdef __GNUC__
-#define HIP_PUBLIC_API              __attribute__ ((visibility ("default")))
-#define HIP_INTERNAL_EXPORTED_API   __attribute__ ((visibility ("default")))
+#define HIP_PUBLIC_API __attribute__((visibility("default")))
+#define HIP_INTERNAL_EXPORTED_API __attribute__((visibility("default")))
 #else
 #define HIP_PUBLIC_API
 #define HIP_INTERNAL_EXPORTED_API

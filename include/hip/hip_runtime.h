@@ -47,8 +47,8 @@ THE SOFTWARE.
 #else
 #include <stdint.h>
 #include <stdlib.h>
-#endif // __cplusplus
-#endif // !defined(__HIPCC_RTC__)
+#endif  // __cplusplus
+#endif  // !defined(__HIPCC_RTC__)
 
 #include <hip/hip_version.h>
 #include <hip/hip_common.h>
@@ -58,13 +58,13 @@ THE SOFTWARE.
 #elif !defined(__HIP_PLATFORM_AMD__) && defined(__HIP_PLATFORM_NVIDIA__)
 #include <hip/nvidia_detail/nvidia_hip_runtime.h>
 #else
-#error("Must define exactly one of __HIP_PLATFORM_AMD__ or __HIP_PLATFORM_NVIDIA__");
+#error ("Must define exactly one of __HIP_PLATFORM_AMD__ or __HIP_PLATFORM_NVIDIA__");
 #endif
 
 #if !defined(__HIPCC_RTC__)
 #include <hip/hip_runtime_api.h>
 #include <hip/library_types.h>
-#endif // !defined(__HIPCC_RTC__)
+#endif  // !defined(__HIPCC_RTC__)
 #include <hip/hip_vector_types.h>
 
 #endif

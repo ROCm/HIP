@@ -45,77 +45,80 @@ THE SOFTWARE.
  * hipJitOption
  */
 typedef enum hipJitOption {
-    hipJitOptionMaxRegisters = 0,         ///< CUDA Only Maximum registers may be used in a thread,
-                                          ///< passed to compiler
-    hipJitOptionThreadsPerBlock,          ///< CUDA Only Number of thread per block
-    hipJitOptionWallTime,                 ///< CUDA Only Value for total wall clock time
-    hipJitOptionInfoLogBuffer,            ///< CUDA Only Pointer to the buffer with logged information
-    hipJitOptionInfoLogBufferSizeBytes,   ///< CUDA Only Size of the buffer in bytes for logged info
-    hipJitOptionErrorLogBuffer,           ///< CUDA Only Pointer to the buffer with logged error(s)
-    hipJitOptionErrorLogBufferSizeBytes,  ///< CUDA Only Size of the buffer in bytes for logged error(s)
-    hipJitOptionOptimizationLevel,        ///< Value of optimization level for generated codes, acceptable options
-                                          ///< -O0, -O1, -O2, -O3
-    hipJitOptionTargetFromContext,        ///< CUDA Only The target context, which is the default
-    hipJitOptionTarget,                   ///< CUDA Only JIT target
-    hipJitOptionFallbackStrategy,         ///< CUDA Only Fallback strategy
-    hipJitOptionGenerateDebugInfo,        ///< CUDA Only Generate debug information
-    hipJitOptionLogVerbose,               ///< CUDA Only Generate log verbose
-    hipJitOptionGenerateLineInfo,         ///< CUDA Only Generate line number information
-    hipJitOptionCacheMode,                ///< CUDA Only Set cache mode
-    hipJitOptionSm3xOpt,                  ///< @deprecated CUDA Only New SM3X option.
-    hipJitOptionFastCompile,              ///< CUDA Only Set fast compile
-    hipJitOptionGlobalSymbolNames,        ///< CUDA Only Array of device symbol names to be relocated to the host
-    hipJitOptionGlobalSymbolAddresses,    ///< CUDA Only Array of host addresses to be relocated to the device
-    hipJitOptionGlobalSymbolCount,        ///< CUDA Only Number of symbol count.
-    hipJitOptionLto,                      ///< @deprecated CUDA Only Enable link-time optimization for device code
-    hipJitOptionFtz,                      ///< @deprecated CUDA Only Set single-precision denormals.
-    hipJitOptionPrecDiv,                  ///< @deprecated CUDA Only Set single-precision floating-point division
-                                          ///< and reciprocals
-    hipJitOptionPrecSqrt,                 ///< @deprecated CUDA Only Set single-precision floating-point square root
-    hipJitOptionFma,                      ///< @deprecated CUDA Only Enable floating-point multiplies and
-                                          ///< adds/subtracts operations
-    hipJitOptionPositionIndependentCode,  ///< CUDA Only Generates Position Independent code
-    hipJitOptionMinCTAPerSM,              ///< CUDA Only Hints to JIT compiler the minimum number of CTAs frin kernel's
-                                          ///< grid to be mapped to SM
-    hipJitOptionMaxThreadsPerBlock,       ///< CUDA only Maximum number of threads in a thread block
-    hipJitOptionOverrideDirectiveValues,  ///< Cuda only Override Directive values
-    hipJitOptionNumOptions,               ///< Number of options
-    hipJitOptionIRtoISAOptExt = 10000,    ///< Hip Only Linker options to be passed on to compiler
-    hipJitOptionIRtoISAOptCountExt,       ///< Hip Only Count of linker options to be passed on to compiler
+  hipJitOptionMaxRegisters = 0,         ///< CUDA Only Maximum registers may be used in a thread,
+                                        ///< passed to compiler
+  hipJitOptionThreadsPerBlock,          ///< CUDA Only Number of thread per block
+  hipJitOptionWallTime,                 ///< CUDA Only Value for total wall clock time
+  hipJitOptionInfoLogBuffer,            ///< CUDA Only Pointer to the buffer with logged information
+  hipJitOptionInfoLogBufferSizeBytes,   ///< CUDA Only Size of the buffer in bytes for logged info
+  hipJitOptionErrorLogBuffer,           ///< CUDA Only Pointer to the buffer with logged error(s)
+  hipJitOptionErrorLogBufferSizeBytes,  ///< CUDA Only Size of the buffer in bytes for logged
+                                        ///< error(s)
+  hipJitOptionOptimizationLevel,  ///< Value of optimization level for generated codes, acceptable
+                                  ///< options -O0, -O1, -O2, -O3
+  hipJitOptionTargetFromContext,  ///< CUDA Only The target context, which is the default
+  hipJitOptionTarget,             ///< CUDA Only JIT target
+  hipJitOptionFallbackStrategy,   ///< CUDA Only Fallback strategy
+  hipJitOptionGenerateDebugInfo,  ///< CUDA Only Generate debug information
+  hipJitOptionLogVerbose,         ///< CUDA Only Generate log verbose
+  hipJitOptionGenerateLineInfo,   ///< CUDA Only Generate line number information
+  hipJitOptionCacheMode,          ///< CUDA Only Set cache mode
+  hipJitOptionSm3xOpt,            ///< @deprecated CUDA Only New SM3X option.
+  hipJitOptionFastCompile,        ///< CUDA Only Set fast compile
+  hipJitOptionGlobalSymbolNames,  ///< CUDA Only Array of device symbol names to be relocated to the
+                                  ///< host
+  hipJitOptionGlobalSymbolAddresses,  ///< CUDA Only Array of host addresses to be relocated to the
+                                      ///< device
+  hipJitOptionGlobalSymbolCount,      ///< CUDA Only Number of symbol count.
+  hipJitOptionLto,       ///< @deprecated CUDA Only Enable link-time optimization for device code
+  hipJitOptionFtz,       ///< @deprecated CUDA Only Set single-precision denormals.
+  hipJitOptionPrecDiv,   ///< @deprecated CUDA Only Set single-precision floating-point division
+                         ///< and reciprocals
+  hipJitOptionPrecSqrt,  ///< @deprecated CUDA Only Set single-precision floating-point square root
+  hipJitOptionFma,       ///< @deprecated CUDA Only Enable floating-point multiplies and
+                         ///< adds/subtracts operations
+  hipJitOptionPositionIndependentCode,  ///< CUDA Only Generates Position Independent code
+  hipJitOptionMinCTAPerSM,  ///< CUDA Only Hints to JIT compiler the minimum number of CTAs frin
+                            ///< kernel's grid to be mapped to SM
+  hipJitOptionMaxThreadsPerBlock,       ///< CUDA only Maximum number of threads in a thread block
+  hipJitOptionOverrideDirectiveValues,  ///< Cuda only Override Directive values
+  hipJitOptionNumOptions,               ///< Number of options
+  hipJitOptionIRtoISAOptExt = 10000,    ///< Hip Only Linker options to be passed on to compiler
+  hipJitOptionIRtoISAOptCountExt,  ///< Hip Only Count of linker options to be passed on to compiler
 } hipJitOption;
 /**
  * hipJitInputType
  */
 typedef enum hipJitInputType {
-    hipJitInputCubin = 0,                                  ///< Cuda only Input cubin
-    hipJitInputPtx,                                        ///< Cuda only Input PTX
-    hipJitInputFatBinary,                                  ///< Cuda Only Input FAT Binary
-    hipJitInputObject,                                     ///< Cuda Only Host Object with embedded device code
-    hipJitInputLibrary,                                    ///< Cuda Only Archive of Host Objects with embedded
-                                                           ///< device code
-    hipJitInputNvvm,                                       ///< @deprecated Cuda only High Level intermediate
-                                                           ///< code for LTO
-    hipJitNumLegacyInputTypes,                             ///< Count of Legacy Input Types
-    hipJitInputLLVMBitcode = 100,                          ///< HIP Only LLVM Bitcode or IR assembly
-    hipJitInputLLVMBundledBitcode = 101,                   ///< HIP Only LLVM Clang Bundled Code
-    hipJitInputLLVMArchivesOfBundledBitcode = 102,         ///< HIP Only LLVM Archive of Bundled Bitcode
-    hipJitInputSpirv = 103,                                ///< HIP Only SPIRV Code Object
-    hipJitNumInputTypes = 10                               ///< Count of Input Types
+  hipJitInputCubin = 0,                 ///< Cuda only Input cubin
+  hipJitInputPtx,                       ///< Cuda only Input PTX
+  hipJitInputFatBinary,                 ///< Cuda Only Input FAT Binary
+  hipJitInputObject,                    ///< Cuda Only Host Object with embedded device code
+  hipJitInputLibrary,                   ///< Cuda Only Archive of Host Objects with embedded
+                                        ///< device code
+  hipJitInputNvvm,                      ///< @deprecated Cuda only High Level intermediate
+                                        ///< code for LTO
+  hipJitNumLegacyInputTypes,            ///< Count of Legacy Input Types
+  hipJitInputLLVMBitcode = 100,         ///< HIP Only LLVM Bitcode or IR assembly
+  hipJitInputLLVMBundledBitcode = 101,  ///< HIP Only LLVM Clang Bundled Code
+  hipJitInputLLVMArchivesOfBundledBitcode = 102,  ///< HIP Only LLVM Archive of Bundled Bitcode
+  hipJitInputSpirv = 103,                         ///< HIP Only SPIRV Code Object
+  hipJitNumInputTypes = 10                        ///< Count of Input Types
 } hipJitInputType;
 /**
  * hipJitCacheMode
  */
 typedef enum hipJitCacheMode {
-    hipJitCacheOptionNone = 0,
-    hipJitCacheOptionCG,
-    hipJitCacheOptionCA
+  hipJitCacheOptionNone = 0,
+  hipJitCacheOptionCG,
+  hipJitCacheOptionCA
 } hipJitCacheMode;
 /**
  * hipJitFallback
  */
 typedef enum hipJitFallback {
-    hipJitPreferPTX = 0,
-    hipJitPreferBinary,
+  hipJitPreferPTX = 0,
+  hipJitPreferBinary,
 } hipJitFallback;
 
 // doxygen end LinkerTypes
@@ -124,7 +127,7 @@ typedef enum hipJitFallback {
  */
 
 #else
-#error("Must define exactly one of __HIP_PLATFORM_AMD__ or __HIP_PLATFORM_NVIDIA__");
+#error ("Must define exactly one of __HIP_PLATFORM_AMD__ or __HIP_PLATFORM_NVIDIA__");
 #endif
 
-#endif // HIP_INCLUDE_HIP_LINKER_TYPES_H
+#endif  // HIP_INCLUDE_HIP_LINKER_TYPES_H
