@@ -137,7 +137,10 @@ typedef struct hipDeviceProp_t {
   size_t textureAlignment;       ///< Alignment requirement for textures
   size_t texturePitchAlignment;  ///< Pitch alignment requirement for texture references bound to
   int deviceOverlap;             ///< Deprecated. Use asyncEngineCount instead
-  int multiProcessorCount;       ///< Number of multi-processors (compute units).
+  int multiProcessorCount;       ///< Number of multi-processors. When the GPU works in Compute
+                                 ///< Unit (CU) mode, this value equals the number of CUs;
+                                 ///< when in Workgroup Processor (WGP) mode, this value equels
+                                 ///< half of CUs, because a single WGP contains two CUs.
   int kernelExecTimeoutEnabled;  ///< Run time limit for kernels executed on the device
   int integrated;                ///< APU vs dGPU
   int canMapHostMemory;          ///< Check whether HIP can map host memory
@@ -507,7 +510,10 @@ typedef enum hipDeviceAttribute_t {
   hipDeviceAttributeComputeCapabilityMinor,  ///< Minor compute capability version number.
   hipDeviceAttributeMultiGpuBoardGroupID,    ///< Unique ID of device group on the same multi-GPU
                                              ///< board
-  hipDeviceAttributeMultiprocessorCount,     ///< Number of multiprocessors on the device.
+  hipDeviceAttributeMultiprocessorCount,     ///< Number of multi-processors. When the GPU works in Compute
+                                             ///< Unit (CU) mode, this value equals the number of CUs;
+                                             ///< when in Workgroup Processor (WGP) mode, this value equels
+                                             ///< half of CUs, because a single WGP contains two CUs.
   hipDeviceAttributeUnused1,                 ///< Previously hipDeviceAttributeName
   hipDeviceAttributePageableMemoryAccess,  ///< Device supports coherently accessing pageable memory
                                            ///< without calling hipHostRegister on it
