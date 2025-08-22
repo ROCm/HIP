@@ -1673,22 +1673,22 @@ typedef enum hipGraphInstantiateFlags {
 } hipGraphInstantiateFlags;
 
 enum hipGraphDebugDotFlags {
-  hipGraphDebugDotFlagsVerbose = 1
-      << 0, /**< Output all debug data as if every debug flag is enabled */
+  hipGraphDebugDotFlagsVerbose =
+      1 << 0, /**< Output all debug data as if every debug flag is enabled */
   hipGraphDebugDotFlagsKernelNodeParams = 1 << 2, /**< Adds hipKernelNodeParams to output */
   hipGraphDebugDotFlagsMemcpyNodeParams = 1 << 3, /**< Adds hipMemcpy3DParms to output */
   hipGraphDebugDotFlagsMemsetNodeParams = 1 << 4, /**< Adds hipMemsetParams to output */
   hipGraphDebugDotFlagsHostNodeParams = 1 << 5,   /**< Adds hipHostNodeParams to output */
-  hipGraphDebugDotFlagsEventNodeParams = 1
-      << 6, /**< Adds hipEvent_t handle from record and wait nodes to output */
-  hipGraphDebugDotFlagsExtSemasSignalNodeParams = 1
-      << 7, /**< Adds hipExternalSemaphoreSignalNodeParams values to output */
-  hipGraphDebugDotFlagsExtSemasWaitNodeParams = 1
-      << 8, /**< Adds hipExternalSemaphoreWaitNodeParams to output */
-  hipGraphDebugDotFlagsKernelNodeAttributes = 1
-      << 9, /**< Adds hipKernelNodeAttrID values to output */
-  hipGraphDebugDotFlagsHandles = 1
-      << 10 /**< Adds node handles and every kernel function handle to output */
+  hipGraphDebugDotFlagsEventNodeParams =
+      1 << 6, /**< Adds hipEvent_t handle from record and wait nodes to output */
+  hipGraphDebugDotFlagsExtSemasSignalNodeParams =
+      1 << 7, /**< Adds hipExternalSemaphoreSignalNodeParams values to output */
+  hipGraphDebugDotFlagsExtSemasWaitNodeParams =
+      1 << 8, /**< Adds hipExternalSemaphoreWaitNodeParams to output */
+  hipGraphDebugDotFlagsKernelNodeAttributes =
+      1 << 9, /**< Adds hipKernelNodeAttrID values to output */
+  hipGraphDebugDotFlagsHandles =
+      1 << 10 /**< Adds node handles and every kernel function handle to output */
 };
 
 /**
@@ -9419,16 +9419,12 @@ hipError_t hipDestroySurfaceObject(hipSurfaceObject_t surfaceObject);
 #endif
 #ifdef __cplusplus
 #if defined(__clang__) && defined(__HIP__)
-template <typename T>
-static hipError_t __host__ inline hipOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize,
-                                                                    T f,
-                                                                    size_t dynSharedMemPerBlk = 0,
-                                                                    int blockSizeLimit = 0) {
+template <typename T> static hipError_t __host__ inline hipOccupancyMaxPotentialBlockSize(
+    int* gridSize, int* blockSize, T f, size_t dynSharedMemPerBlk = 0, int blockSizeLimit = 0) {
   return hipOccupancyMaxPotentialBlockSize(gridSize, blockSize, reinterpret_cast<const void*>(f),
                                            dynSharedMemPerBlk, blockSizeLimit);
 }
-template <typename T>
-static hipError_t __host__ inline hipOccupancyMaxPotentialBlockSizeWithFlags(
+template <typename T> static hipError_t __host__ inline hipOccupancyMaxPotentialBlockSizeWithFlags(
     int* gridSize, int* blockSize, T f, size_t dynSharedMemPerBlk = 0, int blockSizeLimit = 0,
     unsigned int flags = 0) {
   (void)flags;
@@ -9546,11 +9542,8 @@ inline hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks, T
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
  */
-template <class T>
-inline hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(int* numBlocks, T f,
-                                                                        int blockSize,
-                                                                        size_t dynSharedMemPerBlk,
-                                                                        unsigned int flags) {
+template <class T> inline hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
+    int* numBlocks, T f, int blockSize, size_t dynSharedMemPerBlk, unsigned int flags) {
   return hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
       numBlocks, reinterpret_cast<const void*>(f), blockSize, dynSharedMemPerBlk, flags);
 }
@@ -9707,10 +9700,10 @@ static hipError_t __host__ inline hipOccupancyMaxPotentialBlockSizeVariableSMem(
  *
  * @see hipOccupancyMaxPotentialBlockSize
  */
-template <typename F>
-inline hipError_t hipOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize, F kernel,
-                                                    size_t dynSharedMemPerBlk,
-                                                    uint32_t blockSizeLimit) {
+template <typename F> inline hipError_t hipOccupancyMaxPotentialBlockSize(int* gridSize,
+                                                                          int* blockSize, F kernel,
+                                                                          size_t dynSharedMemPerBlk,
+                                                                          uint32_t blockSizeLimit) {
   return hipOccupancyMaxPotentialBlockSize(gridSize, blockSize, (hipFunction_t)kernel,
                                            dynSharedMemPerBlk, blockSizeLimit);
 }
@@ -9793,8 +9786,7 @@ inline hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchPara
  * @warning This API is deprecated.
  *
  */
-template <class T, int dim, enum hipTextureReadMode readMode>
-HIP_DEPRECATED(HIP_DEPRECATED_MSG)
+template <class T, int dim, enum hipTextureReadMode readMode> HIP_DEPRECATED(HIP_DEPRECATED_MSG)
 static inline hipError_t hipBindTexture(size_t* offset, const struct texture<T, dim, readMode>& tex,
                                         const void* devPtr, size_t size = UINT_MAX) {
   return hipBindTexture(offset, &tex, devPtr, &tex.channelDesc, size);
@@ -9813,8 +9805,7 @@ static inline hipError_t hipBindTexture(size_t* offset, const struct texture<T, 
  * @warning This API is deprecated.
  *
  */
-template <class T, int dim, enum hipTextureReadMode readMode>
-HIP_DEPRECATED(HIP_DEPRECATED_MSG)
+template <class T, int dim, enum hipTextureReadMode readMode> HIP_DEPRECATED(HIP_DEPRECATED_MSG)
 static inline hipError_t
     hipBindTexture(size_t* offset, const struct texture<T, dim, readMode>& tex, const void* devPtr,
                    const struct hipChannelFormatDesc& desc, size_t size = UINT_MAX) {
@@ -9835,8 +9826,7 @@ static inline hipError_t
  * @warning This API is deprecated.
  *
  */
-template <class T, int dim, enum hipTextureReadMode readMode>
-HIP_DEPRECATED(HIP_DEPRECATED_MSG)
+template <class T, int dim, enum hipTextureReadMode readMode> HIP_DEPRECATED(HIP_DEPRECATED_MSG)
 static inline hipError_t
     hipBindTexture2D(size_t* offset, const struct texture<T, dim, readMode>& tex,
                      const void* devPtr, size_t width, size_t height, size_t pitch) {
@@ -9858,8 +9848,7 @@ static inline hipError_t
  * @warning This API is deprecated.
  *
  */
-template <class T, int dim, enum hipTextureReadMode readMode>
-HIP_DEPRECATED(HIP_DEPRECATED_MSG)
+template <class T, int dim, enum hipTextureReadMode readMode> HIP_DEPRECATED(HIP_DEPRECATED_MSG)
 static inline hipError_t
     hipBindTexture2D(size_t* offset, const struct texture<T, dim, readMode>& tex,
                      const void* devPtr, const struct hipChannelFormatDesc& desc, size_t width,
@@ -9877,8 +9866,7 @@ static inline hipError_t
  * @warning This API is deprecated.
  *
  */
-template <class T, int dim, enum hipTextureReadMode readMode>
-HIP_DEPRECATED(HIP_DEPRECATED_MSG)
+template <class T, int dim, enum hipTextureReadMode readMode> HIP_DEPRECATED(HIP_DEPRECATED_MSG)
 static inline hipError_t
     hipBindTextureToArray(const struct texture<T, dim, readMode>& tex, hipArray_const_t array) {
   struct hipChannelFormatDesc desc;
@@ -9897,8 +9885,7 @@ static inline hipError_t
  * @warning This API is deprecated.
  *
  */
-template <class T, int dim, enum hipTextureReadMode readMode>
-HIP_DEPRECATED(HIP_DEPRECATED_MSG)
+template <class T, int dim, enum hipTextureReadMode readMode> HIP_DEPRECATED(HIP_DEPRECATED_MSG)
 static inline hipError_t
     hipBindTextureToArray(const struct texture<T, dim, readMode>& tex, hipArray_const_t array,
                           const struct hipChannelFormatDesc& desc) {
@@ -9915,8 +9902,7 @@ static inline hipError_t
  * @warning This API is deprecated.
  *
  */
-template <class T, int dim, enum hipTextureReadMode readMode>
-HIP_DEPRECATED(HIP_DEPRECATED_MSG)
+template <class T, int dim, enum hipTextureReadMode readMode> HIP_DEPRECATED(HIP_DEPRECATED_MSG)
 static inline hipError_t hipBindTextureToMipmappedArray(const struct texture<T, dim, readMode>& tex,
                                                         hipMipmappedArray_const_t mipmappedArray) {
   struct hipChannelFormatDesc desc;
@@ -9940,8 +9926,7 @@ static inline hipError_t hipBindTextureToMipmappedArray(const struct texture<T, 
  * @warning This API is deprecated.
  *
  */
-template <class T, int dim, enum hipTextureReadMode readMode>
-HIP_DEPRECATED(HIP_DEPRECATED_MSG)
+template <class T, int dim, enum hipTextureReadMode readMode> HIP_DEPRECATED(HIP_DEPRECATED_MSG)
 static inline hipError_t hipBindTextureToMipmappedArray(const struct texture<T, dim, readMode>& tex,
                                                         hipMipmappedArray_const_t mipmappedArray,
                                                         const struct hipChannelFormatDesc& desc) {
@@ -9957,8 +9942,7 @@ static inline hipError_t hipBindTextureToMipmappedArray(const struct texture<T, 
  * @warning This API is deprecated.
  *
  */
-template <class T, int dim, enum hipTextureReadMode readMode>
-HIP_DEPRECATED(HIP_DEPRECATED_MSG)
+template <class T, int dim, enum hipTextureReadMode readMode> HIP_DEPRECATED(HIP_DEPRECATED_MSG)
 static inline hipError_t hipUnbindTexture(const struct texture<T, dim, readMode>& tex) {
   return hipUnbindTexture(&tex);
 }
@@ -9999,9 +9983,9 @@ static inline hipError_t hipMallocAsync(void** dev_ptr, size_t size, hipMemPool_
  *
  * @note  This API is implemented on Linux and is under development on Microsoft Windows.
  */
-template <class T>
-static inline hipError_t hipMallocAsync(T** dev_ptr, size_t size, hipMemPool_t mem_pool,
-                                        hipStream_t stream) {
+template <class T> static inline hipError_t hipMallocAsync(T** dev_ptr, size_t size,
+                                                           hipMemPool_t mem_pool,
+                                                           hipStream_t stream) {
   return hipMallocFromPoolAsync(reinterpret_cast<void**>(dev_ptr), size, mem_pool, stream);
 }
 /**
@@ -10028,9 +10012,9 @@ static inline hipError_t hipMallocAsync(T** dev_ptr, size_t size, hipStream_t st
  *
  * @note  This API is implemented on Linux and is under development on Microsoft Windows.
  */
-template <class T>
-static inline hipError_t hipMallocFromPoolAsync(T** dev_ptr, size_t size, hipMemPool_t mem_pool,
-                                                hipStream_t stream) {
+template <class T> static inline hipError_t hipMallocFromPoolAsync(T** dev_ptr, size_t size,
+                                                                   hipMemPool_t mem_pool,
+                                                                   hipStream_t stream) {
   return hipMallocFromPoolAsync(reinterpret_cast<void**>(dev_ptr), size, mem_pool, stream);
 }
 /**
@@ -10133,9 +10117,8 @@ static inline hipError_t hipHostMalloc(T** ptr, size_t size,
  *
  * @see hipHostAlloc
  */
-template <class T>
-static inline hipError_t hipHostAlloc(T** ptr, size_t size,
-                                      unsigned int flags = hipHostAllocDefault) {
+template <class T> static inline hipError_t hipHostAlloc(T** ptr, size_t size,
+                                                         unsigned int flags = hipHostAllocDefault) {
   return hipHostAlloc((void**)ptr, size, flags);
 }
 /**
