@@ -2923,6 +2923,16 @@ hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int
  */
 hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int* flags);
 /**
+ * @brief Queries the Id of a stream.
+ *
+ * @param[in] stream  Stream to be queried
+ * @param[in,out] flags  Pointer to an unsigned long long in which the stream's id is returned
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidHandle.
+ *
+ * @see hipStreamCreateWithFlags, hipStreamGetFlags, hipStreamCreateWithPriority, hipStreamGetPriority
+ */
+hipError_t hipStreamGetId(hipStream_t stream, unsigned long long* streamId);
+/**
  * @brief Queries the priority of a stream.
  *
  * @param[in] stream  Stream to be queried
