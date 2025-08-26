@@ -623,14 +623,21 @@ implementation, however it uses different parameters:
 
 The first parameter is the same as HIP's implementation, but
 ``MIN_BLOCKS_PER_MULTIPROCESSOR`` must  be converted to
-``MIN_WARPS_PER_EXECUTION``, which uses warps and execution units rather than
-blocks and multiprocessors. This conversion is performed automatically by
-:doc:`HIPIFY <hipify:index>`, or can be done manually with the following
-equation.
+``MIN_WARPS_PER_EXECUTION_UNIT``, which uses warps and execution units rather than
+blocks and multiprocessors. This conversion can be done manually with the equation
+considering the mode GPU works:
+
+* In Compute Unit (CU) mode,
 
 .. code-block:: cpp
 
-  MIN_WARPS_PER_EXECUTION_UNIT = (MIN_BLOCKS_PER_MULTIPROCESSOR * MAX_THREADS_PER_BLOCK) / warpSize
+  MIN_WARPS_PER_EXECUTION_UNIT = (MIN_BLOCKS_PER_MULTIPROCESSOR * MAX_THREADS_PER_BLOCK) / (warpSize * 2)
+
+* In Workgroup Processor (WGP) mode,
+
+.. code-block:: cpp
+
+  MIN_WARPS_PER_EXECUTION_UNIT = (MIN_BLOCKS_PER_MULTIPROCESSOR * MAX_THREADS_PER_BLOCK) / (warpSize * 4)
 
 Directly controlling the warps per execution unit makes it easier to reason
 about the occupancy, unlike with blocks, where the occupancy depends on the
