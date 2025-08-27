@@ -6,7 +6,7 @@
 
 # HIP documentation
 
-The HIP is a C++ runtime API and kernel language for AMD GPUs. For more information, see [What is HIP?](./what_is_hip)
+HIP is a C++ runtime API and kernel language for AMD GPUs. For more information, see [What is HIP?](./what_is_hip)
 
 Installation instructions are available from:
 
