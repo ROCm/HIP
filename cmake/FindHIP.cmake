@@ -97,9 +97,14 @@ if(NOT APPLE)
     # Search for HIP installation
     if(NOT HIP_ROOT_DIR)
         # Search in user specified path first
+        if(WIN32)
+            set(HIPCONFIG_EXE_NAME bin/hipconfig.exe)
+        else()
+            set(HIPCONFIG_EXE_NAME bin/hipconfig)
+        endif()
         find_path(
             HIP_ROOT_DIR
-            NAMES bin/hipconfig
+            NAMES ${HIPCONFIG_EXE_NAME}
             PATHS
             "$ENV{ROCM_PATH}"
             "$ENV{ROCM_PATH}/hip"
@@ -149,13 +154,6 @@ if(NOT APPLE)
     if(NOT HIP_HIPCONFIG_EXECUTABLE)
         # Now search in default paths
         find_program(HIP_HIPCONFIG_EXECUTABLE hipconfig)
-    endif()
-    if(NOT UNIX)
-        get_filename_component(HIPCONFIG_EXECUTABLE_EXT ${HIP_HIPCONFIG_EXECUTABLE} EXT)
-        if(NOT HIPCONFIG_EXECUTABLE_EXT STREQUAL ".bat")
-          set(HIP_HIPCONFIG_EXECUTABLE "${HIP_HIPCONFIG_EXECUTABLE}.bat")
-          set(HIP_HIPCC_EXECUTABLE "${HIP_HIPCC_EXECUTABLE}.bat")
-        endif()
     endif()
     mark_as_advanced(HIP_HIPCONFIG_EXECUTABLE)
     mark_as_advanced(HIP_HIPCC_EXECUTABLE)
