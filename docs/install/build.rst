@@ -37,11 +37,18 @@ Install ``ROCm LLVM`` package using the command:
 Building the HIP runtime
 ==========================================================
 
-Set the repository branch using the variable: ``ROCM_BRANCH``. For example, for ROCm 6.1, use:
+In the ROCM 7.1 release, HIP is integrated into the core ROCm projects resides in the ``rocm-systems`` monorepository.
+In addition, the following components are also part of the monrepository:
+
+* ``clr``, AMD's Compute Language Runtime, includes ROCclr, HIPAMD and OpenCl.
+* ``hipother``, provides files required to support the HIP back-end implementation on some non-AMD platforms, like NVIDIA.
+* ``hip-tests``, the HIP testing suite. 
+
+Set the repository branch using the variable: ``ROCM_BRANCH``. For example, for ROCM 7.1, use:
 
 .. code-block:: shell
 
-   export ROCM_BRANCH=rocm-6.1.x
+   export ROCM_BRANCH=release/rocm-rel-7.1
 
 .. tab-set::
 
@@ -50,37 +57,16 @@ Set the repository branch using the variable: ``ROCM_BRANCH``. For example, for 
 
       #. Get HIP source code.
 
-         .. note::
-            Starting in ROCM 5.6, CLR is a new repository that includes the former ROCclr, HIPAMD and
-            OpenCl repositories. OpenCL provides headers that ROCclr runtime depends on.
-
-         .. note::
-            Starting in ROCM 6.1, a new repository ``hipother`` is added to ROCm, which is branched out from HIP.
-            ``hipother`` provides files required to support the HIP back-end implementation on some non-AMD platforms,
-            like NVIDIA.
-
          .. code-block:: shell
 
-            git clone -b "$ROCM_BRANCH" https://github.com/ROCm/clr.git
-            git clone -b "$ROCM_BRANCH" https://github.com/ROCm/hip.git
-
-         CLR (Compute Language Runtime) repository includes ROCclr, HIPAMD and OpenCL.
-
-         ROCclr (ROCm Compute Language Runtime) is a virtual device interface which
-         is defined on the AMD platform. HIP runtime uses ROCclr to interact with different backends.
-
-         HIPAMD provides implementation specifically for HIP on the AMD platform.
-
-         OpenCL provides headers that ROCclr runtime currently depends on.
-         hipother provides headers and implementation specifically for non-AMD HIP platforms, like NVIDIA.
+            git clone -b "$ROCM_BRANCH" git@github.com:ROCm/rocm-systems.git   
 
       #. Set the environment variables.
 
          .. code-block:: shell
 
-            export CLR_DIR="$(readlink -f clr)"
-            export HIP_DIR="$(readlink -f hip)"
-
+            export CLR_DIR="$(readlink -f rocm-systems/projects/clr)"
+            export HIP_DIR="$(readlink -f rocm-systems/projects/hip)"
 
       #. Build HIP.
 
@@ -88,20 +74,18 @@ Set the repository branch using the variable: ``ROCM_BRANCH``. For example, for 
 
             cd "$CLR_DIR"
             mkdir -p build; cd build
-            cmake -DHIP_COMMON_DIR=$HIP_DIR -DHIP_PLATFORM=amd -DCMAKE_PREFIX_PATH="/opt/rocm/" -DCMAKE_INSTALL_PREFIX=$PWD/install -DHIP_CATCH_TEST=0 -DCLR_BUILD_HIP=ON -DCLR_BUILD_OCL=OFF ..
-
+            cmake -DHIP_COMMON_DIR=$HIP_DIR -DHIP_PLATFORM=amd -DCMAKE_PREFIX_PATH="/opt/rocm/" -DCMAKE_INSTALL_PREFIX=$PWD/install -DCLR_BUILD_HIP=ON -DCLR_BUILD_OCL=OFF ..
             make -j$(nproc)
             sudo make install
 
          .. note::
 
-            Note, if you don't specify ``CMAKE_INSTALL_PREFIX``, the HIP runtime is installed at
-            ``<ROCM_PATH>``.
+            If ``CMAKE_INSTALL_PREFIX`` is not explicitly specified, the HIP runtime will be installed at
+            ``<ROCM_PATH>``, which is by default at the path ``/opt/rocm``.
 
-            By default, release version of HIP is built. If need debug version, you can put the option ``CMAKE_BUILD_TYPE=Debug`` in the command line.
+            By default, the release version of HIP is built. If you need a debug version, you can put the option ``CMAKE_BUILD_TYPE=Debug`` in the command line.
 
          Default paths and environment variables:
-
             * HIP is installed into ``<ROCM_PATH>``. This can be overridden by setting the ``INSTALL_PREFIX`` as the command option.
                environment variable.
             * HSA is in ``<ROCM_PATH>``. This can be overridden by setting the ``HSA_PATH``
@@ -154,17 +138,15 @@ Set the repository branch using the variable: ``ROCM_BRANCH``. For example, for 
 
          .. code-block:: shell
 
-            git clone -b "$ROCM_BRANCH" https://github.com/ROCm/clr.git
-            git clone -b "$ROCM_BRANCH" https://github.com/ROCm/hip.git
-            git clone -b "$ROCM_BRANCH" https://github.com/ROCm/hipother.git
+            git clone -b "$ROCM_BRANCH" git@github.com:ROCm/rocm-systems.git
 
       #. Set the environment variables.
 
          .. code-block:: shell
 
-            export CLR_DIR="$(readlink -f clr)"
-            export HIP_DIR="$(readlink -f hip)"
-            export HIP_OTHER="$(readlink -f hipother)"
+            export CLR_DIR="$(readlink -f rocm-systems/projects/clr)"
+            export HIP_DIR="$(readlink -f rocm-systems/projects/hip)"
+            export HIP_OTHER="$(readlink -f rocm-systems/projects/hipother)"
 
       #. Build HIP.
 
@@ -172,7 +154,7 @@ Set the repository branch using the variable: ``ROCM_BRANCH``. For example, for 
 
             cd "$CLR_DIR"
             mkdir -p build; cd build
-            cmake -DHIP_COMMON_DIR=$HIP_DIR -DHIP_PLATFORM=nvidia -DCMAKE_INSTALL_PREFIX=$PWD/install -DHIP_CATCH_TEST=0 -DCLR_BUILD_HIP=ON -DCLR_BUILD_OCL=OFF -DHIPNV_DIR=$HIP_OTHER/hipnv ..
+            cmake -DHIP_COMMON_DIR=$HIP_DIR -DHIP_PLATFORM=nvidia -DCMAKE_INSTALL_PREFIX=$PWD/install -DCLR_BUILD_HIP=ON -DCLR_BUILD_OCL=OFF -DHIPNV_DIR=$HIP_OTHER/hipnv ..
             make -j$(nproc)
             sudo make install
 
@@ -186,22 +168,23 @@ Build HIP tests
 
       * Build HIP catch tests.
 
-         HIP catch tests are separate from the HIP project and use Catch2.
+         HIP catch tests utilize the Catch2 testing framework.
 
          * Get HIP tests source code.
 
             .. code-block:: shell
 
-               git clone -b "$ROCM_BRANCH" https://github.com/ROCm/hip-tests.git
+               git clone -b "$ROCM_BRANCH" git@github.com:ROCm/rocm-systems.git
+               export HIPTESTS_DIR="$(readlink -f rocm-systems/projects/hip-tests)"
 
          * Build HIP tests from source.
 
             .. code-block:: shell
 
-               export HIPTESTS_DIR="$(readlink -f hip-tests)"
                cd "$HIPTESTS_DIR"
                mkdir -p build; cd build
                cmake ../catch -DHIP_PLATFORM=amd -DHIP_PATH=$CLR_DIR/build/install  # or any path where HIP is installed; for example: ``/opt/rocm``
+               export ROCM_PATH=/opt/rocm
                make build_tests
                ctest # run tests
 
