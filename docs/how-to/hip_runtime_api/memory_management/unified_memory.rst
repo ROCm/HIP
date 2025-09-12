@@ -303,207 +303,35 @@ explicit memory management example is presented in the last tab.
 
     .. tab-item:: hipMallocManaged()
 
-        .. code-block:: cpp
+        .. literalinclude:: ../../../tools/example_codes/dynamic_unified_memory.hip
+            :start-after: // [sphinx-start]
+            :end-before: // [sphinx-end]
             :emphasize-lines: 22-25
-
-            #include <hip/hip_runtime.h>
-            #include <iostream>
-
-            #define HIP_CHECK(expression)              \
-            {                                          \
-                const hipError_t err = expression;     \
-                if(err != hipSuccess){                 \
-                    std::cerr << "HIP error: "         \
-                        << hipGetErrorString(err)      \
-                        << " at " << __LINE__ << "\n"; \
-                }                                      \
-            }
-
-            // Addition of two values.
-            __global__ void add(int *a, int *b, int *c) {
-                *c = *a + *b;
-            }
-
-            int main() {
-                int *a, *b, *c;
-
-                // Allocate memory for a, b and c that is accessible to both device and host codes.
-                HIP_CHECK(hipMallocManaged(&a, sizeof(*a)));
-                HIP_CHECK(hipMallocManaged(&b, sizeof(*b)));
-                HIP_CHECK(hipMallocManaged(&c, sizeof(*c)));
-
-                // Setup input values.
-                *a = 1;
-                *b = 2;
-
-                // Launch add() kernel on GPU.
-                hipLaunchKernelGGL(add, dim3(1), dim3(1), 0, 0, a, b, c);
-
-                // Wait for GPU to finish before accessing on host.
-                HIP_CHECK(hipDeviceSynchronize());
-
-                // Print the result.
-                std::cout << *a << " + " << *b << " = " << *c << std::endl;
-
-                // Cleanup allocated memory.
-                HIP_CHECK(hipFree(a));
-                HIP_CHECK(hipFree(b));
-                HIP_CHECK(hipFree(c));
-
-                return 0;
-            }
+            :language: cpp
 
     .. tab-item:: __managed__
 
-        .. code-block:: cpp
+        .. literalinclude:: ../../../tools/example_codes/static_unified_memory.hip
+            :start-after: // [sphinx-start]
+            :end-before: // [sphinx-end]
             :emphasize-lines: 19-20
-
-            #include <hip/hip_runtime.h>
-            #include <iostream>
-
-            #define HIP_CHECK(expression)              \
-            {                                          \
-                const hipError_t err = expression;     \
-                if(err != hipSuccess){                 \
-                    std::cerr << "HIP error: "         \
-                        << hipGetErrorString(err)      \
-                        << " at " << __LINE__ << "\n"; \
-                }                                      \
-            }
-
-            // Addition of two values.
-            __global__ void add(int *a, int *b, int *c) {
-                *c = *a + *b;
-            }
-
-            // Declare a, b and c as static variables.
-            __managed__ int a, b, c;
-
-            int main() {
-                // Setup input values.
-                a = 1;
-                b = 2;
-
-                // Launch add() kernel on GPU.
-                hipLaunchKernelGGL(add, dim3(1), dim3(1), 0, 0, &a, &b, &c);
-
-                // Wait for GPU to finish before accessing on host.
-                HIP_CHECK(hipDeviceSynchronize());
-
-                // Prints the result.
-                std::cout << a << " + " << b << " = " << c << std::endl;
-
-                return 0;
-            }
+            :language: cpp
 
     .. tab-item:: new
 
-        .. code-block:: cpp
+        .. literalinclude:: ../../../tools/example_codes/standard_unified_memory.hip
+            :start-after: // [sphinx-start]
+            :end-before: // [sphinx-end]
             :emphasize-lines: 21-24
-
-            #include <hip/hip_runtime.h>
-            #include <iostream>
-            #include <new>
-
-            #define HIP_CHECK(expression)              \
-            {                                          \
-                const hipError_t err = expression;     \
-                if(err != hipSuccess){                 \
-                    std::cerr << "HIP error: "         \
-                        << hipGetErrorString(err)      \
-                        << " at " << __LINE__ << "\n"; \
-                }                                      \
-            }
-
-            // Addition of two values.
-            __global__ void add(int* a, int* b, int* c) {
-                *c = *a + *b;
-            }
-
-            // This example requires HMM support and the environment variable HSA_XNACK needs to be set to 1
-            int main() {
-                // Allocate memory with proper alignment for performance
-                int *a = new(std::align_val_t(128)) int[1];
-                int *b = new(std::align_val_t(128)) int[1];
-                int *c = new(std::align_val_t(128)) int[1];
-
-                // Setup input values.
-                *a = 1;
-                *b = 2;
-
-                // Launch add() kernel on GPU.
-                hipLaunchKernelGGL(add, dim3(1), dim3(1), 0, 0, a, b, c);
-
-                // Wait for GPU to finish before accessing on host.
-                HIP_CHECK(hipDeviceSynchronize());
-
-                // Prints the result.
-                std::cout << *a << " + " << *b << " = " << *c << std::endl;
-
-                // Cleanup allocated memory with matching aligned delete.
-                ::operator delete[](a, std::align_val_t(128));
-                ::operator delete[](b, std::align_val_t(128));
-                ::operator delete[](c, std::align_val_t(128));
-
-                return 0;
-            }
+            :language: cpp
 
     .. tab-item:: Explicit Memory Management
 
-        .. code-block:: cpp
+        .. literalinclude:: ../../../tools/example_codes/explicit_memory.hip
+            :start-after: // [sphinx-start]
+            :end-before: // [sphinx-end]
             :emphasize-lines: 27-34, 39-40
-
-            #include <hip/hip_runtime.h>
-            #include <iostream>
-
-            #define HIP_CHECK(expression)              \
-            {                                          \
-                const hipError_t err = expression;     \
-                if(err != hipSuccess){                 \
-                    std::cerr << "HIP error: "         \
-                        << hipGetErrorString(err)      \
-                        << " at " << __LINE__ << "\n"; \
-                }                                      \
-            }
-
-            // Addition of two values.
-            __global__ void add(int *a, int *b, int *c) {
-                *c = *a + *b;
-            }
-
-            int main() {
-                int a, b, c;
-                int *d_a, *d_b, *d_c;
-
-                // Setup input values.
-                a = 1;
-                b = 2;
-
-                // Allocate device copies of a, b and c.
-                HIP_CHECK(hipMalloc(&d_a, sizeof(*d_a)));
-                HIP_CHECK(hipMalloc(&d_b, sizeof(*d_b)));
-                HIP_CHECK(hipMalloc(&d_c, sizeof(*d_c)));
-
-                // Copy input values to device.
-                HIP_CHECK(hipMemcpy(d_a, &a, sizeof(*d_a), hipMemcpyHostToDevice));
-                HIP_CHECK(hipMemcpy(d_b, &b, sizeof(*d_b), hipMemcpyHostToDevice));
-
-                // Launch add() kernel on GPU.
-                hipLaunchKernelGGL(add, dim3(1), dim3(1), 0, 0, d_a, d_b, d_c);
-
-                // Copy the result back to the host.
-                HIP_CHECK(hipMemcpy(&c, d_c, sizeof(*d_c), hipMemcpyDeviceToHost));
-
-                // Cleanup allocated memory.
-                HIP_CHECK(hipFree(d_a));
-                HIP_CHECK(hipFree(d_b));
-                HIP_CHECK(hipFree(d_c));
-
-                // Prints the result.
-                std::cout << a << " + " << b << " = " << c << std::endl;
-
-                return 0;
-            }
+            :language: cpp
 
 .. _using unified memory:
 
@@ -559,65 +387,11 @@ Data prefetching is a technique used to improve the performance of your
 application by moving data to the desired device before it's actually
 needed. ``hipCpuDeviceId`` is a special constant to specify the CPU as target.
 
-.. code-block:: cpp
+.. literalinclude:: ../../../tools/example_codes/data_prefetching.hip
+    :start-after: // [sphinx-start]
+    :end-before: // [sphinx-end]
     :emphasize-lines: 33-36,41-42
-
-    #include <hip/hip_runtime.h>
-    #include <iostream>
-
-    #define HIP_CHECK(expression)              \
-    {                                          \
-        const hipError_t err = expression;     \
-        if(err != hipSuccess){                 \
-            std::cerr << "HIP error: "         \
-                << hipGetErrorString(err)      \
-                << " at " << __LINE__ << "\n"; \
-        }                                      \
-    }
-
-    // Addition of two values.
-    __global__ void add(int *a, int *b, int *c) {
-        *c = *a + *b;
-    }
-
-    int main() {
-        int *a, *b, *c;
-        int deviceId;
-        HIP_CHECK(hipGetDevice(&deviceId)); // Get the current device ID
-
-        // Allocate memory for a, b and c that is accessible to both device and host codes.
-        HIP_CHECK(hipMallocManaged(&a, sizeof(*a)));
-        HIP_CHECK(hipMallocManaged(&b, sizeof(*b)));
-        HIP_CHECK(hipMallocManaged(&c, sizeof(*c)));
-
-        // Setup input values.
-        *a = 1;
-        *b = 2;
-
-        // Prefetch the data to the GPU device.
-        HIP_CHECK(hipMemPrefetchAsync(a, sizeof(*a), deviceId, 0));
-        HIP_CHECK(hipMemPrefetchAsync(b, sizeof(*b), deviceId, 0));
-        HIP_CHECK(hipMemPrefetchAsync(c, sizeof(*c), deviceId, 0));
-
-        // Launch add() kernel on GPU.
-        hipLaunchKernelGGL(add, dim3(1), dim3(1), 0, 0, a, b, c);
-
-        // Prefetch the result back to the CPU.
-        HIP_CHECK(hipMemPrefetchAsync(c, sizeof(*c), hipCpuDeviceId, 0));
-
-        // Wait for the prefetch operations to complete.
-        HIP_CHECK(hipDeviceSynchronize());
-
-        // Prints the result.
-        std::cout << *a << " + " << *b << " = " << *c << std::endl;
-
-        // Cleanup allocated memory.
-        HIP_CHECK(hipFree(a));
-        HIP_CHECK(hipFree(b));
-        HIP_CHECK(hipFree(c));
-
-        return 0;
-    }
+    :language: cpp
 
 Memory advice
 --------------------------------------------------------------------------------
@@ -642,71 +416,11 @@ impact on performance can vary based on the specific use case and the system.
 The following is the updated version of the example above with memory advice
 instead of prefetching.
 
-.. code-block:: cpp
+.. literalinclude:: ../../../tools/example_codes/unified_memory_advice.hip
+    :start-after: // [sphinx-start]
+    :end-before: // [sphinx-end]
     :emphasize-lines: 29-41
-
-    #include <hip/hip_runtime.h>
-    #include <iostream>
-
-    #define HIP_CHECK(expression)              \
-    {                                          \
-        const hipError_t err = expression;     \
-        if(err != hipSuccess){                 \
-            std::cerr << "HIP error: "         \
-                << hipGetErrorString(err)      \
-                << " at " << __LINE__ << "\n"; \
-        }                                      \
-    }
-
-    // Addition of two values.
-    __global__ void add(int *a, int *b, int *c) {
-        *c = *a + *b;
-    }
-
-    int main() {
-        int deviceId;
-        HIP_CHECK(hipGetDevice(&deviceId));
-        int *a, *b, *c;
-
-        // Allocate memory for a, b, and c accessible to both device and host codes.
-        HIP_CHECK(hipMallocManaged(&a, sizeof(*a)));
-        HIP_CHECK(hipMallocManaged(&b, sizeof(*b)));
-        HIP_CHECK(hipMallocManaged(&c, sizeof(*c)));
-
-        // Set memory advice for a and b to be read, located on and accessed by the GPU.
-        HIP_CHECK(hipMemAdvise(a, sizeof(*a), hipMemAdviseSetPreferredLocation, deviceId));
-        HIP_CHECK(hipMemAdvise(a, sizeof(*a), hipMemAdviseSetAccessedBy, deviceId));
-        HIP_CHECK(hipMemAdvise(a, sizeof(*a), hipMemAdviseSetReadMostly, deviceId));
-
-        HIP_CHECK(hipMemAdvise(b, sizeof(*b), hipMemAdviseSetPreferredLocation, deviceId));
-        HIP_CHECK(hipMemAdvise(b, sizeof(*b), hipMemAdviseSetAccessedBy, deviceId));
-        HIP_CHECK(hipMemAdvise(b, sizeof(*b), hipMemAdviseSetReadMostly, deviceId));
-
-        // Set memory advice for c to be read, located on and accessed by the CPU.
-        HIP_CHECK(hipMemAdvise(c, sizeof(*c), hipMemAdviseSetPreferredLocation, hipCpuDeviceId));
-        HIP_CHECK(hipMemAdvise(c, sizeof(*c), hipMemAdviseSetAccessedBy, hipCpuDeviceId));
-        HIP_CHECK(hipMemAdvise(c, sizeof(*c), hipMemAdviseSetReadMostly, hipCpuDeviceId));
-
-        // Setup input values.
-        *a = 1;
-        *b = 2;
-
-        // Launch add() kernel on GPU.
-        hipLaunchKernelGGL(add, dim3(1), dim3(1), 0, 0, a, b, c);
-
-        // Wait for GPU to finish before accessing on host.
-        HIP_CHECK(hipDeviceSynchronize());
-
-        // Prints the result.
-        std::cout << *a << " + " << *b << " = " << *c << std::endl;
-
-        // Cleanup allocated memory.
-        HIP_CHECK(hipFree(a));
-        HIP_CHECK(hipFree(b));
-        HIP_CHECK(hipFree(c));
-
-        return 0;
-    }
+    :language: cpp
 
 Memory range attributes
 --------------------------------------------------------------------------------
@@ -714,70 +428,11 @@ Memory range attributes
 :cpp:func:`hipMemRangeGetAttribute()` allows you to query attributes of a given
 memory range. The attributes are given in :cpp:enum:`hipMemRangeAttribute`.
 
-.. code-block:: cpp
+.. literalinclude:: ../../../tools/example_codes/memory_range_attributes.hip
+    :start-after: // [sphinx-start]
+    :end-before: // [sphinx-end]
     :emphasize-lines: 44-49
-
-    #include <hip/hip_runtime.h>
-    #include <iostream>
-
-    #define HIP_CHECK(expression)              \
-    {                                          \
-        const hipError_t err = expression;     \
-        if(err != hipSuccess){                 \
-            std::cerr << "HIP error: "         \
-                << hipGetErrorString(err)      \
-                << " at " << __LINE__ << "\n"; \
-        }                                      \
-    }
-
-    // Addition of two values.
-    __global__ void add(int *a, int *b, int *c) {
-        *c = *a + *b;
-    }
-
-    int main() {
-        int *a, *b, *c;
-        unsigned int attributeValue;
-        constexpr size_t attributeSize = sizeof(attributeValue);
-
-        int deviceId;
-        HIP_CHECK(hipGetDevice(&deviceId));
-
-        // Allocate memory for a, b and c that is accessible to both device and host codes.
-        HIP_CHECK(hipMallocManaged(&a, sizeof(*a)));
-        HIP_CHECK(hipMallocManaged(&b, sizeof(*b)));
-        HIP_CHECK(hipMallocManaged(&c, sizeof(*c)));
-
-        // Setup input values.
-        *a = 1;
-        *b = 2;
-
-        HIP_CHECK(hipMemAdvise(a, sizeof(*a), hipMemAdviseSetReadMostly, deviceId));
-
-        // Launch add() kernel on GPU.
-        hipLaunchKernelGGL(add, dim3(1), dim3(1), 0, 0, a, b, c);
-
-        // Wait for GPU to finish before accessing on host.
-        HIP_CHECK(hipDeviceSynchronize());
-
-        // Query an attribute of the memory range.
-        HIP_CHECK(hipMemRangeGetAttribute(&attributeValue,
-                                attributeSize,
-                                hipMemRangeAttributeReadMostly,
-                                a,
-                                sizeof(*a)));
-
-        // Prints the result.
-        std::cout << *a << " + " << *b << " = " << *c << std::endl;
-        std::cout << "The array a is" << (attributeValue == 1 ? "" : " NOT") << " set to hipMemRangeAttributeReadMostly" << std::endl;
-
-        // Cleanup allocated memory.
-        HIP_CHECK(hipFree(a));
-        HIP_CHECK(hipFree(b));
-        HIP_CHECK(hipFree(c));
-
-        return 0;
-    }
+    :language: cpp
 
 Asynchronously attach memory to a stream
 --------------------------------------------------------------------------------

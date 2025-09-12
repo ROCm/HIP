@@ -66,24 +66,10 @@ which can be used to loop over the available GPUs.
 
 Example code of querying GPUs:
 
-.. code-block:: cpp
-
-  #include <hip/hip_runtime.h>
-  #include <iostream>
-
-  int main() {
-
-      int deviceCount;
-      if (hipGetDeviceCount(&deviceCount) == hipSuccess){
-          for (int i = 0; i < deviceCount; ++i){
-              hipDeviceProp_t prop;
-              if ( hipGetDeviceProperties(&prop, i) == hipSuccess)
-                  std::cout << "Device" << i << prop.name << std::endl;
-          }
-      }
-
-      return 0;
-  }
+.. literalinclude:: ../../tools/example_codes/simple_device_query.cpp
+    :start-after: // [sphinx-start]
+    :end-before: // [sphinx-end]
+    :language: cpp
 
 Setting the GPU
 --------------------------------------------------------------------------------
