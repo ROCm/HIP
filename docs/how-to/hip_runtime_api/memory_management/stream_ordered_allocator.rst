@@ -37,102 +37,17 @@ Here is how to use stream ordered memory allocation:
 .. tab-set::
   .. tab-item:: Stream Ordered Memory Allocation
 
-    .. code-block:: cpp
-
-      #include <iostream>
-      #include <hip/hip_runtime.h>
-
-      // Kernel to perform some computation on allocated memory.
-      __global__ void myKernel(int* data, size_t numElements) {
-          int tid = threadIdx.x + blockIdx.x * blockDim.x;
-          if (tid < numElements) {
-              data[tid] = tid * 2;
-          }
-      }
-
-      int main() {
-          // Initialize HIP.
-          hipInit(0);
-
-          // Stream 0.
-          constexpr hipStream_t streamId = 0;
-
-          // Allocate memory with stream ordered semantics.
-          constexpr size_t numElements = 1024;
-          int* devData;
-          hipMallocAsync(&devData, numElements * sizeof(*devData), streamId);
-
-          // Launch the kernel to perform computation.
-          dim3 blockSize(256);
-          dim3 gridSize((numElements + blockSize.x - 1) / blockSize.x);
-          myKernel<<<gridSize, blockSize>>>(devData, numElements);
-
-          // Copy data back to host.
-          int* hostData = new int[numElements];
-          hipMemcpy(hostData, devData, numElements * sizeof(*devData), hipMemcpyDeviceToHost);
-
-          // Print the array.
-          for (size_t i = 0; i < numElements; ++i) {
-              std::cout << "Element " << i << ": " << hostData[i] << std::endl;
-          }
-
-          // Free memory with stream ordered semantics.
-          hipFreeAsync(devData, streamId);
-          delete[] hostData;
-
-          // Synchronize to ensure completion.
-          hipDeviceSynchronize();
-
-          return 0;
-      }
+    .. literalinclude:: ../../../tools/example_codes/stream_ordered_memory_allocation.hip
+        :start-after: // [sphinx-start]
+        :end-before: // [sphinx-end]
+        :language: cpp
 
   .. tab-item:: Ordinary Allocation
 
-    .. code-block:: cpp
-
-      #include <iostream>
-      #include <hip/hip_runtime.h>
-
-      // Kernel to perform some computation on allocated memory.
-      __global__ void myKernel(int* data, size_t numElements) {
-          int tid = threadIdx.x + blockIdx.x * blockDim.x;
-          if (tid < numElements) {
-              data[tid] = tid * 2;
-          }
-      }
-
-      int main() {
-          // Initialize HIP.
-          hipInit(0);
-
-          // Allocate memory.
-          constexpr size_t numElements = 1024;
-          int* devData;
-          hipMalloc(&devData, numElements * sizeof(*devData));
-
-          // Launch the kernel to perform computation.
-          dim3 blockSize(256);
-          dim3 gridSize((numElements + blockSize.x - 1) / blockSize.x);
-          myKernel<<<gridSize, blockSize>>>(devData, numElements);
-
-          // Copy data back to host.
-          int* hostData = new int[numElements];
-          hipMemcpy(hostData, devData, numElements * sizeof(*devData), hipMemcpyDeviceToHost);
-
-          // Print the array.
-          for (size_t i = 0; i < numElements; ++i) {
-              std::cout << "Element " << i << ": " << hostData[i] << std::endl;
-          }
-
-          // Free memory.
-          hipFree(devData);
-          delete[] hostData;
-
-          // Synchronize to ensure completion.
-          hipDeviceSynchronize();
-
-          return 0;
-      }
+    .. literalinclude:: ../../../tools/example_codes/ordinary_memory_allocation.hip
+        :start-after: // [sphinx-start]
+        :end-before: // [sphinx-end]
+        :language: cpp
 
 For more details, see :ref:`stream_ordered_memory_allocator_reference`.
 
@@ -230,39 +145,10 @@ When the amount of memory held in the memory pool exceeds the threshold, the all
 
 To improve performance, it is a good practice to adjust the memory pool size using ``hipMemPoolTrimTo()``. It helps to reclaim memory from an excessive memory pool, which optimizes memory usage for your application.
 
-.. code-block:: cpp
-
-    #include <hip/hip_runtime.h>
-    #include <iostream>
-
-    int main() {
-        hipMemPool_t memPool;
-        hipDevice_t device = 0; // Specify the device index.
-
-        // Initialize the device.
-        hipSetDevice(device);
-
-        // Get the default memory pool for the device.
-        hipDeviceGetDefaultMemPool(&memPool, device);
-
-        // Allocate memory from the pool (e.g., 1 MB).
-        size_t allocSize = 1 * 1024 * 1024;
-        void* ptr;
-        hipMalloc(&ptr, allocSize);
-
-        // Free the allocated memory.
-        hipFree(ptr);
-
-        // Trim the memory pool to a specific size (e.g., 512 KB).
-        size_t newSize = 512 * 1024;
-        hipMemPoolTrimTo(memPool, newSize);
-
-        // Clean up.
-        hipMemPoolDestroy(memPool);
-
-        std::cout << "Memory pool trimmed to " << newSize << " bytes." << std::endl;
-        return 0;
-    }
+.. literalinclude:: ../../../tools/example_codes/memory_pool_trim.cpp
+    :start-after: // [sphinx-start]
+    :end-before: // [sphinx-end]
+    :language: cpp
 
 Resource usage statistics
 -------------------------
@@ -276,81 +162,10 @@ Resource usage statistics help in optimization. Here is the list of pool attribu
 
 To reset these attributes to the current value, use ``hipMemPoolSetAttribute()``.
 
-.. code-block:: cpp
-
-    #include <iostream>
-    #include <hip/hip_runtime.h>
-
-    // Sample helper functions for getting the usage statistics in bulk.
-    struct usageStatistics {
-        uint64_t reservedMemCurrent;
-        uint64_t reservedMemHigh;
-        uint64_t usedMemCurrent;
-        uint64_t usedMemHigh;
-    };
-
-    void getUsageStatistics(hipMemPool_t memPool, struct usageStatistics *statistics) {
-        hipMemPoolGetAttribute(memPool, hipMemPoolAttrReservedMemCurrent, &statistics->reservedMemCurrent);
-        hipMemPoolGetAttribute(memPool, hipMemPoolAttrReservedMemHigh, &statistics->reservedMemHigh);
-        hipMemPoolGetAttribute(memPool, hipMemPoolAttrUsedMemCurrent, &statistics->usedMemCurrent);
-        hipMemPoolGetAttribute(memPool, hipMemPoolAttrUsedMemHigh, &statistics->usedMemHigh);
-    }
-
-    // Resetting the watermarks resets them to the current value.
-    void resetStatistics(hipMemPool_t memPool) {
-        uint64_t value = 0;
-        hipMemPoolSetAttribute(memPool, hipMemPoolAttrReservedMemHigh, &value);
-        hipMemPoolSetAttribute(memPool, hipMemPoolAttrUsedMemHigh, &value);
-    }
-
-    int main() {
-        hipMemPool_t memPool;
-        hipDevice_t device = 0; // Specify the device index.
-
-        // Initialize the device.
-        hipSetDevice(device);
-
-        // Get the default memory pool for the device.
-        hipDeviceGetDefaultMemPool(&memPool, device);
-
-        // Allocate memory from the pool (e.g., 1 MB).
-        size_t allocSize = 1 * 1024 * 1024;
-        void* ptr;
-        hipMalloc(&ptr, allocSize);
-
-        // Free the allocated memory.
-        hipFree(ptr);
-
-        // Trim the memory pool to a specific size (e.g., 512 KB).
-        size_t newSize = 512 * 1024;
-        hipMemPoolTrimTo(memPool, newSize);
-
-        // Get and print usage statistics before resetting.
-        usageStatistics statsBefore;
-        getUsageStatistics(memPool, &statsBefore);
-        std::cout << "Before resetting statistics:" << std::endl;
-        std::cout << "Reserved Memory Current: " << statsBefore.reservedMemCurrent << " bytes" << std::endl;
-        std::cout << "Reserved Memory High: " << statsBefore.reservedMemHigh << " bytes" << std::endl;
-        std::cout << "Used Memory Current: " << statsBefore.usedMemCurrent << " bytes" << std::endl;
-        std::cout << "Used Memory High: " << statsBefore.usedMemHigh << " bytes" << std::endl;
-
-        // Reset the statistics.
-        resetStatistics(memPool);
-
-        // Get and print usage statistics after resetting.
-        usageStatistics statsAfter;
-        getUsageStatistics(memPool, &statsAfter);
-        std::cout << "After resetting statistics:" << std::endl;
-        std::cout << "Reserved Memory Current: " << statsAfter.reservedMemCurrent << " bytes" << std::endl;
-        std::cout << "Reserved Memory High: " << statsAfter.reservedMemHigh << " bytes" << std::endl;
-        std::cout << "Used Memory Current: " << statsAfter.usedMemCurrent << " bytes" << std::endl;
-        std::cout << "Used Memory High: " << statsAfter.usedMemHigh << " bytes" << std::endl;
-
-        // Clean up.
-        hipMemPoolDestroy(memPool);
-
-        return 0;
-    }
+.. literalinclude:: ../../../tools/example_codes/memory_pool_resource_usage_statistics.cpp
+    :start-after: // [sphinx-start]
+    :end-before: // [sphinx-end]
+    :language: cpp
 
 Memory reuse policies
 ---------------------
