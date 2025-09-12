@@ -63,83 +63,20 @@ The ``hipMallocAsync()`` function uses the current memory pool and also provides
 
 Unlike NVIDIA CUDA, where stream-ordered memory allocation can be implicit, ROCm HIP is explicit. This requires managing memory allocation for each stream in HIP while ensuring precise control over memory usage and synchronization.
 
-.. code-block:: cpp
-
-    #include <iostream>
-    #include <hip/hip_runtime.h>
-
-    // Kernel to perform some computation on allocated memory.
-    __global__ void myKernel(int* data, size_t numElements) {
-        int tid = threadIdx.x + blockIdx.x * blockDim.x;
-        if (tid < numElements) {
-            data[tid] = tid * 2;
-        }
-    }
-
-    int main() {
-        // Create a stream.
-        hipStream_t stream;
-        hipStreamCreate(&stream);
-
-        // Create a memory pool with default properties.
-        hipMemPoolProps poolProps = {};
-        poolProps.allocType = hipMemAllocationTypePinned;
-        poolProps.handleTypes = hipMemHandleTypePosixFileDescriptor;
-        poolProps.location.type = hipMemLocationTypeDevice;
-        poolProps.location.id = 0; // Assuming device 0.
-
-        hipMemPool_t memPool;
-        hipMemPoolCreate(&memPool, &poolProps);
-
-        // Allocate memory from the pool asynchronously.
-        constexpr size_t numElements = 1024;
-        int* devData = nullptr;
-        hipMallocFromPoolAsync(&devData, numElements * sizeof(*devData), memPool, stream);
-
-        // Define grid and block sizes.
-        dim3 blockSize(256);
-        dim3 gridSize((numElements + blockSize.x - 1) / blockSize.x);
-
-        // Launch the kernel to perform computation.
-        myKernel<<<gridSize, blockSize, 0, stream>>>(devData, numElements);
-
-        // Synchronize the stream.
-        hipStreamSynchronize(stream);
-
-        // Copy data back to host.
-        int* hostData = new int[numElements];
-        hipMemcpy(hostData, devData, numElements * sizeof(*devData), hipMemcpyDeviceToHost);
-
-        // Print the array.
-        for (size_t i = 0; i < numElements; ++i) {
-            std::cout << "Element " << i << ": " << hostData[i] << std::endl;
-        }
-
-        // Free the allocated memory.
-        hipFreeAsync(devData, stream);
-
-        // Synchronize the stream again to ensure all operations are complete.
-        hipStreamSynchronize(stream);
-
-        // Destroy the memory pool and stream.
-        hipMemPoolDestroy(memPool);
-        hipStreamDestroy(stream);
-
-        // Free host memory.
-        delete[] hostData;
-
-        return 0;
-    }
+.. literalinclude:: ../../../tools/example_codes/memory_pool.hip
+    :start-after: // [sphinx-start]
+    :end-before: // [sphinx-end]
+    :language: cpp
 
 Trim pools
 ----------
 
 The memory allocator allows you to allocate and free memory in stream order. To control memory usage, set the release threshold attribute using ``hipMemPoolAttrReleaseThreshold``.  This threshold specifies the amount of reserved memory in bytes to hold onto.
 
-.. code-block:: cpp
-
-    uint64_t threshold = UINT64_MAX;
-    hipMemPoolSetAttribute(memPool, hipMemPoolAttrReleaseThreshold, &threshold);
+.. literalinclude:: ../../../tools/example_codes/memory_pool_threshold.hip
+    :start-after: // [sphinx-start]
+    :end-before: // [sphinx-end]
+    :language: cpp
 
 When the amount of memory held in the memory pool exceeds the threshold, the allocator tries to release memory back to the operating system during the next call to stream, event, or context synchronization.
 
