@@ -68,70 +68,7 @@ Complete example
 A complete example to demonstrate the error handling with a simple addition of
 two values kernel:
 
-.. code-block:: cpp
-
-  #include <hip/hip_runtime.h>
-  #include <vector>
-  #include <iostream>
-
-  #define HIP_CHECK(expression)                  \
-  {                                              \
-      const hipError_t status = expression;      \
-      if(status != hipSuccess){                  \
-          std::cerr << "HIP error "              \
-                    << status << ": "            \
-                    << hipGetErrorString(status) \
-                    << " at " << __FILE__ << ":" \
-                    << __LINE__ << std::endl;    \
-      }                                          \
-  }
-
-  // Addition of two values.
-  __global__ void add(int *a, int *b, int *c, size_t size) {
-      const size_t index = threadIdx.x + blockDim.x * blockIdx.x;
-      if(index < size) {
-          c[index] += a[index] + b[index];
-      }
-  }
-
-  int main() {
-      constexpr int numOfBlocks = 256;
-      constexpr int threadsPerBlock = 256;
-      constexpr size_t arraySize = 1U << 16;
-
-      std::vector<int> a(arraySize), b(arraySize), c(arraySize);
-      int *d_a, *d_b, *d_c;
-
-      // Setup input values.
-      std::fill(a.begin(), a.end(), 1);
-      std::fill(b.begin(), b.end(), 2);
-
-      // Allocate device copies of a, b and c.
-      HIP_CHECK(hipMalloc(&d_a, arraySize * sizeof(*d_a)));
-      HIP_CHECK(hipMalloc(&d_b, arraySize * sizeof(*d_b)));
-      HIP_CHECK(hipMalloc(&d_c, arraySize * sizeof(*d_c)));
-
-      // Copy input values to device.
-      HIP_CHECK(hipMemcpy(d_a, &a, arraySize * sizeof(*d_a), hipMemcpyHostToDevice));
-      HIP_CHECK(hipMemcpy(d_b, &b, arraySize * sizeof(*d_b), hipMemcpyHostToDevice));
-
-      // Launch add() kernel on GPU.
-      hipLaunchKernelGGL(add, dim3(numOfBlocks), dim3(threadsPerBlock), 0, 0, d_a, d_b, d_c, arraySize);
-      // Check the kernel launch
-      HIP_CHECK(hipGetLastError());
-      // Check for kernel execution error
-      HIP_CHECK(hipDeviceSynchronize());
-
-      // Copy the result back to the host.
-      HIP_CHECK(hipMemcpy(&c, d_c, arraySize * sizeof(*d_c), hipMemcpyDeviceToHost));
-
-      // Cleanup allocated memory.
-      HIP_CHECK(hipFree(d_a));
-      HIP_CHECK(hipFree(d_b));
-      HIP_CHECK(hipFree(d_c));
-
-      // Print the result.
-      std::cout << a[0] << " + " << b[0] << " = " << c[0] << std::endl;
-
-      return 0;
-  }
+.. literalinclude:: ../../tools/example_codes/error_handling.hip
+    :start-after: // [sphinx-start]
+    :end-before: // [sphinx-end]
+    :language: cpp
