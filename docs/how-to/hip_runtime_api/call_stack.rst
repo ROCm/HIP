@@ -33,38 +33,10 @@ You can adjust the call stack size as shown in the following example, allowing
 fine-tuning based on specific kernel requirements. This helps prevent stack
 overflow errors by ensuring sufficient stack memory is allocated.
 
-.. code-block:: cpp
-
-    #include <hip/hip_runtime.h>
-    #include <iostream>
-
-    #define HIP_CHECK(expression)                \
-    {                                            \
-        const hipError_t status = expression;    \
-        if(status != hipSuccess){                \
-                std::cerr << "HIP error "        \
-                    << status << ": "            \
-                    << hipGetErrorString(status) \
-                    << " at " << __FILE__ << ":" \
-                    << __LINE__ << std::endl;    \
-        }                                        \
-    }
-
-    int main()
-    {
-        size_t stackSize;
-        HIP_CHECK(hipDeviceGetLimit(&stackSize, hipLimitStackSize));
-        std::cout << "Default stack size: " << stackSize << " bytes" << std::endl;
-
-        // Set a new stack size
-        size_t newStackSize = 1024 * 8; // 8 KiB
-        HIP_CHECK(hipDeviceSetLimit(hipLimitStackSize, newStackSize));
-
-        HIP_CHECK(hipDeviceGetLimit(&stackSize, hipLimitStackSize));
-        std::cout << "Updated stack size: " << stackSize << " bytes" << std::endl;
-
-        return 0;
-    }
+.. literalinclude:: ../../tools/example_codes/call_stack_management.cpp
+    :start-after: // [sphinx-start]
+    :end-before: // [sphinx-end]
+    :language: cpp
 
 Depending on the GPU model, at full occupancy, it can consume a significant
 amount of memory. For instance, an MI300X with 304 compute units (CU) and up to
@@ -81,49 +53,7 @@ needed for the call stack due to the GPUs inherent parallelism. This can be
 achieved by increasing stack size or optimizing code to reduce stack usage. To
 detect stack overflow add proper error handling or use debugging tools.
 
-.. code-block:: cpp
-
-    #include <hip/hip_runtime.h>
-    #include <iostream>
-
-    #define HIP_CHECK(expression)                \
-    {                                            \
-        const hipError_t status = expression;    \
-        if(status != hipSuccess){                \
-                std::cerr << "HIP error "        \
-                    << status << ": "            \
-                    << hipGetErrorString(status) \
-                    << " at " << __FILE__ << ":" \
-                    << __LINE__ << std::endl;    \
-        }                                        \
-    }
-
-    __device__ unsigned long long fibonacci(unsigned long long n)
-    {
-        if (n == 0 || n == 1)
-        {
-            return n;
-        }
-        return fibonacci(n - 1) + fibonacci(n - 2);
-    }
-
-    __global__ void kernel(unsigned long long n)
-    {
-        unsigned long long result = fibonacci(n);
-        const size_t x = threadIdx.x + blockDim.x * blockIdx.x;
-
-        if (x == 0)
-            printf("%llu! = %llu \n", n, result);
-    }
-
-    int main()
-    {
-        kernel<<<1, 1>>>(10);
-        HIP_CHECK(hipDeviceSynchronize());
-
-        // With -O0 optimization option hit the stack limit
-        // kernel<<<1, 256>>>(2048);
-        // HIP_CHECK(hipDeviceSynchronize());
-
-        return 0;
-    }
+.. literalinclude:: ../../tools/example_codes/device_recursion.hip
+    :start-after: // [sphinx-start]
+    :end-before: // [sphinx-end]
+    :language: cpp
