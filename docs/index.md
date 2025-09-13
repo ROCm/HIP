@@ -38,8 +38,7 @@ The HIP documentation is organized into the following categories:
 * {doc}`./how-to/hip_runtime_api`
 * {doc}`./how-to/hip_cpp_language_extensions`
 * {doc}`./how-to/kernel_language_cpp_support`
-* [HIP porting guide](./how-to/hip_porting_guide)
-* [HIP porting: driver API guide](./how-to/hip_porting_driver_api)
+* {doc}`./how-to/hip_porting_guide`
 * {doc}`./how-to/hip_rtc`
 * {doc}`./understand/amd_clr`
 
