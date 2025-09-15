@@ -1153,6 +1153,7 @@ typedef enum hipMemAllocationType {
       * location while the application is actively using it
       */
     hipMemAllocationTypePinned  = 0x1,
+    hipMemAllocationTypeUncached = 0x40000000,
     hipMemAllocationTypeMax     = 0x7FFFFFFF
 } hipMemAllocationType;
 /**
