@@ -31,7 +31,7 @@ tight integration with other systems, or require advanced control over GPU resou
 
 The HIP runtime API includes corresponding functions for both the CUDA driver and
 the CUDA runtime API. The module and context functionality are available with the
-``hipModule`` and ``hipCtx`` prefixes, and CUDA driver API functions are usually
+``hipModule`` and ``hipCtx`` prefixes, and driver API functions are usually
 prefixed with ``hipDrv``.
 
 Porting a CUDA project
@@ -101,8 +101,8 @@ Address spaces (related to context)
 
 ``amdclang++``, also known as HIP-Clang, defines a process-wide address space where
 the CPU and all devices allocate addresses from a single unified pool.
-This means addresses can be shared between contexts. Unlike the original CUDA
-implementation, a new context does not create a new address space for the device.
+This means addresses can be shared between contexts. Unlike CUDA, a new context
+does not create a new address space for the device.
 
 Context stack behavior differences
 ----------------------------------
@@ -282,7 +282,7 @@ cuModule and hipModule
 
 The ``cuModule`` feature of the driver API provides additional control over how and
 when accelerator code objects are loaded. For example, the driver API enables
-code objects to load from files or memory pointers. Symbols for kernels or
+code objects to be loaded from files or memory pointers. Symbols for kernels or
 global data are extracted from the loaded code objects. In contrast, the runtime
 API loads automatically and, if necessary, compiles all the kernels from an
 executable binary when it runs. In this mode, kernel code must be compiled using
@@ -331,7 +331,7 @@ automatically loaded code objects. HIP-Clang enables both of these capabilities 
 be used together. Of course, it is possible to create a program with no kernels and
 no automatic loading.
 
-For module API reference, visit :ref:`module_management_reference`.
+For the module API reference, visit :ref:`module_management_reference`.
 
 Using hipModuleLaunchKernel (is this still needed?)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
