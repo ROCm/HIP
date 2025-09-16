@@ -6399,8 +6399,22 @@ hipError_t hipGetDriverEntryPoint(const char* symbol, void** funcPtr, unsigned l
  */
 hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const char* name);
 /**
- * @brief builds module from code object which resides in host memory. Image is pointer to that
- * location.
+ * @brief builds module from code object data which resides in host memory.
+ *
+ * The "image" is a pointer to the location of code object data. This data can be either
+ * a single code object or a fat binary (fatbin), which serves as the entry point for loading and
+ * launching device-specific kernel executions.
+ *
+ * By default, the following command generates a fatbin:
+ *
+ * "amdclang++ -O3 -c --offload-device-only --offload-arch=<GPU_ARCH> <input_file> -o <output_file>"
+ *
+ * For more details, refer to:
+ * <a
+ * href= "https://rocm.docs.amd.com/projects/HIP/en/latest/how-to/kernel_language_cpp_support.html#kernel-compilation">
+ * Kernel Compilation</a> in the HIP kernel language C++ support, or
+ * <a
+ * href="https://rocm.docs.amd.com/projects/HIP/en/latest/how-to/hip_rtc.html">HIP runtime compilation (HIP RTC)</a>.
  *
  * @param [in] image  The pointer to the location of data
  * @param [out] module  Retuned module
