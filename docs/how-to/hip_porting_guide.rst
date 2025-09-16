@@ -31,7 +31,7 @@ tight integration with other systems, or require advanced control over GPU resou
 
 The HIP runtime API includes corresponding functions for both the CUDA driver and
 the CUDA runtime API. The module and context functionality are available with the
-``hipModule`` and ``hipCtx`` prefixes, and CUDA driver API functions are usually
+``hipModule`` and ``hipCtx`` prefixes, and driver API functions are usually
 prefixed with ``hipDrv``.
 
 Porting a CUDA project
