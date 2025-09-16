@@ -101,8 +101,8 @@ Address spaces (related to context)
 
 ``amdclang++``, also known as HIP-Clang, defines a process-wide address space where
 the CPU and all devices allocate addresses from a single unified pool.
-This means addresses can be shared between contexts. Unlike the original CUDA
-implementation, a new context does not create a new address space for the device.
+This means addresses can be shared between contexts. Unlike CUDA, a new context
+does not create a new address space for the device.
 
 Context stack behavior differences
 ----------------------------------
