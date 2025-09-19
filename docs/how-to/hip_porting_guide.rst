@@ -34,6 +34,9 @@ the CUDA runtime API. The module and context functionality are available with th
 ``hipModule`` and ``hipCtx`` prefixes, and driver API functions are usually
 prefixed with ``hipDrv``.
 
+Porting a CUDA project
+======================
+
 HIP projects can target either AMD or NVIDIA platforms. HIP is a marshalling language
 that provides a thin-layer mapping to functions in AMD's ROCm language, or to CUDA
 functions. To compile the HIP code, you can use ``amdclang++``, also called HIP-Clang,
