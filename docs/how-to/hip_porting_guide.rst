@@ -331,7 +331,7 @@ automatically loaded code objects. HIP-Clang enables both of these capabilities 
 be used together. Of course, it is possible to create a program with no kernels and
 no automatic loading.
 
-For module API reference, visit :ref:`module_management_reference`.
+For the module API reference, visit :ref:`module_management_reference`.
 
 Using hipModuleLaunchKernel (is this still needed?)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
