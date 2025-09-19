@@ -66,6 +66,7 @@ The HIP documentation is organized into the following categories:
 * [SAXPY tutorial](./tutorial/saxpy)
 * [Reduction tutorial](./tutorial/reduction)
 * [Cooperative groups tutorial](./tutorial/cooperative_groups_tutorial)
+* [HIP Graph API tutorial](./tutorial/graph_api)
 
 :::
 
