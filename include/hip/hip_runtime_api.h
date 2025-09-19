@@ -692,6 +692,8 @@ typedef struct hipIpcEventHandle_st {
 typedef struct ihipModule_t* hipModule_t;
 typedef struct ihipModuleSymbol_t* hipFunction_t;
 typedef struct ihipLinkState_t* hipLinkState_t;
+typedef struct ihipLibrary_t* hipLibrary_t;
+typedef struct ihipKernel_t* hipKernel_t;
 /**
  * HIP memory pool
  */
@@ -6345,6 +6347,69 @@ hipError_t hipModuleGetFunction(hipFunction_t* function, hipModule_t module, con
  * #hipErrorNotFound,
  */
 hipError_t hipModuleGetFunctionCount(unsigned int* count, hipModule_t mod);
+
+/**
+ * @brief Load hip Library from inmemory object
+ *
+ * @param [out] library Output Library
+ * @param [in] code In memory object
+ * @param [in] jitOptions JIT options, CUDA only
+ * @param [in] jitOptionsValues JIT options values, CUDA only
+ * @param [in] numJitOptions Number of JIT options
+ * @param [in] libraryOptions Library options
+ * @param [in] libraryOptionValues Library options values
+ * @param [in] numLibraryOptions Number of library options
+ * @return #hipSuccess, #hipErrorInvalidValue,
+ */
+hipError_t hipLibraryLoadData(hipLibrary_t* library, const void* code, hipJitOption** jitOptions,
+                              void** jitOptionsValues, unsigned int numJitOptions,
+                              hipLibraryOption** libraryOptions, void** libraryOptionValues,
+                              unsigned int numLibraryOptions);
+
+/**
+ * @brief Load hip Library from file
+ *
+ * @param [out] library Output Library
+ * @param [in] fileName file which contains code object
+ * @param [in] jitOptions JIT options, CUDA only
+ * @param [in] jitOptionsValues JIT options values, CUDA only
+ * @param [in] numJitOptions Number of JIT options
+ * @param [in] libraryOptions Library options
+ * @param [in] libraryOptionValues Library options values
+ * @param [in] numLibraryOptions Number of library options
+ * @return #hipSuccess, #hipErrorInvalidValue
+ */
+hipError_t hipLibraryLoadFromFile(hipLibrary_t* library, const char* fileName,
+                                  hipJitOption** jitOptions, void** jitOptionsValues,
+                                  unsigned int numJitOptions, hipLibraryOption** libraryOptions,
+                                  void** libraryOptionValues, unsigned int numLibraryOptions);
+
+/**
+ * @brief Unload HIP Library
+ *
+ * @param [in] library Input created hip library
+ * @return #hipSuccess, #hipErrorInvalidValue
+ */
+hipError_t hipLibraryUnload(hipLibrary_t library);
+
+/**
+ * @brief Get Kernel object from library
+ *
+ * @param [out] pKernel Output kernel object
+ * @param [in] library Input hip library
+ * @param [in] name kernel name to be searched for
+ * @return #hipSuccess, #hipErrorInvalidValue
+ */
+hipError_t hipLibraryGetKernel(hipKernel_t* pKernel, hipLibrary_t library, const char* name);
+
+/**
+ * @brief Get Kernel count in library
+ *
+ * @param [out] count Count of kernels in library
+ * @param [in] library Input created hip library
+ * @return #hipSuccess, #hipErrorInvalidValue
+*/
+hipError_t hipLibraryGetKernelCount(unsigned int *count, hipLibrary_t library);
 
 /**
  * @brief Find out attributes for a given function.

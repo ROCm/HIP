@@ -121,6 +121,11 @@ typedef enum hipJitFallback {
   hipJitPreferBinary,
 } hipJitFallback;
 
+typedef enum hipLibraryOption_e {
+  hipLibraryHostUniversalFunctionAndDataTable = 0,
+  hipLibraryBinaryIsPreserved = 1
+} hipLibraryOption;
+
 // doxygen end LinkerTypes
 /**
  * @}
