@@ -282,7 +282,7 @@ cuModule and hipModule
 
 The ``cuModule`` feature of the driver API provides additional control over how and
 when accelerator code objects are loaded. For example, the driver API enables
-code objects to load from files or memory pointers. Symbols for kernels or
+code objects to be loaded from files or memory pointers. Symbols for kernels or
 global data are extracted from the loaded code objects. In contrast, the runtime
 API loads automatically and, if necessary, compiles all the kernels from an
 executable binary when it runs. In this mode, kernel code must be compiled using
