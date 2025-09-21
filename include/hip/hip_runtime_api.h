@@ -848,7 +848,7 @@ enum hipLimit_t {
 /**
  * Host memory will be forcedly allocated on extended fine grained system memory
  * pool which is with MTYPE_UC.
- * @note  This allocation flag is applicable on AMD devices in Linux only.
+ * @note  This allocation flag is applicable on AMD devices, except for Navi4X, in Linux only.
  */
 #define hipHostMallocUncached 0x10000000
 #define hipHostAllocUncached hipHostMallocUncached
@@ -909,7 +909,7 @@ enum hipLimit_t {
 #define hipExtHostRegisterCoarseGrained 0x8
 
 /** Map host memory onto extended fine grained access host memory pool when enabled.
- * It is applicable on AMD devices in Linux only
+ * It is applicable on AMD devices, except for Navi4X, in Linux only.
  */
 #define hipExtHostRegisterUncached 0x80000000
 
