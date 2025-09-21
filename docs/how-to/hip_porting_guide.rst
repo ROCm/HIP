@@ -261,6 +261,7 @@ platform:
      - ``.fatbin``
      - ``.hip_fatbin``
 
+
 ``hipcc`` uses HIP-Clang or NVCC to compile host code. Both of these compilers can
 embed code objects into the final executable. These code objects are automatically
 loaded when the application starts. The ``hipModule`` API can be used to load
