@@ -51,6 +51,11 @@ Update ``hipFree``
 
 :cpp:func:`hipFree` previously had an implicit wait for synchronization purpose which is applicable for all memory allocations. This wait has been disabled in the HIP 7.0 runtime for allocations made with ``hipMallocAsync`` and ``hipMallocFromPoolAsync`` to match the behavior of CUDA API ``cudaFree``
 
+Update ``hipFreeAsync``
+-----------------------
+
+The API returns ``hipSuccess`` when the input pointer is NULL, instead of ``hipErrorInvalidValue``, to be consistent with :cpp:func:`hipFree`.
+
 HIP runtime compiler (hipRTC) changes
 =====================================
 
@@ -189,6 +194,7 @@ During stream capture, the following HIP APIs return the ``hipErrorStreamCapture
 * :cpp:func:`hipMemPoolDestroy`
 * :cpp:func:`hipDeviceSetSharedMemConfig`
 * :cpp:func:`hipDeviceSetCacheConfig`
+* :cpp:func:`hipMemcpyWithStream`
 
 The usage of these APIs is restricted during stream capture. No impact if stream capture is working fine on CUDA.
 
@@ -296,6 +302,7 @@ In order to match the CUDA runtime behavior more closely, HIP APIs with streams 
 * Memory management related APIs
 
   * :cpp:func:`hipMemcpyPeerAsync`
+  * :cpp:func:`hipMemcpy2DValidateParams`
   * :cpp:func:`hipMallocFromPoolAsync`
   * :cpp:func:`hipFreeAsync`
   * :cpp:func:`hipMallocAsync`
