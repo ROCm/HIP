@@ -56,6 +56,11 @@ Update ``hipFreeAsync``
 
 The API returns ``hipSuccess`` when the input pointer is NULL, instead of ``hipErrorInvalidValue``, to be consistent with :cpp:func:`hipFree`.
 
+Exceptions during kernel execution changes
+------------------------------------------
+
+Exceptions that occur during kernel execution will no longer abort the process, but will instead return an error, unless core dumping is enabled.
+
 HIP runtime compiler (hipRTC) changes
 =====================================
 
