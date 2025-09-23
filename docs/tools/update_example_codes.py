@@ -285,8 +285,8 @@ urllib.request.urlretrieve(
     "docs/tools/example_codes/p2p_memory_access.hip"
 )
 urllib.request.urlretrieve(
-    "https://raw.githubusercontent.com/ROCm/rocm-examples/amd-staging/HIP-Doc/Programming-Guide/Using-HIP-Runtime-API/Multi-Device-Management/p2p_memory_access_failed/main.hip",
-    "docs/tools/example_codes/p2p_memory_access_failed.hip"
+    "https://raw.githubusercontent.com/ROCm/rocm-examples/amd-staging/HIP-Doc/Programming-Guide/Using-HIP-Runtime-API/Multi-Device-Management/p2p_memory_access_host_staging/main.hip",
+    "docs/tools/example_codes/p2p_memory_access_host_staging.hip"
 )
 
 # Reference examples from HIP-Doc / Reference

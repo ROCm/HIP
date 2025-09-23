@@ -53,7 +53,7 @@ int main()
     if(deviceCount < 2)
     {
         std::cout << "This example requires at least two HIP devices." << std::endl;
-        return EXIT_FAILURE;
+        return EXIT_SUCCESS;
     }
     
     double* deviceData0;
@@ -75,13 +75,9 @@ int main()
     simpleKernel<<<1000, 128>>>(deviceData1); // Launch kernel on device 1
     HIP_CHECK(hipDeviceSynchronize());
 
-    // Attempt to use deviceData0 on device 1 (This will not work as deviceData0 is allocated on device 0)
+    // Use deviceData0 on device 1. This works but incurs a performance penalty.
     HIP_CHECK(hipSetDevice(deviceId1));
-    hipError_t err = hipMemcpy(deviceData1, deviceData0, size, hipMemcpyDeviceToDevice); // This should fail
-    if (err != hipSuccess)
-    {
-        std::cout << "Error: Cannot access deviceData0 from device 1, deviceData0 is on device 0" << std::endl;
-    }
+    HIP_CHECK(hipMemcpy(deviceData1, deviceData0, size, hipMemcpyDeviceToDevice));
 
     // Copy result from device 0
     double hostData0[1024];
