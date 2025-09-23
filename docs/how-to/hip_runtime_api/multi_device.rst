@@ -73,7 +73,10 @@ applications that require frequent data exchange between GPUs, as it eliminates
 the need to transfer data through the host memory.
 
 By adding peer-to-peer access to the example referenced in
-:ref:`multi_device_selection`, data can be copied between devices:
+:ref:`multi_device_selection`, data can be efficiently copied between devices.
+If peer-to-peer access is not activated, the call to :cpp:func:`hipMemcpy`
+still works but internally uses a staging buffer in host memory, which incurs a
+performance penalty.
 
 .. tab-set::
 
@@ -82,13 +85,13 @@ By adding peer-to-peer access to the example referenced in
         .. literalinclude:: ../../tools/example_codes/p2p_memory_access.hip
             :start-after: // [sphinx-start]
             :end-before: // [sphinx-end]
-            :emphasize-lines: 31-37, 51-55
+            :emphasize-lines: 43-49, 63-67
             :language: cpp
 
     .. tab-item:: without peer-to-peer
 
-        .. literalinclude:: ../../tools/example_codes/p2p_memory_access.hip
+        .. literalinclude:: ../../tools/example_codes/p2p_memory_access_host_staging.hip
             :start-after: // [sphinx-start]
             :end-before: // [sphinx-end]
-            :emphasize-lines: 43-49, 53, 58
+            :emphasize-lines: 55-57
             :language: cpp
