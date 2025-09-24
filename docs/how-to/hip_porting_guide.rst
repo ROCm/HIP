@@ -29,6 +29,8 @@ error code spaces:
 General Tips
 --------------------------------------------------------------------------------
 
+* ``hipDeviceptr_t`` is a ``void*`` and treated like a raw pointer, while ``CUdevicptr``
+  is an ``unsigned int`` and treated as a device memory handle. 
 * Starting to port on an NVIDIA machine is often the easiest approach, as the
   code can be tested for functionality and performance even if not fully ported
   to HIP.
@@ -46,16 +48,16 @@ HIPIFY
 translate CUDA to HIP code. There are two flavours available, ``hipfiy-clang``
 and ``hipify-perl``.
 
-:doc:`hipify-clang <hipify:hipify-clang>` is, as the name implies, a Clang-based
+:doc:`hipify-clang <hipify:how-to/hipify-clang>` is, as the name implies, a Clang-based
 tool, and actually parses the code, translates it into an Abstract Syntax Tree,
 from which it then generates the HIP source. For this, ``hipify-clang`` needs to
 be able to actually compile the code, so the CUDA code needs to be correct, and
 a CUDA install with all necessary headers must be provided.
 
-:doc:`hipify-perl <hipify:hipify-perl>` uses pattern matching, to translate the
+:doc:`hipify-perl <hipify:how-to/hipify-perl>` uses pattern matching, to translate the
 CUDA code to HIP. It does not require a working CUDA installation, and can also
 convert CUDA code, that is not syntactically correct. It is therefore easier to
-set up and use, but is not as powerful as ``hipfiy-clang``.
+set up and use, but is not as powerful as ``hipify-clang``.
 
 Scanning existing CUDA code to scope the porting effort
 --------------------------------------------------------------------------------
@@ -610,6 +612,70 @@ platforms and architectures. The ``warpSize`` built-in should be used in device
 code, while the host can query it during runtime via the device properties. See
 the :ref:`HIP language extension for warpSize <warp_size>` for information on
 how to write portable wave-aware code.
+
+Lane masks bit-shift
+================================================================================
+
+A thread in a warp is also called a lane, and a lane mask is a bitmask where
+each bit corresponds to a thread in a warp. A bit is 1 if the thread is active,
+0 if it's inactive. Bit-shift operations are typically used to create lane masks
+and on AMD GPUs the ``warpSize`` can differ between different architectures,
+that's why it's essential to use correct bitmask type, when porting code.
+
+Example:
+
+.. code-block:: cpp
+
+  // Get the thread's position in the warp
+  unsigned int laneId = threadIdx.x % warpSize;
+
+  // Use lane ID for bit-shift
+  val & ((1 << (threadIdx.x % warpSize) )-1 );
+
+  // Shift 32 bit integer with val variable
+  WarpReduce::sum( (val < warpSize) ? (1 << val) : 0);
+
+Lane masks are 32-bit integer types as this is the integer precision that C 
+assigns to such constants by default. GCN/CDNA architectures have a warp size of
+64, :code:`threadIdx.x % warpSize` and :code:`val` in the example may obtain 
+values greater than 31. Consequently, shifting by such values would clear the 
+32-bit register to which the shift operation is applied. For AMD
+architectures, a straightforward fix could look as follows:
+
+.. code-block:: cpp
+  
+  // Get the thread's position in the warp
+  unsigned int laneId = threadIdx.x % warpSize;
+
+  // Use lane ID for bit-shift
+  val & ((1ull << (threadIdx.x % warpSize) )-1 );
+
+  // Shift 64 bit integer with val variable
+  WarpReduce::sum( (val < warpSize) ? (1ull << val) : 0);
+
+For portability reasons, it is better to introduce appropriately
+typed placeholders as shown below:
+
+.. code-block:: cpp
+
+  #if defined(__GFX8__) || defined(__GFX9__)
+  typedef uint64_t lane_mask_t;
+  #else
+  typedef uint32_t lane_mask_t;
+  #endif
+
+The use of :code:`lane_mask_t` with the previous example:
+
+.. code-block:: cpp
+
+  // Get the thread's position in the warp
+  unsigned int laneId = threadIdx.x % warpSize;
+
+  // Use lane ID for bit-shift
+  val & ((lane_mask_t{1} << (threadIdx.x % warpSize) )-1 );
+
+  // Shift 32 or 64 bit integer with val variable
+  WarpReduce::sum( (val < warpSize) ? (lane_mask_t{1} << val) : 0);
 
 Porting from CUDA __launch_bounds__
 ================================================================================

@@ -108,6 +108,8 @@ C++ application.
   :cpp:func:`hipMalloc` and :cpp:func:`hipFree` are blocking calls. However, HIP
   also provides non-blocking versions :cpp:func:`hipMallocAsync` and
   :cpp:func:`hipFreeAsync`, which require a stream as an additional argument.
+  For asynchronous memory allocations made with ``hipMallocAsync`` and ``hipMallocFromPoolAsync``
+  ``hipFree`` does not implicitly wait for synchronization, to match the behavior of ``cudaFree``.
 
 .. _pinned_host_memory:
 
