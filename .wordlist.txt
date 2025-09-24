@@ -39,6 +39,8 @@ Dereferencing
 DFT
 dll
 DirectX
+DPP
+dst
 EIGEN
 enqueue
 enqueues
