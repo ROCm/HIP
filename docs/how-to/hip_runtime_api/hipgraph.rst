@@ -8,12 +8,6 @@
 HIP graphs
 ********************************************************************************
 
-.. note::
-    The HIP graph API is currently in Beta. Some features can change and might
-    have outstanding issues. Not all features supported by CUDA graphs are yet
-    supported. For a list of all currently supported functions see the
-    :ref:`HIP graph API documentation<graph_management_reference>`.
-
 HIP graphs are an alternative way of executing tasks on a GPU that can provide
 performance benefits over launching kernels using the standard
 method via streams. A HIP graph is made up of nodes and edges. The nodes of a

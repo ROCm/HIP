@@ -13,6 +13,8 @@ returned by HIP API functions to indicate various runtime conditions and errors.
 
 For more details, see :ref:`Error handling functions <error_handling_reference>`.
 
+.. _basic_runtime_errors:
+
 Basic Runtime Errors
 ====================
 
@@ -100,6 +102,8 @@ Basic Runtime Errors
     If this error is encountered, it generally means the API or feature is not fully supported in the
     current version.
 
+.. _memory_management_errors:
+
 Memory Management Errors
 ========================
 
@@ -138,6 +142,14 @@ Memory Management Errors
     * - :term:`hipErrorRuntimeMemory`
       - ``1052``
       - Runtime memory call returned error
+
+    * - :term:`hipErrorInvalidChannelDescriptor`
+      - ``911``
+      - Input for texture object, resource descriptor, or texture descriptor is a NULL pointer or invalid
+
+    * - :term:`hipErrorInvalidTexture`
+      - ``912``
+      - Texture reference pointer is NULL or invalid
 
 .. glossary::
 
@@ -232,6 +244,21 @@ Memory Management Errors
 
     This error differs from ``hipErrorOutOfMemory`` in that it relates to memory operations internal to the HIP
     runtime rather than explicit application requests for memory allocation.
+
+  hipErrorInvalidChannelDescriptor
+
+    This error indicates that an invalid channel descriptor is used to define the format and layout of data
+    in memory, particularly when working with textures or arrays. This could happen if the descriptor is
+    incorrectly set up or if it does not match the expected format for the operation being performed.
+
+  hipErrorInvalidTexture
+
+    The error code is returned when an invalid texture object is used in a function call. This typically
+    occurs when a texture object is not properly initialized or configured before being used in operations
+    that require valid texture data. If you encounter this error, it suggests that the texture object
+    might be missing necessary configuration details or has been corrupted.
+
+.. _device_context_errors:
 
 Device and Context Errors
 =========================
@@ -385,6 +412,8 @@ Device and Context Errors
     * Custom build environments with mismatched components
     * Partial upgrades of the ROCm stack
 
+.. _kernel_launch_errors:
+
 Kernel and Launch Errors
 ========================
 
@@ -396,9 +425,17 @@ Kernel and Launch Errors
      - Value
      - Description
 
+   * - :term:`hipErrorInvalidValue``
+     - ``1``
+     - Invalid input value
+
    * - :term:`hipErrorInvalidDeviceFunction`
      - ``98``
      - Invalid device function
+
+   * - :term:`hipErrorContextIsDestroyed`
+     - ``709``
+     - Invalid stream handle
 
    * - :term:`hipErrorInvalidConfiguration`
      - ``9``
@@ -446,12 +483,21 @@ Kernel and Launch Errors
 
 .. glossary::
 
+  hipErrorInvalidValue
+
+    Error returned when a grid dimension check finds any input global work size
+    dimension is zero, or a shared memory size check finds the size exceeds the size limit. 
+
   hipErrorInvalidDeviceFunction
 
     Invalid device function. This error occurs when attempting to use a function that is not a valid device
     function or is not available for the current device. Common scenarios include:
 
     * Code compiled for a specific GPU architecture (using ``--offload-arch``) but executed on an different/incompatible GPU
+
+  hipErrorContextIsDestroyed
+
+    This error is returned when the input stream or input stream handle is invalid. 
 
   hipErrorInvalidConfiguration
 
@@ -507,7 +553,7 @@ Kernel and Launch Errors
   hipErrorInvalidKernelFile
 
     Invalid kernel file. This error occurs when the kernel file or module being loaded is corrupted or in
-    an invalid format.
+    an invalid format, for example the file name exists but the file size is 0.
 
   hipErrorInvalidImage
 
@@ -556,6 +602,7 @@ Kernel and Launch Errors
 
     * Launching a cooperative kernel with grid dimensions that exceed hardware limits
     * Requesting more resources than available for synchronization across thread blocks
+    * The shared memory size in bytes exceeds the device local memory size per CU
     * Using cooperative groups on hardware with limited support
     * Not accounting for cooperative launch limitations in kernel configuration
 
@@ -576,6 +623,8 @@ Kernel and Launch Errors
     When this error occurs, it may be necessary to reset the device or create a new context to continue
     normal operation. Additional debugging of the previous failed launch may be required to identify
     the root cause.
+
+.. _stream_capture_errors:
 
 Stream Capture Errors
 =====================
@@ -623,6 +672,10 @@ Stream Capture Errors
    * - :term:`hipErrorCapturedEvent`
      - ``907``
      - Operation not permitted on an event last recorded in a capturing stream
+
+   * - :term:`hipErrorInvalidResourceHandle`
+     - ``400``
+     - Input launch stream is ``NULL`` or is ``hipStreamLegacy``
 
 .. glossary::
 
@@ -754,6 +807,14 @@ Stream Capture Errors
     and cannot be used for host-side synchronization until the capture is complete and the graph
     is executed.
 
+  hipErrorInvalidResourceHandle
+
+    This error is returned when the input launch stream is a NULL pointer, is invalid, or is ``hipStreamLegacy``.
+    If you encounter this error, you should check the validity of the resource handle being used in your HIP
+    API calls. Ensure that the handle was correctly obtained and has not been freed or invalidated before use.
+
+.. _profiler_errors:
+
 Profiler Errors
 ===============
 
@@ -844,6 +905,8 @@ Profiler Errors
 
     The HIP profiler must be in an active state before it can be stopped. This error is informational
     and indicates that the profiler is already in the desired inactive state.
+
+.. _resource_mapping_errors:
 
 Resource Mapping Errors
 =======================
@@ -992,6 +1055,8 @@ Resource Mapping Errors
     operation was attempted on a resource that was not mapped as a pointer. Resources must be mapped
     with the appropriate mapping type for the operations that will be performed on them.
 
+.. _peer_access_errors:
+
 Peer Access Errors
 ==================
 
@@ -1057,6 +1122,8 @@ Peer Access Errors
     To fix this error, call :cpp:func:`hipDeviceEnablePeerAccess()` before attempting operations that require direct
     access between peer devices. Not all device combinations support peer access. Compatibility can be
     determined with :cpp:func:`hipDeviceCanAccessPeer()`.
+
+.. _system_file_errors:
 
 System and File Errors
 ======================
@@ -1183,6 +1250,8 @@ System and File Errors
     This is a catch-all error that may require looking at system logs or using additional
     debugging tools to identify the root cause.
 
+.. _graphics_content_errors:
+
 Graphics Context Errors
 =======================
 
@@ -1215,6 +1284,8 @@ Graphics Context Errors
     The graph update was not performed because it included changes which violated constraints specific to
     instantiated graph update. This error occurs when attempting to update an already instantiated
     graph with changes that are not allowed.
+
+.. _hardware_errors:
 
 Hardware Errors
 ===============

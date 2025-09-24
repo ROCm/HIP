@@ -348,89 +348,89 @@ find out what device binary flavors are embedded into the executable?
     artifacts on disk. Add the ROCmCC installation folder to your PATH if you
     want to use these utilities (the utilities expect them to be on the PATH).
 
-    You can list embedded program binaries using ``roc-obj-ls``.
+    You can list embedded program binaries using ``llvm-objdump`` with
+    ``--offloading`` option.
 
     .. code-block:: bash
 
-      roc-obj-ls ./saxpy
+      llvm-objdump --offloading ./saxpy
 
     It should return something like:
 
     .. code-block:: shell
 
-      1       host-x86_64-unknown-linux         file://./saxpy#offset=12288&size=0
-      1       hipv4-amdgcn-amd-amdhsa--gfx803   file://./saxpy#offset=12288&size=9760
+      ./saxpy:        file format elf64-x86-64
+      Extracting offload bundle: ./saxpy.0.host-x86_64-unknown-linux-gnu-
+      Extracting offload bundle: ./saxpy.0.hipv4-amdgcn-amd-amdhsa--gfx942
 
     The compiler embeds a version 4 code object (more on `code
     object versions <https://www.llvm.org/docs/AMDGPUUsage.html#code-object-metadata>`_)
-    and used the LLVM target triple `amdgcn-amd-amdhsa--gfx803` (more on `target triples
+    and used the LLVM target triple ``amdgcn-amd-amdhsa--gfx942`` (more on `target triples
     <https://www.llvm.org/docs/AMDGPUUsage.html#target-triples>`_). You can
     extract that program object in a disassembled fashion for human consumption
-    via ``roc-obj``.
+    via ``llvm-objdump``.
 
     .. code-block:: bash
 
-      roc-obj -t gfx803 -d ./saxpy
+      llvm-objdump --disassemble saxpy.0.hipv4-amdgcn-amd-amdhsa--gfx942 > saxpy.s
 
-    This creates two files on disk and ``.s`` extension is of most interest.
-    Opening this file or dumping it to the console using ``cat``
-    lets find the disassembled binary of the SAXPY compute kernel, something
-    similar to:
+    This creates a file on the disk called ``saxpy.s`` Opening this file or
+    dumping it to the console using ``cat`` lets find the disassembled binary of
+    the SAXPY compute kernel, something similar to:
 
     .. code-block::
 
+      saxpy.0.hipv4-amdgcn-amd-amdhsa--gfx942:        file format elf64-amdgpu
+
       Disassembly of section .text:
 
-      <_Z12saxpy_kernelfPKfPfj>:
-          s_load_dword s0, s[4:5], 0x2c        // 000000001000: C0020002 0000002C
-          s_load_dword s1, s[4:5], 0x18        // 000000001008: C0020042 00000018
-          s_waitcnt lgkmcnt(0)                 // 000000001010: BF8C007F
-          s_and_b32 s0, s0, 0xffff             // 000000001014: 8600FF00 0000FFFF
-          s_mul_i32 s6, s6, s0                 // 00000000101C: 92060006
-          v_add_u32_e32 v0, vcc, s6, v0        // 000000001020: 32000006
-          v_cmp_gt_u32_e32 vcc, s1, v0         // 000000001024: 7D980001
-          s_and_saveexec_b64 s[0:1], vcc       // 000000001028: BE80206A
-          s_cbranch_execz 22                   // 00000000102C: BF880016 <_Z12saxpy_kernelfPKfPfj+0x88>
-          s_load_dwordx4 s[0:3], s[4:5], 0x8   // 000000001030: C00A0002 00000008
-          v_mov_b32_e32 v1, 0                  // 000000001038: 7E020280
-          v_lshlrev_b64 v[0:1], 2, v[0:1]      // 00000000103C: D28F0000 00020082
-          s_waitcnt lgkmcnt(0)                 // 000000001044: BF8C007F
-          v_mov_b32_e32 v3, s1                 // 000000001048: 7E060201
-          v_add_u32_e32 v2, vcc, s0, v0        // 00000000104C: 32040000
-          v_addc_u32_e32 v3, vcc, v3, v1, vcc  // 000000001050: 38060303
-          flat_load_dword v2, v[2:3]           // 000000001054: DC500000 02000002
-          v_mov_b32_e32 v3, s3                 // 00000000105C: 7E060203
-          v_add_u32_e32 v0, vcc, s2, v0        // 000000001060: 32000002
-          v_addc_u32_e32 v1, vcc, v3, v1, vcc  // 000000001064: 38020303
-          flat_load_dword v3, v[0:1]           // 000000001068: DC500000 03000000
-          s_load_dword s0, s[4:5], 0x0         // 000000001070: C0020002 00000000
-          s_waitcnt vmcnt(0) lgkmcnt(0)        // 000000001078: BF8C0070
-          v_mac_f32_e32 v3, s0, v2             // 00000000107C: 2C060400
-          flat_store_dword v[0:1], v3          // 000000001080: DC700000 00000300
-          s_endpgm                             // 000000001088: BF810000
+      0000000000001900 <_Z12saxpy_kernelfPKfPfj>:
+        s_load_dword s3, s[0:1], 0x2c                              // 000000001900: C00200C0 0000002C
+        s_load_dword s4, s[0:1], 0x18                              // 000000001908: C0020100 00000018
+        s_waitcnt lgkmcnt(0)                                       // 000000001910: BF8CC07F
+        s_and_b32 s3, s3, 0xffff                                   // 000000001914: 8603FF03 0000FFFF
+        s_mul_i32 s2, s2, s3                                       // 00000000191C: 92020302
+        v_add_u32_e32 v0, s2, v0                                   // 000000001920: 68000002
+        v_cmp_gt_u32_e32 vcc, s4, v0                               // 000000001924: 7D980004
+        s_and_saveexec_b64 s[2:3], vcc                             // 000000001928: BE82206A
+        s_cbranch_execz 20                                         // 00000000192C: BF880014 <_Z12saxpy_kernelfPKfPfj+0x80>
+        s_load_dwordx4 s[4:7], s[0:1], 0x8                         // 000000001930: C00A0100 00000008
+        v_mov_b32_e32 v1, 0                                        // 000000001938: 7E020280
+        v_lshlrev_b64 v[0:1], 2, v[0:1]                            // 00000000193C: D28F0000 00020082
+        s_load_dword s0, s[0:1], 0x0                               // 000000001944: C0020000 00000000
+        s_waitcnt lgkmcnt(0)                                       // 00000000194C: BF8CC07F
+        v_lshl_add_u64 v[2:3], s[4:5], 0, v[0:1]                   // 000000001950: D2080002 04010004
+        v_lshl_add_u64 v[0:1], s[6:7], 0, v[0:1]                   // 000000001958: D2080000 04010006
+        global_load_dword v4, v[2:3], off                          // 000000001960: DC508000 047F0002
+        global_load_dword v5, v[0:1], off                          // 000000001968: DC508000 057F0000
+        s_waitcnt vmcnt(0)                                         // 000000001970: BF8C0F70
+        v_fmac_f32_e32 v5, s0, v4                                  // 000000001974: 760A0800
+        global_store_dword v[0:1], v5, off                         // 000000001978: DC708000 007F0500
+        s_endpgm                                                   // 000000001980: BF810000
+        s_nop 0                                                    // 000000001984: BF800000
 
     Alternatively, call the compiler with ``--save-temps`` to dump all device
     binary to disk in separate files.
 
     .. code-block:: bash
 
-      amdclang++ ./HIP-Basic/saxpy/main.hip -o saxpy -I ./Common -lamdhip64 -L /opt/rocm/lib -O2 --save-temps
+      amdclang++ ./HIP-Basic/saxpy/main.hip -o saxpy -I ./Common -lamdhip64 -L /opt/rocm/lib -O2 --save-temps --offload-arch=gfx942
 
     List all the temporaries created while compiling ``main.hip`` with:
 
     .. code-block:: bash
 
       ls main-hip-amdgcn-amd-amdhsa-*
-      main-hip-amdgcn-amd-amdhsa-gfx803.bc
-      main-hip-amdgcn-amd-amdhsa-gfx803.cui
-      main-hip-amdgcn-amd-amdhsa-gfx803.o
-      main-hip-amdgcn-amd-amdhsa-gfx803.out
-      main-hip-amdgcn-amd-amdhsa-gfx803.out.resolution.txt
-      main-hip-amdgcn-amd-amdhsa-gfx803.s
+      main-hip-amdgcn-amd-amdhsa-gfx942.bc
+      main-hip-amdgcn-amd-amdhsa-gfx942.o
+      main-hip-amdgcn-amd-amdhsa-gfx942.out.resolution.txt
+      main-hip-amdgcn-amd-amdhsa-gfx942.hipi 
+      main-hip-amdgcn-amd-amdhsa-gfx942.out
+      main-hip-amdgcn-amd-amdhsa-gfx942.s
 
     Files with the ``.s`` extension hold the disassembled contents of the binary.
     The filename notes the graphics IPs used by the compiler. The contents of
-    this file are similar to what ``roc-obj`` printed to the console.
+    this file are similar to the `*.s` file created with ``llvm-objdump`` earlier.
 
   .. tab-item:: Linux and NVIDIA
     :sync: linux-nvidia
@@ -491,7 +491,7 @@ find out what device binary flavors are embedded into the executable?
 
     We can see that the compiler embedded a version 4 code object (more on code
     `object versions <https://www.llvm.org/docs/AMDGPUUsage.html#code-object-metadata>`_) and
-    used the LLVM target triple `amdgcn-amd-amdhsa--gfx906` (more on `target triples
+    used the LLVM target triple ``amdgcn-amd-amdhsa--gfx906`` (more on `target triples
     <https://www.llvm.org/docs/AMDGPUUsage.html#target-triples>`_). Don't be
     alarmed about linux showing up as a binary format, AMDGPU binaries uploaded to
     the GPU for execution are proper linux ELF binaries in their format.
