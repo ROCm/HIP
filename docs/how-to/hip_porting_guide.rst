@@ -16,7 +16,7 @@ code and work through common issues.
 CUDA provides separate driver and runtime APIs, while HIP uses a single API.
 The two CUDA APIs generally provide similar functionality and are mostly interchangeable.
 However, the CUDA driver API enables fine-grained control over the kernel-level
-initialization, contexts, and module management. While the runtime API automatically
+initialization, contexts, and module management, while the runtime API automatically
 manages contexts and modules. The driver API is suitable for applications that need
 tight integration with other systems, or require advanced control over GPU resources.
 
@@ -64,8 +64,8 @@ General Tips
   to HIP.
 * Once the CUDA code is ported to HIP and is running on the CUDA machine,
   compile the HIP code for an AMD machine.
-* You can handle platform-specific features through conditional compilation or
-  by adding them to the open-source HIP infrastructure.
+* You can handle platform-specific features through conditional compilation as described
+  in :ref:`compilation_platform`.
 * Use the `HIPIFY <https://github.com/ROCm/HIPIFY>`_ tools to automatically
   convert CUDA code to HIP, as described in the following section.
 
@@ -198,14 +198,14 @@ ROCm provides libraries to ease porting of code relying on CUDA libraries.
 Most CUDA libraries have a corresponding HIP library. For more information,
 see either :doc:`ROCm libraries <rocm:reference/api-libraries>` or :doc:`HIPIFY CUDA compatible libraries <hipify:reference/supported_apis>`.
 
-There are two flavours of libraries provided by ROCm, ones prefixed with ``hip``
-and ones prefixed with ``roc``. While both are written using HIP, in general
+There are two flavours of libraries provided by ROCm, libraries prefixed with ``hip``
+and libraries prefixed with ``roc``. While both are written using HIP, in general
 only the ``hip``-libraries are portable. The libraries with the ``roc``-prefix
 might also run on CUDA-capable GPUs, however they have been optimized for AMD
 GPUs and might use assembly code or a different API, to achieve the best
 performance.
 
-In the case where a library provides both ``roc`` and ``hip``versions, such as
+In the case where a library provides both ``roc`` and ``hip`` versions, such as
 ``hipSparse`` and ``rocSparse``, the ``hip`` version is a marshalling library,
 which is just a thin layer that redirects function calls to either the
 ``roc`` library or the corresponding CUDA library, depending on the target platform.  
@@ -595,32 +595,32 @@ required to implement this interaction.
    * - HIP type
      - CU Driver type
      - CUDA Runtime type
-   * - ``hipModule_t``
+   * - :cpp:type:``hipModule_t``
      - ``CUmodule``
      -
-   * - ``hipFunction_t``
+   * - :cpp:type:``hipFunction_t``
      - ``CUfunction``
      -
-   * - ``hipCtx_t``
+   * - :cpp:type:``hipCtx_t``
      - ``CUcontext``
      -
-   * - ``hipDevice_t``
+   * - :cpp:type:``hipDevice_t``
      - ``CUdevice``
      -
-   * - ``hipStream_t``
+   * - :cpp:type:``hipStream_t``
      - ``CUstream``
      - ``cudaStream_t``
-   * - ``hipEvent_t``
+   * - :cpp:type:``hipEvent_t``
      - ``CUevent``
      - ``cudaEvent_t``
-   * - ``hipArray``
+   * - :cpp:type:``hipArray_t``
      - ``CUarray``
      - ``cudaArray``
 
 Compilation options
 -------------------
 
-The ``hipModule_t`` interface does not support the ``cuModuleLoadDataEx`` function,
+The :cpp:type:``hipModule_t`` interface does not support the ``cuModuleLoadDataEx`` function,
 which is used to control PTX compilation options. HIP-Clang does not use PTX, so
 it does not support these compilation options. In fact, HIP-Clang code objects contain
 fully compiled code for a device-specific instruction set and don't require additional
@@ -648,7 +648,7 @@ For example:
             optionValues[0] = (void *)(&maxRegs);
 
             // hipModuleLoadData(module, imagePtr) will be called on HIP-Clang path, JIT
-            // options will not be used, and cupModuleLoadDataEx(module, imagePtr,
+            // options will not be used, and cuModuleLoadDataEx(module, imagePtr,
             // numOptions, options, optionValues) will be called on NVCC path
             hipModuleLoadDataEx(module, imagePtr, numOptions, options, optionValues);
 
@@ -675,7 +675,7 @@ For example:
             CUfunction k;
             cuModuleGetFunction(&k, module, "myKernel");
 
-The sample below shows how to use ``hipModuleGetFunction``.
+The sample below shows how to use :cpp:func:``hipModuleGetFunction``.
 
 .. code-block:: cpp
 
@@ -1090,9 +1090,9 @@ functions offered by the HIP runtime, even if the application was built with an
 older toolkit.
 
 .. note::
-  ``hipGetProcAddress`` and its CUDA counterpart ``cuGetProcAddress`` are limited
+  :cpp:func:``hipGetProcAddress`` and its CUDA counterpart ``cuGetProcAddress`` are limited
   to HIP/CUDA driver API function calls. For HIP/CUDA runtime API calls,the corresponding
-  function is ``hipGetDriverEntryPoint`` / ``cudaGetDriverEntryPoint``. 
+  function is :cpp:func:``hipGetDriverEntryPoint`` / ``cudaGetDriverEntryPoint``. 
 
 An example is provided for a hypothetical ``foo()`` function.
 
