@@ -595,32 +595,32 @@ required to implement this interaction.
    * - HIP type
      - CU Driver type
      - CUDA Runtime type
-   * - :cpp:type:``hipModule_t``
+   * - :cpp:type:`hipModule_t`
      - ``CUmodule``
      -
-   * - :cpp:type:``hipFunction_t``
+   * - :cpp:type:`hipFunction_t`
      - ``CUfunction``
      -
-   * - :cpp:type:``hipCtx_t``
+   * - :cpp:type:`hipCtx_t`
      - ``CUcontext``
      -
-   * - :cpp:type:``hipDevice_t``
+   * - :cpp:type:`hipDevice_t`
      - ``CUdevice``
      -
-   * - :cpp:type:``hipStream_t``
+   * - :cpp:type:`hipStream_t`
      - ``CUstream``
      - ``cudaStream_t``
-   * - :cpp:type:``hipEvent_t``
+   * - :cpp:type:`hipEvent_t`
      - ``CUevent``
      - ``cudaEvent_t``
-   * - :cpp:type:``hipArray_t``
+   * - :cpp:type:`hipArray_t`
      - ``CUarray``
      - ``cudaArray``
 
 Compilation options
 -------------------
 
-The :cpp:type:``hipModule_t`` interface does not support the ``cuModuleLoadDataEx`` function,
+The :cpp:type:`hipModule_t` interface does not support the ``cuModuleLoadDataEx`` function,
 which is used to control PTX compilation options. HIP-Clang does not use PTX, so
 it does not support these compilation options. In fact, HIP-Clang code objects contain
 fully compiled code for a device-specific instruction set and don't require additional
