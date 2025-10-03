@@ -122,10 +122,9 @@ runtime and driver APIs.
 Scanning CUDA source to scope the translation
 ---------------------------------------------
 
-The ``--examine`` option, supported by the clang and perl versions, tells hipify
-to do a test-run, without changing the files, but instead scan CUDA code to
-determine which files contain CUDA code and how much of that code can
-automatically be hipified.
+The ``--examine`` option, tells the hipify tools to do a test-run without changing
+the source files, but instead scanning the files to determine which files contain CUDA code and
+how much of that code can automatically be hipified.
 
 There also are ``hipexamine-perl.sh`` or ``hipexamine.sh`` (for
 ``hipify-clang``) scripts to automatically scan directories.
@@ -191,10 +190,10 @@ hipified code to ``stdout``.
 ``hipconvertinplace.sh`` or ``hipconvertinplace-perl.sh`` operate on whole
 directories.
 
-Library equivalents
-===================
+Library and driver equivalents
+==============================
 
-ROCm provides libraries to ease porting of code relying on CUDA libraries.
+ROCm provides libraries to ease porting of code relying on CUDA libraries or the CUDA driver API.
 Most CUDA libraries have a corresponding HIP library. For more information,
 see either :doc:`ROCm libraries <rocm:reference/api-libraries>` or :doc:`HIPIFY CUDA compatible libraries <hipify:reference/supported_apis>`.
 
@@ -213,7 +212,7 @@ which is just a thin layer that redirects function calls to either the
 .. note::
 
   If the application is only required to run on AMD GPUs, it is recommended to use
-  the ``roc``-libraries. In hipify, this can be accomplished using the ``--roc`` option. 
+  the ``roc``-libraries. In hipify tools, this can be accomplished using the ``--roc`` option. 
 
 cuModule and hipModule
 ----------------------
