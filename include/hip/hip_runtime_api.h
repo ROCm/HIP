@@ -6361,9 +6361,9 @@ hipError_t hipModuleGetFunctionCount(unsigned int* count, hipModule_t mod);
  * @param [in] numLibraryOptions Number of library options
  * @return #hipSuccess, #hipErrorInvalidValue,
  */
-hipError_t hipLibraryLoadData(hipLibrary_t* library, const void* code, hipJitOption** jitOptions,
+hipError_t hipLibraryLoadData(hipLibrary_t* library, const void* code, hipJitOption* jitOptions,
                               void** jitOptionsValues, unsigned int numJitOptions,
-                              hipLibraryOption** libraryOptions, void** libraryOptionValues,
+                              hipLibraryOption* libraryOptions, void** libraryOptionValues,
                               unsigned int numLibraryOptions);
 
 /**
@@ -6380,8 +6380,8 @@ hipError_t hipLibraryLoadData(hipLibrary_t* library, const void* code, hipJitOpt
  * @return #hipSuccess, #hipErrorInvalidValue
  */
 hipError_t hipLibraryLoadFromFile(hipLibrary_t* library, const char* fileName,
-                                  hipJitOption** jitOptions, void** jitOptionsValues,
-                                  unsigned int numJitOptions, hipLibraryOption** libraryOptions,
+                                  hipJitOption* jitOptions, void** jitOptionsValues,
+                                  unsigned int numJitOptions, hipLibraryOption* libraryOptions,
                                   void** libraryOptionValues, unsigned int numLibraryOptions);
 
 /**
