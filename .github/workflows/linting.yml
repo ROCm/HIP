@@ -17,4 +17,4 @@ on:
 jobs:
   call-workflow-passing-data:
     name: Documentation
-    uses: ROCm/rocm-docs-core/.github/workflows/linting.yml@rstcheck_test
+    uses: ROCm/rocm-docs-core/.github/workflows/linting.yml@rst_check
