@@ -319,31 +319,42 @@ using the bitcode APIs provided by HIPRTC.
   vector<char> kernel_bitcode(bitCodeSize);
   hiprtcGetBitcode(prog, kernel_bitcode.data());
 
-CU Mode vs WGP mode
+CU mode vs WGP mode
 -------------------------------------------------------------------------------
 
-AMD GPUs consist of an array of workgroup processors, each built with 2 compute
-units (CUs) capable of executing SIMD32. All the CUs inside a workgroup
-processor use local data share (LDS).
+All :doc:`supported AMD GPUs <rocm-install-on-linux:reference/system-requirements>` are built around a data-parallel
+processor (DPP) array.
 
-gfx10+ support execution of wavefront in CU mode and work-group processor mode
-(WGP). Please refer to section 2.3 of `RDNA3 ISA reference <https://www.amd.com/content/dam/amd/en/documents/radeon-tech-docs/instruction-set-architectures/rdna3-shader-instruction-set-architecture-feb-2023_0.pdf>`_.
+On CDNA GPUs, the DPP is organized as a set of compute unit (CU) pipelines, with each CU containing a single SIMD64
+unit. Each CU has its own low-latency memory space called local data share (LDS), which threads from a warp running on
+the CU can access.
 
-gfx9 and below only supports CU mode.
+On RDNA GPUs, the DPP is organized as a set of workgroup processor (WGP) pipelines. Each WGP contains two CUs, and each
+CU contains two SIMD32 units. The LDS is attached to the WGP, so threads from different warps can access the same LDS if
+they run on CUs within the same WGP.
 
-In WGP mode, 4 warps of a block can simultaneously be executed on the workgroup
-processor, where as in CU mode only 2 warps of a block can simultaneously
-execute on a CU. In theory, WGP mode might help with occupancy and increase the
-performance of certain HIP programs (if not bound to inter warp communication),
-but might incur performance penalty on other HIP programs which rely on atomics
-and inter warp communication. This also has effect of how the LDS is split
-between warps, please refer to `RDNA3 ISA reference <https://www.amd.com/content/dam/amd/en/documents/radeon-tech-docs/instruction-set-architectures/rdna3-shader-instruction-set-architecture-feb-2023_0.pdf>`_ for more information.
+.. note::
+  
+  Because CDNA GPUs do not use workgroup processors and have a different CU layout, the following information applies
+  only to RDNA GPUs.
+
+Warps are dispatched in one of two modes. These control whether warps are distributed across two SIMD32s (**CU mode**)
+or across all four SIMD32s within a WGP (**WGP mode**).
+
+CU mode executes two warps per block on a single CU and provides only half the LDS to those warps. Independence between
+CUs can improve performance for workloads avoiding inter-warp communication, but LDS capacity per CU is limited.
+
+WGP mode executes four warps per block on a WGP with a shared LDS. It can increase occupancy and improve performance
+for workloads without heavy inter-warp communication, but it can degrade performance for programs relying on atomics or
+extensive inter-warp communication.
+
+For more information on the differences between CU and WGP modes, please refer to the appropriate ISA reference under
+`AMD RDNA architecture <https://gpuopen.com/amd-gpu-architecture-programming-documentation/>`__.
 
 .. note::
 
-  HIPRTC assumes **WGP mode by default** for gfx10+. This can be overridden by
-  passing ``-mcumode`` to HIPRTC compile options in
-  :cpp:func:`hiprtcCompileProgram`.
+  HIPRTC assumes **WGP mode by default** for RDNA GPUs. This can be overridden by passing ``-mcumode`` as a compile
+  option in :cpp:func:`hiprtcCompileProgram`.
 
 Linker APIs
 ===============================================================================
