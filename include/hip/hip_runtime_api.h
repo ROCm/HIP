@@ -3048,6 +3048,14 @@ hipError_t hipStreamSetAttribute(hipStream_t stream, hipStreamAttrID attr,
 hipError_t hipStreamGetAttribute(hipStream_t stream, hipStreamAttrID attr,
                                  hipStreamAttrValue* value_out);
 
+/**
+ *@brief Copies attributes from source stream to destination stream.
+ * @param[in] dst - Destination stream
+ * @param[in] src - Source stream
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ */
+hipError_t hipStreamCopyAttributes(hipStream_t dst, hipStream_t src);
+
 // end doxygen Stream
 /**
  * @}
