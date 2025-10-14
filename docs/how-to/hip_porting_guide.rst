@@ -1,5 +1,5 @@
 .. meta::
-  :description: This chapter presents how to port the CUDA API to HIP API
+  :description: This chapter presents how to port the CUDA source code to HIP
   :keywords: AMD, ROCm, HIP, CUDA, driver API, porting, port
 
 .. _porting_cuda_code:
