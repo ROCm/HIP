@@ -1,5 +1,5 @@
 .. meta::
-  :description: This chapter presents how to port the CUDA API to HIP API
+  :description: This chapter presents how to port the CUDA source code to HIP
   :keywords: AMD, ROCm, HIP, CUDA, driver API, porting, port
 
 .. _porting_cuda_code:
@@ -13,7 +13,7 @@ environment, enabling you to run your application on AMD GPUs. This topic descri
 the available tools and provides practical suggestions for porting your CUDA
 code and working through common issues.
 
-CUDA provides separate driver and runtime APIs, while HIP uses a single API.
+CUDA provides separate driver and runtime APIs, while HIP mostly uses a single API.
 The two CUDA APIs generally provide similar functionality and are mostly interchangeable.
 However, the CUDA driver API provides fine-grained control over kernel-level
 initialization, contexts, and module management, while the runtime API automatically
