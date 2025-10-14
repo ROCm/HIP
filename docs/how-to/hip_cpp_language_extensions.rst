@@ -998,8 +998,9 @@ Arithmetic reduces:
   T __reduce_max_sync (unsigned long long mask, T var);
 
 ``T`` can be:
-- On Nvidia platform: ``int`` or ``unsigned int``
-- On AMD platform: ``int`` or ``unsigned int``; if the user defines the macro ``HIP_ENABLE_EXTRA_WARP_SYNC_TYPES``, then: ``unsigned long long``, ``long long``, ``half``/``single``/``double`` precision floating
+* On Nvidia platform: ``int`` or ``unsigned int``
+
+* On AMD platform: ``int`` or ``unsigned int``; if the user defines the macro ``HIP_ENABLE_EXTRA_WARP_SYNC_TYPES``, then: ``unsigned long long``, ``long long``, ``half``/``single``/``double`` precision floating
 point types are also be supported.
 
 Returns the aggregated result of the arithmetic operation, where each of the participating threads
@@ -1017,8 +1018,9 @@ Logical reduces:
   T __reduce_xor_sync (unsigned long long mask, T var);
 
 ``T`` can be:
-- On Nvidia platform: ``unsigned int``
-- On AMD platform: ``unsigned int``, and if the user defines the macro ``HIP_ENABLE_EXTRA_WARP_SYNC_TYPES``, then ``int``, ``unsigned long long`` or ``long long`` are also supported
+* On Nvidia platform: ``unsigned int``
+
+* On AMD platform: ``unsigned int``, and if the user defines the macro ``HIP_ENABLE_EXTRA_WARP_SYNC_TYPES``, then ``int``, ``unsigned long long`` or ``long long`` are also supported
 
 Returns the result of the aggregated logical AND/OR/XOR operation where each of the participating threads
 (i.e. the ones mentioned on the mask) contribute ``var``.
@@ -1032,7 +1034,7 @@ Informational note: On the AMD platform, **masks that start from lane zero and h
 exhibit better performance** than masks with "holes" (example of mask with no holes: 0xFF and with holes: 0xFB;
 the reduction with 0xFF is faster).
 
-These functiones do not provide a memory barrier on any platform.
+These functions do not provide a memory barrier on any platform.
 
 Warp matrix functions
 --------------------------------------------------------------------------------
