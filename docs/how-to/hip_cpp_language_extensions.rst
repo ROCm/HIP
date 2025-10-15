@@ -998,6 +998,7 @@ Arithmetic reduces:
   T __reduce_max_sync (unsigned long long mask, T var);
 
 ``T`` can be:
+
 * On Nvidia platform: ``int`` or ``unsigned int``
 
 * On AMD platform: ``int`` or ``unsigned int``; if the user defines the macro ``HIP_ENABLE_EXTRA_WARP_SYNC_TYPES``, then: ``unsigned long long``, ``long long``, ``half``/``single``/``double`` precision floating
@@ -1018,6 +1019,7 @@ Logical reduces:
   T __reduce_xor_sync (unsigned long long mask, T var);
 
 ``T`` can be:
+
 * On Nvidia platform: ``unsigned int``
 
 * On AMD platform: ``unsigned int``, and if the user defines the macro ``HIP_ENABLE_EXTRA_WARP_SYNC_TYPES``, then ``int``, ``unsigned long long`` or ``long long`` are also supported
