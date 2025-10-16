@@ -302,14 +302,14 @@ urllib.request.urlretrieve(
 
 # graph_api
 urllib.request.urlretrieve(
-    "https://raw.githubusercontent.com/ROCm/rocm-examples/amd-staging/HIP-Doc/Tutorials/graph_api/src/main_streams.hip"
+    "https://raw.githubusercontent.com/ROCm/rocm-examples/amd-staging/HIP-Doc/Tutorials/graph_api/src/main_streams.hip",
     "docs/tools/example_codes/graph_api_tutorial_main_streams.hip"
 )
 urllib.request.urlretrieve(
-    "https://raw.githubusercontent.com/ROCm/rocm-examples/amd-staging/HIP-Doc/Tutorials/graph_api/src/main_graph_capture.hip"
+    "https://raw.githubusercontent.com/ROCm/rocm-examples/amd-staging/HIP-Doc/Tutorials/graph_api/src/main_graph_capture.hip",
     "docs/tools/example_codes/graph_api_tutorial_main_graph_capture.hip"
 )
 urllib.request.urlretrieve(
-    "https://raw.githubusercontent.com/ROCm/rocm-examples/amd-staging/HIP-Doc/Tutorials/graph_api/src/main_graph_creation.hip"
+    "https://raw.githubusercontent.com/ROCm/rocm-examples/amd-staging/HIP-Doc/Tutorials/graph_api/src/main_graph_creation.hip",
     "docs/tools/example_codes/graph_api_tutorial_main_graph_creation.hip"
 )
