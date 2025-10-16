@@ -144,7 +144,7 @@ auto main() -> int
                                            << volGeom.dim.z << std::endl;
 
         // Initialize per-stream data
-        for(auto streamIdx = 0; streamIdx < streams.size(); ++streamIdx)
+        for(auto streamIdx = 0u; streamIdx < streams.size(); ++streamIdx)
         {
             std::cout << "Initializing stream " << streamIdx << "... " << std::flush;
             auto stream = streams.at(streamIdx);
@@ -265,7 +265,7 @@ auto main() -> int
 
         auto start = std::chrono::steady_clock::now();
             
-        auto projIdx = 0;
+        auto projIdx = 0u;
         while(projIdx < projGeom.numProj)
         {
             // [sphinx-begin-capture-start]
@@ -283,7 +283,7 @@ auto main() -> int
                 auto forkEvent = hipEvent_t{};
                 hip_check(hipEventCreate(&forkEvent));
                 hip_check(hipEventRecord(forkEvent, streams.at(0)));
-                hip_check(hipStreamWaitEvent(streams.at(streamIdx), forkEvent));
+                hip_check(hipStreamWaitEvent(streams.at(streamIdx), forkEvent, 0));
                 hip_check(hipEventDestroy(forkEvent)); // Can destroy after wait is recorded
             }
             // [sphinx-fork-end]
@@ -438,7 +438,7 @@ auto main() -> int
                 auto joinEvent = hipEvent_t{};
                 hip_check(hipEventCreate(&joinEvent));
                 hip_check(hipEventRecord(joinEvent, streams.at(streamIdx)));
-                hip_check(hipStreamWaitEvent(streams.at(0), joinEvent));
+                hip_check(hipStreamWaitEvent(streams.at(0), joinEvent, 0));
                 hip_check(hipEventDestroy(joinEvent)); // Can destroy after wait is recorded
             }
             // [sphinx-join-end]
@@ -554,7 +554,7 @@ auto main() -> int
         std::cout << "Done!" << std::endl;
         
         auto const elapsed = std::chrono::duration<double>{stop - start};
-        std::cout << "Reconstruction time: " << elapsed << std::endl;
+        std::cout << "Reconstruction time: " << elapsed.count() << 's' << std::endl;
 
         // Cleanup
         if(graphFinalCreated)
