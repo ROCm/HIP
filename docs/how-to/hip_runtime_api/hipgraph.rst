@@ -14,6 +14,10 @@ method via streams. A HIP graph is made up of nodes and edges. The nodes of a
 HIP graph represent the operations performed, while the edges mark dependencies
 between those operations.
 
+.. hint::
+    The :ref:`HIP Graph API tutorial <hip_graph_api_tutorial>` demonstrates how
+    to use HIP graphs in a real-world application.
+
 The nodes can be one of the following:
 
 - empty nodes
