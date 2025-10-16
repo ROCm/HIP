@@ -2,6 +2,8 @@
   :description: HIP graph API tutorial
   :keywords: AMD, ROCm, HIP, graph API, tutorial
 
+.. _hip_graph_api_tutorial:
+
 *******************************************************************************
 HIP Graph API Tutorial
 *******************************************************************************
@@ -108,12 +110,14 @@ The reconstruction pipeline consists of:
 
 1. **Load** projection data into GPU memory
 2. **Preprocess** the projection through six stages:
+
   a. Logarithmic transformation (convert X-ray intensities)
   b. Pixel weighting (correct for cone-beam geometry)
   c. Forward FFT (transform to frequency domain)
   d. Shepp-Logan filtering (enhance edges and improve contrast)
   e. Inverse FFT (return to spatial domain)
   f. Normalization (account for unnormalized FFT)
+
 3. **Reconstruct** the 3D volume using the Feldkamp-Davis-Kress (FDK) algorithm [FeDK84]_
 
 **Why HIP graphs?** CT scanners process hundreds of projections per scan. By capturing this fixed workflow as a graph,
@@ -175,7 +179,7 @@ concepts.
   prefixed with ``main_``.
 
 Step 1: Build the tutorial code
-==========================
+===============================
 
 The full code for this tutorial is part of the `ROCm examples repository <https://github.com/ROCm/rocm-examples>`__.
 Check out the repository:
@@ -332,7 +336,7 @@ Inside the ``build`` directory you will now generate a trace:
 
 .. note::
   For more information on the ``rocprofv3`` tool, please refer to its
-  :ref:`documentation <rocprofiler-sdk:using-rocprov3>`.
+  :ref:`documentation <rocprofiler-sdk:using-rocprofv3>`.
 
 Analyzing the trace
 ^^^^^^^^^^^^^^^^^^^
@@ -381,6 +385,7 @@ Inside the main loop, activate capture mode on the first stream:
   :dedent:
 
 .. admonition:: What happens during capture?
+
   When :cpp:func:`hipStreamBeginCapture` is called, the stream stops executing operations immediately. Instead, it
   records operations into a graph template (``graph`` in the code shown here).
 
@@ -658,5 +663,5 @@ Resources
 
 .. rubric:: References
 
-.. [FeDK84] L. A. Feldkamp, L. C. Davis and J. W. Kress: "Practical cone-beam algorithm". In *Journal of the Optical Society of America A*, vol. 1, no. 6, pp. 612-619, June 1984, DOI `10.1364/JOSAA.1.000612 <https://dx.doi.org/10.1364/JOSAA.1.000612>`__.
-.. [ShLo74] L. A. Shepp and B. F. Logan: "The Fourier reconstruction of a head section". In *IEEE Transactions on Nuclear Science*, vol. 21, no. 3, pp. 21-43, June 1974, DOI `10.1109/TNS.1974.6499235 <https://dx.doi.org/10.1109/TNS.1974.6499235>`__.
+.. [FeDK84] L.A. Feldkamp, L.C. Davis and J.W. Kress: "Practical cone-beam algorithm". In *Journal of the Optical Society of America A*, vol. 1, no. 6, pp. 612-619, June 1984, DOI `10.1364/JOSAA.1.000612 <https://dx.doi.org/10.1364/JOSAA.1.000612>`__.
+.. [ShLo74] L.A. Shepp and B.F. Logan: "The Fourier reconstruction of a head section". In *IEEE Transactions on Nuclear Science*, vol. 21, no. 3, pp. 21-43, June 1974, DOI `10.1109/TNS.1974.6499235 <https://dx.doi.org/10.1109/TNS.1974.6499235>`__.
