@@ -1339,7 +1339,7 @@ Floating-point Intrinsics
         | :math:`y \in [-100, 100]`
       - 0
 
-    * - | ``float __frcp_rn(float x, float y)``
+    * - | ``float __frcp_rn(float x)``
         | Returns ``1 / x`` in round-to-nearest-even mode.
       - :math:`x \in [-100, 100]`
       - 0
@@ -1427,7 +1427,7 @@ Floating-point Intrinsics
         | :math:`y \in [-100, 100]`
       - 0
 
-    * - | ``double __drcp_rn(double x, double y)``
+    * - | ``double __drcp_rn(double x)``
         | Returns ``1 / x`` in round-to-nearest-even mode.
       - :math:`x \in [-100, 100]`
       - 0
