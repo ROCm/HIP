@@ -127,6 +127,7 @@ subtrees:
   - file: tutorial/saxpy
   - file: tutorial/reduction
   - file: tutorial/cooperative_groups_tutorial
+  - file: tutorial/graph_api
 
 - caption: About
   entries:

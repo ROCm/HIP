@@ -297,3 +297,19 @@ urllib.request.urlretrieve(
     "https://raw.githubusercontent.com/ROCm/rocm-examples/amd-staging/HIP-Doc/Reference/Low-Precision-Floating-Point-Types/low_precision_float_fp16/main.hip",
     "docs/tools/example_codes/low_precision_float_fp16.hip"
 )
+
+# Tutorial codes from HIP-Doc / Tutorials
+
+# graph_api
+urllib.request.urlretrieve(
+    "https://raw.githubusercontent.com/ROCm/rocm-examples/amd-staging/HIP-Doc/Tutorials/graph_api/src/main_streams.hip"
+    "docs/tools/example_codes/graph_api_tutorial_main_streams.hip"
+)
+urllib.request.urlretrieve(
+    "https://raw.githubusercontent.com/ROCm/rocm-examples/amd-staging/HIP-Doc/Tutorials/graph_api/src/main_graph_capture.hip"
+    "docs/tools/example_codes/graph_api_tutorial_main_graph_capture.hip"
+)
+urllib.request.urlretrieve(
+    "https://raw.githubusercontent.com/ROCm/rocm-examples/amd-staging/HIP-Doc/Tutorials/graph_api/src/main_graph_creation.hip"
+    "docs/tools/example_codes/graph_api_tutorial_main_graph_creation.hip"
+)
