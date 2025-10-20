@@ -40,10 +40,11 @@
     }                                                \
 }
 
-__global__ void simpleKernel(double *data)
+__global__ void simpleKernel(double *data, std::size_t elems)
 {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    data[idx] = idx * 2.0;
+    if(idx < elems)
+        data[idx] = idx * 2.0;
 }
 
 int main()
@@ -57,8 +58,10 @@ int main()
         return EXIT_SUCCESS;
     }
 
-    double *deviceData0, *deviceData1;
-    std::size_t size = 1024 * sizeof(*deviceData0);
+    double *deviceData0;
+    double *deviceData1;
+    constexpr std::size_t elems = 1024;
+    constexpr std::size_t size = elems * sizeof(double);
 
     // Create streams and events for each device
     hipStream_t stream0, stream1;
@@ -83,7 +86,7 @@ int main()
     HIP_CHECK(hipEventRecord(startEvent0, stream0));
 
     // Launch the kernel asynchronously on device 0
-    simpleKernel<<<1000, 128, 0, stream0>>>(deviceData0);
+    simpleKernel<<<8, 128, 0, stream0>>>(deviceData0, elems);
 
     // Record the stop event on device 0
     HIP_CHECK(hipEventRecord(stopEvent0, stream0));
@@ -96,7 +99,7 @@ int main()
     HIP_CHECK(hipEventRecord(startEvent1, stream1));
 
     // Launch the kernel asynchronously on device 1
-    simpleKernel<<<1000, 128, 0, stream1>>>(deviceData1);
+    simpleKernel<<<8, 128, 0, stream1>>>(deviceData1, elems);
 
     // Record the stop event on device 1
     HIP_CHECK(hipEventRecord(stopEvent1, stream1));

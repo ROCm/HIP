@@ -40,10 +40,11 @@
     }                                                \
 }
 
-__global__ void simpleKernel(double *data)
+__global__ void simpleKernel(double *data, std::size_t elems)
 {
-    int idx   = blockIdx.x * blockDim.x + threadIdx.x;
-    data[idx] = idx * 2.0;
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if(idx < elems)
+        data[idx] = idx * 2.0;
 }
 
 int main()
@@ -58,7 +59,8 @@ int main()
 
     double* deviceData0;
     double* deviceData1;
-    std::size_t size = 1024 * sizeof(*deviceData0);
+    constexpr std::size_t elems = 1024;
+    constexpr std::size_t size = elems * sizeof(double);
 
     int deviceId0 = 0;
     int deviceId1 = 1;
@@ -74,13 +76,13 @@ int main()
     // Set device 0 and perform operations
     HIP_CHECK(hipSetDevice(deviceId0)); // Set device 0 as current
     HIP_CHECK(hipMalloc(&deviceData0, size)); // Allocate memory on device 0
-    simpleKernel<<<1000, 128>>>(deviceData0); // Launch kernel on device 0
+    simpleKernel<<<8, 128>>>(deviceData0, elems); // Launch kernel on device 0
     HIP_CHECK(hipDeviceSynchronize());
 
     // Set device 1 and perform operations
     HIP_CHECK(hipSetDevice(deviceId1)); // Set device 1 as current
     HIP_CHECK(hipMalloc(&deviceData1, size)); // Allocate memory on device 1
-    simpleKernel<<<1000, 128>>>(deviceData1); // Launch kernel on device 1
+    simpleKernel<<<8, 128>>>(deviceData1, elems); // Launch kernel on device 1
     HIP_CHECK(hipDeviceSynchronize());
 
     // Use peer-to-peer access
@@ -90,12 +92,12 @@ int main()
     HIP_CHECK(hipMemcpy(deviceData0, deviceData1, size, hipMemcpyDeviceToDevice));
 
     // Copy result from device 0
-    double hostData0[1024];
+    double hostData0[elems];
     HIP_CHECK(hipSetDevice(deviceId0));
     HIP_CHECK(hipMemcpy(hostData0, deviceData0, size, hipMemcpyDeviceToHost));
 
     // Copy result from device 1
-    double hostData1[1024];
+    double hostData1[elems];
     HIP_CHECK(hipSetDevice(deviceId1));
     HIP_CHECK(hipMemcpy(hostData1, deviceData1, size, hipMemcpyDeviceToHost));
 
