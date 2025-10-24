@@ -49,7 +49,7 @@ and :doc:`GPU isolation <rocm:conceptual/gpu-isolation>`.
         | 0x20000: Memory allocation.
         | 0x40000: Memory pool allocation, including memory in graphs.
         | 0x80000: Timestamp details.
-        | 0x100000: Comgr path information print
+        | 0x100000: Comgr path information print.
         | 0xFFFFFFFF: Log always even mask flag is zero.
 
     * - | ``HIP_FORCE_DEV_KERNARG``
