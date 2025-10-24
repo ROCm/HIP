@@ -27,7 +27,7 @@ and :doc:`GPU isolation <rocm:conceptual/gpu-isolation>`.
       -
 
     * - | ``AMD_LOG_MASK``
-        | Specifies HIP log filters. Here is the ` complete list of log masks <https://github.com/ROCm/rocm-systems/blob/develop/projects/clr/rocclr/utils/debug.hpp#L48>`_.
+        | Specifies HIP log filters. Here is the `complete list of log masks <https://github.com/ROCm/rocm-systems/blob/develop/projects/clr/rocclr/utils/debug.hpp#L48>`_.
       - ``0x7FFFFFFF``
       - | 0x1: Log API calls.
         | 0x2: Kernel and copy commands and barriers.
