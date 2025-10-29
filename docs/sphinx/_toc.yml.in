@@ -58,7 +58,6 @@ subtrees:
   - file: how-to/hip_cpp_language_extensions
   - file: how-to/kernel_language_cpp_support
   - file: how-to/hip_porting_guide
-  - file: how-to/hip_porting_driver_api
   - file: how-to/hip_rtc
   - file: understand/amd_clr
 
@@ -127,6 +126,7 @@ subtrees:
   - file: tutorial/saxpy
   - file: tutorial/reduction
   - file: tutorial/cooperative_groups_tutorial
+  - file: tutorial/graph_api
 
 - caption: About
   entries:

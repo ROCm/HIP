@@ -27,7 +27,7 @@ and :doc:`GPU isolation <rocm:conceptual/gpu-isolation>`.
       -
 
     * - | ``AMD_LOG_MASK``
-        | Specifies HIP log filters. Here is the ` complete list of log masks <https://github.com/ROCm/clr/blob/develop/rocclr/utils/debug.hpp#L40>`_.
+        | Specifies HIP log filters. Here is the `complete list of log masks <https://github.com/ROCm/rocm-systems/blob/develop/projects/clr/rocclr/utils/debug.hpp#L48>`_.
       - ``0x7FFFFFFF``
       - | 0x1: Log API calls.
         | 0x2: Kernel and copy commands and barriers.
@@ -49,7 +49,15 @@ and :doc:`GPU isolation <rocm:conceptual/gpu-isolation>`.
         | 0x20000: Memory allocation.
         | 0x40000: Memory pool allocation, including memory in graphs.
         | 0x80000: Timestamp details.
+        | 0x100000: Comgr path information print.
         | 0xFFFFFFFF: Log always even mask flag is zero.
+
+    * - | ``HIP_FORCE_DEV_KERNARG``
+        | Forces kernel arguments to be stored in device memory to reduce latency.
+        | Can improve performance by 2-3 µs for some kernels.
+      - ``1``
+      - | 0: Disable
+        | 1: Enable
 
     * - | ``HIP_LAUNCH_BLOCKING``
         | Used for serialization on kernel execution.
