@@ -899,7 +899,10 @@ enum hipLimit_t {
  * can be obtained with #hipHostGetDevicePointer.*/
 #define hipHostRegisterMapped 0x2
 
-/** Not supported.*/
+/** The passed memory pointer is treated as pointing to some memory-mapped I/O space, e.g.
+ * belonging to a third-party PCIe device, and it will be marked as non cache-coherent and 
+ * contiguous.
+ * */
 #define hipHostRegisterIoMemory 0x4
 
 /** This flag is ignored On AMD devices.*/
