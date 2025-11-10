@@ -59,7 +59,3 @@ exclude_patterns = [
     './how-to/debugging_env.rst',
     "./reference/env_variables"
 ]
-
-git_url = subprocess.check_output(['git', 'config', '--get', 'remote.origin.url']).strip().decode('ascii')
-if git_url.find("git:") != -1:
-    html_theme_options = {"repository_url": "https://github.com/ROCm/hip"}
