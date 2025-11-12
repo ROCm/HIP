@@ -6467,6 +6467,19 @@ hipError_t hipKernelGetLibrary(hipLibrary_t* library, hipKernel_t kernel);
 hipError_t hipKernelGetName(const char** name, hipKernel_t kernel);
 
 /**
+ * @brief Returns the offset and size of a kernel parameter
+ *
+ * @param [in] kernel       Kernel handle to retrieve parameter info
+ * @param [in] paramIndex   Index of the parameter
+ * @param [out] paramOffset returns the offset of the parameter
+ * @param [out] paramSize   Optionally returns the size of the parameter
+ *
+ * @return #hipSuccess, #hipErrorInvalidValue
+*/
+hipError_t hipKernelGetParamInfo(hipKernel_t kernel, size_t paramIndex, size_t* paramOffset,
+                                 size_t* paramSize);
+
+/**
  * @brief Find out attributes for a given function.
  * @ingroup Execution
  * @param [out] attr  Attributes of funtion
