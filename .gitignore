@@ -1,6 +1,8 @@
 .*
 !.gitignore
+!..markdownlint-cli2.yaml
 !.spellcheck.local.yaml
+!.wordlist.txt
 *.o
 *.exe
 *.swp

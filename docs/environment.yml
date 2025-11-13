@@ -7,4 +7,4 @@ dependencies:
   - pip
   - doxygen=1.9.8
   - pip:
-    - -r ./sphinx/requirements.txt
+    - -r ./docs/sphinx/requirements.txt
