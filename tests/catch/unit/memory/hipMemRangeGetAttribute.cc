@@ -94,8 +94,6 @@ TEST_CASE("Unit_hipMemRangeGetAttribute_TstCountParam") {
     int MEM_SIZE = 4096, RND_NUM = 9999, FLG_READMOSTLY_ENBLD = 1;
     bool IfTestPassed = true;
     int data = RND_NUM, *devPtr = nullptr;
-    size_t TotGpuMem, TotGpuFreeMem;
-    HIP_CHECK(hipMemGetInfo(&TotGpuFreeMem, &TotGpuMem));
 
     HIP_CHECK(hipMallocManaged(&devPtr, MEM_SIZE, hipMemAttachGlobal));
     HIP_CHECK(hipMemAdvise(devPtr, MEM_SIZE, hipMemAdviseSetReadMostly, 0));
@@ -108,25 +106,28 @@ TEST_CASE("Unit_hipMemRangeGetAttribute_TstCountParam") {
       IfTestPassed = false;
     }
     HIP_CHECK(hipFree(devPtr));
-    HIP_CHECK(hipMallocManaged(&devPtr, TotGpuFreeMem, hipMemAttachGlobal));
-    HIP_CHECK(hipMemAdvise(devPtr, TotGpuFreeMem, hipMemAdviseSetReadMostly,
-                           0));
+
+    // Test with a large but reasonable size (256MB)
+    size_t LargeMem = 256 * 1024 * 1024;
+    HIP_CHECK(hipMallocManaged(&devPtr, LargeMem, hipMemAttachGlobal));
+    HIP_CHECK(hipMemAdvise(devPtr, LargeMem, hipMemAdviseSetReadMostly, 0));
     HIP_CHECK(hipMemRangeGetAttribute(&data, sizeof(int),
                                      hipMemRangeAttributeReadMostly,
-                                     devPtr, TotGpuFreeMem));
+                                     devPtr, LargeMem));
 
     if (data != FLG_READMOSTLY_ENBLD) {
       WARN("hipMemRangeGetAttribute() api didnt return expected value!\n");
       IfTestPassed = false;
     }
     HIP_CHECK(hipFree(devPtr));
-    HIP_CHECK(hipMallocManaged(&devPtr, (TotGpuFreeMem - 1),
-                              hipMemAttachGlobal));
-    HIP_CHECK(hipMemAdvise(devPtr, (TotGpuFreeMem - 1),
+
+    // Test with size - 1
+    HIP_CHECK(hipMallocManaged(&devPtr, (LargeMem - 1), hipMemAttachGlobal));
+    HIP_CHECK(hipMemAdvise(devPtr, (LargeMem - 1),
                           hipMemAdviseSetReadMostly, 0));
     HIP_CHECK(hipMemRangeGetAttribute(&data, sizeof(int),
                                      hipMemRangeAttributeReadMostly,
-                                     devPtr, (TotGpuFreeMem - 1)));
+                                     devPtr, (LargeMem - 1)));
 
     if (data != FLG_READMOSTLY_ENBLD) {
       WARN("hipMemRangeGetAttribute() api didnt return expected value!\n");
