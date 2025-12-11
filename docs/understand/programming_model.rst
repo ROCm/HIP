@@ -271,10 +271,16 @@ depicted in the following figure.
 .. _wavefront:
 
 Warp (or Wavefront)
-  The innermost grouping of threads is called a warp. A warp is the most tightly
-  coupled groups of threads, both physically and logically. Threads inside a warp
-  are executed in lockstep, with each thread executing the same instruction. Threads
-  in a warp are also called lanes, and the value identifying them is the lane ID.
+  The innermost grouping of threads is called a warp (NVIDIA terminology) or 
+  wavefront (AMD terminology). A wavefront is the most tightly coupled group of 
+  threads, both physically and logically. Threads within a wavefront are
+  executed in lockstep, with each thread executing the same instruction
+  simultaneously on different data elements.
+  
+  A wavefront represents the fundamental execution unit of AMD GPUs. Each wavefront 
+  consists of multiple parallel threads that execute the same instruction 
+  simultaneously across the SIMD pipelines of a compute unit. Threads in a wavefront 
+  are also called lanes, and the value identifying them is the lane ID.
 
   .. tip::
 
@@ -282,22 +288,39 @@ Warp (or Wavefront)
     consequence, they are only as multidimensional as the user interprets the
     calculated values to be.
 
-  The size of a warp is architecture dependent and always fixed. For AMD GPUs
-  the warp is typically 64 threads, though sometimes 32 threads. Warps are
-  signified by the set of communication primitives at their disposal, as
-  discussed in :ref:`warp-cross-lane`.
+  The size of a wavefront is architecture dependent and always fixed:
+  
+  * **64 threads** for AMD GCN and CDNA architectures as well as RDNA architectures in wave64 mode
+  * **32 threads** for AMD RDNA architectures in wave32 mode
+  * **32 threads** for NVIDIA GPUs
+  
+  Wavefronts are signified by the set of communication primitives at their disposal, 
+  as discussed in :ref:`warp-cross-lane`. On modern AMD datacenter GPUs like MI300X, 
+  each CU can support up to 64 concurrent wavefronts, each containing 64 threads, 
+  for a total of over 4,000 active threads per CU.
 
 .. _inherent_thread_hierarchy_block:
 
-Block
-  The next level of the thread hierarchy is called a thread block, or block. The
-  defining feature of a block is that all threads in the block have shared memory
-  that they can use to share data or synchronize with one another, as described in
-  :ref:`memory_hierarchy`.
+Block (Work-group)
+  The next level of the thread hierarchy is called a thread block (or work-group in 
+  OpenCL terminology). A block is a collection of wavefronts that can synchronize 
+  and share local data share (LDS) memory. The defining feature of a block is that 
+  all threads in the block have shared memory that they can use to share data or 
+  synchronize with one another, as described in :ref:`memory_hierarchy`.
+  
+  All wavefronts of a block execute on the same compute unit, ensuring they 
+  can access the same LDS and synchronize efficiently. This locality is crucial 
+  for performance when threads need to cooperate on shared data.
 
   The size of a block, or the block dimension, is the user-configurable number of
   threads per block, but is limited by the queryable capabilities of the executing
-  hardware. The unique ID of the thread within a block can be 1, 2, or 3-dimensional
+  hardware. Common limits include:
+  
+  * Maximum threads per block: typically 1024
+  * Maximum block dimensions: 1024 x 1024 x 64 (x, y, z)
+  * Limited by available resources (registers, LDS, wavefront slots)
+  
+  The unique ID of the thread within a block can be 1, 2, or 3-dimensional
   as provided by the HIP API. You can configure the thread block to best represent
   the data associated with the kernel instruction set. 
   
@@ -308,10 +331,24 @@ Block
 .. _inherent_thread_hierarchy_grid:
 
 Grid
-  The top-most level of the thread hierarchy is a grid. A grid is the number of blocks
-  needed for a single launch of the kernel. The unique ID of each block within
-  a grid can be 1, 2, or 3-dimensional, as provided by the API and is queryable
-  by every thread within the block.
+  The top-most level of the thread hierarchy is a grid. A grid represents the total 
+  collection of blocks (work-groups) launched for a single kernel execution. It defines 
+  the overall problem size and how work is distributed across the GPU.
+  
+  The grid is specified when launching a kernel and determines:
+  
+  * Total number of threads: ``grid_size`` × ``block_size``
+  * Distribution of work across compute units
+  * Overall parallelism of the computation
+  
+  The unique ID of each block within a grid can be 1, 2, or 3-dimensional, as provided 
+  by the API and is queryable by every thread within the block through the ``blockIdx`` 
+  built-in variable.
+  
+  Grid dimensions are limited by hardware capabilities:
+  
+  * Maximum x-dimension: 2³¹ - 1
+  * Maximum y and z-dimensions: 2¹⁶ - 1 (65,535)
 
 The three-dimensional thread hierarchy available to a kernel program lends itself to solutions
 that align closely to the computational problem. The following are some examples: 

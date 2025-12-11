@@ -1,7 +1,7 @@
 .. meta::
   :description: This chapter describes a set of best practices designed to help
    developers optimize the performance of HIP-capable GPU architectures.
-  :keywords: AMD, ROCm, HIP, CUDA, performance, guidelines
+  :keywords: AMD, ROCm, HIP, CUDA, performance, guidelines, optimization, how-to
 
 .. _how_to_performance_guidelines:
 
@@ -9,313 +9,619 @@
 Performance guidelines
 *******************************************************************************
 
-The AMD HIP performance guidelines are a set of best practices designed to help
-you optimize the application performance on AMDGPUs. The guidelines discuss
-established parallelization and optimization techniques to improve the
-application performance on HIP-capable GPU architectures.
+The AMD HIP performance guidelines provide practical, actionable techniques for
+optimizing application performance on AMD GPUs. This guide focuses on 
+step-by-step instructions and best practices for improving performance.
 
-Here are the four main cornerstones to help you exploit HIP's performance
-optimization potential:
+For theoretical foundations and performance concepts, see 
+:doc:`../understand/performance_optimization`.
 
-- Parallel execution
-- Memory bandwidth usage optimization
-- Maximum throughput optimization
-- Memory thrashing minimization
+Optimization workflow
+=====================
 
-This document discusses the usage and benefits of these cornerstones in detail.
+Follow this systematic approach to optimize GPU performance:
+
+1. **Profile and measure baseline**
+   
+   Use ``rocprofv3`` to identify bottlenecks:
+   
+   .. code-block:: bash
+   
+      rocprofv3 --stats ./your_application
+   
+   Collect metrics on kernel execution time, memory bandwidth, occupancy, and 
+   CU utilization.
+
+2. **Analyze metrics to identify bottlenecks**
+   
+   Determine if kernels are compute-bound or memory-bound. Check arithmetic 
+   intensity, memory bandwidth achieved vs peak, and compute throughput.
+   
+   For understanding the roofline model, see :ref:`roofline_model`.
+
+3. **Apply targeted optimizations**
+   
+   Based on identified bottlenecks, apply techniques from this guide.
+
+4. **Verify improvements**
+   
+   Re-profile to confirm performance gains.
+
+5. **Iterate**
+   
+   Repeat until performance goals are met.
 
 .. _parallel execution:
 
 Parallel execution
-================================================================================
+==================
 
 For optimal use and to keep all system components busy, the application must
-reveal and efficiently provide as much parallelism as possible. The parallelism
-can be performed at the application level, device level, and multiprocessor
-level.
-
-.. _application_parallel_execution:
+reveal and efficiently provide as much parallelism as possible.
 
 Application level
---------------------------------------------------------------------------------
+-----------------
 
-To enable parallel execution of the application across the host and devices, use
-:ref:`asynchronous calls and streams <asynchronous_how-to>`. Assign workloads
-based on efficiency: serial to the host or parallel to the devices.
+To enable parallel execution across the host and devices:
 
-For parallel workloads, when threads belonging to the same block need to
-synchronize to share data, use :cpp:func:`__syncthreads()` (see:
-:ref:`synchronization_functions`) within the same kernel invocation. For threads
-belonging to different blocks, use global memory with two separate
-kernel invocations. It is recommended to avoid the latter approach as it adds
-overhead.
+* Use :ref:`asynchronous calls and streams <asynchronous_how-to>`
+* Assign serial workloads to the host
+* Assign parallel workloads to the devices
+
+For parallel workloads:
+
+* Use :cpp:func:`__syncthreads()` (see :ref:`synchronization_functions`) for 
+  intra-block synchronization
+* Use global memory with separate kernel invocations for inter-block 
+  synchronization (has overhead, minimize when possible)
 
 Device level
---------------------------------------------------------------------------------
+------------
 
-Device level optimization primarily involves maximizing parallel execution
-across the multiprocessors on the device. You can achieve device level
-optimization by executing multiple kernels concurrently on a device. To enhance
-performance, the management of these kernels is facilitated by streams, which
-allows overlapping of computation and data transfers. This approach aims at
-keeping all multiprocessors busy by executing enough kernels concurrently.
-However, launching too many kernels can lead to resource contention, hence a
-balance must be found for optimal performance. The device level optimization
-helps in achieving maximum utilization of the device resources.
+Maximize parallel execution across multiprocessors:
+
+* Execute multiple kernels concurrently on a device
+* Use streams to overlap computation and data transfers
+* Keep all multiprocessors busy with enough concurrent kernels
+* Avoid launching too many kernels (causes resource contention)
 
 Multiprocessor level
---------------------------------------------------------------------------------
+--------------------
 
-Multiprocessor level optimization involves maximizing parallel execution within
-each multiprocessor on a device. The key to multiprocessor level optimization
-is to efficiently utilize the various functional units within a multiprocessor.
-For example, ensuring a sufficient number of resident warps, so that every clock
-cycle has an instruction from a warp is ready for execution. This instruction
-could either be another independent instruction of the same warp, which exploits
-:ref:`instruction level optimization <instruction optimization>`, or more
-commonly an instruction of another warp, which exploits thread-level parallelism.
+Maximize parallel execution within each multiprocessor:
 
-On the other hand, device level optimization focuses on the device as a whole,
-aiming at keeping all multiprocessors busy by executing enough kernels
-concurrently. Both multiprocessor and device levels of optimization are crucial
-for achieving maximum performance. They work together to ensure efficient
-utilization of the GPU resources, ranging from individual multiprocessors to the
-device as a whole.
+* Ensure sufficient resident warps for every clock cycle
+* Exploit instruction-level parallelism within warps
+* Exploit thread-level parallelism across warps
+* Balance resource usage for optimal occupancy
 
 .. _memory optimization:
 
 Memory throughput optimization
-================================================================================
+==============================
 
 The first step in maximizing memory throughput is to minimize low-bandwidth
 data transfers between the host and the device.
 
-Additionally, maximize the use of on-chip memory, that is, shared memory and
-caches, and minimize transfers with global memory. Shared memory acts as a
-user-managed cache explicitly allocated and accessed by the application. A
-common programming pattern is to stage data from device memory into shared
-memory. The staging of data from the device to shared memory involves the
-following steps:
-
-1. Each thread of a block loading data from device memory to shared memory.
-2. Synchronizing with all other threads of the block.
-3. Processing the data stored in shared memory.
-4. Synchronizing again if necessary.
-5. Writing the results back to the device global memory.
-
-For some applications, a traditional hardware-managed cache is more appropriate
-for exploiting data locality.
-
-In conclusion, the throughput of memory accesses by a kernel can vary
-significantly depending on the access pattern. Therefore, the next step in
-maximizing memory throughput is to organize memory accesses as optimally as
-possible. This is especially important for global memory accesses, as global
-memory bandwidth is low compared to available on-chip bandwidths and arithmetic
-instruction throughput. Thus, non-optimal global memory accesses generally have
-a high impact on performance.
-The memory throughput optimization techniques are further discussed in detail in
-the following sections.
+Additionally, maximize the use of on-chip memory (shared memory and caches) and 
+minimize transfers with global memory.
 
 .. _data transfer:
 
-Data transfer
---------------------------------------------------------------------------------
+Data transfer optimization
+--------------------------
 
-To minimize data transfers between the host and the device, applications should
-move more computations from the host to the device, even at the cost of running
-kernels that don't fully utilize parallelism for the device. Intermediate data
-structures should be created, used, and discarded in device memory without being
-mapped or copied to host memory.
+**Minimize host-device transfers**
 
-Batching small transfers into a single large transfer can improve performance
-due to the overhead associated with each transfer. On systems with a front-side
-bus, using page-locked host memory can enhance data transfer performance.
+* Move computations from host to device when possible
+* Create, use, and discard intermediate data structures on device
+* Avoid unnecessary copies to host memory
 
-When using mapped page-locked memory, there is no need to allocate device
-memory or explicitly copy data between device and host memory. Data transfers
-occur implicitly each time the kernel accesses the mapped memory. For optimal
-performance, these memory accesses should be coalesced, similar to global
-memory accesses. The process where threads in a warp access sequential memory
-locations is known as coalesced memory access, which can enhance memory data
-transfer efficiency.
+**Batch small transfers**
 
-On integrated systems where device and host memory are physically the same, no
-copy operation between host and device memory is required and hence mapped
-page-locked memory should be used instead. To check if the device is integrated,
-applications can query the integrated device property.
+Each memory transfer incurs a fixed overhead from driver calls and PCIe
+transaction setup. Consolidating many small transfers into a single large
+transfer amortizes this overhead across more data, resulting in much higher
+effective bandwidth.
+
+.. code-block:: cuda
+
+   // Instead of many small transfers
+   for (int i = 0; i < n; i++) {
+       hipMemcpy(&d_data[i], &h_data[i], sizeof(float), ...);
+   }
+   
+   // Use a single large transfer
+   hipMemcpy(d_data, h_data, n * sizeof(float), ...);
+
+**Use page-locked memory for transfers**
+
+Page-locked (pinned) memory cannot be swapped to disk by the operating system, 
+allowing the GPU to access it directly via DMA without CPU involvement. This 
+eliminates an extra copy through a staging buffer and achieves higher bandwidth.
+
+.. code-block:: cuda
+
+   float* h_pinned;
+   hipHostMalloc(&h_pinned, size);
+   // Faster transfers than pageable memory
+   hipMemcpy(d_data, h_pinned, size, hipMemcpyHostToDevice);
+
+**Use mapped memory on integrated systems**
+
+On integrated GPUs (APUs), the CPU and GPU share the same physical memory. 
+Mapped page-locked memory allows zero-copy access, where the GPU reads directly 
+from host memory without requiring an explicit transfer, eliminating redundant copies.
+
+.. code-block:: cuda
+
+   int integrated;
+   hipDeviceGetAttribute(&integrated, hipDeviceAttributeIntegrated, device);
+   if (integrated) {
+       // Use mapped page-locked memory - no explicit copy needed
+       hipHostMalloc(&ptr, size, hipHostMallocMapped);
+   }
 
 .. _device memory access:
 
 Device memory access
----------------------
+--------------------
 
-Memory access instructions might be repeated due to the spread of memory
-addresses across warp threads. The impact on throughput varies with memory type
-and is generally reduced when addresses are more scattered, especially in
-global memory.
+**Ensure proper alignment**
 
-Device memory is accessed via 32-, 64-, or 128-byte transactions that must be
-naturally aligned.
-Maximizing memory throughput involves:
+Memory hardware loads data in aligned chunks (typically 128 bytes). Using 
+naturally aligned data types ensures each access maps to a single memory 
+transaction, maximizing bandwidth and avoiding split transactions.
 
-- Coalescing memory accesses of threads within a warp into minimal transactions.
-- Following optimal access patterns.
-- Using properly sized and aligned data types.
-- Padding data when necessary.
+.. code-block:: cuda
 
-Global memory instructions support reading or writing data of specific sizes (1,
-2, 4, 8, or 16 bytes) that are naturally aligned. Not meeting the size and
-alignment requirements leads to multiple instructions, which reduces
-performance. Therefore, for correct results and optimal performance:
+   // Use naturally aligned types
+   float4 data;  // 16-byte aligned
+   float2 data;  // 8-byte aligned
+   
+   // Ensure structure alignment
+   struct __align__(16) MyStruct {
+       float4 data;
+   };
 
-- Use data types that meet these requirements
-- Ensure alignment for structures
-- Maintain alignment for all values or arrays.
+**Optimize 2D array access**
 
-Threads often access 2D arrays at an address calculated as
-``BaseAddress + xIndex + width * yIndex``. For efficient memory access, the
-array and thread block widths should be multiples of the warp size. If the
-array width is not a multiple of the warp size, it is usually more efficient to
-allocate the array with a width rounded up to the nearest multiple and pad the
-rows accordingly.
+Padding 2D arrays to multiples of the wavefront size ensures each row starts 
+at an aligned memory boundary. This allows consecutive threads accessing the 
+same row to generate coalesced memory transactions, thereby maximizing
+bandwidth.
 
-Local memory is used for certain automatic variables, such as arrays with
-non-constant indices, large structures of arrays, and any variable where the
-kernel uses more registers than available. Local memory resides in device
-memory, which leads to high latency and low bandwidth, similar to global memory
-accesses. However, the local memory is organized for consecutive 32-bit words to
-be accessed by consecutive thread IDs, which allows full coalescing when all
-threads in a warp access the same relative address.
+.. code-block:: cuda
 
-Shared memory is located on-chip and provides higher bandwidth and lower latency
-than local or global memory. It is divided into banks that can be simultaneously
-accessed, which boosts bandwidth. However, bank conflicts, where two addresses
-fall in the same bank, lead to serialized access and decreased throughput.
-Therefore, understanding how memory addresses map to banks and scheduling
-requests to minimize conflicts is crucial for optimal performance.
+   // Ensure array width is multiple of warp size
+   int width = ((actual_width + warpSize - 1) / warpSize) * warpSize;
+   hipMalloc(&array, width * height * sizeof(float));
+   
+   // Access pattern
+   int idx = x + width * y;  // width should be warp-aligned
 
-Constant memory is in the device memory and cached in the constant cache.
-Requests are split based on different memory addresses and are serviced based
-either on the throughput of the constant cache for cache hits or on the
-throughput of the device memory otherwise. This splitting of requests affects
-throughput.
+**Coalesce memory accesses**
 
-Texture and surface memory are stored in the device memory and cached in the
-texture cache. This setup optimizes 2D spatial locality, which leads to better
-performance for threads reading close 2D addresses.
-Reading device memory through texture or surface fetching provides the following
-advantages:
+When consecutive threads in a wavefront access consecutive memory addresses, 
+the hardware combines these into a single wide transaction. Non-coalesced 
+patterns require multiple transactions, reducing effective bandwidth.
 
-- Higher bandwidth for local texture fetches or surface reads.
-- Offloading addressing calculation.
-- Data broadcasting.
-- Optional conversion of 8-bit and 16-bit integer input data to 32-bit
-  floating-point values on the fly.
+.. code-block:: cuda
+
+   // Good: consecutive threads access consecutive addresses
+   int idx = threadIdx.x + blockIdx.x * blockDim.x;
+   data[idx] = value;
+   
+   // Bad: strided access
+   int idx = threadIdx.x * stride;  // Non-coalesced if stride > 1
+   data[idx] = value;
+
+For understanding memory coalescing theory, see :ref:`memory_hierarchy_theory`.
+
+**Use shared memory for data reuse**
+
+Shared memory (LDS) provides low-latency on-chip storage shared across threads 
+in a block. Loading data into shared memory once and reusing it many times 
+reduces global memory traffic, particularly effective for tiled algorithms such
+as matrix multiplication.
+
+.. code-block:: cuda
+
+   __global__ void optimized_kernel(float* input, float* output) {
+       __shared__ float tile[TILE_SIZE][TILE_SIZE];
+       
+       // Load data into shared memory
+       tile[threadIdx.y][threadIdx.x] = input[...];
+       __syncthreads();
+       
+       // Reuse data from fast shared memory
+       float result = 0;
+       for (int i = 0; i < TILE_SIZE; i++) {
+           result += tile[threadIdx.y][i] * tile[i][threadIdx.x];
+       }
+       __syncthreads();
+       
+       output[...] = result;
+   }
+
+**Avoid bank conflicts in shared memory**
+
+Shared memory is organized into banks, each capable of servicing one request per
+cycle. When multiple threads in a warp access the same bank simultaneously, the
+requests are serialized, reducing throughput. Padding arrays by one element
+shifts addresses to avoid systematic conflicts.
+
+.. code-block:: cuda
+
+   // Bad: power-of-2 stride causes conflicts
+   __shared__ float data[32][32];
+   float value = data[threadIdx.x][threadIdx.y];
+   
+   // Good: padding avoids conflicts
+   __shared__ float data[32][33];  // Extra column
+   float value = data[threadIdx.x][threadIdx.y];
+
+For bank conflict theory, see :ref:`bank_conflicts_theory`.
+
+**Use texture memory for 2D spatial access**
+
+Texture memory provides hardware-accelerated 2D filtering and caching optimized 
+for spatial locality. It automatically handles boundary conditions and can 
+interpolate values, making it ideal for image processing and nearby-neighbor access patterns.
+
+.. code-block:: cuda
+
+   // Create texture object
+   hipTextureObject_t texObj;
+   hipCreateTextureObject(&texObj, &resDesc, &texDesc, NULL);
+   
+   // Access in kernel
+   float value = tex2D<float>(texObj, x, y);
 
 .. _instruction optimization:
 
-Optimization for maximum instruction throughput
-================================================================================
-
-To maximize instruction throughput:
-
-- Minimize low throughput arithmetic instructions.
-- Minimize divergent warps inflicted by flow control instructions.
-- Maximize instruction parallelism.
-
-These techniques are discussed in detail in the following sections.
+Instruction throughput optimization
+====================================
 
 Arithmetic instructions
---------------------------------------------------------------------------------
+-----------------------
 
-The type and complexity of arithmetic operations can significantly impact the
-performance of your application. We are highlighting some hints how to maximize
-it.
+**Use efficient operations**
 
-Use efficient operations: Some arithmetic operations are costlier than others.
-For example, multiplication is typically faster than division, and integer
-operations are usually faster than floating-point operations, especially with
-double precision.
+Division requires many more hardware cycles than multiplication. Similarly, 
+bitwise operations (shifts, AND, OR) are single-cycle instructions on integer 
+units, making them far more efficient than equivalent arithmetic for power-of-two calculations.
 
-Minimize low-throughput instructions: This might involve trading precision for
-speed when it does not affect the final result. For instance, consider using
-single-precision arithmetic instead of double-precision.
+.. code-block:: cuda
 
-Leverage intrinsic functions: Intrinsic functions are predefined functions
-available in HIP that can often be executed faster than equivalent arithmetic
-operations (subject to some input or accuracy restrictions). They can help
-optimize performance by replacing more complex arithmetic operations.
+   // Prefer multiplication over division
+   float result = value * 0.5f;     // Fast
+   float result = value / 2.0f;     // Slower
+   
+   // Use bitwise operations for powers of 2
+   int index = threadIdx.x << 2;    // Multiply by 4
+   int mask = (1 << n) - 1;         // Create bit mask
 
-Optimize memory access: The memory access efficiency can impact the speed of
-arithmetic operations. See: :ref:`device memory access`.
+**Use single-precision when possible**
+
+AMD GPUs have significantly higher throughput for single-precision (FP32) 
+operations compared to double-precision (FP64). Using single-precision math 
+functions can deliver substantial performance gains when FP64 accuracy is not required.
+
+.. code-block:: cuda
+
+   // Single-precision (faster)
+   float result = sinf(x);
+   float result = expf(x);
+   
+   // Double-precision (slower, use only when necessary)
+   double result = sin(x);
+   double result = exp(x);
+
+**Leverage fast math intrinsics**
+
+Hardware-specific intrinsics bypass certain accuracy checks and use lookup
+tables or polynomial approximations, trading slight precision loss for
+significantly higher throughput. These should be used when the application can
+tolerate reduced precision.
+
+.. code-block:: cuda
+
+   // Fast intrinsic versions
+   float ex = __expf(x);            // Fast exponential
+   float lg = __logf(x);            // Fast logarithm
+   float sq = __fsqrt_rn(x);        // Fast square root
+   float rc = __frcp_rn(x);         // Fast reciprocal
 
 .. _control flow instructions:
 
-Control flow instructions
---------------------------------------------------------------------------------
+Control flow optimization
+-------------------------
 
-Control flow instructions (``if``, ``else``, ``for``, ``do``, ``while``,
-``break``, ``continue``, ``switch``) can impact instruction throughput by
-causing threads within a warp to diverge and follow different execution paths.
-To optimize performance, write control conditions to minimize divergent warps.
-For example, when the control condition depends on ``threadIdx`` or ``warpSize``,
-warp doesn't diverge. The compiler might optimize loops, short ifs, or switch
-blocks using branch predication, which prevents warp divergence. With branch
-predication, instructions associated with a false predicate are scheduled but
-not executed, which avoids unnecessary operations. For control conditions where
-one outcome is significantly more likely than the other, use `__builtin_expect <https://clang.llvm.org/docs/LanguageExtensions.html#builtin-expect>`_
-or ``[[likely]]`` to indicate the likely condition result.
+**Minimize divergence**
 
-Avoiding divergent warps
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+When threads in a wavefront take different execution paths, the hardware 
+serializes both branches, executing each path with only the relevant threads 
+active. This reduces effective parallelism and wastes cycles on inactive threads.
 
-Warps diverge when threads within the same warp follow different execution paths.
-This is caused by conditional statements that lead to different arithmetic
-operations being performed by different threads. Divergent warps can
-significantly reduce instruction throughput, so it is advisable to structure
-your code to minimize divergence.
+.. code-block:: cuda
+
+   // Good: no divergence (condition depends on threadIdx)
+   if (threadIdx.x < 32) {
+       // All threads in first half-warp execute
+   }
+   
+   // Bad: divergence within warp
+   if (data[threadIdx.x] > threshold) {
+       // Some threads execute, others don't
+   }
+
+**Use branch hints for predictable conditions**
+
+Providing hints about branch likelihood helps the compiler generate better 
+instruction ordering and can improve the branch predictor's accuracy, reducing 
+pipeline stalls when the prediction proves correct.
+
+.. code-block:: cuda
+
+   if (__builtin_expect(rare_condition, 0)) {
+       // Unlikely branch
+   }
+   
+   // C++20 attribute
+   if (common_condition) [[likely]] {
+       // Likely branch
+   }
+
+**Avoid divergent warps**
+
+When divergence is unavoidable, restructure the code to separate divergent paths 
+into different kernel launches or use predication (branchless programming) to 
+keep all threads active, though computing unnecessary values may be acceptable 
+if it avoids the serialization penalty.
+
+.. code-block:: cuda
+
+   // Instead of:
+   if (threadIdx.x % 2 == 0) {
+       result = compute_even();
+   } else {
+       result = compute_odd();
+   }
+   
+   // Consider separating into different kernels or using predication
 
 Synchronization
---------------------------------------------------------------------------------
+---------------
 
-Synchronization ensures that all threads within a block complete their
-computations and memory accesses before moving forward, which is critical when
-threads depend on other thread results. However, synchronization can also cause
-performance overhead, as it needs the threads to wait, which might lead to idle
-GPU resources.
+**Use minimal synchronization**
 
-To synchronize all threads in a block, use :cpp:func:`__syncthreads()`.
-:cpp:func:`__syncthreads()` ensures that, all threads reach the same point in
-the code and can access shared memory after reaching that point.
+Each synchronization point stalls all threads in a block until the slowest one 
+reaches the barrier. Minimize synchronizations by carefully analyzing data 
+dependencies—only synchronize when threads genuinely need to exchange data 
+through shared memory.
 
-An alternative way to synchronize is to use streams. Different streams can
-execute commands either without following a specific order or concurrently. This
-is why streams allow more fine-grained control over the execution order of
-commands, which can be beneficial in certain scenarios.
+.. code-block:: cuda
+
+   __global__ void kernel() {
+       __shared__ float data[256];
+       
+       // Load phase
+       data[threadIdx.x] = input[...];
+       __syncthreads();  // Necessary sync
+       
+       // Compute phase - no sync needed if threads are independent
+       float result = compute(data[...]);
+       
+       // Store phase - sync only if needed
+       output[...] = result;
+   }
+
+**Use streams for async execution**
+
+Streams enable concurrent execution of independent operations. Commands in 
+different streams can overlap in time, allowing kernel execution and memory 
+transfers to run simultaneously. This maximizes GPU utilization by keeping 
+multiple execution engines busy concurrently.
+
+.. code-block:: cuda
+
+   hipStream_t stream1, stream2;
+   hipStreamCreate(&stream1);
+   hipStreamCreate(&stream2);
+   
+   // Overlap independent operations
+   kernel1<<<grid, block, 0, stream1>>>(...);
+   kernel2<<<grid, block, 0, stream2>>>(...);
+   
+   hipStreamSynchronize(stream1);
+   hipStreamSynchronize(stream2);
+
+Managing register pressure
+==========================
+
+High register usage can limit occupancy. Follow these steps:
+
+**Minimize live variables**
+
+The compiler allocates registers for every variable that must remain accessible. 
+Reducing the number of simultaneously live variables frees registers, allowing 
+more wavefronts to fit on each CU. Chaining function calls trades some redundant 
+computation for lower register usage.
+
+.. code-block:: cuda
+
+   // Instead of storing all intermediate results
+   float a = compute_a();
+   float b = compute_b();
+   float c = compute_c();
+   float result = combine(a, b, c);
+   
+   // Recompute or chain operations
+   float result = combine(compute_a(), compute_b(), compute_c());
+
+**Use shared memory for temporary storage**
+
+Per-thread arrays stored in registers consume valuable register space, limiting 
+occupancy. Moving temporary storage to shared memory trades register usage for 
+shared memory usage, often allowing higher occupancy since shared memory limits 
+are typically less restrictive.
+
+.. code-block:: cuda
+
+   // Instead of per-thread arrays (uses registers)
+   float temp[100];
+   
+   // Use shared memory
+   __shared__ float temp[blockDim.x][100];
+   float* my_temp = temp[threadIdx.x];
+
+**Adjust launch bounds**
+
+The ``__launch_bounds__`` attribute provides hints to the compiler about expected 
+thread block size and minimum blocks per CU. This guides register allocation 
+decisions, potentially trading per-thread register count for higher occupancy.
+
+.. code-block:: cuda
+
+   __global__ void 
+   __launch_bounds__(256, 4)  // 256 threads, 4 blocks per CU
+   my_kernel() {
+       // Kernel code
+   }
+
+**Check register usage during compilation**
+
+The compiler can report per-kernel register usage statistics. Monitoring this 
+output helps identify kernels consuming excessive registers, guiding optimization 
+efforts toward reducing register pressure in the most impactful areas.
+
+.. code-block:: bash
+
+   hipcc --resource-usage kernel.hip
+
+For register pressure theory, see :ref:`register_pressure_theory`.
+
+Improving occupancy
+===================
+
+Higher occupancy helps hide latency. Follow these steps:
+
+**Reduce register usage per thread**
+
+Use techniques from "Managing register pressure" above.
+
+**Reduce shared memory usage per block**
+
+Each CU has limited shared memory that must be divided among resident blocks. 
+Reducing per-block shared memory usage allows more blocks to reside simultaneously, 
+increasing occupancy and improving latency hiding through greater thread-level parallelism.
+
+.. code-block:: cuda
+
+   // Allocate only what's needed
+   __shared__ float tile[TILE_SIZE][TILE_SIZE];
+   
+   // Or use dynamic allocation
+   extern __shared__ float dynamic_shared[];
+
+**Optimize block size**
+
+AMD GPUs execute threads in wavefronts of 64. Choosing block sizes as multiples 
+of 64 prevents partial wavefronts that waste execution slots. Larger blocks 
+(128-256 threads) typically achieve better occupancy and resource utilization.
+
+.. code-block:: cuda
+
+   // Use multiples of wavefront size
+   dim3 block(64);    // Good for AMD GPUs (wavefront=64)
+   dim3 block(128);   // Common choice
+   dim3 block(256);   // Good for high-occupancy kernels
+   
+   // Avoid very small blocks
+   dim3 block(32);    // May waste resources
+
+**Profile occupancy**
+
+Profiling tools report the ratio of active wavefronts to maximum possible 
+wavefronts per CU. Low occupancy suggests resource constraints (registers or 
+shared memory) are limiting parallelism and may indicate opportunities for optimization.
+
+.. code-block:: bash
+
+   rocprofv3 --occupancy ./your_application
+
+For occupancy theory, see :ref:`occupancy`.
 
 Minimizing memory thrashing
-================================================================================
+============================
 
 Applications frequently allocating and freeing memory might experience slower
-allocation calls over time as memory is released back to the operating system.
-To optimize performance in such scenarios, follow these guidelines:
+allocation calls over time. To optimize:
 
-- Avoid allocating all available memory with :cpp:func:`hipMalloc` or
-  :cpp:func:`hipHostMalloc`, as this immediately reserves memory and might
-  prevent other applications from using it. This behavior could strain the
-  operating system schedulers or prevent other applications from running on the
-  same GPU.
-- Try to allocate memory in suitably sized blocks early in the application's
-  lifecycle and deallocate only when the application no longer needs it.
-  Minimize the number of :cpp:func:`hipMalloc` and :cpp:func:`hipFree` calls in
-  your application, particularly in performance-critical areas.
-- Consider resorting to other memory types such as :cpp:func:`hipHostMalloc` or
-  :cpp:func:`hipMallocManaged`, if an application can't allocate sufficient
-  device memory. While the other memory types might not offer similar
-  performance, they allow the application to continue running.
-- For supported platforms, use :cpp:func:`hipMallocManaged`, as it allows
-  oversubscription. With the right policies, :cpp:func:`hipMallocManaged` can
-  maintain most, if not all, :cpp:func:`hipMalloc` performance.
-  :cpp:func:`hipMallocManaged` doesn't require an allocation to be resident
-  until it is needed or prefetched, which eases the load on the operating
-  system's schedulers and facilitates multitenant scenarios.
+**Allocate early, deallocate late**
+
+Frequent allocation and deallocation causes memory fragmentation and increases 
+allocator overhead. Reusing allocations across iterations amortizes the cost 
+of memory management and maintains better memory locality.
+
+.. code-block:: cuda
+
+   // Bad: frequent allocation in loop
+   for (int i = 0; i < iterations; i++) {
+       float* temp;
+       hipMalloc(&temp, size);
+       // Use temp
+       hipFree(temp);
+   }
+   
+   // Good: allocate once
+   float* temp;
+   hipMalloc(&temp, size);
+   for (int i = 0; i < iterations; i++) {
+       // Reuse temp
+   }
+   hipFree(temp);
+
+**Avoid allocating all available memory**
+
+Reserving some memory headroom prevents allocation failures and system instability. 
+The driver and runtime need workspace for internal operations, and leaving a 
+safety margin ensures stable operation without unexpected out-of-memory errors.
+
+.. code-block:: cuda
+
+   size_t free, total;
+   hipMemGetInfo(&free, &total);
+   
+   // Don't allocate all free memory
+   size_t safe_size = free * 0.9;  // Leave some margin
+
+**Use managed memory for oversubscription**
+
+Managed memory automatically migrates data between host and device on demand, 
+allowing allocations larger than physical GPU memory. Prefetching hints help 
+the runtime optimize page placement, reducing migration overhead during kernel execution.
+
+.. code-block:: cuda
+
+   // Allows exceeding physical memory
+   float* data;
+   hipMallocManaged(&data, large_size);
+   
+   // Optionally prefetch to device
+   hipMemPrefetchAsync(data, size, device, stream);
+
+Summary
+=======
+
+Key optimization techniques:
+
+* **Profile first**: Use ``rocprofv3`` to identify actual bottlenecks
+* **Parallelize effectively**: Maximize work at all levels (application, device, CU)
+* **Optimize memory**: Minimize transfers, maximize coalescing, use LDS
+* **Manage resources**: Balance registers, shared memory, and occupancy
+* **Minimize divergence**: Structure control flow to keep warps coherent
+
+For understanding the theory behind these techniques, refer to 
+:doc:`../understand/performance_optimization` and :doc:`../understand/hardware_implementation`.

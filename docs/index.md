@@ -30,6 +30,7 @@ The HIP documentation is organized into the following categories:
 :::{grid-item-card} Programming guide
 
 * {doc}`./understand/programming_model`
+* {doc}`./understand/performance_optimization`
 * {doc}`./understand/hardware_implementation`
 * {doc}`./understand/compilers`
 * {doc}`./how-to/performance_guidelines`

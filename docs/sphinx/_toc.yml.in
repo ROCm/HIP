@@ -26,6 +26,7 @@ subtrees:
 - caption: Programming guide
   entries:
   - file: understand/programming_model
+  - file: understand/performance_optimization
   - file: understand/hardware_implementation
   - file: understand/compilers
   - file: how-to/performance_guidelines
