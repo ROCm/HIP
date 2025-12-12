@@ -31,14 +31,14 @@ Some guidelines are outlined below:
 
 * Add a translation to the hipify-clang tool ; many examples abound.
   * For stat tracking purposes, place the API into an appropriate stat category ("dev", "mem", "stream", etc).
-* Add a inlined NVIDIA implementation for the function in /hipnv/include/hip/nvidia_detail/nvidia_hip_runtime_api.h in the repository [hipother](https://github.com/ROCm/hipother).
+* Add a inlined NVIDIA implementation for the function in /hipnv/include/hip/nvidia_detail/nvidia_hip_runtime_api.h in the repository [hipother](../hipother).
   * These are typically headers
-* Add an HIP definition and Doxygen comments for the function in /include/hip/hip_runtime_api.h, in the repository [hip](https://github.com/ROCm/hip).
-  * Source implementation typically go in clr/hipamd/src/hip_*.cpp in the reposotory [clr](https://github.com/ROCm/clr). The implementation involves calls to HIP runtime (ie for hipStream_t).
+* Add an HIP definition and Doxygen comments for the function in /include/hip/hip_runtime_api.h, in the hip repository.
+  * Source implementation typically go in clr/hipamd/src/hip_*.cpp in the repository [clr](../clr). The implementation involves calls to HIP runtime (ie for hipStream_t).
 
 ### Run Unit Tests ###
 
-For new features or bug fixes, it's mandatory to run associate [hip-tests](https://github.com/ROCm/hip-tests).
+For new features or bug fixes, it's mandatory to run associate [hip-tests](../hip-tests).
 Please go to the repo and follow the steps.
 
 For applications and benchmarks outside the hip-tests environment, developments should use a two-step development flow:
