@@ -85,7 +85,7 @@ performance penalty.
         .. literalinclude:: ../../tools/example_codes/p2p_memory_access.hip
             :start-after: // [sphinx-start]
             :end-before: // [sphinx-end]
-            :emphasize-lines: 43-49, 63-67
+            :emphasize-lines: 45-51, 65-69
             :language: cpp
 
     .. tab-item:: without peer-to-peer
@@ -93,5 +93,5 @@ performance penalty.
         .. literalinclude:: ../../tools/example_codes/p2p_memory_access_host_staging.hip
             :start-after: // [sphinx-start]
             :end-before: // [sphinx-end]
-            :emphasize-lines: 55-57
+            :emphasize-lines: 57-59
             :language: cpp

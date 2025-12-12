@@ -306,7 +306,7 @@ explicit memory management example is presented in the last tab.
         .. literalinclude:: ../../../tools/example_codes/dynamic_unified_memory.hip
             :start-after: // [sphinx-start]
             :end-before: // [sphinx-end]
-            :emphasize-lines: 22-25
+            :emphasize-lines: 26-29
             :language: cpp
 
     .. tab-item:: __managed__
@@ -314,7 +314,7 @@ explicit memory management example is presented in the last tab.
         .. literalinclude:: ../../../tools/example_codes/static_unified_memory.hip
             :start-after: // [sphinx-start]
             :end-before: // [sphinx-end]
-            :emphasize-lines: 19-20
+            :emphasize-lines: 22-23
             :language: cpp
 
     .. tab-item:: new
@@ -322,7 +322,7 @@ explicit memory management example is presented in the last tab.
         .. literalinclude:: ../../../tools/example_codes/standard_unified_memory.hip
             :start-after: // [sphinx-start]
             :end-before: // [sphinx-end]
-            :emphasize-lines: 21-24
+            :emphasize-lines: 25-28
             :language: cpp
 
     .. tab-item:: Explicit Memory Management
@@ -330,7 +330,7 @@ explicit memory management example is presented in the last tab.
         .. literalinclude:: ../../../tools/example_codes/explicit_memory.hip
             :start-after: // [sphinx-start]
             :end-before: // [sphinx-end]
-            :emphasize-lines: 27-34, 39-40
+            :emphasize-lines: 31-38, 43-44
             :language: cpp
 
 .. _using unified memory:
@@ -390,7 +390,7 @@ needed. ``hipCpuDeviceId`` is a special constant to specify the CPU as target.
 .. literalinclude:: ../../../tools/example_codes/data_prefetching.hip
     :start-after: // [sphinx-start]
     :end-before: // [sphinx-end]
-    :emphasize-lines: 33-36,41-42
+    :emphasize-lines: 37-40,45-46
     :language: cpp
 
 Memory advice
@@ -419,7 +419,7 @@ instead of prefetching.
 .. literalinclude:: ../../../tools/example_codes/unified_memory_advice.hip
     :start-after: // [sphinx-start]
     :end-before: // [sphinx-end]
-    :emphasize-lines: 29-41
+    :emphasize-lines: 32-44
     :language: cpp
 
 Memory range attributes
@@ -431,7 +431,7 @@ memory range. The attributes are given in :cpp:enum:`hipMemRangeAttribute`.
 .. literalinclude:: ../../../tools/example_codes/memory_range_attributes.hip
     :start-after: // [sphinx-start]
     :end-before: // [sphinx-end]
-    :emphasize-lines: 44-49
+    :emphasize-lines: 49-54
     :language: cpp
 
 Asynchronously attach memory to a stream
