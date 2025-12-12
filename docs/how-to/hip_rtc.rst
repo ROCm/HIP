@@ -320,13 +320,13 @@ using the bitcode APIs provided by HIPRTC.
   hiprtcGetBitcode(prog, kernel_bitcode.data());
 
 CU mode vs WGP mode
--------------------------------------------------------------------------------
+-------------------
 
 All :doc:`supported AMD GPUs <rocm-install-on-linux:reference/system-requirements>` are built around a data-parallel
 processor (DPP) array.
 
-On CDNA GPUs, the DPP is organized as a set of compute unit (CU) pipelines, with each CU containing a single SIMD64
-unit. Each CU has its own low-latency memory space called local data share (LDS), which threads from a warp running on
+On CDNA GPUs, the DPP is organized as a set of compute unit (CU) pipelines, with each CU containing four SIMD64
+units. Each CU has its own low-latency memory space called local data share (LDS), which threads from a warp running on
 the CU can access.
 
 On RDNA GPUs, the DPP is organized as a set of workgroup processor (WGP) pipelines. Each WGP contains two CUs, and each
