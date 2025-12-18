@@ -251,7 +251,6 @@ typedef struct hipDeviceProp_t {
                                                  /// devices with unmatched shared memories
   int isLargeBar;                                ///< 1: if it is a large PCI bar device, else 0
   int asicRevision;                              ///< Revision of the GPU in this device
-  int hasExpertSchedMode;                        ///< 1: device supports expert scheduling mode, else 0
 } hipDeviceProp_t;
 
 /**
