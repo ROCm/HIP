@@ -103,8 +103,8 @@ subtrees:
       - file: reference/hip_runtime_api/global_defines_enums_structs_files
         subtrees:
         - entries:
-          - file: reference/hip_runtime_api/global_defines_enums_structs_files/global_enum_and_defines
-          - file: reference/hip_runtime_api/global_defines_enums_structs_files/driver_types
+          - file: doxygen/html/group___global_defs
+          - file: doxygen/html/group___driver_types
           - file: doxygen/html/annotated
           - file: doxygen/html/files
   - file: reference/math_api
