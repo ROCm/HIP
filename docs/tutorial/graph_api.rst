@@ -332,7 +332,7 @@ Inside the ``build`` directory you will now generate a trace:
 
 .. code-block:: bash
 
-  rocprofv3 -o streams -d outDir -f pftrace --hip-trace --kernel-trace --memory-copy-trace --memory-allocation-trace -- ./HIP-Doc/Tutorials/graph_api/src/hip_graph_api_tutorial_graph_creation
+  rocprofv3 -o streams -d outDir -f pftrace --hip-trace --kernel-trace --memory-copy-trace --memory-allocation-trace -- ./HIP-Doc/Tutorials/graph_api/src/hip_graph_api_tutorial_streams
 
 .. note::
   For more information on the ``rocprofv3`` tool, please refer to its
