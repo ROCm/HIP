@@ -598,6 +598,8 @@ typedef enum hipDeviceAttribute_t {
                                                  ///< indirectly addressable) VGPRs per thread in
                                                  ///< DWORDs.
   hipDeviceAttributePciChipId,                   ///< GPU Manufacturer device id
+  hipDeviceAttributeExpertSchedMode,             ///< '1' if Device supports expert scheduling mode,
+                                                 ///< '0' otherwise.
 
   hipDeviceAttributeAmdSpecificEnd = 19999,
   hipDeviceAttributeVendorSpecificBegin = 20000,
