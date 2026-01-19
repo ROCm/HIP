@@ -494,7 +494,6 @@ HIP doesn't support the following CUDA functions/operators in ``cooperative_grou
 * ``synchronize``
 * ``memcpy_async``
 * ``wait`` and ``wait_prior``
-* ``barrier_arrive`` and ``barrier_wait``
 * ``invoke_one`` and ``invoke_one_broadcast``
 * ``reduce``
 * ``reduce_update_async`` and ``reduce_store_async``
