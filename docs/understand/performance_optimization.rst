@@ -46,7 +46,7 @@ The intersection point determines the transition between memory-bound and
 compute-bound regions. Kernels below and to the left of the intersection are 
 memory-bound, while those to the right are compute-bound.
 
-.. figure:: ../../data/understand/performance_optimization/roofline.svg
+.. figure:: ../data/understand/performance_optimization/roofline.svg
    :alt: Roofline model diagram showing memory bandwidth ceiling and compute
          ceiling
    :align: center
