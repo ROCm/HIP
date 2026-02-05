@@ -672,6 +672,8 @@ Finally, the mangled name of the kernel is used to launch it using the
   hipModuleGetFunction(&kernel, module, name);
   hipModuleLaunchKernel(kernel, 1, 1, 1, 1, 1, 1, 0, nullptr, nullptr, config);
 
+For a detailed example, refer to `lowered_names <https://github.com/ROCm/rocm-examples/tree/amd-staging/HIP-Doc/Programming-Guide/Programming-for-HIP-Runtime-Compiler/lowered_names>`__ in `rocm_examples <https://github.com/ROCm/rocm-examples>`__.
+
 Versioning
 ===============================================================================
 
