@@ -2018,6 +2018,14 @@ typedef struct HIP_LAUNCH_CONFIG_st {
 } HIP_LAUNCH_CONFIG;
 
 /**
+ * Struct representing array memory requirements.
+ */
+typedef struct hipArrayMemoryRequirements {
+  size_t alignment;
+  size_t size;
+} hipArrayMemoryRequirements;
+
+/**
  * Requested handle type for address range.
  */
 typedef enum hipMemRangeHandleType {
@@ -5844,6 +5852,24 @@ hipError_t hipMemcpy3DPeer(hipMemcpy3DPeerParms* p);
  * @returns #hipSuccess, #hipErrorInvalidValue, hipErrorInvalidDevice
  */
 hipError_t hipMemcpy3DPeerAsync(hipMemcpy3DPeerParms* p, hipStream_t stream __dparm(0));
+
+/**
+ * @brief Returns the memory requirements of a HIP mipmapped array.
+ *
+ * @param[out] memoryRequirements Pointer to hipArrayMemoryRequirements
+ * @param[in] mipmap HIP mipmapped array to get the memory requirements of
+ * @param[in] device Device to get the memory requirements for
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * Returns the memory requirements of a HIP mipmapped array in memoryRequirements.
+ *
+ * The returned value in hipArrayMemoryRequirements::size represents the total size of the HIP
+ mipmapped array. The returned value in hipArrayMemoryRequirements::alignment represents the
+ alignment necessary for mapping the HIP mipmapped array.
+ */
+hipError_t hipMipmappedArrayGetMemoryRequirements(hipArrayMemoryRequirements* memoryRequirements,
+                                                  hipMipmappedArray_t mipmap, hipDevice_t device);
 // doxygen end Memory
 /**
  * @}
