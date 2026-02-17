@@ -37,7 +37,11 @@ xyzzy
         00000042
 )here");
 
+#ifdef HIP_STANDALONE_PRINTF_PROC
+  hip::SpawnProc proc("printfFlags_proc", true);
+#else
   hip::SpawnProc proc("printfFlags", true);
+#endif
   REQUIRE(proc.run() == 0);
   REQUIRE(proc.getOutput() == reference);
 }

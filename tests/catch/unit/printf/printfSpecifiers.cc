@@ -45,6 +45,28 @@ x
 (nil)
 3.14159000    hello 0xf01dab1eca55e77e
 )here");
+#elif defined(__HIP_PLATFORM_SPIRV__)
+  // SPIR-V/OpenCL device printf uses float precision for %f (IGC behavior)
+  std::string reference(R"here(xyzzy
+%
+hello % world
+%s
+%s0xf01dab1eca55e77e
+%cxyzzy
+sep
+-42
+42
+123.456001
+-123.456001
+-1.234560e+02
+1.234560E+02
+123.456
+-123.456
+x
+
+(nil)
+3.14159012    hello 0xf01dab1eca55e77e
+)here");
 #elif !defined(_WIN32)
   std::string reference(R"here(xyzzy
 %
@@ -89,7 +111,11 @@ x
 )here");
 #endif
 
+#ifdef HIP_STANDALONE_PRINTF_PROC
+  hip::SpawnProc proc("printfSpecifiers_proc", true);
+#else
   hip::SpawnProc proc("printfSpecifiers", true);
+#endif
   REQUIRE(0 == proc.run());
   REQUIRE(proc.getOutput() == reference);
 }

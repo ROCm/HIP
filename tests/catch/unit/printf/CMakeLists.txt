@@ -28,4 +28,15 @@ if(NOT STANDALONE_TESTS)
 
   add_dependencies(printfTests printfFlags)
   add_dependencies(printfTests printfSpecifiers)
+else()
+  # When STANDALONE_TESTS, the test runner is also named printfFlags. Build the
+  # kernel exe with _proc suffix so SpawnProc can find and run it.
+  add_executable(printfFlags_proc EXCLUDE_FROM_ALL printfFlags_exe.cc)
+  add_executable(printfSpecifiers_proc EXCLUDE_FROM_ALL printfSpecifiers_exe.cc)
+  set_target_properties(printfFlags_proc printfSpecifiers_proc PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+  add_dependencies(printfFlags printfFlags_proc)
+  add_dependencies(printfSpecifiers printfSpecifiers_proc)
+  target_compile_definitions(printfFlags PRIVATE HIP_STANDALONE_PRINTF_PROC=1)
+  target_compile_definitions(printfSpecifiers PRIVATE HIP_STANDALONE_PRINTF_PROC=1)
 endif()
