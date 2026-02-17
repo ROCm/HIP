@@ -24,6 +24,15 @@ else()
     message(FATAL_ERROR "Unexpected HIP_PLATFORM: " ${HIP_PLATFORM})
 endif()
 
+# Ensure HIP platform define for TestContext and all test sources
+if(HIP_PLATFORM STREQUAL "amd")
+    add_definitions(-D__HIP_PLATFORM_AMD__=1)
+elseif(HIP_PLATFORM STREQUAL "nvidia")
+    add_definitions(-D__HIP_PLATFORM_NVIDIA__=1)
+elseif(HIP_PLATFORM STREQUAL "spirv")
+    add_definitions(-D__HIP_PLATFORM_SPIRV__=1)
+endif()
+
 # Set HIP Path
 if(NOT DEFINED HIP_PATH)
     if(DEFINED ENV{HIP_PATH})
