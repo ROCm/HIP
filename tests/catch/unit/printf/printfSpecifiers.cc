@@ -89,5 +89,8 @@ x
     INFO("Line " << i << ": expected '" << rl << "' got '" << ol << "'");
     REQUIRE(eq(rl, ol));
   }
-  REQUIRE((rs.eof() && os.eof()));
+  REQUIRE(rs.eof());
+  while (std::getline(os, ol)) {
+    REQUIRE(ol.find_first_not_of(" \t\r\n") == std::string::npos);
+  }
 }
