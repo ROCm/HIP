@@ -89,5 +89,5 @@ x
     INFO("Line " << i << ": expected '" << rl << "' got '" << ol << "'");
     REQUIRE(eq(rl, ol));
   }
-  REQUIRE(rs.eof() && os.eof());
+  REQUIRE((rs.eof() && os.eof()));
 }
