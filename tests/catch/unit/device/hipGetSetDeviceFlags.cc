@@ -18,6 +18,8 @@ THE SOFTWARE.
 */
 
 #include <hip_test_common.hh>
+#include <array>
+#include <algorithm>
 #include <iterator>
 #include <vector>
 #include <mutex>

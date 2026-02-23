@@ -174,6 +174,11 @@ set(TEST_SRC
 )
 endif()
 
+# chipStar/SPIRV: hipMemcpyHtoD/hipMemcpyHtoDAsync (driver API) not implemented
+if(HIP_PLATFORM MATCHES "spirv")
+  list(REMOVE_ITEM TEST_SRC hipMemcpyAllApiNegative.cc hipMemcpy_MultiThread.cc)
+endif()
+
 # skipped due to os related code in tests
 # need to work on them when all the tests are enabled
 if(UNIX)

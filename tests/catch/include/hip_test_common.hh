@@ -29,7 +29,10 @@ THE SOFTWARE.
 #include <iostream>
 #include <iomanip>
 #include <mutex>
+#include <cstring>
+#include <cstring>
 #include <cstdlib>
+#include <cstring>
 
 #define HIP_PRINT_STATUS(status) INFO(hipGetErrorName(status) << " at line: " << __LINE__);
 

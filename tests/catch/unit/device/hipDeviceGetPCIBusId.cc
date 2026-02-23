@@ -24,6 +24,8 @@
  */
 
 #include <hip_test_common.hh>
+#include <array>
+#include <algorithm>
 
 #define MAX_DEVICE_LENGTH 20
 

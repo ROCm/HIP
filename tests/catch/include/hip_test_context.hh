@@ -80,12 +80,12 @@ struct HCResult {
 
 class TestContext {
   bool p_windows = false, p_linux = false;  // OS
-  bool amd = false, nvidia = false;         // HIP Platform
+  bool amd = false, nvidia = false, spirv = false;  // HIP Platform
   std::string exe_path;
   std::string current_test;
   std::set<std::string> skip_test;
   std::string json_file_;
-  std::vector<std::string> platform_list_ = {"amd", "nvidia"};
+  std::vector<std::string> platform_list_ = {"amd", "nvidia", "spirv"};
   std::vector<std::string> os_list_ = {"windows", "linux", "all"};
   std::vector<std::string> amd_arch_list_ = {};
 
@@ -146,6 +146,7 @@ class TestContext {
   bool isLinux() const;
   bool isNvidia() const;
   bool isAmd() const;
+  bool isSpirv() const;
   bool skipTest() const;
 
   const std::string& getCurrentTest() const { return current_test; }

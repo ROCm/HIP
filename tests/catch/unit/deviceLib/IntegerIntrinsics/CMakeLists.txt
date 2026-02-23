@@ -12,12 +12,12 @@ elseif(HIP_PLATFORM MATCHES "nvidia")
     hip_add_exe_to_target(NAME IntegerIntrinsicsTests
         TEST_SRC ${TEST_SRC}
         TEST_TARGET_NAME build_tests
-        COMPILE_OPTIONS --Wno-deprecated-declarations)
+        COMPILE_OPTIONS -Wno-deprecated-declarations)
 elseif(HIP_PLATFORM MATCHES "spirv")
     hip_add_exe_to_target(NAME IntegerIntrinsicsTests
         TEST_SRC ${TEST_SRC}
         TEST_TARGET_NAME build_tests
-        COMPILE_OPTIONS --Wno-deprecated-declarations)
+        COMPILE_OPTIONS -Wno-deprecated-declarations)
 else()
     message(FATAL_ERROR "HIP_PLATFORM must be either amd, nvidia, or spirv")
 endif()
