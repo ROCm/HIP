@@ -110,13 +110,12 @@ foreach(line ${output})
     set(output_dir_arg "--out ${output_dir}/${output_prefix}${test_name_clean}${output_suffix}")
   endif()
 
-  file(RELATIVE_PATH exe_path ${CMAKE_CURRENT_BINARY_DIR} ${TEST_EXECUTABLE})
-
   # ...and add to script
   add_command(add_test
     "${prefix}${test}${suffix}"
     ${TEST_EXECUTOR}
-    "${exe_path}"
+    ${ANALYSIS_COMMAND}
+    "${TEST_EXECUTABLE}"
     "${test_name}"
     ${extra_args}
     "${reporter_arg}"
