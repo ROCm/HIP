@@ -147,12 +147,33 @@ This structure allows for efficient use of GPU resources and facilitates the acc
 
   Interaction of Host and Device in a GPU application
 
+HIP Runtime API
+~~~~~~~~~~~~~~~
+
+The HIP Runtime API provides a high-level C-style interface that abstracts the
+lower-level ROCr Runtime, simplifying GPU programming on AMD hardware. It offers
+functions for memory management, kernel launches, synchronization, and device
+control, enabling developers to write GPU-accelerated applications in a
+portable, C++-friendly way.
+
+The Runtime API serves the same role within ROCm as the CUDA Runtime API does
+in NVIDIA's stack. It simplifies GPU programming by abstracting explicit device
+and context management handled by the HSA/ROCr driver layer. Developers interact
+with familiar, high-level constructs such as :cpp:func:`hipMalloc`,
+:cpp:func:`hipMemcpy`, and ``hipLaunchKernelGGL``, while the runtime handles
+resource allocation, queue management, and synchronization transparently.
+
+The Runtime API can be linked either statically or dynamically, with the shared
+object typically named ``libamdhip64.so`` on Linux systems. It is open source
+and maintained as part of the ROCm ecosystem, allowing inspection, extension,
+and integration into custom build environments.
+
 .. _device_program:
 
 Device programming
 ------------------
 
-The device or kernel program acts as workers on the GPU application, distributing operations to be handled quickly and efficiently. Launching a kernel in the host application starts the kernel program running on the GPU, defining the parallel operations to repeat the same instructions across many datasets. Understanding how the kernel works and the processes involved is essential to writing efficient GPU applications. Threads, blocks, and grids provide a hierarchical approach to parallel operations. Understanding the thread hierarchy is critical to distributing work across the available CUs, managing parallel operations, and optimizing memory access. The general flow of the kernel program looks like this:
+The device or kernel program acts as a worker on the GPU application, distributing operations to be handled quickly and efficiently. Launching a kernel in the host application starts the kernel program running on the GPU, defining the parallel operations that repeat the same instructions across many datasets. Understanding how the kernel works and the processes involved is essential to writing efficient GPU applications. Threads, blocks, and grids provide a hierarchical approach to parallel operations. Understanding the thread hierarchy is critical to distributing work across the available CUs, managing parallel operations, and optimizing memory access. The general flow of the kernel program looks like this:
 
 1.	Thread Grouping: As described in :ref:`inherent_thread_model`, threads are organized into a hierarchy consisting of threads, which are individual instances of parallel operations, blocks that group the threads, and grids that group blocks into the kernel. Each thread runs an instance of the kernel in parallel with other threads in the block. 
 2.	Indexing: The kernel computes the unique index for each thread to access the relevant data to be processed by the thread.  
@@ -245,19 +266,26 @@ multiple threads via the thread ID constants ``threadIdx.x``, ``blockIdx.x``, et
 Hierarchical thread model
 -------------------------
 
-As previously discussed, all threads of a kernel are uniquely identified by a set
-of integral values called thread IDs. The hierarchy consists of three levels: thread,
-blocks, and grids.
+The thread hierarchy defines how parallel work is structured and executed across
+AMD GPUs, from single threads up to the full device. All threads of a kernel are
+uniquely identified by a set of integral values called thread IDs. The hierarchy
+consists of three levels: threads, blocks, and grids.
 
-* Threads are single instances of kernel operations, running concurrently across warps
+* Threads are single instances of kernel operations, running concurrently
 * Blocks group threads together and enable cooperation and shared memory
 * Grids define the number of thread blocks for a single kernel launch
-* Blocks and grids can be defined in 3 dimensions (``x``, ``y``, ``z``)
+* Blocks and grids can be defined in three dimensions (``x``, ``y``, ``z``)
 * By default, the Y and Z dimensions are set to 1
 
-The combined values represent the thread index, and relate to the sequence that the
-threads execute. The thread hierarchy is integral to how AMD GPUs operate, and is
-depicted in the following figure.
+This hierarchy maps directly onto AMD hardware:
+
+* Threads execute on SIMD lanes
+* Work-groups occupy :ref:`compute units <compute_unit>`
+* Grids utilize all available CUs across the GPU
+
+The combined values represent the thread index, and relate to the sequence that
+the threads execute. The thread hierarchy is integral to how AMD GPUs operate,
+and is depicted in the following figure.
 
 .. figure:: ../data/understand/programming_model/thread_hierarchy.svg
   :alt: Diagram depicting nested rectangles of varying color. The outermost one
@@ -267,6 +295,37 @@ depicted in the following figure.
         rectangles filled with downward pointing arrows inside.
 
   Hierarchy of thread groups.
+
+.. _work-item:
+
+Thread (Work-item)
+  The smallest unit of execution in the HIP programming model is a thread, also
+  called a work-item in lower-level documentation such as AMDGPU ISA manuals and
+  HSA specifications. Each thread represents an independent control flow with
+  its own registers and program counter.
+  
+  Threads execute the same kernel function independently, using identifiers such
+  as ``threadIdx.x`` and ``blockIdx.x`` that determine which portion of data the
+  thread operates on within its work group and grid. For example:
+  
+  .. code-block:: cuda
+  
+    int tid = threadIdx.x;
+    int bid = blockIdx.x;
+    int global_idx = tid + bid * blockDim.x;
+  
+  Each thread maintains its own register state, including vector general-purpose
+  registers (VGPRs), and a private program counter. Threads have private storage
+  for local variables, spilled registers, and function call stacks, which reside
+  in global memory when on-chip register limits are exceeded. High-performance
+  kernels minimize this usage by keeping data in registers or :ref:`Local Data
+  Share (LDS) <lds>`.
+  
+  A single SIMD lane executes the instructions for one thread at a time. Because
+  each CU contains multiple SIMD units, thousands of threads can execute
+  concurrently across the GPU. From a programmer's perspective, a thread is the
+  fundamental unit of GPU computation, analogous to a CPU thread but scaled to
+  tens of thousands of instances operating in parallel.
 
 .. _wavefront:
 
@@ -290,27 +349,48 @@ Warp (or Wavefront)
 
   The size of a wavefront is architecture dependent and always fixed:
   
-  * **64 threads** for AMD GCN and CDNA architectures as well as RDNA architectures in wave64 mode
-  * **32 threads** for AMD RDNA architectures in wave32 mode
-  * **32 threads** for NVIDIA GPUs
+  * **64 threads** for CDNA architectures
+  * **32 threads** for RDNA architectures
   
-  Wavefronts are signified by the set of communication primitives at their disposal, 
-  as discussed in :ref:`warp-cross-lane`. On modern AMD datacenter GPUs like MI300X, 
-  each CU can support up to 64 concurrent wavefronts, each containing 64 threads, 
-  for a total of over 4,000 active threads per CU.
+  Wavefronts are signified by the set of communication primitives at their
+  disposal, as discussed in :ref:`warp-cross-lane`. On modern AMD datacenter
+  GPUs, the number of resident wavefronts per CU is limited by architectural  
+  wave slots and available resources (such as registers and LDS). For example,  
+  if a CU supports 64 resident wavefronts, each containing 64 threads, this  
+  would correspond to 4,096 threads in flight; actual limits are  
+  architecture-specific and described in the hardware implementation  
+  documentation. 
+  
+  When a wavefront issues an instruction whose operands are not yet ready, for
+  instance, a global memory load from :ref:`HBM <hbm>`, it becomes stalled.
+  Rather than idling, the wavefront scheduler selects another ready wavefront to
+  execute. This rapid context switching hides memory and instruction latency and
+  is key to achieving high utilization.
+  
+  To keep the compute units busy, you should maximize occupancy, the number of
+  resident wavefronts per CU, ensuring there is always at least one eligible
+  wavefront ready to issue instructions. The ratio of active issue cycles to
+  total cycles is known as issue efficiency.
 
 .. _inherent_thread_hierarchy_block:
 
 Block (Work-group)
-  The next level of the thread hierarchy is called a thread block (or work-group in 
-  OpenCL terminology). A block is a collection of wavefronts that can synchronize 
-  and share local data share (LDS) memory. The defining feature of a block is that 
-  all threads in the block have shared memory that they can use to share data or 
-  synchronize with one another, as described in :ref:`memory_hierarchy`.
+  The next level of the thread hierarchy is called a thread block (or work-group
+  in OpenCL terminology). A block is a collection of wavefronts that can
+  synchronize and share local data share (LDS) memory. The defining feature of a
+  block is that all threads in the block have shared memory that they can use to
+  share data or synchronize with one another, as described in
+  :ref:`memory_hierarchy`.
   
-  All wavefronts of a block execute on the same compute unit, ensuring they 
-  can access the same LDS and synchronize efficiently. This locality is crucial 
-  for performance when threads need to cooperate on shared data.
+  All wavefronts of a block execute on the same CU, ensuring they can
+  access the same LDS and synchronize efficiently. This locality is crucial for
+  performance when threads need to cooperate on shared data.
+  
+  Threads within a work-group can coordinate with one another through barriers
+  and the shared :ref:`Local Data Share (LDS) <lds>`. Because LDS resides in the
+  CU's L1 cache subsystem, this cooperation is extremely fast. Threads in
+  different work-groups cannot synchronize directly and must communicate through
+  global memory using atomics or fences.
 
   The size of a block, or the block dimension, is the user-configurable number of
   threads per block, but is limited by the queryable capabilities of the executing
@@ -331,9 +411,33 @@ Block (Work-group)
 .. _inherent_thread_hierarchy_grid:
 
 Grid
-  The top-most level of the thread hierarchy is a grid. A grid represents the total 
-  collection of blocks (work-groups) launched for a single kernel execution. It defines 
-  the overall problem size and how work is distributed across the GPU.
+  The top-most level of the thread hierarchy is a grid. A grid represents the
+  total collection of blocks (work-groups) launched for a single kernel
+  execution. It defines the overall problem size and how work is distributed
+  across the GPU.
+  
+  When a kernel is launched, the host specifies the grid's dimensions, the
+  number of work-groups, and the number of threads per work-group. Each thread
+  within the grid is assigned a unique index derived from its position within
+  both its work-group and the global grid, allowing threads to cooperatively
+  process large datasets.
+  
+  All work-groups in a grid execute the same kernel code, but on different
+  portions of input data. The scheduling of work-groups is handled dynamically by
+  the GPU driver and hardware scheduler, distributing them across available
+  compute units. Execution order is non-deterministic, work-groups may execute
+  concurrently or in arbitrary order depending on hardware availability and
+  resource usage.
+  
+  Work-groups within a grid cannot synchronize directly through barriers, since
+  they may execute on different CUs. Instead, they coordinate via global memory,
+  often using atomic operations or device-wide synchronization mechanisms. The
+  kernel itself returns only after all work-groups in the grid have finished
+  execution.
+  
+  This grid-level abstraction allows a single kernel launch to scale
+  transparently with GPU size: larger GPUs simply execute more work-groups
+  concurrently, while smaller GPUs schedule them in more waves.
   
   The grid is specified when launching a kernel and determines:
   
@@ -341,14 +445,11 @@ Grid
   * Distribution of work across compute units
   * Overall parallelism of the computation
   
-  The unique ID of each block within a grid can be 1, 2, or 3-dimensional, as provided 
-  by the API and is queryable by every thread within the block through the ``blockIdx`` 
-  built-in variable.
+  The unique ID of each block within a grid can be 1, 2, or 3-dimensional, as
+  provided by the API, and is accessible to every thread in the block through
+  the ``blockIdx`` built-in variable.
   
-  Grid dimensions are limited by hardware capabilities:
-  
-  * Maximum x-dimension: 2³¹ - 1
-  * Maximum y and z-dimensions: 2¹⁶ - 1 (65,535)
+  Grid dimensions are limited by queryable hardware capabilities.
 
 The three-dimensional thread hierarchy available to a kernel program lends itself to solutions
 that align closely to the computational problem. The following are some examples: 
@@ -378,12 +479,23 @@ For further information, see :doc:`Cooperative groups </how-to/hip_runtime_api/c
 Memory model
 ============
 
-The GPU memory architecture is designed to support parallel execution across the
-thread hierarchy. Understanding the following memory spaces and their relationships
-to thread groupings is crucial for efficient GPU programming. The choice of memory
-type and access patterns significantly impacts kernel performance. The following figure
-summarizes the memory namespaces and how they relate to the various levels of the
-threading model. 
+The GPU memory architecture is designed to support parallel execution across
+the thread hierarchy. Understanding the following memory spaces and their
+relationships to thread groupings is crucial for efficient GPU programming. The
+choice of memory type and access patterns significantly impacts kernel
+performance.
+
+HIP's memory hierarchy consists of three main levels that mirror the GPU's
+physical structure:
+
+* **Private registers**: Per-thread storage with the fastest access
+* **Local Data Share (LDS)**: Per-work-group shared memory with low latency
+* **High-Bandwidth Memory (HBM)**: Device-wide global memory with high capacity
+
+This hierarchy gives you precise control over data locality and synchronization,
+allowing compute-bound kernels to efficiently exploit the massively parallel
+architecture. The following figure summarizes the memory namespaces and how they
+relate to the various levels of the threading model.
 
 .. figure:: ../data/understand/programming_model/memory_hierarchy.svg
   :alt: Diagram depicting nested rectangles of varying color. The outermost one
@@ -395,35 +507,83 @@ threading model.
 
   Memory hierarchy.
 
-Local or per-thread memory
+Registers or per-thread memory
   Read-write storage only visible to the threads defining the given variables,
   also called per-thread memory. This is the default memory namespace.
-  The size of the blocks for a given kernel, and thereby the number of concurrent
-  warps, are limited by local memory usage. This relates to the *occupancy* of the
-  CU as described in :doc:`Compute Units <./hardware_implementation>`,
-  an important concept in resource usage and performance optimization. 
+  
+  Each thread uses registers to store temporary variables, operands, and
+  intermediate results during execution. These registers physically reside in
+  the register file of a :ref:`compute unit <compute_unit>` and are implemented
+  using fast on-chip SRAM, typically the fastest accessible memory in the GPU.
+  
+  When a thread requires more storage than the available registers, some values
+  may spill into global memory, which incurs a significant performance penalty
+  due to much higher latency. Registers are managed automatically by the
+  LLVM-based ROCm compiler toolchain during kernel compilation, optimizing
+  register allocation to minimize spills and maximize the number of threads that
+  can run concurrently on a CU.
+  
+  The size of the blocks for a given kernel, and thereby the number of
+  concurrent wavefronts, are limited by register usage. This relates to the
+  *occupancy* of the CU as described in
+  :doc:`Compute Units <./hardware_implementation>`, an important concept in
+  resource usage and performance optimization.
 
-  Use local memory when the data is specific to a thread, to store variables generated
-  by the thread, or to provide register pressure relief for the thread. 
+  Use registers when the data is specific to a thread. This includes temporary
+  variables, loop counters, and intermediate results that don't need to be
+  shared across threads. Registers provide the lowest latency access for
+  thread-specific data.
 
 Shared memory
-  Read-write storage visible to all the threads in a given block. Use shared memory
-  when the data is reused within a thread block, when cross-thread communication
-  is needed, or to minimize global memory transactions by using device memory
-  whenever possible. 
+  Read-write storage visible to all the threads in a given block.
+  
+  Shared memory corresponds to the :ref:`Local Data Share (LDS) <lds>`, a fast,
+  on-chip SRAM region within each compute unit's L1 cache subsystem. LDS
+  provides low-latency, programmer-managed shared memory that enables efficient
+  coordination and reuse of data.
+  
+  A typical high-performance kernel follows this pattern:
+  
+  * Load data from global memory into LDS
+  * Perform arithmetic operations using SIMD or :ref:`Matrix Cores (MFMA units)
+    <mfma_units>`
+  * Synchronize threads within the work-group via barrier instructions
+  * Write results back to global memory, optionally using atomics for
+    inter-work-group coordination
+  
+  Each CU provides a fixed amount of LDS (the size depending on the
+  architecture), shared among all resident work-groups. How much LDS a kernel
+  consumes directly influences occupancy, since larger allocations reduce the
+  number of active work-groups per CU.
+  
+  Use shared memory when the data is reused within a thread block, when
+  cross-thread communication is needed, or to minimize global memory
+  transactions by using on-chip memory whenever possible.
 
 Global
   Read-write storage visible to all threads in a given grid. There are
   specialized versions of global memory with different usage semantics which
-  are typically backed by the same hardware storing global. 
-
-  Use global memory when you have large datasets, are transferring memory between
-  the host and the device, and when you are sharing data between thread blocks. 
+  are typically backed by the same hardware storing global.
+  
+  Global memory serves as the main data store for input tensors, intermediate
+  results, and kernel outputs. On AMD GPUs, global memory is physically
+  implemented in :ref:`High-Bandwidth Memory (HBM) <hbm>` or GDDR memory,
+  depending on the product class.
+  
+  Access to global memory is explicit and programmer-managed, with
+  synchronization possible through atomic operations or memory fences. Data
+  transfers between the host and device are managed using HIP runtime APIs such
+  as :cpp:func:`hipMalloc`, :cpp:func:`hipMemcpy`, and :cpp:func:`hipFree`.
+  Performance is largely determined by memory coalescing, alignment, and reuse.
+  
+  Use global memory when you have large datasets, are transferring memory
+  between the host and the device, and when you are sharing data between thread
+  blocks.
 
   Constant
     Read-only storage visible to all threads in a given grid. It is a limited
-    segment of global with queryable size. Use constant memory for read-only data
-    that is shared across multiple threads, and that has a small data size. 
+    segment of global with queryable size. Use constant memory for read-only
+    data that is shared across multiple threads, and that has a small data size.
 
   Texture
     Read-only storage visible to all threads in a given grid and accessible
@@ -570,3 +730,278 @@ the runtime to distribute workloads across multiple GPUs to balance the load and
 from being over-utilized while others are idle. 
 
 For more information, see :ref:`multi-device`.
+
+Domain-specific programming models
+==================================
+
+Beyond the low-level kernel-based programming model described in previous
+sections, ROCm provides domain-specific library abstractions that offer
+alternative ways to express GPU computation. These libraries encapsulate common
+computational patterns, providing higher-level programming models optimized for
+specific problem domains.
+
+Rather than writing explicit kernels with manual memory management and
+optimization, developers can express algorithms using domain-appropriate
+operations. The libraries handle kernel selection, memory layout, and
+performance tuning automatically, adapting to different GPU architectures and
+problem sizes at runtime.
+
+This section presents two representative examples:
+:doc:`rocBLAS <rocblas:index>` for linear algebra and
+:doc:`MIOpen <miopen:index>` for deep learning. These libraries illustrate how
+domain-specific abstractions can improve productivity while maintaining
+performance portability across AMD GPU architectures.
+
+Linear algebra with rocBLAS
+----------------------------
+
+rocBLAS implements the BLAS standard, providing a high-performance library for
+fundamental dense linear algebra operations. It represents an alternative
+programming model where computation is expressed as matrix and vector operations
+rather than explicit GPU kernels.
+
+Programming model characteristics
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The rocBLAS programming model differs from kernel-level HIP in several key
+aspects:
+
+* **Abstraction level**: Developers call functions like ``rocblas_sgemm()`` for
+  matrix multiplication instead of writing tiled kernels manually
+* **Memory layout**: Matrices are conceptualized as mathematical objects with
+  rows and columns, not raw pointers and index arithmetic
+* **Automatic optimization**: The library selects optimal kernel
+  implementations based on problem dimensions, data types (FP64, FP32, FP16,
+  BF16, INT8), and target GPU architecture (for example, ``gfx90a``,
+  ``gfx942``)
+* **Performance portability**: The same API call adapts to CDNA, RDNA, and
+  future architectures without code changes
+
+Instead of managing thread blocks, shared memory tiles, and register allocation,
+the developer specifies the mathematical operation. rocBLAS handles all
+low-level optimizations, including memory coalescing, use of :ref:`Matrix Cores
+(MFMA units) <mfma_units>`, and exploitation of on-chip :ref:`LDS <lds>`.
+
+Column-major versus row-major layouts
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+One practical consideration when using rocBLAS is matrix layout. To maintain
+compatibility with the original Fortran-based BLAS specification, rocBLAS
+expects matrices in column-major order. Most C and C++ programs, including HIP
+kernels, use row-major order by default.
+
+This mismatch can be resolved mathematically without physically transposing
+data. Given the identity:
+
+.. math::
+
+   \text{If } \pmb{C} = \pmb{A} \times \pmb{B}, \text{ then } \pmb{C}^T = \pmb{B}^T \times \pmb{A}^T
+
+By swapping the operand order and dimensions when calling rocBLAS, and
+interpreting the result as a row-major matrix, the correct result is obtained
+without memory rearrangement:
+
+.. code-block:: cpp
+
+   #include <rocblas/rocblas.h>
+
+   // Matrix multiply C = alpha * A @ B + beta * C
+   // for row-major matrices using rocBLAS
+   void sgemm_row_major(rocblas_handle handle, int M, int N, int K,
+                        const float* alpha,
+                        const float* A, const float* B,
+                        const float* beta, float* C) {
+       // Swap A and B, swap M and N for row-major layout
+       rocblas_sgemm(handle,
+                     rocblas_operation_none, rocblas_operation_none,
+                     N, M, K,
+                     alpha,
+                     B, N,  // leading dimension of B^T
+                     A, K,  // leading dimension of A^T
+                     beta,
+                     C, N); // leading dimension of C^T
+   }
+
+This technique preserves both correctness and performance. The
+``rocblas_operation_none`` flag indicates matrices should be used as provided,
+avoiding additional device-side transposes that would harm performance.
+
+Integration with HIP applications
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+rocBLAS integrates with HIP applications through a handle-based API. The library
+manages its own stream-based execution model, coordinating with HIP's
+asynchronous operations:
+
+.. code-block:: cpp
+
+   rocblas_handle handle;
+   rocblas_create_handle(&handle);
+   
+   // Optional: associate with HIP stream
+   rocblas_set_stream(handle, hipStream);
+   
+   // Perform computation
+   rocblas_sgemm(handle, ...);
+   
+   // Synchronize if needed
+   hipStreamSynchronize(hipStream);
+   
+   rocblas_destroy_handle(handle);
+
+Applications link against ``librocblas.so`` and include ``rocblas.h``. The
+library serves as the foundation for deep learning frameworks such as PyTorch
+and TensorFlow when running on AMD GPUs, handling dense matrix operations in
+fully connected and transformer layers.
+
+Deep learning with MIOpen
+--------------------------
+
+MIOpen provides GPU-accelerated primitives for deep neural networks, offering a
+programming model centered on neural network operations rather than explicit
+kernels. It occupies the same software layer as rocBLAS but is specialized for deep
+learning workloads.
+
+Programming model characteristics
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+MIOpen abstracts GPU programming to the level of neural network layers and
+operations:
+
+* **Domain expressiveness**: Computations are expressed as convolutions,
+  normalizations, activations, and attention mechanisms, not thread hierarchies
+* **Declarative fusion**: Operations can be combined (Convolution → Bias →
+  ReLU) into fused kernels automatically
+* **Automatic algorithm selection**: The library chooses between direct,
+  FFT-based, Winograd, and GEMM-based implementations at runtime
+* **Memory optimization**: Fused operations keep intermediate results in
+  :ref:`LDS <lds>`, minimizing :ref:`global memory <hbm>` traffic
+
+Rather than manually implementing convolutional kernels with careful attention
+to memory coalescing and :ref:`MFMA unit <mfma_units>` utilization, developers
+describe the neural network architecture. MIOpen handles low-level optimization,
+auto-tuning, and performance-critical implementation details.
+
+Graph and Fusion APIs
+~~~~~~~~~~~~~~~~~~~~~~
+
+Modern MIOpen workflows use Graph and Fusion APIs, which allow declarative
+specification of operation sequences:
+
+.. code-block:: cpp
+
+   // Declarative fusion example (conceptual)
+   auto conv = createConvolution(input, weights, ...);
+   auto bias = createBiasAdd(conv, bias_vector);
+   auto relu = createActivation(bias, ACTIVATION_RELU);
+   
+   // Library fuses into single optimized kernel
+   auto fused_op = fuseOperations({conv, bias, relu});
+   executeGraph(fused_op);
+
+Operation fusion significantly improves performance by reducing memory
+bandwidth pressure. Instead of three separate kernel launches with intermediate
+global memory writes and reads, a single fused kernel keeps data on-chip
+throughout the computation pipeline.
+
+This is particularly important for operations like batch normalization followed
+by activation, where intermediate tensors would otherwise require expensive
+round-trips through :ref:`HBM <hbm>`. Keeping these values in LDS reduces
+memory traffic and improves energy efficiency.
+
+Runtime optimization and tuning
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+MIOpen maintains multiple implementations for each operation. For convolutions,
+this includes:
+
+* **Direct convolution**: Explicit loops over kernel dimensions
+* **GEMM-based**: Reformulates convolution as matrix multiplication
+* **Winograd**: Reduces arithmetic complexity for small kernels
+* **FFT-based**: Frequency-domain convolution for large kernels
+
+The library uses runtime heuristics and pre-tuned configuration databases to
+select the optimal algorithm based on:
+
+* Input tensor dimensions and layout
+* Filter sizes and stride patterns
+* Target GPU architecture (CDNA versus RDNA, specific ``gfx`` version)
+* Available memory and compute resources
+* Data types (FP32, FP16, BF16, INT8)
+
+This auto-tuning abstracts performance optimization from the application
+developer. The same MIOpen call automatically adapts when moving from a
+datacenter MI300X (``gfx942``) to a consumer RDNA3 GPU (``gfx1200``), selecting
+architecture-appropriate implementations without code changes.
+
+Framework integration
+~~~~~~~~~~~~~~~~~~~~~
+
+Deep learning frameworks like PyTorch and TensorFlow use MIOpen as their GPU
+backend on AMD hardware. When a PyTorch model calls ``torch.nn.Conv2d`` or
+``torch.nn.BatchNorm2d``, these operations dispatch to MIOpen primitives.
+
+The framework provides the high-level neural network API, while MIOpen handles
+the GPU-specific implementation. This separation allows framework developers to
+focus on model architectures and training algorithms, while library developers
+optimize GPU kernels for specific hardware generations.
+
+For applications requiring both general linear algebra and specialized deep
+learning operations, rocBLAS and MIOpen work together. MIOpen uses rocBLAS (via
+hipBLASLt and Tensile backends) for the matrix-multiply-intensive portions of
+operations like fully connected layers, while providing specialized kernels for
+convolutions, pooling, and normalization.
+
+Comparison of programming models
+---------------------------------
+
+The following table summarizes how different programming models trade control
+for abstraction:
+
+.. list-table:: Programming Model Comparison
+   :header-rows: 1
+   :widths: 30 35 35
+
+   * - Aspect
+     - HIP Kernels
+     - Domain-Specific Libraries
+   * - Programming unit
+     - Thread, block, grid
+     - Domain primitives (matrices, layers, transforms)
+   * - Memory management
+     - Explicit (``hipMalloc``, ``hipMemcpy``)
+     - Library-managed, handle-based
+   * - Optimization approach
+     - Manual tuning required
+     - Auto-tuned, architecture-adaptive
+   * - Thread hierarchy
+     - Explicit configuration
+     - Abstracted by API
+   * - Performance portability
+     - Requires retuning per architecture
+     - Automatic adaptation across architectures
+   * - Development effort
+     - High (low-level control)
+     - Low (high-level API calls)
+
+The examples of rocBLAS and MIOpen illustrate a common pattern across the ROCm
+software stack: domain-specific libraries that abstract low-level GPU
+programming into higher-level operations tailored to specific computational
+domains. The ROCm ecosystem provides many additional libraries following this
+pattern, including rocFFT for Fast Fourier Transforms, rocRAND for random number
+generation, rocSPARSE for sparse linear algebra, and RCCL for collective
+communication across multiple GPUs.
+
+Choosing the appropriate abstraction level depends on the application domain.
+For novel algorithms not covered by existing libraries, kernel-level HIP
+provides full control. For well-established operations within specific domains,
+the ROCm library ecosystem offers productivity and performance portability.
+
+Many applications combine multiple programming models: HIP kernels for custom
+algorithms, domain-specific libraries for standard operations, and framework
+integration for high-level workflows. The ROCm software stack supports this
+layered approach, allowing developers to select the appropriate abstraction for
+each component of their application.
+
+For a complete list of ROCm libraries and their capabilities, see the `ROCm
+documentation <https://rocm.docs.amd.com/en/latest/>`_.
