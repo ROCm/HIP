@@ -100,9 +100,10 @@ For example, compiling for the MI300X would use:
   amdclang++ --offload-arch=gfx942 kernel.cpp -o kernel.out
 
 The compiler uses this flag to emit optimized machine code for that GPU's
-:ref:`compute units <compute_unit>`, matrix cores, and memory subsystem. The
-GFX IP acts as a virtual hardware target, decoupling high-level programming
-models (HIP, OpenMP, OpenCL) from the underlying physical GPU design.
+:ref:`compute units <compute_unit>`, :ref:`matrix cores <mfma_units>`, and
+memory subsystem. The GFX IP acts as a virtual hardware target, decoupling
+high-level programming models (HIP, OpenMP, OpenCL) from the underlying physical
+GPU design.
 
 While AMD does not explicitly name its compatibility model as "onion-layered,"
 the GFX IP system follows a similar principle: newer architectures generally
@@ -147,13 +148,12 @@ matrix-multiply instructions. A few examples of instructions from the
   register
 * ``v_mfma_f32_16x16x4f16 v[0:15], v[16:31], v[32:47], v[0:15]`` — perform a
   16×16×4 matrix fused multiply-add
-* ``s_barrier`` — synchronize all wavefronts in the work-group
+* ``s_barrier`` — synchronize all warps in the work-group
 
 In this syntax:
 
 * ``v_`` instructions operate on vector registers (VGPRs) per thread.
-* ``s_`` instructions operate on scalar registers (SGPRs) shared by the
-  wavefront.
+* ``s_`` instructions operate on scalar registers (SGPRs) shared by the warp.
 * Specialized matrix instructions (``v_mfma_*``) invoke the :ref:`Matrix Core
   (MFMA) hardware units <mfma_units>`.
 
@@ -188,7 +188,7 @@ yet released.
 
 This makes AMDGPU IR a "narrow waist" between software and hardware,
 abstracting the details of the physical :ref:`compute units <compute_unit>`,
-:ref:`wavefront <wavefront>` schedulers, and memory hierarchies, while still
+:ref:`warp <wavefront>` schedulers, and memory hierarchies, while still
 providing explicit control over threads, registers, and memory spaces.
 
 Unlike traditional CPU ISAs, AMDGPU IR is not executed directly. Instead, it is
@@ -218,15 +218,15 @@ These instructions represent operations in the virtual machine model:
 * Arithmetic and memory intrinsics (``llvm.fma``, ``llvm.amdgcn.buffer.load``)
   map one-to-one to GPU instructions.
 * Built-in functions like ``llvm.amdgcn.workitem.id.x()`` access special
-  per-thread state, such as the current thread or :ref:`work-group
-  <work_group>` index.
+  per-thread state, such as the current thread or
+  :ref:`block <inherent_thread_hierarchy_block>` index.
 
 The AMDGPU IR machine model reflects the hardware reality of AMD GPUs: a single
 instruction stream drives a :ref:`wavefront <wavefront>` of 64 threads that
 execute in lockstep on the SIMD pipelines, each maintaining its own register
-state while sharing program flow and :ref:`local memory <lds>`. Wavefronts
-cooperate through the :ref:`Local Data Share (LDS) <lds>` and synchronize via
-barriers, the same abstractions exposed in the high-level ROCm programming
+state while sharing program flow and :ref:`local memory <lds>`.
+Warps cooperate through the :ref:`Local Data Share (LDS) <lds>` and synchronize
+via barriers, the same abstractions exposed in the high-level ROCm programming
 model.
 
 Since AMDGPU IR is integrated with the open-source LLVM compiler

@@ -116,12 +116,13 @@ Compute-bound performance
 
 A kernel is compute-bound when its performance is limited by the GPU's
 arithmetic throughput rather than memory bandwidth. These kernels have high
-arithmetic intensity, spending most cycles executing arithmetic operations.
+:ref:`arithmetic intensity <arithmetic_intensity>`, spending most cycles
+executing arithmetic operations.
 
 Kernels that are compute-bound are limited by the arithmetic bandwidth of
-the GPU's Compute Units (CUs)—on AMD architectures, this means the vector
-ALUs and :ref:`MFMA units <mfma_units>` within each :ref:`CU <compute_unit>`
-or Single Instruction Multiple Data (SIMD) unit.
+the GPU's :ref:`Compute Units (CUs) <compute_unit>`—on AMD architectures, this
+means the :ref:`vector ALUs <valu>` and :ref:`MFMA units <mfma_units>` within
+each :ref:`CU <compute_unit>` or Single Instruction Multiple Data (SIMD) unit.
 
 Characteristics of compute-bound kernels:
 
@@ -148,12 +149,14 @@ Memory-bound performance
 ========================
 
 A kernel is memory-bound when its performance is limited by memory
-bandwidth rather than compute capacity. These kernels have low arithmetic
-intensity and spend significant time waiting for memory operations.
+bandwidth rather than compute capacity. These kernels have low
+:ref:`arithmetic intensity <arithmetic_intensity>` and spend significant time
+waiting for memory operations.
 
 Kernels that are memory-bound are limited by the memory bandwidth of the
 GPU—that is, by how quickly data can move between :ref:`HBM <hbm>` and the
-on-chip caches or :ref:`LDS <lds>` of the GPU's compute units.
+on-chip caches or :ref:`LDS <lds>` of the GPU's
+:ref:`compute units <compute_unit>`.
 
 Memory-bound kernels are limited by the bandwidth between GPU RAM and local
 caches because the working sets of most real-world GPU workloads are far
@@ -261,27 +264,27 @@ execution.
 
 Latency hiding is the strategy of masking long-latency operations by
 running them concurrently. On AMD GPUs, performant kernels
-interleave the execution of many threads across wavefronts keeping overall
-throughput high even when individual instructions take many cycles.
-When one wavefront stalls on a slow :ref:`global-memory <hbm>` access, the
-scheduler immediately issues instructions from another eligible wavefront.
+interleave the execution of many threads across :ref:`warps <wavefront>` keeping
+overall throughput high even when individual instructions take many cycles. When
+one warp stalls on a slow :ref:`global-memory <hbm>` access, the
+:ref:`scheduler <wave-scheduling>` immediately issues instructions from another
+eligible warp.
 
 How latency hiding works:
 
-* **Wavefront switching**: Context switches occur every cycle with zero
-  overhead
-* **Multiple wavefronts per CU**: Many concurrent wavefronts supported
+* **warp switching**: Context switches occur every cycle with zero overhead
+* **Multiple warps per CU**: Many concurrent warps supported
 * **Instruction-level parallelism**: Multiple independent instructions in
   flight
 
-This keeps the compute units busy: while one wavefront drives
-:ref:`MFMA matrix ops <mfma_units>`, another runs scalar and vector ALU
-work (e.g., quantize and dequantize), and a third issues loads and stores
-through the memory pipeline (LDS, L1, and L2 ↔ :ref:`HBM <hbm>`).
+This keeps the :ref:`compute units <compute_unit>` busy: while one
+warp drives :ref:`MFMA matrix ops <mfma_units>`, another runs scalar and vector
+ALU work (e.g., quantize and dequantize), and a third issues loads and stores
+through the memory pipeline (:ref:`LDS <lds>`, L1, and L2 ↔ :ref:`HBM <hbm>`).
 
 The hardware can completely hide memory latency if there are enough active
-wavefronts with independent work. The number of instructions required from
-other wavefronts to hide latency depends on the GPU's specific memory latency and
+warps with independent work. The number of instructions required from other
+warps to hide latency depends on the GPU's specific memory latency and
 instruction throughput characteristics.
 
 .. _littles_law:
@@ -297,12 +300,12 @@ and throughput:
    \text{concurrency (ops)} = \text{latency (s)} \times \text{throughput (ops/s)}
 
 In GPU terms, it tells you how much independent work you must have in
-flight to hide latency via fine-grained scheduling. On AMD GPUs, wavefront
-switching by the wavefront schedulers is the primary latency-hiding
-mechanism.
+flight to hide latency via fine-grained scheduling. On AMD GPUs,
+:ref:`warp <wavefront>` switching by the warp schedulers is the primary
+latency-hiding mechanism.
 
 Little's Law determines how many independent memory transactions or
-instructions must be outstanding across active wavefronts to keep the
+instructions must be outstanding across active warps to keep the
 compute units busy.
 
 Concretely, consider a simple sequence in AMD CDNA terms:
@@ -320,117 +323,114 @@ load takes hundreds of cycles, you need hundreds of independent in-flight
 operations to finish, on average, one such sequence per cycle—hiding the
 memory latency from consumers.
 
-Issuance occurs at the wavefront granularity (typically 64 threads per
-wavefront on CDNA). When latency hiding is successful, the CU maintains
-enough active wavefronts and rapidly context-switches among them whenever
-one blocks, so execution units don't sit idle waiting on memory or other
-long-latency events.
+Issuance occurs at the warp granularity (64 threads per warp on CDNA). When
+latency hiding is successful, the CU maintains enough active warps and rapidly
+context-switches among them whenever one blocks, so execution units don't sit
+idle waiting on memory or other long-latency events.
 
 Requirements for effective latency hiding:
 
-* Sufficient occupancy (active wavefronts)
+* Sufficient occupancy (active warps)
 * Independent instructions to overlap
 * Balanced resource usage
 * Minimal divergence
 
 .. _wavefront_execution:
 
-Wavefront execution states
-==========================
+Warp (Wavefront) execution states
+=================================
 
-The state of the wavefronts executing a kernel on an AMD GPU can be
-described using several non-exclusive terms—active, stalled, eligible, and
-selected.
+The state of the :ref:`warps <wavefront>` executing a kernel on an AMD GPU
+can be described using several non-exclusive terms—active, stalled, eligible,
+and selected.
 
-A wavefront is considered **active** from the time its threads begin
-executing until all threads in that wavefront have completed the kernel.
-The wavefront schedulers select wavefronts from the active pool each cycle;
-the selected wavefronts then issue their instructions.
+A warp is considered **active** from the time its threads begin executing until
+all threads in that warp have completed the kernel. The
+:ref:`warp schedulers <wave-scheduling>` select warps from the active pool each
+cycle; the selected warps then issue their instructions.
 
-An **eligible** wavefront is an active wavefront ready to issue its next
-instruction. For a wavefront to be eligible:
+An **eligible** warp is an active warp ready to issue its next instruction. For
+a warp to be eligible:
 
 * Its next instruction has been fetched
-* The required pipeline (vector ALU, MFMA, or memory) is available
+* The required pipeline (vector ALU, :ref:`MFMA <mfma_units>`, or memory) is
+  available
 * All data dependencies have been resolved
 * No synchronization barriers (for example, ``s_barrier``) are pending
 
-Eligible wavefronts are the immediate candidates for issue. A lack of
-eligible wavefronts often indicates dependency or memory stalls—a key
-target in performance tuning.
+Eligible warps are the immediate candidates for issue. A lack of eligible warps
+often indicates dependency or memory stalls—a key target in performance tuning.
 
-A **stalled** wavefront is active but unable to issue its next instruction
-due to resource or data hazards. Common causes include:
+A **stalled** warp is active but unable to issue its next instruction due to
+resource or data hazards. Common causes include:
 
-* Execution dependencies: waiting for results from previous ALU or MFMA
-  operations
-* Memory dependencies: waiting for global or LDS memory fetches
+* Execution dependencies: waiting for results from previous ALU or
+  :ref:`MFMA <mfma_units>` operations
+* Memory dependencies: waiting for global or :ref:`LDS <lds>` memory fetches
 * Pipeline conflicts: required execution units are occupied
 
 AMD hardware uses a scoreboard mechanism to track outstanding dependencies
-per wavefront. When waiting on LDS or ALU results, a wavefront is said to
-be on the short scoreboard; when waiting on off-chip :ref:`HBM <hbm>`
-accesses, it is on the long scoreboard. This scoreboarding approach—
-originally from the CDC 6600 supercomputer—allows dynamic scheduling across
-wavefronts (thread-level parallelism) rather than within them
-(instruction-level parallelism).
+per warp. When waiting on :ref:`LDS <lds>` or ALU results, a warp is said to be
+on the short scoreboard; when waiting on off-chip :ref:`HBM <hbm>` accesses, it
+is on the long scoreboard. This scoreboarding approach—originally from the CDC
+6600 supercomputer—allows dynamic scheduling across warps (thread-level
+parallelism) rather than within them (instruction-level parallelism).
 
-A **selected** wavefront is an eligible one chosen by the wavefront
-scheduler to issue an instruction in the current cycle. Each CU typically
-has multiple schedulers that can each issue one instruction per cycle from
-their eligible pool.
+A **selected** warp is an eligible one chosen by the warp scheduler to issue an
+instruction in the current cycle. Each :ref:`CU <compute_unit>` typically has
+multiple schedulers that can each issue one instruction per cycle from their
+eligible pool.
 
 Understanding these states helps explain GPU utilization metrics:
 
 * **Active cycles**: Percentage of cycles with at least one instruction
   executing
 * **Stall cycles**: Percentage of cycles waiting for resources
-* **Idle cycles**: No wavefronts available to execute
+* **Idle cycles**: No warps available to execute
 
 Maximizing active cycles while minimizing stall and idle cycles improves
 performance. Effective latency hiding on AMD hardware relies on keeping
-enough active and eligible wavefronts resident so that the schedulers
-always have work to select, ensuring the CU pipelines remain fully
-utilized.
+enough active and eligible warps resident so that the schedulers always have
+work to select, ensuring the CU pipelines remain fully utilized.
 
 .. _occupancy:
 
 Occupancy theory
 ================
 
-Occupancy measures the ratio of active wavefronts to the maximum possible
-wavefronts on a compute unit.
+Occupancy measures the ratio of active :ref:`warp <wavefront>` to the maximum
+possible warps on a :ref:`compute unit <compute_unit>`.
 
 .. math::
 
-   \text{Occupancy} = \frac{\text{Active Wavefronts}}{\text{Max Wavefronts per CU}}
+   \text{Occupancy} = \frac{\text{Active warps}}{\text{Max warps per CU}}
 
 There are two common ways to measure it:
 
 * **Theoretical occupancy**: The upper limit determined by the kernel's
   launch configuration (threads per block, register use, LDS use) and the
   hardware limits of the CU
-* **Achieved occupancy**: The actual number of wavefronts active during
-  kernel execution, i.e., on active cycles
+* **Achieved occupancy**: The actual number of warps active during kernel
+  execution, i.e., on active cycles
 
-As part of the AMD execution model, all threads in a work group are
-scheduled to the same CU. Each CU has finite resources—Vector
-General-Purpose Registers (VGPRs), Scalar General-Purpose Registers
-(SGPRs), :ref:`LDS <lds>` (shared memory), and wave slots—that must be
-shared among all resident work-groups. These constraints jointly determine
-the maximum number of active wavefronts.
+As part of the AMD execution model, all threads in a
+:ref:`block <inherent_thread_hierarchy_block>` are scheduled to the same CU.
+Each CU has finite resources—Vector General-Purpose Registers (VGPRs), Scalar
+General-Purpose Registers (SGPRs), :ref:`LDS <lds>` (shared memory), and wave
+slots—that must be shared among all resident blocks. These constraints jointly
+determine the maximum number of active warps.
 
 Why occupancy matters:
 
-* Higher occupancy improves latency hiding
-* More concurrent wavefronts mask memory and instruction latency
+* Higher occupancy improves :ref:`latency hiding <latency_hiding>`
+* More concurrent warps mask memory and instruction latency
 * Enables better utilization of execution units
 
 Limiting factors:
 
 * **Register usage**: VGPRs and SGPRs per thread
 * **Shared memory (LDS)**: Allocation per block
-* **Wavefront slots**: Hardware limit on concurrent wavefronts
+* **Warp slots**: Hardware limit on concurrent warps
 * **Block size**: Small blocks may waste resources
 
 Trade-offs:
@@ -440,17 +440,18 @@ Trade-offs:
 * Optimal occupancy depends on kernel characteristics
 * Memory-bound kernels benefit more from high occupancy
 
-Low occupancy often reduces performance when there aren't enough eligible
-wavefronts to hide memory or arithmetic latency, causing low issue
-efficiency and underutilized pipelines. However, once occupancy is
-sufficient for latency hiding, increasing it further can hurt performance
-by reducing the number of available registers or LDS per wavefront—both of which can
-limit arithmetic intensity.
+Low occupancy often reduces performance when there aren't enough eligible warps
+to hide memory or arithmetic latency, causing low issue efficiency and
+underutilized pipelines. However, once occupancy is sufficient for 
+latency hiding, increasing it further can hurt performance by reducing the
+number of available registers or LDS per warp—both of which can limit
+:ref:`arithmetic intensity <arithmetic_intensity>`.
 
-In short, occupancy measures how fully a CU is loaded, not how efficiently
-it is utilized. High-performance kernels (for example, MFMA-based GEMMs on CDNA)
-often operate at low occupancy because only a few wavefronts are needed to
-fully saturate the MFMA and memory pipelines.
+In short, occupancy measures how fully a :ref:`CU <compute_unit>` is loaded, not
+how efficiently it is utilized. High-performance kernels (for example,
+:ref:`MFMA <mfma_units>`-based GEMMs on :ref:`CDNA <cdna_architecture>`) often
+operate at low occupancy because only a few warps are needed to fully saturate
+the MFMA and memory pipelines.
 
 .. _memory_hierarchy_theory:
 
@@ -494,15 +495,15 @@ bandwidth unused.
 Coalescing takes advantage of how DRAM is organized internally. When a DRAM
 address is accessed, the hardware actually fetches or writes a burst: a run
 of consecutive addresses fetched together in a single transaction. If
-multiple threads in a wavefront access addresses that fall into the same
-burst, those logical accesses can be coalesced into that single
+multiple threads in a :ref:`warp <wavefront>` access addresses that fall into
+the same burst, those logical accesses can be coalesced into that single
 transaction.
 
-This fits naturally with the wavefront execution model: in normal
-execution, all threads in a wavefront execute the same instruction at the
-same time. If each lane in the wavefront loads or stores a value from a
+This fits naturally with the warp execution model: in normal
+execution, all threads in a warp execute the same instruction at the
+same time. If each lane in the warp loads or stores a value from a
 contiguous region (e.g., lane *i* accesses ``base + i``), the memory system
-can typically serve the entire wavefront's request with a small number of
+can typically serve the entire warp's request with a small number of
 large, aligned bursts. When addresses are scattered (e.g., large strides or
 irregular indexing), more bursts are needed, and effective bandwidth drops.
 
@@ -537,7 +538,7 @@ stride (distance between consecutive elements accessed by each thread):
 
        for (std::size_t j = t * stride; j < N; j += T * stride)
        {
-           // across a wavefront, addresses differ by (stride * sizeof(float))
+           // across a warp, addresses differ by (stride * sizeof(float))
            float v = in[j]; // perfectly coalesced for stride == 1
            acc = acc * 1.000000119f + v;  // force compiler to keep the load
        }
@@ -546,15 +547,15 @@ stride (distance between consecutive elements accessed by each thread):
        if (t < N) out[t] = acc;
    }
 
-When ``stride == 1``, threads in the same wavefront access consecutive
-4-byte elements (``in[j]``, ``in[j+1]``, ``in[j+2]``, …). These accesses
-fall into a small number of aligned DRAM bursts, so the memory system can
-coalesce them efficiently and deliver high bandwidth.
+When ``stride == 1``, threads in the same warp access consecutive 4-byte
+elements (``in[j]``, ``in[j+1]``, ``in[j+2]``, …). These accesses fall into a
+small number of aligned DRAM bursts, so the memory system can coalesce them
+efficiently and deliver high bandwidth.
 
 As stride increases:
 
 * The addresses accessed by neighboring threads move farther apart
-* Each wavefront's loads spread across more bursts
+* Each warp's loads spread across more bursts
 * The number of physical transactions per logical access increases
 * Effective bandwidth drops
 
@@ -567,11 +568,11 @@ Shared memory (LDS) is organized into banks that can be accessed
 independently. Bank conflicts occur when multiple threads access different
 addresses in the same bank.
 
-A bank conflict occurs when multiple threads in a wavefront simultaneously
-access different addresses that reside in the same :ref:`LDS <lds>` bank.
-When that happens, the accesses to that bank must be serialized, reducing
-effective LDS throughput by an integer factor and preventing full
-utilization of the on-chip memory bandwidth.
+A bank conflict occurs when multiple threads in a :ref:`warp <wavefront>`
+simultaneously access different addresses that reside in the same
+:ref:`LDS <lds>` bank. When that happens, the accesses to that bank must be
+serialized, reducing effective LDS throughput by an integer factor and
+preventing full utilization of the on-chip memory bandwidth.
 
 On AMD GPUs, the on-chip LDS (HIP's "shared memory") inside each compute unit is
 physically organized into banks. These banks can be accessed in parallel, which
@@ -607,7 +608,7 @@ Example: conflict-free access
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you access sequential elements of a float array in LDS, different lanes
-in a wavefront naturally land in different banks:
+in a warp naturally land in different banks:
 
 .. code-block:: cuda
 
@@ -641,17 +642,17 @@ Here, each successive access is offset by :math:`32 \times 4 = 128 \text{bytes}`
 * ``data[32]`` → bank 0
 * ``data[64]`` → bank 0
 
-Every lane in the wavefront is hitting bank 0, but at different addresses,
-all in the same cycle. These accesses must be serialized by the LDS
-hardware, which can turn a fast LDS access into a slow operation.
+Every lane in the warp is hitting bank 0, but at different addresses, all in the
+same cycle. These accesses must be serialized by the LDS hardware, which can
+turn a fast LDS access into a slow operation.
 
 When conflicts don't happen
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If all threads in a wavefront access the exact same address in a bank
-(e.g., all lanes reading the same control value from LDS), hardware can
-often broadcast that value. In that case, the request is not treated as a
-conflict—it's one read, fanned out to many lanes.
+If all threads in a warp access the exact same address in a bank (e.g., all
+lanes reading the same control value from LDS), hardware can often broadcast
+that value. In that case, the request is not treated as a conflict—it's one
+read, fanned out to many lanes.
 
 .. _register_pressure_theory:
 
@@ -674,10 +675,10 @@ of physical registers per compute unit.
 How register pressure arises
 -----------------------------
 
-Each thread in a wavefront consumes a number of registers as determined by
-the compiled Instruction Set Architecture (ISA) code (AMD CDNA or RDNA
-assembly). All threads in a work-group share the same CU, so the total register
-file usage per work-group depends on both:
+Each thread in a :ref:`warp <wavefront>` consumes a number of registers as
+determined by the compiled Instruction Set Architecture (ISA) code (AMD CDNA or
+RDNA assembly). All threads in a work-group share the same CU, so the total
+register file usage per work-group depends on both:
 
 * The number of threads per work-group (launch configuration), and
 * The number of registers required per thread (kernel complexity)
@@ -698,7 +699,7 @@ Why register pressure matters:
 
 The relationship between registers and occupancy:
 
-* More registers per thread → fewer concurrent wavefronts
+* More registers per thread → fewer concurrent warps
 * Fewer registers per thread → higher occupancy but may need memory spills
 * Optimal balance depends on kernel memory access patterns
 
@@ -782,24 +783,25 @@ Relevant counters include:
 * ``SQ_ACCUM_SALU_BUSY`` (scalar ALU activity)
 
 Together, these form the pipe utilization profile—showing how well each
-instruction pipeline is being fed with eligible wavefronts and how close
-the kernel is to saturating the hardware's arithmetic or memory throughput.
+instruction pipeline is being fed with eligible :ref:`warps <wavefront>` and how
+close the kernel is to saturating the hardware's arithmetic or memory
+throughput.
 
 .. _issue_efficiency:
 
 Issue efficiency
 ~~~~~~~~~~~~~~~~
 
-Issue efficiency measures how effectively the wavefront scheduler on each
-compute unit keeps the execution pipelines busy by issuing instructions
-from eligible wavefronts. In a perfectly efficient kernel, the scheduler
-issues one instruction every cycle for every active CU.
+Issue efficiency measures how effectively the warp scheduler on each compute
+unit keeps the execution pipelines busy by issuing instructions from eligible
+warps. In a perfectly efficient kernel, the scheduler issues one instruction
+every cycle for every active CU.
 
-An issue efficiency of 100% means that on every active cycle, at least one
-wavefront was eligible and an instruction was successfully issued. Lower
-values indicate that during some cycles, all active wavefronts were
-stalled—waiting on memory, dependencies, or resources—and the scheduler was
-idle, reducing total instruction throughput.
+An issue efficiency of 100% means that on every active cycle, at least one warp
+was eligible and an instruction was successfully issued. Lower values indicate
+that during some cycles, all active warps were stalled—waiting on memory,
+dependencies, or resources—and the scheduler was idle, reducing total
+instruction throughput.
 
 **Issue efficiency**: The ratio of issued instructions to the maximum
 possible. Low efficiency can indicate instruction cache misses, scheduling
@@ -808,8 +810,7 @@ inefficiencies, or resource conflicts.
 On AMD GPUs, issue efficiency can be measured using hardware performance
 counters exposed through ROCProfiler or Omnitrace, such as:
 
-* ``SQ_WAVES_BUSY`` — percentage of cycles where any wavefront was actively
-  executing
+* ``SQ_WAVES_BUSY`` — percentage of cycles where any warp was actively executing
 * ``SQ_WAVES_ISSUED`` — number of issued waves per cycle
 * ``SQ_ACCUM_INSTS_ISSUED`` — total instructions issued per CU
 * ``SQ_ACCUM_CYCLES_BUSY`` — number of cycles the CU was active
@@ -827,9 +828,8 @@ CU utilization
 CU utilization measures the percentage of time that compute units on an AMD
 GPU are actively executing instructions.
 
-Instead of reporting the fraction of time a kernel is executing somewhere
-on the GPU, CU utilization reports the fraction of time all CUs spend
-executing wavefronts.
+Instead of reporting the fraction of time a kernel is executing somewhere on the
+GPU, CU utilization reports the fraction of time all CUs spend executing warps.
 
 **CU utilization**: The percentage of compute units actively executing
 work. Low utilization suggests insufficient parallelism, load imbalance, or
@@ -840,10 +840,11 @@ indicates that most CUs are busy executing instructions across the device.
 However, high CU utilization alone does not guarantee full performance.
 
 If CU utilization is high but throughput remains low, the kernel may not be
-effectively using the functional pipelines within each CU—such as vector
-ALUs, MFMA tensor cores, or load and store units. In that case, you should
-examine pipe utilization, which measures how fully those individual
-execution paths are being used.
+effectively using the functional pipelines within each CU—such as
+:ref:`vector ALUs <valu>`, :ref:`MFMA tensor cores <mfma_units>`, or
+:ref:`load and store units <lsu>`. In that case, you should examine pipe
+utilization, which measures how fully those individual execution paths are being
+used.
 
 CU utilization can be observed with AMD's profiling and monitoring tools:
 
@@ -852,25 +853,25 @@ CU utilization can be observed with AMD's profiling and monitoring tools:
   ``SQ_WAVE_CYCLES``, ``SQ_BUSY_CYCLES``, and per-pipe instruction metrics
 * ``rocminfo`` — shows the number of CUs available per GPU
 
-In summary, CU utilization captures how actively the GPU's compute units
-are engaged in running wavefronts. High CU utilization indicates good
-parallel workload distribution, while low CU utilization may point to poor
-occupancy, launch configuration limits, or insufficient concurrency.
+In summary, CU utilization captures how actively the GPU's compute units are
+engaged in running warps. High CU utilization indicates good parallel workload
+distribution, while low CU utilization may point to poor occupancy, launch
+configuration limits, or insufficient concurrency.
 
 .. _branch_efficiency:
 
 Branch efficiency
 ~~~~~~~~~~~~~~~~~
 
-Branch efficiency measures how often all threads within a wavefront take
-the same execution path when encountering conditional statements.
+Branch efficiency measures how often all threads within a
+:ref:`warp <wavefront>` take the same execution path when encountering
+conditional statements.
 
 It quantifies control-flow uniformity—that is, how often all lanes in a
-wavefront evaluate a conditional identically. It is calculated as the ratio
-of uniform branch decisions to total branch instructions executed. High
-branch efficiency indicates little to no wavefront divergence, while low
-branch efficiency means many lanes are masked off due to diverging control
-flow.
+:ref:`warp <wavefront>` evaluate a conditional identically. It is calculated as
+the ratio of uniform branch decisions to total branch instructions executed.
+High branch efficiency indicates little to no warp divergence, while low branch
+efficiency means many lanes are masked off due to diverging control flow.
 
 **Branch efficiency**: The ratio of non-divergent to total branches. Low
 efficiency indicates significant divergence overhead.
@@ -883,16 +884,14 @@ pattern found in most GPU kernels, for instance:
    int idx = blockIdx.x * blockDim.x + threadIdx.x;
    if (idx < n)
 
-usually has very high branch efficiency, since nearly all wavefronts
-consist entirely of threads that either satisfy ``idx < n`` or not—except
-perhaps for the last partial wavefront, which straddles the boundary of
-``n``.
+usually has very high branch efficiency, since nearly all warps consist entirely
+of threads that either satisfy ``idx < n`` or not—except perhaps for the last
+partial warp, which straddles the boundary of ``n``.
 
 While CPUs also optimize branch behavior, they focus on temporal
-uniformity—predicting whether the same branch will be taken or not over
-repeated iterations. GPUs, on the other hand, care about spatial
-uniformity: whether all lanes in the wavefront take the same branch at the
-same time.
+uniformity—predicting whether the same branch will be taken or not over repeated
+iterations. GPUs, on the other hand, care about spatial uniformity: whether all
+lanes in the warp take the same branch at the same time.
 
 On AMD architectures, this spatial uniformity is tracked via the EXEC mask.
 Divergence forces EXEC to toggle individual bits to deactivate lanes
@@ -945,9 +944,9 @@ concepts:
 * **Roofline model**: Visual framework for analyzing performance limits
   based on arithmetic intensity
 * **Arithmetic intensity**: The compute-to-memory ratio of algorithms
-* **Latency hiding**: How concurrent execution masks delays through
-  wavefront switching
-* **Occupancy**: How wavefront concurrency affects resource utilization
+* **Latency hiding**: How concurrent execution masks delays through warp
+  switching
+* **Occupancy**: How warp concurrency affects resource utilization
 * **Memory hierarchy**: How different memory types affect bandwidth and the
   importance of coalescing
 * **Performance metrics**: Quantitative measures for analysis including

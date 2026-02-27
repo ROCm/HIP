@@ -96,14 +96,13 @@ dispatch, the SPI:
 * Receives workgroups from the ACEs
 * Schedules workgroups onto available compute units
 * Initializes registers with kernel parameters
-* Ensures all wavefronts of a workgroup execute on the same CU for
-  synchronization
+* Ensures all warps of a workgroup execute on the same CU for synchronization
 * Monitors resource availability and queues workgroups when resources are
   exhausted
 
 The SPI tracks four critical resources that limit concurrent execution:
 
-* Wavefront slots (execution contexts)
+* warp slots (execution contexts)
 * Vector general-purpose registers (VGPRs)
 * Scalar general-purpose registers (SGPRs)
 * Local data share (LDS) memory
@@ -119,7 +118,7 @@ Scalar L1 data cache (sL1D)
 
 The scalar L1 data cache (sL1D) serves scalar memory operations from multiple
 CUs within a shader array. The sL1D is shared between CUs and caches data that
-is uniform across a wavefront, including:
+is uniform across a warp, including:
 
 * Kernel arguments and pointers
 * Grid and block dimensions
@@ -151,10 +150,10 @@ transformation, and exits as results, to maximize the number
 of such transformations per clock cycle.
 
 CUs enable latency hiding through massive hardware multithreading. A single CU
-can manage thousands of concurrent threads organized as a number of wavefronts,
-each containing 32 (RDNA) or 64 (CDNA) threads. This massive concurrency
-allows the hardware to hide memory access latency by executing other wavefronts
-while some wait for data.
+can manage thousands of concurrent threads organized as a number of warps, each
+containing 32 (RDNA) or 64 (CDNA) threads. This massive concurrency allows the
+hardware to hide memory access latency by executing other warps while some wait
+for data.
 
 .. figure:: ../data/understand/hardware_implementation/gcn_compute_unit.png
    :align: center
@@ -171,29 +170,28 @@ Sequencer and scheduling
 
 The instruction sequencer (SQ) serves as the control center of each compute
 unit, managing instruction flow through the execution pipelines. The sequencer
-maintains wavefront state and coordinates instruction execution across
-different functional units.
+maintains warp state and coordinates instruction execution across different
+functional units.
 
-**Wavefront organization**: The sequencer organizes active wavefronts into
-four pools, each containing slots for up to ten wavefronts (eight on the CDNA2
-MI200 Series). Each slot includes:
+**Warp organization**: The sequencer organizes active warps into four pools,
+each containing slots for up to ten warps (eight on the CDNA2 MI200 Series).
+Each slot includes:
 
-* Wavefront-level registers (program counter, execution mask, and others)
+* Warp-level registers (program counter, execution mask, and others)
 * Instruction buffer for prefetched instructions
 * State information for scheduling decisions
 
-This organization theoretically allows up to 40 concurrent wavefronts per CU,
-though actual occupancy is typically limited by register and LDS usage.
+This organization theoretically allows up to 40 concurrent warps per CU, though
+actual occupancy is typically limited by register and LDS usage.
 
-**Instruction fetching**: The fetch arbiter selects one wavefront per cycle to
-fetch instructions from memory, prioritizing the oldest wavefronts. Each CU
-can fetch up to 32 bytes (4-8 instructions) per cycle.
+**Instruction fetching**: The fetch arbiter selects one warp per cycle to fetch
+instructions from memory, prioritizing the oldest warps. Each CU can fetch up to
+32 bytes (4-8 instructions) per cycle.
 
 **Instruction issuing**: The issue arbiter determines which instructions
-execute each cycle, selecting wavefronts from one pool per cycle in
-round-robin fashion. The arbiter can issue multiple instructions per cycle to
-different execution units, with a theoretical maximum of five instructions per
-cycle:
+execute each cycle, selecting warps from one pool per cycle in round-robin
+fashion. The arbiter can issue multiple instructions per cycle to different
+execution units, with a theoretical maximum of five instructions per cycle:
 
 * One VALU instruction
 * One vector memory operation
@@ -201,12 +199,12 @@ cycle:
 * One LDS operation
 * One branch operation
 
-Instructions always issue at wavefront granularity, with all threads in the
-wavefront executing the same instruction in lockstep. The hardware can perform
-single-cycle context switching between wavefronts with zero overhead, as all
-wavefront contexts remain resident on the CU. This enables efficient latency
-hiding, allowing the CU to switch to another wavefront immediately when the
-current wavefront encounters a stall condition such as a memory access.
+Instructions always issue at warp granularity, with all threads in the warp
+executing the same instruction in lockstep. The hardware can perform
+single-cycle context switching between warps with zero overhead, as all warp
+contexts remain resident on the CU. This enables efficient latency hiding,
+allowing the CU to switch to another warp immediately when the current warp
+encounters a stall condition such as a memory access.
 
 Execution pipelines
 -------------------
@@ -220,9 +218,9 @@ utilization of the hardware resources.
 Vector arithmetic logic unit (VALU)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The VALU executes vector instructions across entire wavefronts, with each
-thread potentially operating on different data. For CDNA architectures, the
-VALU consists of:
+The VALU executes vector instructions across entire warps, with each thread
+potentially operating on different data. For CDNA architectures, the VALU
+consists of:
 
 * **Four SIMD processors**: Each containing 16 single-precision ALUs (or
   equivalent), for 64 total ALUs per CU. In CDNA3, these are SIMD64 pipelines
@@ -230,12 +228,12 @@ VALU consists of:
 * **Vector register files**: 256-512 KiB of VGPR storage split across the
   four SIMDs. VGPRs are organized as 32-bit lanes, providing flexibility for
   mixed-precision computations.
-* **Instruction buffers**: Storage for up to 8-10 wavefronts per SIMD
+* **Instruction buffers**: Storage for up to 8-10 warps per SIMD
 
-On architectures with 64-thread wavefronts and 16-instruction wide SIMD units,
+On architectures with 64-thread warps and 16-instruction wide SIMD units,
 executing one instruction takes four cycles (one cycle per 16 threads). The
-four SIMD design ensures full utilization when sufficient wavefronts are
-available, as a new instruction can issue to each SIMD every cycle.
+four SIMD design ensures full utilization when sufficient warps are available,
+as a new instruction can issue to each SIMD every cycle.
 
 The VALU serves as the primary arithmetic engine, executing the majority of
 computation in GPU kernels. Data flows into these pipelines, undergoes
@@ -248,22 +246,22 @@ fused multiply-add (MFMA) instructions to specialized matrix units.
 Register pressure and occupancy
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Register usage directly impacts CU occupancy. Each wavefront requires a
+Register usage directly impacts CU occupancy. Each warp requires a
 portion of the finite VGPR and SGPR pools. Higher register usage per thread
-reduces the maximum number of concurrent wavefronts, potentially limiting the
-CU's ability to hide latency. Mixed-precision workloads can optimize register
-usage by storing lower-precision values in fewer registers.
+reduces the maximum number of concurrent warps, potentially limiting the CU's
+ability to hide latency. Mixed-precision workloads can optimize register usage
+by storing lower-precision values in fewer registers.
 
 Scalar arithmetic logic unit (SALU)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The SALU executes instructions uniformly across all threads in a wavefront,
-handling operations such as:
+The SALU executes instructions uniformly across all threads in a warp, handling
+operations such as:
 
 * Control flow (branches, loops)
 * Address calculations
 * Loading kernel arguments and constants
-* Managing wavefront-uniform values
+* Managing warp-uniform values
 
 The SALU includes:
 
@@ -287,9 +285,9 @@ Branch unit
 ^^^^^^^^^^^
 
 The branch unit executes jumps and branches for control flow changes affecting
-entire wavefronts. Note that the branch unit handles wavefront-level control
-flow, not execution mask updates for thread divergence, which are handled
-through predication.
+entire warps. Note that the branch unit handles warp-level control flow, not
+execution mask updates for thread divergence, which are handled through
+predication.
 
 .. _sfu:
 
@@ -343,7 +341,7 @@ local shared memory, and caches, for thousands of concurrent threads.
 
 Each CU includes a set of LSUs tightly integrated with its vector
 and scalar pipelines. These units handle memory instructions generated by
-active wavefronts, such as ``buffer_load``, ``buffer_store``, and
+active warps, such as ``buffer_load``, ``buffer_store``, and
 ``flat_load_dword``, and route them through the GPU's hierarchical memory
 system.
 
@@ -357,8 +355,8 @@ The LSU's responsibilities include:
 
 LSUs manage thousands of outstanding memory requests per GPU, dynamically
 scheduling them to hide memory latency. While arithmetic pipelines continue
-executing other wavefronts, the LSUs maintain queues of pending transactions
-and reorder responses as data returns from memory.
+executing other warps, the LSUs maintain queues of pending transactions and
+reorder responses as data returns from memory.
 
 .. _mfma_units:
 
@@ -410,7 +408,7 @@ register storage per CU.
 .. _dme:
 
 Data movement engine (CDNA 3 / CDNA 4)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 CDNA 3 and CDNA 4 architectures include specialized Data Movement Engine (DME)
 hardware units designed to accelerate access to multi-dimensional tensor data
@@ -437,9 +435,9 @@ The DME design provides two key advantages:
 * **Resource decoupling**: By removing large tensor copies from the main
   execution pipelines, the CU can continue executing arithmetic instructions
   while data movement occurs in the background.
-* **Asynchronous execution model**: A single wavefront can issue a DME copy
-  command, immediately resume computation, and later synchronize only when the
-  transfer has completed. This enables producer-consumer parallelism.
+* **Asynchronous execution model**: A single warp can issue a DME copy command,
+  immediately resume computation, and later synchronize only when the transfer
+  has completed. This enables producer-consumer parallelism.
 
 Programmers can access this functionality through asynchronous copy intrinsics
 in ROCm, such as ``__builtin_amdgcn_async_work_group_copy``, which map
@@ -469,7 +467,7 @@ cycle total bandwidth. Each bank can be accessed independently every cycle for
 reads, writes, and/or atomic operations. The SIMDs connect to the LDS in pairs,
 with each pair sharing a 64-byte bidirectional port.
 
-**Access patterns**: A single wavefront can achieve up to 64 bytes per cycle
+**Access patterns**: A single warp can achieve up to 64 bytes per cycle
 throughput (16 lanes per cycle). The actual bandwidth depends on data size and
 access patterns:
 
@@ -594,8 +592,8 @@ Memory coalescing
 
 Memory coalescing combines memory accesses from multiple threads into fewer
 transactions, significantly improving bandwidth utilization. The coalescing
-hardware in the VMEM unit analyzes addresses from all threads in a wavefront
-and groups them into the minimum number of cache line requests.
+hardware in the VMEM unit analyzes addresses from all threads in a warp and
+groups them into the minimum number of cache line requests.
 
 **Coalesced access pattern**: When consecutive threads access consecutive
 memory addresses, the hardware can combine all 64 thread requests into as few
@@ -665,14 +663,14 @@ fundamental architectural changes:
 
   RDNA3 work group processor architecture
 
-**Wave32 execution**: Primary execution mode uses 32-thread wavefronts,
-reducing divergence penalties and register pressure.
+**Wave32 execution**: Primary execution mode uses 32-thread warps, reducing
+divergence penalties and register pressure.
 
 **Dual compute units**: The work group processor (WGP) replaces standalone
 CUs, containing two closely coupled compute units sharing resources:
 
 * Each CU has two 32-wide SIMD units
-* Wavefronts execute in a single cycle on 32-wide SIMDs
+* Warps execute in a single cycle on 32-wide SIMDs
 * Reduced instruction latency improves responsiveness
 
 **Three-level cache hierarchy**:
@@ -697,14 +695,14 @@ maximum performance.
 Occupancy and resource limits
 -----------------------------
 
-Occupancy measures the ratio of active wavefronts to maximum possible
-wavefronts on a CU. Higher occupancy generally improves latency hiding but is
+Occupancy measures the ratio of active warps to maximum possible
+warps on a CU. Higher occupancy generally improves latency hiding but is
 limited by:
 
-* **Register usage**: Each wavefront requires VGPRs and SGPRs from finite
+* **Register usage**: Each warp requires VGPRs and SGPRs from finite
   pools
 * **LDS allocation**: Shared memory used per workgroup
-* **Wavefront slots**: Fixed number of execution contexts per CU
+* **warp slots**: Fixed number of execution contexts per CU
 * **Workgroup size**: Smaller workgroups can waste resources
 
 Balancing these resources is critical for achieving optimal occupancy. Tools
@@ -714,15 +712,15 @@ factors.
 Latency hiding through multithreading
 -------------------------------------
 
-GPUs hide memory and instruction latency through massive hardware
-multithreading rather than complex CPU techniques such as out-of-order
-execution and/or speculation. With sufficient wavefronts:
+GPUs hide memory and instruction latency through massive hardware multithreading
+rather than complex CPU techniques such as out-of-order execution and/or
+speculation. With sufficient warps:
 
-* Memory latency is hidden by executing other wavefronts during waits
-* Pipeline latencies are covered by round-robin wavefront scheduling
+* Memory latency is hidden by executing other warps during waits
+* Pipeline latencies are covered by round-robin warp scheduling
 * No context switch overhead as all contexts remain resident
 
-The hardware can switch between wavefronts every cycle, maintaining high ALU
+The hardware can switch between warps every cycle, maintaining high ALU
 utilization even with long-latency operations in flight.
 
 Memory bandwidth utilization
@@ -748,13 +746,13 @@ Different AMD GPU architectures benefit from tailored optimizations:
 
 **For CDNA**:
 
-* Optimize for 64-thread wavefront granularity
+* Optimize for 64-thread warp granularity
 * Leverage matrix cores for applicable algorithms
 * Consider AGPR usage for register spilling
 
 **For RDNA**:
 
-* Design for 32-thread wavefront execution
+* Design for 32-thread warp execution
 * Utilize improved divergence handling
 * Take advantage of additional cache level
 
@@ -777,7 +775,7 @@ the memory hierarchy, enables you to write more efficient GPU applications.
 Key hardware concepts for optimization include:
 
 * Workgroup scheduling and resource management by the SPI
-* Instruction scheduling and wavefront execution in compute units
+* Instruction scheduling and warp execution in compute units
 * Memory coalescing and cache behavior
 * Architecture-specific features (matrix cores, Wave32 and/or Wave64 modes)
 * Resource limits affecting occupancy
