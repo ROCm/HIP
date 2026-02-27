@@ -559,6 +559,7 @@ typedef enum hipDeviceAttribute_t {
                                                      ///< Ordered Memory Allocator
   hipDeviceAttributeHostNumaId,             ///< NUMA ID of the cpu node closest to the device,
                                             ///< or -1 when NUMA isn't supported
+  hipDeviceAttributeDmaBufSupported,  ///< Device supports DMABuf buffer sharing
 
   hipDeviceAttributeCudaCompatibleEnd = 9999,
   hipDeviceAttributeAmdSpecificBegin = 10000,
