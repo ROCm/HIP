@@ -143,12 +143,6 @@ The debugging environment variables in HIP are collected in the following table.
         | 2: Wait for completion after enqueue.
         | 3: Both
 
-    * - | ``AMD_DIRECT_DISPATCH``
-        | Enable direct kernel dispatch (Currently for Linux; under development for Windows).
-      - ``1``
-      - | 0: Disable
-        | 1: Enable
-
     * - | ``GPU_MAX_HW_QUEUES``
         | The maximum number of hardware queues allocated per device.
       - ``4``

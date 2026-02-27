@@ -92,12 +92,6 @@ and :doc:`GPU isolation <rocm:conceptual/gpu-isolation>`.
         | 2: Wait for completion after enqueue.
         | 3: Both
 
-    * - | ``AMD_DIRECT_DISPATCH``
-        | Enable direct kernel dispatch (Currently for Linux; under development for Windows).
-      - ``1``
-      - | 0: Disable
-        | 1: Enable
-
     * - | ``GPU_MAX_HW_QUEUES``
         | The maximum number of hardware queues allocated per device.
       - ``4``
