@@ -8032,7 +8032,7 @@ const char* hipKernelNameRef(const hipFunction_t f);
  * @param [in] hostFunction Pointer of host function.
  * @param [in] stream Stream the kernel is executed on.
  *
- * @returns #hipSuccess, #hipErrorInvalidValue
+ * @returns The name of the passed kernel function object, or nullptr.
  *
  */
 const char* hipKernelNameRefByPtr(const void* hostFunction, hipStream_t stream);
@@ -8041,7 +8041,7 @@ const char* hipKernelNameRefByPtr(const void* hostFunction, hipStream_t stream);
  *
  * @param [in] stream Stream of device executed on.
  *
- * @returns #hipSuccess, #hipErrorInvalidValue
+ * @returns The device ID on the stream.
  *
  */
 int hipGetStreamDeviceId(hipStream_t stream);
