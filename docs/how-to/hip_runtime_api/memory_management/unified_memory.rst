@@ -333,6 +333,63 @@ explicit memory management example is presented in the last tab.
             :emphasize-lines: 31-38, 43-44
             :language: cpp
 
+.. _unified memory allocator comparison:
+
+Choosing the right memory allocator
+--------------------------------------------------------------------------------
+
+Selecting the appropriate memory allocator depends on your specific use case,
+performance requirements, and target hardware. The following table provides
+guidance on when to use each unified memory allocator in HIP.
+
+.. list-table:: Memory allocator comparison
+    :widths: 25, 35, 40
+    :header-rows: 1
+    :align: center
+
+    * - Allocator
+      - Best Use Case
+      - Key Characteristics
+    * - :cpp:func:`hipMallocManaged` / ``__managed__``
+      - Applications that need automatic data migration between host and
+        device, or require memory oversubscription
+      - Automatic page-fault driven migration; accessible from both host
+        and device; may have performance overhead from on-demand migration
+    * - ``new``, ``malloc()``, ``allocate()`` (CDNA2+ with HMM)
+      - CPU-centric code being ported to HIP, or applications that want
+        system allocator simplicity with GPU accessibility
+      - Uses standard system allocators; first-touch placement policy;
+        requires ``HSA_XNACK=1`` for GPU access; convenient for porting
+    * - :cpp:func:`hipMalloc`
+      - Device-local data that is primarily accessed by GPU kernels with
+        minimal host interaction
+      - Device-local allocation; zero-copy access from host; no automatic
+        migration; best performance for GPU-intensive workloads
+    * - :cpp:func:`hipHostMalloc`
+      - Data that is primarily accessed by the host but needs to be
+        accessible from the device
+      - Pinned host memory; zero-copy access from device; no automatic
+        migration; can improve transfer bandwidth for host-device copies
+
+When choosing an allocator, consider the following factors:
+
+- **Access pattern:** If data is accessed frequently by both host and device,
+  managed memory or system allocators provide automatic migration. If data is
+  primarily used by one processor, :cpp:func:`hipMalloc()` or
+  :cpp:func:`hipHostMalloc()` may be more efficient.
+
+- **Performance requirements:** For maximum performance with known access
+  patterns, explicit memory management with :cpp:func:`hipMalloc()` and
+  :cpp:func:`hipMemcpy()` typically provides the best performance. Managed
+  memory trades some performance for programming simplicity.
+
+- **Memory oversubscription:** Only managed memory and system allocators (with
+  HMM support) allow allocating more memory than physically available on the
+  device.
+
+- **Portability:** System allocators (``new``, ``malloc()``) make porting CPU
+  code easier, but require CDNA2+ with ``HSA_XNACK=1`` for GPU access.
+
 .. _using unified memory:
 
 Using unified memory
@@ -379,6 +436,14 @@ Data prefetching
     place, prefetching will waste time. Users should profile their code to
     verify whether prefetching is beneficial for their specific use case.
 
+.. note::
+    **Cold Start Latency:** Implicit page faulting on first access can cause
+    significant latency spikes, especially in performance-critical code paths.
+    To avoid this, use :cpp:func:`hipMemPrefetchAsync` during initialization
+    to ensure data is resident on the target device before critical kernels
+    execute. This proactive approach eliminates the "cold start" penalty
+    associated with on-demand page migration.
+
 When prefetching is beneficial, developers can consider setting different default
 locations for different devices and using prefetch between them, which can help
 eliminate IPC communication overhead when memory moves between devices.
@@ -421,6 +486,38 @@ instead of prefetching.
     :end-before: // [sphinx-end]
     :emphasize-lines: 32-44
     :language: cpp
+
+.. _unified memory best practices:
+
+Best practices for memory advice
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Choosing the right memory advice hint can significantly improve performance by
+reducing unnecessary data migrations. The following table provides guidance on
+when to use specific hints:
+
+.. list-table:: Memory advice best practices
+    :widths: 45, 55
+    :header-rows: 1
+    :align: center
+
+    * - Hint
+      - Use Case
+    * - :cpp:enumerator:`hipMemAdviseSetReadMostly`
+      - Data that is mostly read and only occasionally written to. This
+        prevents unnecessary data migration for read-heavy workloads.
+    * - :cpp:enumerator:`hipMemAdviseSetPreferredLocation`
+      - Set the preferred location for the data as a specific device. Use
+        this to keep data on a particular device (host or device) to reduce
+        migration overhead.
+    * - :cpp:enumerator:`hipMemAdviseSetAccessedBy`
+      - Data that will be accessed by a specified device. This helps prevent
+        page faults by proactively migrating data to the accessing device.
+    * - :cpp:enumerator:`hipMemAdviseSetCoarseGrain`
+      - Data that only needs to be coherent at dispatch boundaries. The
+        default fine-grained model allows coherent operations during kernel
+        execution, while coarse-grained provides better performance for data
+        that does not require runtime coherence.
 
 Memory range attributes
 --------------------------------------------------------------------------------

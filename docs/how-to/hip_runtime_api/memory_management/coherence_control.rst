@@ -125,6 +125,37 @@ allocation is coarse-grained.
   * Setting both the ``hipHostMallocCoherent`` and
     ``hipHostMallocNonCoherent`` flags leads to an illegal state.
 
+Performance implications
+========================
+
+Understanding the performance characteristics of coherence control is essential
+for optimizing memory access patterns. Coherence control effectively serves as
+a **cache control** mechanism, with significant impact on bandwidth and latency.
+
+.. list-table:: Coherence control performance characteristics
+    :widths: 30, 70
+    :header-rows: 1
+    :align: center
+
+    * - Coherence Type
+      - Performance Characteristics
+    * - **Coarse-grained**
+      - Recommended for bulk data transfers and large memory regions. Utilizes
+        the full L2 cache, providing high bandwidth for sequential access
+        patterns. Synchronization points (e.g., :cpp:func:`hipDeviceSynchronize`)
+        flush caches to ensure visibility, minimizing host-device interconnect
+        communication overhead.
+    * - **Fine-grained**
+      - Recommended for atomic flags, signals, and small synchronization
+        variables. Typically bypasses the L2 cache or employs heavy coherency
+        protocols to ensure immediate visibility, resulting in lower bandwidth.
+        Best suited for scenarios where both host and device require concurrent
+        access to the same data.
+
+In practice, coarse-grained coherence provides better performance for most
+compute-intensive workloads, while fine-grained coherence should be used
+selectively for specific synchronization requirements.
+
 Visibility of synchronization functions
 ================================================================================
 
