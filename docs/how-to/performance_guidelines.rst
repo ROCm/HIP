@@ -105,7 +105,7 @@ The following trace data is available for visualization:
 ROCprof Compute Viewer
 ----------------------
 
-`ROCprof Compute Viewer <https://rocm.docs.amd.com/projects/rocprof_compute_viewer/en/latest/>`__
+`ROCprof Compute Viewer <https://rocm.docs.amd.com/projects/rocprof-compute-viewer/en/latest/>`__
 provides a GUI-based environment for analyzing GPU kernel performance data. It
 delivers detailed kernel-level insights, including counter correlation and
 hierarchical performance breakdowns, helping developers interpret execution
