@@ -459,8 +459,17 @@ typedef enum hipMemcpyFlags {
   hipMemcpyFlagDefault = 0x0,                  ///< Default flag
   hipMemcpyFlagPreferOverlapWithCompute = 0x1, ///< Tries to overlap copy with compute work.
   hipMemcpyFlagExtPreferCE = 0x100,            ///< Prefer copy engine over compute engine.
-  hipMemcpyFlagExtOpSwap = 0x200,              ///< Swap contents of src and dst.
 } hipMemcpyFlags;
+
+/**
+ * Extended flags for batch memcpy operations. These values are OR'd into the
+ * same 'flags' field as hipMemcpyFlags (bits 8+). Used with hipMemcpyBatchAsync
+ * and hipMemcpy3DBatchAsync.
+ */
+typedef enum hipMemcpyFlagsExt {
+  hipMemcpyFlagExtOpSwap       = 0x200,  ///< Swap contents of src and dst buffers.
+  hipMemcpyFlagExtOpIndirect   = 0x400,  ///< src/dst are pointers-to-pointers; resolved at execution.
+} hipMemcpyFlagsExt;
 
 /**
  * Flags to specify order in which source pointer is accessed by Batch memcpy
