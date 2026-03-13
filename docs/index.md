@@ -6,9 +6,7 @@
 
 # HIP documentation
 
-The Heterogeneous-computing Interface for Portability (HIP) is a C++ runtime API
-and kernel language that lets you create portable applications for AMD and
-NVIDIA GPUs from a single source code. For more information, see [What is HIP?](./what_is_hip)
+HIP is a C++ runtime API and kernel language for AMD GPUs. For more information, see [What is HIP?](./what_is_hip)
 
 ```{note}
 HIP API 7.0 introduces changes to make it align more closely with NVIDIA CUDA.
