@@ -2,7 +2,7 @@
 #include <hip_test_checkers.hh>
 #include <hip_test_kernels.hh>
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__)
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/wait.h>

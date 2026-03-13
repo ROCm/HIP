@@ -37,7 +37,7 @@ Negative/Argument Validation:
 #include <hip_test_common.hh>
 #include <hip_test_checkers.hh>
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__)
 #include <sys/mman.h>
 #include <sys/wait.h>
 #include <unistd.h>

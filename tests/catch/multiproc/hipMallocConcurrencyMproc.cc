@@ -32,7 +32,7 @@ Testcase Scenarios :
 #include <hip_test_checkers.hh>
 #include <hip_test_kernels.hh>
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__)
 #include <sys/wait.h>
 #include <sys/types.h>
 #include <unistd.h>

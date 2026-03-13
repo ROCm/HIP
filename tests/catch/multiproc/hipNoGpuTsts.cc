@@ -22,7 +22,7 @@ THE SOFTWARE.
 #include <fstream>
 #include <vector>
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__)
 #include <unistd.h>
 #include <sys/mman.h>
 #include <sys/wait.h>
@@ -1684,4 +1684,4 @@ TEST_CASE("Unit_NoGpuTst_hipStreamBeginCapture") {
 TEST_CASE("Unit_NoGpuTst_hipStreamIsCapturing") {
   REQUIRE(NoGpuTst_Common(NoGpuTst_hipStreamIsCapturing));
 }
-#endif  // #ifdef __linux__
+#endif  // #if defined(__linux__) || defined(__APPLE__)

@@ -26,7 +26,7 @@ in parent process and access it in child process.
 #include <hip_test_common.hh>
 #include <hip_test_checkers.hh>
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__)
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <sys/wait.h>

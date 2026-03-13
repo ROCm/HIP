@@ -19,7 +19,7 @@ THE SOFTWARE.
 #include <hip_test_common.hh>
 #include <stdlib.h>
 #include <stdio.h>
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__)
 #include <unistd.h>
 #include <sys/wait.h>
 #include <sys/types.h>

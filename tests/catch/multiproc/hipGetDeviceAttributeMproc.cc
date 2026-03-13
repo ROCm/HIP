@@ -27,7 +27,7 @@ THE SOFTWARE.
 
 #include <hip_test_common.hh>
 #include <iostream>
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__)
 #include <unistd.h>
 #include <sys/wait.h>
 
