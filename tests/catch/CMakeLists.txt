@@ -240,7 +240,10 @@ function(catch_executable src)
 
     message("Standalone Catch test: ${exec_name} ${src}")
     add_executable(${exec_name} EXCLUDE_FROM_ALL  ${src} $<TARGET_OBJECTS:Main_Object_Standalone> $<TARGET_OBJECTS:KERNELS>) 
-    target_link_libraries(${exec_name} PRIVATE stdc++fs -pthread )
+    if(NOT APPLE)
+      target_link_libraries(${exec_name} PRIVATE stdc++fs)
+    endif()
+    target_link_libraries(${exec_name} PRIVATE -pthread)
 
     if(HIP_PLATFORM MATCHES "nvidia")
          target_link_libraries(${exec_name} PRIVATE nvrtc)
