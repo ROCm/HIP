@@ -33,6 +33,9 @@ This testcase verifies following scenarios
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#elif defined(__APPLE__)
+#include <sys/types.h>
+#include <sys/sysctl.h>
 #else
 #include "sys/types.h"
 #include "sys/sysinfo.h"
@@ -170,12 +173,16 @@ void memcpytest2_get_host_memory(size_t *free, size_t *total) {
   MEMORYSTATUSEX status;
   status.dwLength = sizeof(status);
   GlobalMemoryStatusEx(&status);
-  // Windows doesn't allow allocating more than half of system memory to the gpu
-  // Since the runtime also needs space for its internal allocations,
-  // we should not try to allocate more than 40% of reported system memory,
-  // otherwise we can run into OOM issues.
   *free = static_cast<size_t>(0.4 * status.ullAvailPhys);
   *total = static_cast<size_t>(0.4 * status.ullTotalPhys);
+}
+#elif defined(__APPLE__)
+void memcpytest2_get_host_memory(size_t *free, size_t *total) {
+  int64_t totalMem = 0;
+  size_t len = sizeof(totalMem);
+  sysctlbyname("hw.memsize", &totalMem, &len, nullptr, 0);
+  *total = static_cast<size_t>(totalMem);
+  *free = static_cast<size_t>(0.4 * totalMem);
 }
 #else
 struct sysinfo memInfo;
