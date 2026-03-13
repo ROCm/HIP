@@ -36,7 +36,7 @@ THE SOFTWARE.
 #if defined(_WIN32)
 #define HT_WIN 1
 #define HT_LINUX 0
-#elif defined(__linux__)
+#elif defined(__linux__) || defined(__APPLE__)
 #define HT_WIN 0
 #define HT_LINUX 1
 #else
@@ -130,7 +130,7 @@ class TestContext {
     if (!::getenv_s(&dstSize, dstBuf, MAX_LEN, var.c_str())) {
       return std::string(dstBuf);
     }
-    #elif defined(__linux__)
+    #elif defined(__linux__) || defined(__APPLE__)
     char* val = std::getenv(var.c_str());
     if (val != NULL) {
       return std::string(val);
