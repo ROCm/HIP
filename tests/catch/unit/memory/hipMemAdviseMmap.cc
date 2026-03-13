@@ -18,7 +18,7 @@ THE SOFTWARE.
 */
 
 #include <hip_test_common.hh>
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__)
   #include <fcntl.h>
   #include <sys/mman.h>
   #include <sys/stat.h>
@@ -51,8 +51,8 @@ TEST_CASE("Unit_hipMemAdvise_MmapMem") {
                                   0));
   INFO("hipDeviceAttributeManagedMemory: " << managed);
   if (PageableMem == 1) {
-#ifdef __linux__
-    // For now this test is enabled only for linux platforms
+#if defined(__linux__) || defined(__APPLE__)
+    // For now this test is enabled only for linux/macOS platforms
     FILE *fptr;
     fptr = fopen("ForTest1.txt", "w");
     for (int m = 0; m < NUM_ELMS; ++m) {

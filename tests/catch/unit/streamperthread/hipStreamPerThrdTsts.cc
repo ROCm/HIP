@@ -40,7 +40,7 @@ THE SOFTWARE.
   #include <Windows.h>
   #define sleep(x) _sleep(x)
 #endif
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__)
   #include <unistd.h>
   #include <sys/mman.h>
   #include <sys/wait.h>
@@ -304,7 +304,7 @@ TEST_CASE("Unit_hipStreamPerThread_MangdMem") {
 }
 
 /*  To check the working of hipStreamPerThread in forked process*/
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__)
 TEST_CASE("Unit_hipStreamPerThread_ChildProc") {
   if (fork() == 0) {  //  child process
     int *Ad = nullptr, *Ah = nullptr, NumElms = 4096, CONST_NUM = 123;

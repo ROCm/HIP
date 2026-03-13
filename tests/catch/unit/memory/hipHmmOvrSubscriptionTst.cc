@@ -24,7 +24,7 @@ THE SOFTWARE.
    feature which is part of HMM.*/
 
 #include <hip_test_common.hh>
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__)
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
