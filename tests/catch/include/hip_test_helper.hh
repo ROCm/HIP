@@ -25,6 +25,9 @@ THE SOFTWARE.
 
 #ifdef __linux__
   #include <sys/sysinfo.h>
+#elif defined(__APPLE__)
+  #include <sys/types.h>
+  #include <sys/sysctl.h>
 #else
   #include <windows.h>
   #include <sysinfoapi.h>
@@ -43,6 +46,11 @@ static inline size_t getMemoryAmount() {
   struct sysinfo info{};
   sysinfo(&info);
   return info.freeram / (1024 * 1024);  // MB
+#elif defined(__APPLE__)
+  int64_t freeBytes = 0;
+  size_t len = sizeof(freeBytes);
+  sysctlbyname("hw.memsize", &freeBytes, &len, nullptr, 0);
+  return static_cast<size_t>(freeBytes / (1024 * 1024));  // MB
 #elif defined(_WIN32)
   MEMORYSTATUSEX statex;
   statex.dwLength = sizeof(statex);
