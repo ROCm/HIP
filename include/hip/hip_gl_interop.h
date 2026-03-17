@@ -3,6 +3,7 @@
  *
  * SPDX-License-Identifier: MIT
  */
+
 #ifndef HIP_GL_INTEROP_H
 #define HIP_GL_INTEROP_H
 

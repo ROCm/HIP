@@ -3,6 +3,7 @@
  *
  * SPDX-License-Identifier: MIT
  */
+
 #pragma once
 
 #include <hip/hip_common.h>

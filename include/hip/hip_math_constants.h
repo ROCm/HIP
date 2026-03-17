@@ -3,6 +3,7 @@
  *
  * SPDX-License-Identifier: MIT
  */
+
 #ifndef HIP_MATH_CONSTANTS_H
 #define HIP_MATH_CONSTANTS_H
 
