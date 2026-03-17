@@ -5,7 +5,8 @@ If you want to contribute to our documentation, refer to {doc}`Contribute to ROC
 
 ## Issue Discussion ##
 
-Please use the [GitHub Issue](https://github.com/ROCm/HIP/issues) tab to notify us of issues.
+Please use the [rocm-systems Issues](https://github.com/ROCm/rocm-systems/issues) tab to notify us of issues. In the `rocm-systems` repo, issues
+related to HIP should be labeled accordingly to ensure they receive the proper attention.
 
 * Use your best judgement for issue creation. If your issue is already listed, upvote the issue and
   comment or post to provide additional details, such as how you reproduced this issue.

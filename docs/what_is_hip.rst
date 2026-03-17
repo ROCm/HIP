@@ -1,6 +1,6 @@
 .. meta::
   :description: This chapter provides an introduction to the HIP API.
-  :keywords: AMD, ROCm, HIP, CUDA, C++ language extensions
+  :keywords: AMD, ROCm, HIP, C++ language extensions
 
 .. _intro-to-hip:
 
@@ -8,44 +8,38 @@
 What is HIP?
 *******************************************************************************
 
-The Heterogeneous-computing Interface for Portability (HIP) API is a C++ runtime API
-and kernel language that lets developers create portable applications running in heterogeneous systems,
-using CPUs and AMD GPUs or NVIDIA GPUs from a single source code. HIP provides a simple
-marshalling language to access either the AMD ROCM back-end, or NVIDIA CUDA back-end,
-to build and run application kernels.
+HIP is a C++ runtime API and kernel language for AMD GPUs. It is part of AMD's
+ROCm platform and lets developers create applications that run on heterogeneous
+systems, using CPUs and AMD GPUs from a single source code base.
 
 .. figure:: data/what_is_hip/hip.svg
     :alt: HIP in an application.
     :align: center
 
 * HIP is a thin API with little or no performance impact over coding directly
-  in NVIDIA CUDA or AMD :doc:`ROCm <rocm:what-is-rocm>`.
+  in AMD :doc:`ROCm <rocm:what-is-rocm>`.
 
-* HIP enables coding in a single-source C++ programming language including
+* HIP enables coding in a single-source C++ programming language, including
   features such as templates, C++11 lambdas, classes, namespaces, and more.
 
-* Developers can specialize for the platform (CUDA or ROCm) to tune for
-  performance or handle tricky cases.
+* Developers can tune for performance or handle tricky cases via HIP.
 
-ROCm offers compilers (``clang``, ``hipcc``), code
-profilers (``rocprof``, ``omnitrace``), debugging tools (``rocgdb``), libraries
-and HIP with the runtime API and kernel language, to create heterogeneous applications
-running on both CPUs and GPUs. ROCm provides marshalling libraries like
-:doc:`hipFFT <hipfft:index>` or :doc:`hipBLAS <hipblas:index>` that act as a
-thin programming layer over either NVIDIA CUDA or AMD ROCm to enable support for
-either back-end. These libraries offer pointer-based memory interfaces and are
-easily integrated into your applications.
+ROCm offers compilers (``clang``, ``hipcc``), code profilers (``rocprofv3``),
+debugging tools (``rocgdb``), libraries and HIP with the runtime
+API and kernel language, to create heterogeneous applications running on both
+CPUs and GPUs. ROCm provides libraries like
+:doc:`hipFFT <hipfft:index>` and :doc:`hipBLAS <hipblas:index>` that
+provide API compatibility with equivalent NVIDIA CUDA libraries, making it easier
+to port existing NVIDIA CUDA applications. These libraries provide pointer-based
+memory interfaces and can be easily integrated into your applications.
 
-HIP supports the ability to build and run on either AMD GPUs or NVIDIA GPUs.
-GPU Programmers familiar with NVIDIA CUDA or OpenCL will find the HIP API
-familiar and easy to use. Developers no longer need to choose between AMD or
-NVIDIA GPUs. You can quickly port your application to run on the available
-hardware while maintaining a single codebase. The :doc:`HIPify <hipify:index>`
-tools, based on the clang front-end and Perl language, can convert CUDA API
-calls into the corresponding HIP API calls. However, HIP is not intended to be a
-drop-in replacement for CUDA, and developers should expect to do some manual
-coding and performance tuning work for AMD GPUs to port existing projects as
-described :doc:`HIP porting guide <how-to/hip_porting_guide>`.
+GPU programmers with NVIDIA CUDA experience will find the HIP API straightforward.
+You can quickly port NVIDIA CUDA applications to run on AMD GPUs. The
+:doc:`HIPify <hipify:index>` tools, based on the clang front-end and Perl language,
+can convert NVIDIA CUDA API calls into the corresponding HIP API calls. However, HIP
+is not intended to be a drop-in replacement for NVIDIA CUDA, and developers should
+expect to do some manual coding and performance tuning work to port existing projects
+to AMD GPUs as described in the :doc:`HIP porting guide <how-to/hip_porting_guide>`.
 
 HIP provides two components: those that run on the CPU, also known as host
 system, and those that run on GPUs, also referred to as device. The host-based
@@ -55,9 +49,8 @@ events, and perform synchronization. The kernel language provides a way to
 develop massively parallel programs that run on GPUs, and provides access to GPU
 specific hardware capabilities.
 
-In summary, HIP simplifies cross-platform development, maintains performance,
-and provides a familiar C++ experience for GPU programming that runs seamlessly
-on both AMD and NVIDIA GPUs.
+In summary, HIP simplifies porting NVIDIA CUDA applications to AMD GPUs, maintains
+performance, and provides a familiar C++ experience for GPU programming.
 
 HIP components
 ===============================================
@@ -68,19 +61,11 @@ associated with each component, see :doc:`HIP licensing <license>`.
 C++ runtime API
 -----------------------------------------------
 
-For the AMD ROCm platform, HIP provides headers and a runtime library built on
-top of HIP-Clang compiler in the repository
-:doc:`Compute Language Runtime (CLR) <understand/amd_clr>`. The HIP runtime
-implements HIP streams, events, and memory APIs, and is an object library that
-is linked with the application. The source code for all headers and the library
-implementation is available on GitHub.
-
-For the NVIDIA CUDA platform, HIP provides headers that translate from the
-HIP runtime API to the CUDA runtime API. The host-side contains mostly inlined
-wrappers or even just preprocessor defines, with no additional overhead.
-The device-side code is compiled with ``nvcc``, just like normal CUDA kernels,
-and therefore one can expect the same performance as if directly coding in CUDA.
-The CUDA specific headers can be found in the `hipother repository <https://github.com/ROCm/hipother>`_.
+HIP provides headers and a runtime library built on top of HIP-Clang compiler in
+the repository :doc:`Compute Language Runtime (CLR) <understand/amd_clr>`. The
+HIP runtime implements HIP streams, events, and memory APIs, and is an object
+library that is linked with the application. The source code for all headers and
+the library implementation is available on GitHub.
 
 For further details, check :ref:`HIP Runtime API Reference <runtime_api_reference>`.
 

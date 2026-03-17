@@ -1,14 +1,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="description" content="HIP documentation and programming guide.">
-  <meta name="keywords" content="HIP, Heterogeneous-computing Interface for Portability, HIP programming guide">
+  <meta name="keywords" content="HIP, ROCm, AMD, HIP programming guide">
 </head>
 
 # HIP documentation
 
-The Heterogeneous-computing Interface for Portability (HIP) is a C++ runtime API
-and kernel language that lets you create portable applications for AMD and
-NVIDIA GPUs from a single source code. For more information, see [What is HIP?](./what_is_hip)
+HIP is a C++ runtime API and kernel language for AMD GPUs. It allows developers to
+create portable applications by providing a programming interface that is similar to
+NVIDIA CUDA, making it straightforward to port existing NVIDIA CUDA code to run on AMD hardware.
+For more information, see [What is HIP?](./what_is_hip)
 
 ```{note}
 HIP API 7.0 introduces changes to make it align more closely with NVIDIA CUDA.
@@ -52,7 +53,7 @@ The HIP documentation is organized into the following categories:
 * [HIP complex math API](./reference/complex_math_api)
 * [HIP environment variables](./reference/env_variables)
 * [HIP error codes](./reference/error_codes)
-* [CUDA to HIP API Function Comparison](./reference/api_syntax)
+* [NVIDIA CUDA to HIP API Function Comparison](./reference/api_syntax)
 * [List of deprecated APIs](./reference/deprecated_api_list)
 * [Low Precision Floating Point Types](./reference/low_fp_types)
 * {doc}`./reference/hardware_features`
