@@ -386,12 +386,9 @@ In the preceding code, note the code repetition for all possible values of ``war
     +{
     +    if (tid < I)
     +        shared[tid] = op(shared[tid], shared[tid + I]);
-    +#ifdef __HIP_PLATFORM_NVIDIA__
-    +    __syncwarp(0xffffffff >> (WarpSize - I));
-    +#endif
     +});
 
-Because HIP typically targets hardware with warp sizes of 32 (NVIDIA GPUs and RDNA AMD GPUs) and 64 (CDNA AMD GPUs), portable HIP code must handle both. That is why instead of assuming a warp size of 32, make the warp size a template argument of the kernel. This allows you to unroll the final loop using ``tmp::static_for`` in a parametric way but still having the code read much like an ordinary loop.
+Because HIP targets AMD hardware with warp sizes of 32 (RDNA AMD GPUs) and 64 (CDNA AMD GPUs), HIP code must handle both. That is why instead of assuming a warp size of 32, make the warp size a template argument of the kernel. This allows you to unroll the final loop using ``tmp::static_for`` in a parametric way but still having the code read much like an ordinary loop.
 
 Promoting the warp size to being a compile-time constant also requires you to handle it similarly on the host-side. You can sandwich the kernel launch with ``tmp::static_switch``, promoting the snake-case run-time ``warp_size`` variable to a camel-case compile-time constant ``WarpSize``.
 
@@ -421,9 +418,7 @@ Promoting the warp size to being a compile-time constant also requires you to ha
 
 .. note::
 
-    Neither RDNA- nor CDNA-based AMD hardware provides guaranteed independent progress to lanes of the same warp.  When targeting NVIDIA hardware, lanes of a warp might execute somewhat independently as long as the programmer assists the compiler using dedicated built-in functions. This feature is called Independent Thread Scheduling. The HIP headers don't expose the necessary warp primitives and their overloads.
-
-    Portable applications can still tap into this feature with carefully ``#ifdef`` -ed code, but at this particular optimization level, it's a requirement. The code implicitly relies on the lockstep behavior of an ROCm wavefront, but CUDA warps don't share this property. You must synchronize all the active lanes of a warp to avoid a data race with some lanes progressing faster than others in the same warp.
+    Neither RDNA- nor CDNA-based AMD hardware provides guaranteed independent progress to lanes of the same warp. AMD GPUs execute warps in lockstep, meaning all lanes progress together. This lockstep behavior simplifies synchronization within a warp, as you can rely on all active lanes executing instructions at the same time without requiring explicit warp-level synchronization primitives.
 
 Unroll all loops
 ----------------

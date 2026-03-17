@@ -16,11 +16,10 @@ Prerequisites
 =============
 
 To follow this tutorial, you'll need installed drivers and a HIP compiler
-toolchain to compile your code. Because HIP for ROCm supports compiling and
-running on Linux and Windows with AMD and NVIDIA GPUs, the combination of
-install instructions is more than worth covering as part of this tutorial. For
-more information about installing HIP development packages, see
-:doc:`/install/install`.
+toolchain to compile your code. Because HIP supports compiling and running on
+Linux and Windows with AMD GPUs, the install instructions are more than worth
+covering as part of this tutorial. For more information about
+installing HIP development packages, see :doc:`/install/install`.
 
 .. _hip-tutorial-saxpy-heterogeneous-programming:
 
@@ -158,8 +157,8 @@ for compilation" on Linux. To make invocations more terse, Linux and Windows
 example follow.
 
 .. tab-set::
-  .. tab-item:: Linux and AMD
-    :sync: linux-amd
+  .. tab-item:: Linux
+    :sync: linux
 
     While distro maintainers might package ROCm so that it installs to
     system-default locations, AMD's packages aren't installed that way. They need
@@ -182,19 +181,8 @@ example follow.
       have `/opt/rocm/bin` on the Path for convenience. This subtly affects
       CMake package detection logic of ROCm libraries.
 
-  .. tab-item:: Linux and NVIDIA
-    :sync: linux-nvidia
-
-    Both distro maintainers and NVIDIA package CUDA so that ``nvcc`` and related
-    tools are available on the command line by default. You can call the
-    compiler on the command line with:
-
-    .. code-block:: bash
-
-      nvcc --version
-
-  .. tab-item:: Windows and AMD
-    :sync: windows-amd
+  .. tab-item:: Windows
+    :sync: windows
 
     Windows compilers and command line tooling have traditionally relied on
     extra environmental variables and PATH entries to function correctly.
@@ -244,89 +232,25 @@ example follow.
 
       clang++ --version
 
-  .. tab-item:: Windows and NVIDIA
-    :sync: windows-nvidia
-
-    Windows compilers and command line tooling have traditionally relied on
-    extra environmental variables and PATH entries to function correctly.
-    Visual Studio refers to command lines with this setup as "Developer
-    Command Prompt" or "Developer PowerShell" for ``cmd.exe`` and PowerShell
-    respectively.
-
-    The HIP and CUDA SDKs on Windows don't include complete toolchains. You will
-    also need:
-
-    - The Microsoft Windows SDK. It provides the import libs to crucial system
-      libraries that all executables must link to and some auxiliary compiler
-      tooling.
-    - A Standard Template Library (STL). Installed as part of the Microsoft
-      Visual C++ compiler (MSVC) or with Visual Studio.
-
-    If you don't have a version of Visual Studio 2022 installed, for a
-    minimal command line experience, install the
-    `Build Tools for Visual Studio 2022 <https://aka.ms/vs/17/release/vs_BuildTools.exe>`_
-    with the Desktop Developemnt Workload. Under Individual Components select:
-
-    - A version of the Windows SDK
-    - "MSVC v143 - VS 2022 C++ x64/x86 build tools (Latest)"
-    - "C++ CMake tools for Windows" (optional)
-
-    .. note::
-
-      The "C++ CMake tools for Windows" individual component is a convenience which
-      puts both ``cmake.exe`` and ``ninja.exe`` onto the PATH inside developer
-      command prompts. You can install these manually, but then you must manage
-      them manually.
-
-    Visual Studio 2017 and later are detectable as COM object instances via WMI.
-    To setup a command line from any shell for the latest Visual Studio's
-    default Visual C++ toolset issue:
-
-    .. code-block:: powershell
-
-      $InstallationPath = Get-CimInstance MSFT_VSInstance | Sort-Object -Property Version -Descending | Select-Object -First 1 -ExpandProperty InstallLocation
-      Import-Module $InstallationPath\Common7\Tools\Microsoft.VisualStudio.DevShell.dll
-      Enter-VsDevShell -InstallPath $InstallationPath -SkipAutomaticLocation -Arch amd64 -HostArch amd64 -DevCmdArguments '-no_logo'
-
-    You should be able to call the compiler on the command line now:
-
-    .. code-block:: powershell
-
-      nvcc --version
-
 Invoking the compiler manually
 ------------------------------
 
 To compile and link a single-file application, use the following commands:
 
 .. tab-set::
-  .. tab-item:: Linux and AMD
-    :sync: linux-amd
+  .. tab-item:: Linux
+    :sync: linux
 
     .. code-block:: bash
 
       amdclang++ ./HIP-Basic/saxpy/main.hip -o saxpy -I ./Common -lamdhip64 -L /opt/rocm/lib -O2
 
-  .. tab-item:: Linux and NVIDIA
-    :sync: linux-nvidia
-
-    .. code-block:: bash
-
-      nvcc ./HIP-Basic/saxpy/main.hip -o saxpy -I ./Common -I /opt/rocm/include -O2 -x cu
-
-  .. tab-item:: Windows and AMD
-    :sync: windows-amd
+  .. tab-item:: Windows
+    :sync: windows
 
     .. code-block:: powershell
 
       clang++ .\HIP-Basic\saxpy\main.hip -o saxpy.exe -I .\Common -lamdhip64 -L ${env:HIP_PATH}lib -O2
-
-  .. tab-item:: Windows and NVIDIA
-    :sync: windows-nvidia
-
-    .. code-block:: powershell
-
-      nvcc .\HIP-Basic\saxpy\main.hip -o saxpy.exe -I ${env:HIP_PATH}include -I .\Common -O2 -x cu
 
 Depending on your computer, the resulting binary might or might not run. If not,
 it typically complains about "Invalid device function". That error
@@ -341,8 +265,8 @@ find out what device binary flavors are embedded into the executable?
 
 .. tab-set::
 
-  .. tab-item:: Linux and AMD
-    :sync: linux-amd
+  .. tab-item:: Linux
+    :sync: linux
 
     The utilities included with ROCm help significantly to inspect binary
     artifacts on disk. Add the ROCmCC installation folder to your PATH if you
@@ -432,32 +356,8 @@ find out what device binary flavors are embedded into the executable?
     The filename notes the graphics IPs used by the compiler. The contents of
     this file are similar to the `*.s` file created with ``llvm-objdump`` earlier.
 
-  .. tab-item:: Linux and NVIDIA
-    :sync: linux-nvidia
-
-    Unlike HIP on AMD, when compiling using the NVIDIA support of HIP the resulting
-    binary will be a valid CUDA executable as far as the binary goes. Therefor
-    it'll incorporate PTX ISA (Parallel Thread eXecution Instruction Set
-    Architecture) instead of AMDGPU binary. As s result, tooling shipping with the
-    CUDA SDK can be used to inspect which device ISA got compiled into a specific
-    executable. The tool most useful to us currently is ``cuobjdump``.
-
-    .. code-block:: bash
-
-      cuobjdump --list-ptx ./saxpy
-
-    Which will print something like:
-
-    .. code-block::
-
-      PTX file    1: saxpy.1.sm_52.ptx
-
-    From this we can see that the saxpy kernel is stored as ``sm_52``, which shows
-    that a compute capability 5.2 ISA got embedded into the executable, so devices
-    which sport compute capability 5.2 or newer will be able to run this code.
-
-  .. tab-item:: Windows and AMD
-    :sync: windows-amd
+  .. tab-item:: Windows
+    :sync: windows
 
     The HIP SDK for Windows don't yet sport the ``roc-*`` set of utilities to work
     with binary artifacts. To find out what binary formats are embedded into an
@@ -562,36 +462,12 @@ find out what device binary flavors are embedded into the executable?
               s_endpgm
               ...
 
-  .. tab-item:: Windows and NVIDIA
-    :sync: windows-nvidia
-
-    Unlike HIP on AMD, when compiling using the NVIDIA support for HIP, the resulting
-    binary will be a valid CUDA executable. Therefore, it'll incorporate PTX ISA
-    (Parallel Thread eXecution Instruction Set Architecture) instead of AMDGPU
-    binary. As a result, tooling included with the CUDA SDK can be used to
-    inspect which device ISA was compiled into a specific executable. The most
-    helpful to us currently is ``cuobjdump``.
-
-    .. code-block:: bash
-
-      cuobjdump.exe --list-ptx .\saxpy.exe
-
-    Which prints something like:
-
-    .. code-block::
-
-      PTX file    1: saxpy.1.sm_52.ptx
-
-    This example shows that the SAXPY kernel is stored as ``sm_52``. It also shows
-    that a compute capability 5.2 ISA was embedded into the executable, so devices
-    that support compute capability 5.2 or newer will be able to run this code.
-
 Now that you've found what binary got embedded into the executable, find which
 format our available devices use.
 
 .. tab-set::
-  .. tab-item:: Linux and AMD
-    :sync: linux-amd
+  .. tab-item:: Linux
+    :sync: linux
 
     On Linux a utility called ``rocminfo`` helps us list all the properties of the
     devices available on the system, including which version of graphics IP
@@ -618,60 +494,8 @@ format our available devices use.
       Calculating y[i] = a * x[i] + y[i] over 1000000 elements.
       First 10 elements of the results: [ 3, 5, 7, 9, 11, 13, 15, 17, 19, 21 ]
 
-  .. tab-item:: Linux and NVIDIA
-    :sync: linux-nvidia
-
-    On Linux HIP with the NVIDIA back-end, the ``deviceQuery`` CUDA SDK sample
-    can help us list all the properties of the devices available on the system,
-    including which version of compute capability a device sports.
-    ``<major>.<minor>`` compute capability is passed to ``nvcc`` on the
-    command-line as ``sm_<major><minor>``, for eg. ``8.6`` is ``sm_86``.
-
-    Because it's not included as a binary, compile the matching
-    example from ROCm.
-
-    .. code-block:: bash
-
-      nvcc ./HIP-Basic/device_query/main.cpp -o device_query -I ./Common -I /opt/rocm/include -O2
-
-    Filter the output to have only the lines of interest, for example:
-
-    .. code-block:: bash
-
-      ./device_query | grep "major.minor"
-      major.minor:              8.6
-      major.minor:              7.0
-
-    .. note::
-
-      In addition to the ``nvcc`` executable is another tool called ``__nvcc_device_query``
-      which prints the SM Architecture numbers to standard out as a comma
-      separated list of numbers. The utility's name suggests it's not a user-facing
-      executable but is used by ``nvcc`` to determine what devices are in the
-      system at hand.
-
-    Now that you know which graphics IPs our devices use, recompile your program with
-    the appropriate parameters.
-
-    .. code-block:: bash
-
-      nvcc ./HIP-Basic/saxpy/main.hip -o saxpy -I ./Common -I /opt/rocm/include -O2 -x cu -arch=sm_70,sm_86
-
-    .. note::
-
-      If you want to portably target the development machine which is compiling, you
-      may specify ``-arch=native`` instead.
-
-    Now the sample will run.
-
-    .. code-block::
-
-      ./saxpy
-      Calculating y[i] = a * x[i] + y[i] over 1000000 elements.
-      First 10 elements of the results: [ 3, 5, 7, 9, 11, 13, 15, 17, 19, 21 ]
-
-  .. tab-item:: Windows and AMD
-    :sync: windows-amd
+  .. tab-item:: Windows
+    :sync: windows
 
     On Windows, a utility called ``hipInfo.exe`` helps us list all the properties
     of the devices available on the system, including which version of graphics IP
@@ -690,59 +514,6 @@ format our available devices use.
     .. code-block:: powershell
 
       clang++ .\HIP-Basic\saxpy\main.hip -o saxpy.exe -I .\Common -lamdhip64 -L ${env:HIP_PATH}lib -O2 --offload-arch=gfx1032 --offload-arch=gfx1035
-
-    Now the sample will run.
-
-    .. code-block::
-
-      .\saxpy.exe
-      Calculating y[i] = a * x[i] + y[i] over 1000000 elements.
-      First 10 elements of the results: [ 3, 5, 7, 9, 11, 13, 15, 17, 19, 21 ]
-
-  .. tab-item:: Windows and NVIDIA
-    :sync: windows-nvidia
-
-    On Windows HIP with the NVIDIA back-end, the ``deviceQuery`` CUDA SDK sample
-    can help us list all the properties of the devices available on the system,
-    including which version of compute capability a device sports.
-    ``<major>.<minor>`` compute capability is passed to ``nvcc`` on the
-    command-line as ``sm_<major><minor>``, for eg. ``8.6`` is ``sm_86``.
-
-    Because it's not included as a binary, compile the matching
-    example from ROCm.
-
-    .. code-block:: powershell
-
-      nvcc .\HIP-Basic\device_query\main.cpp -o device_query.exe -I .\Common -I ${env:HIP_PATH}include -O2
-
-    Filter the output to have only the lines of interest, for example:
-
-    .. code-block:: powershell
-
-      .\device_query.exe | Select-String "major.minor"
-
-      major.minor:              8.6
-      major.minor:              7.0
-
-    .. note::
-
-      Next to the ``nvcc`` executable is another tool called ``__nvcc_device_query.exe``
-      which simply prints the SM Architecture numbers to standard out as a comma
-      separated list of numbers. The naming of this utility suggests it's not a user
-      facing executable but is used by ``nvcc`` to determine what devices are in the
-      system at hand.
-
-    Now that you know which graphics IPs our devices use, recompile your program with
-    the appropriate parameters.
-
-    .. code-block:: powershell
-
-      nvcc .\HIP-Basic\saxpy\main.hip -o saxpy.exe -I ${env:HIP_PATH}include -I .\Common -O2 -x cu -arch=sm_70,sm_86
-
-    .. note::
-
-      If you want to portably target the development machine which is compiling, you
-      may specify ``-arch=native`` instead.
 
     Now the sample will run.
 

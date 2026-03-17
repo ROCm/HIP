@@ -11,7 +11,7 @@ This tutorial demonstrates the basic concepts of cooperative groups in the HIP (
 Prerequisites
 =============
 
-To follow this tutorial, you'll need properly installed drivers and a HIP compiler toolchain to compile your code. Because ROCm HIP supports compiling and running on Linux and Microsoft Windows with AMD and NVIDIA GPUs, review the HIP development package installation before starting this tutorial. For more information, see :doc:`/install/install`.
+To follow this tutorial, you'll need properly installed drivers and a HIP compiler toolchain to compile your code. Because ROCm HIP supports compiling and running on Linux and Microsoft Windows with AMD GPUs, review the HIP development package installation before starting this tutorial. For more information, see :doc:`/install/install`.
 
 Simple HIP Code
 ===============
