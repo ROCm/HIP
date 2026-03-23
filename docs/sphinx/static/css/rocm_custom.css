@@ -1,0 +1,6 @@
+/* Override PyData Sphinx Theme default colors */
+
+article img {
+  border-radius: 20px !important;
+  border: 1px solid #FFFFFF;
+}
