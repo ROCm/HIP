@@ -1,6 +1,7 @@
 /* Override PyData Sphinx Theme default colors */
 
-article img {
-  border-radius: 20px !important;
-  border: 1px solid #FFFFFF;
+html[data-theme="dark"] .bd-content img:not(.only-dark,.dark-light)
+{
+    background-color: inherit;
+    border-radius: .25rem;
 }
