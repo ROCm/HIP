@@ -476,13 +476,58 @@ With each group type, the synchronization requires using the correct cooperative
       multi_grid_group multi_grid = this_multi_grid();
       multi_grid.sync();
 
+Operations
+==========
+
+HIP has one group-wide operation for now: ``reduce()``. Participation of all the threads belonging to the group is expected, with each thread contributing the same per-thread value. Behaviour is undefined if one of the threads of the group does not participate.
+
+.. code-block:: cpp
+
+  auto reduce(const TyGroup& group, T&& val, Operation&& op)
+
+Defined in cooperative_groups/hip_reduce.h. Performs a reduction operation ``op`` on the specified group, contributing the value ``val``
+
+* ``group`` is either a ``coalesced_group`` or a ``thread_block_tile``
+
+* ``val`` needs to be a type ``T`` that is trivially copyable and up to 32 bytes in size.
+
+* ``op`` must be a function object, which includes lambdas or functors which define ``operator()``. The following predefined functors in the ``cooperative_groups`` namespace:
+
+  + ``cooperative_groups::plus`` (addition)
+
+  + ``cooperative_groups::less`` (minimum)
+
+  + ``cooperative_groups::greater`` (maximum)
+
+  + ``cooperative_groups::bit_and`` (bitwise and)
+
+  + ``cooperative_groups::bit_or`` (bitwise or)
+
+  + ``cooperative_groups::bit_xor`` (bitwise xor)
+
+Performance
+--------------
+
+On AMD, although all types ``T`` fulfilling the description above can be used with the functors in the ``cooperative_groups`` namespace, only some of them will receive hardware acceleration in the form of DPP instructions. Essentially only the types supported by ``__reduce_*_sync`` operations would potentially receive acceleration :ref:`hip_cpp_language_extensions:Warp reduction functions` The macro ``HIP_ENABLE_EXTRA_WARP_SYNC_TYPES`` might be needed to enable the hardware acceleration on some types.
+
+For arithmetic reduces (``plus``, ``less`` and ``greater``):
+
+* On Nvidia platform: there is hardware acceleration for ``int`` or ``unsigned int``
+
+* On AMD platform: there is hardware acceleration for ``int`` or ``unsigned int``, and if the user defines the macro ``HIP_ENABLE_EXTRA_WARP_SYNC_TYPES``, then ``unsigned long long``, ``long long``, ``half``/``single``/``double`` precision floating point types will also receive hardware acceleration.
+
+For bitwise-reduces: (``bit_and``, ``bit_or``, ``bit_xor``)
+
+* On Nvidia platform: ``unsigned int``
+
+* On AMD platform: ``unsigned int``, and if the user defines the macro ``HIP_ENABLE_EXTRA_WARP_SYNC_TYPES``, then ``int``, ``unsigned long long`` or ``long long`` are also hardware-accelerated.
+
 Unsupported NVIDIA CUDA features
 ================================
 
 HIP doesn't support the following NVIDIA CUDA optional headers:
 
 * ``cooperative_groups/memcpy_async.h``
-* ``cooperative_groups/reduce.h``
 * ``cooperative_groups/scan.h``
 
 HIP doesn't support the following CUDA class in ``cooperative_groups`` namespace:
@@ -495,7 +540,5 @@ HIP doesn't support the following CUDA functions/operators in ``cooperative_grou
 * ``memcpy_async``
 * ``wait`` and ``wait_prior``
 * ``invoke_one`` and ``invoke_one_broadcast``
-* ``reduce``
 * ``reduce_update_async`` and ``reduce_store_async``
-* Reduce operators ``plus`` , ``less`` , ``greater`` , ``bit_and`` , ``bit_xor`` and ``bit_or``
 * ``inclusive_scan`` and ``exclusive_scan``
