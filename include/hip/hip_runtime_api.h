@@ -902,7 +902,7 @@ enum hipLimit_t {
 #define hipHostRegisterMapped 0x2
 
 /** The passed memory pointer is treated as pointing to some memory-mapped I/O space, e.g.
- * belonging to a third-party PCIe device, and it will be marked as non cache-coherent and 
+ * belonging to a third-party PCIe device, and it will be marked as non cache-coherent and
  * contiguous.
  * */
 #define hipHostRegisterIoMemory 0x4
@@ -3942,6 +3942,27 @@ hipError_t hipMemPrefetchAsync(const void* dev_ptr, size_t count, int device,
  */
 hipError_t hipMemPrefetchAsync_v2(const void* dev_ptr, size_t count, hipMemLocation location,
                                   unsigned int flags, hipStream_t stream __dparm(0));
+
+/**
+ * @brief Prefetches a batch of memory ranges to the specified locations using HIP.
+ *
+ * @param [in] dev_ptrs      pointers to the memory ranges to prefetch
+ * @param [in] sizes      sizes in bytes of the memory ranges to prefetch
+ * @param [in] count      number of memory ranges to prefetch
+ * @param [in] prefetch_locs   locations to prefetch the memory ranges to
+ * @param [in] prefetch_loc_idxs  indices of the memory ranges to prefetch
+ * @param [in] num_prefetch_locs  number of locations to prefetch
+ * @param [in] flags      flags for future use, must be zero now.
+ * @param [in] stream    stream to enqueue the prefetch operation
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * @note  This API is implemented on Linux and is under development on Microsoft Windows.
+ */
+hipError_t hipMemPrefetchBatchAsync(void** dev_ptrs, size_t* sizes, size_t count,
+                                    hipMemLocation* prefetch_locs, size_t* prefetch_loc_idxs,
+                                    size_t num_prefetch_locs, unsigned long long flags,
+                                    hipStream_t stream);
 /**
  * @brief Advise about the usage of a given memory range to HIP.
  *
