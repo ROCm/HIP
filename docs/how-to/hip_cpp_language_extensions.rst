@@ -101,12 +101,10 @@ be:
 
 The kernel arguments are listed after the configuration parameters.
 
-.. code-block:: cpp
-
-  .. literalinclude:: ../../tools/example_codes/calling_global_functions.hip
-      :start-after: // [sphinx-start]
-      :end-before: // [sphinx-end]
-      :language: cpp
+.. literalinclude:: ../tools/example_codes/calling_global_functions.hip
+  :start-after: // [sphinx-start]
+  :end-before: // [sphinx-end]
+  :language: cuda
 
 Inline qualifiers
 --------------------------------------------------------------------------------
