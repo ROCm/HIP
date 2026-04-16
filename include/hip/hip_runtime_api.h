@@ -544,6 +544,9 @@ typedef enum hipDeviceAttribute_t {
   hipDeviceAttributeHostNumaId,             ///< NUMA ID of the cpu node closest to the device,
                                             ///< or -1 when NUMA isn't supported
   hipDeviceAttributeDmaBufSupported,  ///< Device supports DMABuf buffer sharing
+  hipDeviceAttributeGPUDirectRDMAWithHipVMMSupported,  ///< GPU Direct RDMA with HIP VMM is supported
+                                                       ///< (requires DMA-Buf and HIP virtual memory
+                                                       ///< management)
 
   hipDeviceAttributeCudaCompatibleEnd = 9999,
   hipDeviceAttributeAmdSpecificBegin = 10000,
