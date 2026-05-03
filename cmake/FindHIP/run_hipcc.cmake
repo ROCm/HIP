@@ -66,7 +66,7 @@ execute_process(COMMAND ${HIP_HIPCONFIG_EXECUTABLE} --compiler OUTPUT_VARIABLE H
 execute_process(COMMAND ${HIP_HIPCONFIG_EXECUTABLE} --runtime OUTPUT_VARIABLE HIP_RUNTIME OUTPUT_STRIP_TRAILING_WHITESPACE)
 if(NOT host_flag)
     set(__CC ${HIP_HIPCC_EXECUTABLE})
-    if("${HIP_PLATFORM}" STREQUAL "amd")
+    if("${HIP_PLATFORM}" STREQUAL "amd" OR "${HIP_PLATFORM}" STREQUAL "spirv")
         if("${HIP_COMPILER}" STREQUAL "clang")
             if(NOT "x${HIP_CLANG_PATH}" STREQUAL "x")
                 set(ENV{HIP_CLANG_PATH} ${HIP_CLANG_PATH})
