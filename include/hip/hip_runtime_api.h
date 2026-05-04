@@ -581,7 +581,13 @@ typedef enum hipDeviceAttribute_t {
                                                   ///< units for the device
   hipDeviceAttributeFineGrainSupport,  ///< '1' if Device supports fine grain, '0' otherwise
   hipDeviceAttributeWallClockRate,     ///< Constant frequency of wall clock in kilohertz.
-  hipDeviceAttributeNumberOfXccs,      ///< The number of XCC(s) on the device
+  hipDeviceAttributeNumberOfXccs,  ///< Number of XCC(s) in the device’s current
+                                   ///< compute partition(XCP).
+                                   ///< An XCC is AMD’s fundamental GPU compute tile.
+                                   ///< Devices like MI300X include multiple XCCs
+                                   ///< per package. Value varies by boot‑time
+                                   ///< partition mode(compute or memory).
+                                   ///< Partition modes can be set using amd‑smi.
   hipDeviceAttributeMaxAvailableVgprsPerThread,  ///< Max number of available (directly or
                                                  ///< indirectly addressable) VGPRs per thread in
                                                  ///< DWORDs.
