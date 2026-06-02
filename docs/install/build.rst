@@ -190,7 +190,7 @@ HIP catch tests are built using AMD's ``amdclang`` compiler.
 
 #. Build a HIP Catch standalone test.
 
-   For detailed instructions on building the standalone Catch tests, consult the `hip-tests README.md at <https://github.com/ROCm/rocm-systems/tree/release/therock-7.13/projects/hip-tests/README.md>`_.
+   For detailed instructions on building the standalone Catch tests, consult the `hip-tests README.md <https://github.com/ROCm/rocm-systems/blob/develop/projects/hip-tests/README.md>`_.
 
 Run HIP
 =================================================
