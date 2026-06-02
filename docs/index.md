@@ -42,6 +42,7 @@ The HIP documentation is organized into the following categories:
 * {doc}`./how-to/hip_porting_guide`
 * {doc}`./how-to/hip_rtc`
 * {doc}`./understand/amd_clr`
+* {doc}`./how-to/hipDeviceProperties`
 
 :::
 

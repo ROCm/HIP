@@ -55,6 +55,7 @@ subtrees:
   - file: how-to/hip_porting_guide
   - file: how-to/hip_rtc
   - file: understand/amd_clr
+  - file: how-to/hipDeviceProperties
 
 - caption: Reference
   entries:
