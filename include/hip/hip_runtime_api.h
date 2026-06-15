@@ -547,6 +547,7 @@ typedef enum hipDeviceAttribute_t {
   hipDeviceAttributeGPUDirectRDMAWithHipVMMSupported,  ///< GPU Direct RDMA with HIP VMM is supported
                                                        ///< (requires DMA-Buf and HIP virtual memory
                                                        ///< management)
+  hipDeviceAttributeHandleTypeFabricSupported,   ///< Device supports exporting memory to a fabric handle
 
   hipDeviceAttributeCudaCompatibleEnd = 9999,
   hipDeviceAttributeAmdSpecificBegin = 10000,
@@ -700,6 +701,9 @@ typedef struct hipIpcMemHandle_st {
 typedef struct hipIpcEventHandle_st {
   char reserved[HIP_IPC_HANDLE_SIZE];
 } hipIpcEventHandle_t;
+typedef struct hipMemFabricHandle_st {
+    unsigned char data[HIP_IPC_HANDLE_SIZE];
+} hipMemFabricHandle_t;
 typedef struct ihipModule_t* hipModule_t;
 typedef struct ihipModuleSymbol_t* hipFunction_t;
 typedef struct ihipLinkState_t* hipLinkState_t;
@@ -1237,7 +1241,8 @@ typedef enum hipMemAllocationHandleType {
   hipMemHandleTypePosixFileDescriptor =
       0x1,  ///< Allows a file descriptor for exporting. Permitted only on POSIX systems
   hipMemHandleTypeWin32 = 0x2,    ///< Allows a Win32 NT handle for exporting. (HANDLE)
-  hipMemHandleTypeWin32Kmt = 0x4  ///< Allows a Win32 KMT handle for exporting. (D3DKMT_HANDLE)
+  hipMemHandleTypeWin32Kmt = 0x4,  ///< Allows a Win32 KMT handle for exporting. (D3DKMT_HANDLE)
+  hipMemHandleTypeFabric   = 0x8   ///< Allows a fabric handle to be used for exporting.
 } hipMemAllocationHandleType;
 /**
  * Specifies the properties of allocations made from the pool.
