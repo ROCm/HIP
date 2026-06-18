@@ -19,6 +19,9 @@ build:
    os: ubuntu-22.04
    tools:
       python: "mambaforge-22.9" # needed until ubuntu ships doxygen >= 1.9.8
+   jobs:
+     post_checkout:
+       - git sparse-checkout add projects/clr/hipamd/include
    apt_packages:
      - "gfortran" # For pre-processing fortran sources
      - "graphviz" # For dot graphs in doxygen
