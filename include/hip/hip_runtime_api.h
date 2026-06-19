@@ -9425,8 +9425,6 @@ hipError_t hipDrvGraphExecMemsetNodeSetParams(hipGraphExec_t hGraphExec, hipGrap
  * @param [in] devPtr - starting address of the range.
  * @param [in] size - size of the range.
  * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
- * @warning This API is marked as Beta. While this feature is complete, it can
- *          change and might have outstanding issues.
  *
  * @note  This API is implemented on Linux and is under development on Microsoft Windows.
  */
@@ -9441,8 +9439,6 @@ hipError_t hipMemAddressFree(void* devPtr, size_t size);
  * @param [in] addr - requested starting address of the range.
  * @param [in] flags - currently unused, must be zero.
  * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
- * @warning This API is marked as Beta. While this feature is complete, it can
- *          change and might have outstanding issues.
  *
  * @note  This API is implemented on Linux and is under development on Microsoft Windows.
  */
@@ -9464,9 +9460,6 @@ hipError_t hipMemAddressReserve(void** ptr, size_t size, size_t alignment, void*
  * The prop location type must be specified as #hipMemLocationTypeDevice or #hipMemLocationTypeHost.
  * Any other value results in #hipErrorInvalidValue.
  *
- * @warning This API is marked as Beta. While this feature is complete, it can
- *          change and might have outstanding issues.
- *
  * @note  This API is implemented on Linux and is under development on Microsoft Windows.
  */
 hipError_t hipMemCreate(hipMemGenericAllocationHandle_t* handle, size_t size,
@@ -9480,8 +9473,6 @@ hipError_t hipMemCreate(hipMemGenericAllocationHandle_t* handle, size_t size,
  * @param [in] handleType - type of the shareable handle.
  * @param [in] flags - currently unused, must be zero.
  * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
- * @warning This API is marked as Beta. While this feature is complete, it can
- *          change and might have outstanding issues.
  *
  * @note  This API is implemented on Linux and is under development on Microsoft Windows.
  */
@@ -9497,8 +9488,6 @@ hipError_t hipMemExportToShareableHandle(void* shareableHandle,
  * @param [in] location - target location.
  * @param [in] ptr - address to check the access flags.
  * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
- * @warning This API is marked as Beta. While this feature is complete, it can
- *          change and might have outstanding issues.
  *
  * @note  This API is implemented on Linux and is under development on Microsoft Windows.
  */
@@ -9511,8 +9500,6 @@ hipError_t hipMemGetAccess(unsigned long long* flags, const hipMemLocation* loca
  * @param [in] prop - location properties.
  * @param [in] option - determines which granularity to return.
  * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
- * @warning This API is marked as Beta. While this feature is complete, it can
- *          change and might have outstanding issues.
  *
  * @note  This API is implemented on Linux and is under development on Microsoft Windows.
  *
@@ -9526,8 +9513,6 @@ hipError_t hipMemGetAllocationGranularity(size_t* granularity, const hipMemAlloc
  * @param [out] prop - properties of the given handle.
  * @param [in] handle - handle to perform the query on.
  * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
- * @warning This API is marked as Beta. While this feature is complete, it can
- *          change and might have outstanding issues.
  *
  * @note  This API is implemented on Linux and is under development on Microsoft Windows.
  */
@@ -9541,8 +9526,6 @@ hipError_t hipMemGetAllocationPropertiesFromHandle(hipMemAllocationProp* prop,
  * @param [in] osHandle - shareable handle representing the memory allocation.
  * @param [in] shHandleType - handle type.
  * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
- * @warning This API is marked as Beta. While this feature is complete, it can
- *          change and might have outstanding issues.
  *
  * @note  This API is implemented on Linux and is under development on Microsoft Windows.
  */
@@ -9558,8 +9541,6 @@ hipError_t hipMemImportFromShareableHandle(hipMemGenericAllocationHandle_t* hand
  * @param [in] handle - memory allocation to be mapped.
  * @param [in] flags - currently unused, must be zero.
  * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
- * @warning This API is marked as Beta. While this feature is complete, it can
- *          change and might have outstanding issues.
  *
  * @note  This API is implemented on Linux and is under development on Microsoft Windows.
  */
@@ -9573,8 +9554,6 @@ hipError_t hipMemMap(void* ptr, size_t size, size_t offset, hipMemGenericAllocat
  * @param [in] count - number of hipArrayMapInfo in mapInfoList.
  * @param [in] stream - stream identifier for the stream to use for map or unmap operations.
  * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
- * @warning This API is under development. Currently it is not supported on AMD
- *          GPUs and returns #hipErrorNotSupported.
  */
 hipError_t hipMemMapArrayAsync(hipArrayMapInfo* mapInfoList, unsigned int count,
                                hipStream_t stream);
@@ -9585,8 +9564,6 @@ hipError_t hipMemMapArrayAsync(hipArrayMapInfo* mapInfoList, unsigned int count,
  *
  * @param [in] handle - handle of the memory allocation.
  * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
- * @warning This API is marked as Beta. While this feature is complete, it can
- *          change and might have outstanding issues.
  *
  * @note  This API is implemented on Linux and is under development on Microsoft Windows.
  */
@@ -9598,8 +9575,6 @@ hipError_t hipMemRelease(hipMemGenericAllocationHandle_t handle);
  * @param [out] handle - handle representing addr.
  * @param [in] addr - address to look up.
  * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
- * @warning This API is marked as Beta. While this feature is complete, it can
- *          change and might have outstanding issues.
  *
  * @note  This API is implemented on Linux and is under development on Microsoft Windows.
  */
@@ -9614,8 +9589,6 @@ hipError_t hipMemRetainAllocationHandle(hipMemGenericAllocationHandle_t* handle,
  * @param [in] desc - array of hipMemAccessDesc.
  * @param [in] count - number of hipMemAccessDesc in desc.
  * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
- * @warning This API is marked as Beta. While this feature is complete, it can
- *          change and might have outstanding issues.
  *
  * @note  This API is implemented on Linux and is under development on Microsoft Windows.
  */
@@ -9627,8 +9600,6 @@ hipError_t hipMemSetAccess(void* ptr, size_t size, const hipMemAccessDesc* desc,
  * @param [in] ptr - starting address of the range to unmap.
  * @param [in] size - size of the virtual address range.
  * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
- * @warning This API is marked as Beta. While this feature is complete, it can
- *          change and might have outstanding issues.
  *
  * @note  This API is implemented on Linux and is under development on Microsoft Windows.
  */
