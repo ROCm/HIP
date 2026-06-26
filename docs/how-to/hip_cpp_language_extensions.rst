@@ -921,7 +921,7 @@ Arithmetic reduces:
 
 * On Nvidia platform: ``int`` or ``unsigned int``
 
-* On AMD platform: ``int`` or ``unsigned int``; if the user defines the macro ``HIP_ENABLE_EXTRA_WARP_SYNC_TYPES``, then: ``unsigned long long``, ``long long``, ``half``/``single``/``double`` precision floating
+* On AMD platform: ``int`` or ``unsigned int``; if the user defines the macro ``HIP_ENABLE_EXTRA_WARP_SYNC_TYPES``, then: ``unsigned long long``, ``long long``, ``half``/``float``/``double`` precision floating
 point types are also be supported.
 
 Returns the aggregated result of the arithmetic operation, where each of the participating threads
@@ -940,9 +940,9 @@ Logical reduces:
 
 ``T`` can be:
 
-* On Nvidia platform: ``unsigned int``
+* Nvidia: ``unsigned int``
 
-* On AMD platform: ``unsigned int``, and if the user defines the macro ``HIP_ENABLE_EXTRA_WARP_SYNC_TYPES``, then ``int``, ``unsigned long long`` or ``long long`` are also supported
+* AMD: ``unsigned int``, and if the user defines the macro ``HIP_ENABLE_EXTRA_WARP_SYNC_TYPES``, then ``int``, ``unsigned long long`` or ``long long`` are also supported
 
 Returns the result of the aggregated logical AND/OR/XOR operation where each of the participating threads
 (i.e. the ones mentioned on the mask) contribute ``var``.
@@ -952,7 +952,7 @@ participate in cross-lane communication with the calling lane. Each participatin
 bit set in its mask argument, and all active threads specified in any mask argument must execute the same
 call with the same mask, otherwise the result is undefined.
 
-Informational note: On the AMD platform, **masks that start from lane zero and have no "holes" use faster cross-lane operations and
+Informational note: On AMD, **masks that start from lane zero and have no "holes" use faster cross-lane operations and
 exhibit better performance** than masks with "holes" (example of mask with no holes: 0xFF and with holes: 0xFB;
 the reduction with 0xFF is faster).
 
