@@ -2068,6 +2068,12 @@ typedef enum hipMemRangeFlags {
  * Most HIP APIs implicitly initialize the HIP runtime.
  * This API provides control over the timing of the initialization.
  *
+ * @note Applications that use fork() should not initialize the HIP runtime
+ * before the fork when the child process will continue executing HIP code
+ * without an immediate exec(). Instead, the parent and child processes should
+ * initialize HIP independently after fork(). Inheriting HIP runtime state
+ * across fork() may lead to undefined behavior or initialization failures.
+ *
  * @returns #hipSuccess, #hipErrorInvalidValue
  */
 // TODO-ctx - more description on error codes.

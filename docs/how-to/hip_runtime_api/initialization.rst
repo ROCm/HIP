@@ -91,3 +91,12 @@ operations. This function performs several key tasks:
 
   Checks for errors in device selection and returns error if the specified
   device is not available or not capable of executing HIP operations.
+
+Process creation (`fork()`/`exec()`)
+================================================================================
+
+Applications that use `fork()` should avoid initializing the HIP runtime before
+the fork when the child process will continue execution without an immediate `exec()`.
+GPU runtime state, device contexts, internal threads, and synchronization objects may
+not be safely inherited across `fork()`. If both parent and child intend to use HIP
+after a fork, each process should initialize HIP independently after the fork.
