@@ -49,7 +49,8 @@ int main()
     // Run the kernel
     // ...
 
-    HIP_CHECK(hipMemcpy(device_input, host_input, element_number * sizeof(int), hipMemcpyHostToDevice));
+    // Copy the result back to host
+    HIP_CHECK(hipMemcpy(host_output, device_output, element_number * sizeof(int), hipMemcpyDeviceToHost));
 
     // Free host memory
     delete[] host_input;
