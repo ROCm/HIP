@@ -38,8 +38,14 @@ docs_core.setup()
 
 external_projects_current_project = "hip"
 
+# Generate llms.txt and llms-full.txt (requires the rocm-docs-core[llms] extra).
+rocm_docs_generate_llms = True
+
 for sphinx_var in ROCmDocs.SPHINX_VARS:
     globals()[sphinx_var] = getattr(docs_core, sphinx_var)
+
+# Enable the per-page Markdown download button.
+html_theme_options["use_download_button"] = True
 
 # Add the _extensions directory to Python's search path
 sys.path.append(str(Path(__file__).parent / 'extension'))
