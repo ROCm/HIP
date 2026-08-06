@@ -53,6 +53,11 @@ The following cooperative groups classes can be used on the device side.
 .. doxygenclass:: cooperative_groups::coalesced_group
    :members:
 
+.. _cluster_group_ref:
+
+.. doxygenclass:: cooperative_groups::cluster_group
+   :members:
+
 Cooperative groups construct functions
 ======================================
 

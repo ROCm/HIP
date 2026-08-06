@@ -91,7 +91,7 @@ Constructed via:
 
   thread_block g = this_thread_block();
 
-The ``group_index()`` , ``thread_index()`` , ``thread_rank()`` , ``size()``, ``cg_type()``, ``is_valid()`` , ``sync()`` and ``group_dim()`` member functions are public of the thread_block class. For further details, check the :ref:`thread_block references <thread_block_ref>` .
+The ``group_index()`` , ``thread_index()`` , ``thread_rank()`` , ``size()``, ``cg_type()``, ``is_valid()`` , ``sync()``, ``barrier_arrive()``, ``barrier_wait()`` and ``group_dim()`` member functions are public of the thread_block class. For further details, check the :ref:`thread_block references <thread_block_ref>` .
 
 Grid group
 ------------
@@ -108,7 +108,7 @@ Constructed via:
 
   grid_group g = this_grid();
 
-The ``thread_rank()`` , ``size()``, ``cg_type()``, ``is_valid()`` and ``sync()`` member functions
+The ``thread_rank()`` , ``size()``, ``cg_type()``, ``is_valid()``, ``sync()``, ``barrier_arrive()`` and ``barrier_wait()`` member functions
 are public of the ``grid_group`` class. For further details, check the :ref:`grid_group references <grid_group_ref>`.
 
 Multi-grid group
@@ -191,6 +191,48 @@ Constructed via:
   ``shfl()`` functions support integer or float type.
 
 The ``thread_rank()`` , ``size()``, ``cg_type()``, ``is_valid()``, ``sync()``, ``meta_group_rank()``, ``meta_group_size()``, ``shfl()``, ``shfl_down()``, ``shfl_up()``, ``ballot()``, ``any()``, ``all()``, ``match_any()`` and ``match_all()`` member functions are public of the ``coalesced_group`` class. For more information, see :ref:`coalesced_group references <coalesced_group_ref>` .
+
+.. _coop_cluster_group:
+
+Cluster group
+-------------
+
+Represents a group of thread blocks that execute together on the device. A cluster
+can be 1D, 2D, or 3D and can contain up to 15 workgroups. Each block in the cluster
+runs on a separate Workgroup Processor (WGP). The cluster group provides
+synchronization and shared-memory mapping across those blocks.
+
+.. code-block:: cpp
+
+  class cluster_group;
+
+Constructed via:
+
+.. code-block:: cpp
+
+  cluster_group g = this_cluster();
+
+The following member functions are public on the ``cluster_group`` class:
+
+* ``sync()`` — synchronizes all threads in the cluster.
+* ``barrier_arrive()`` — arrives at the cluster barrier and returns an ``arrival_token``.
+* ``barrier_wait(arrival_token&&)`` — waits on the token returned by ``barrier_arrive()``.
+* ``block_index()`` — returns the 3D index of the calling block within the cluster.
+* ``block_rank()`` — returns the rank of the calling block within ``[0, num_blocks())``.
+* ``thread_index()`` — returns the 3D index of the calling thread within the cluster.
+* ``thread_rank()`` — returns the rank of the calling thread within ``[0, num_threads())``.
+* ``dim_blocks()`` — returns the dimensions of the launched cluster in units of blocks.
+* ``num_blocks()`` — returns the total number of blocks in the cluster.
+* ``dim_threads()`` — returns the dimensions of the launched cluster in units of threads.
+* ``num_threads()`` (alias: ``size()``) — returns the total number of threads in the cluster.
+* ``map_shared_rank<T>(T* addr, int rank)`` — returns the address of a shared-memory variable in the block with the given rank.
+* ``query_shared_rank(const void* addr)`` — returns the block rank that owns the given shared-memory address.
+
+.. note::
+
+  ``map_shared_rank()`` and ``query_shared_rank()`` require a device that reports
+  multi-block cluster support. Check ``hipDeviceProp_t::clusterLaunch`` at
+  runtime before relying on these functions.
 
 Cooperative groups simple example
 =================================
@@ -476,6 +518,54 @@ With each group type, the synchronization requires using the correct cooperative
       multi_grid_group multi_grid = this_multi_grid();
       multi_grid.sync();
 
+Split barrier
+-------------
+
+``barrier_arrive()`` and ``barrier_wait()`` split synchronization into two
+separate steps, allowing useful work to be performed in between. This is
+supported on ``thread_block``, ``grid_group``, and ``cluster_group``.
+
+``barrier_arrive()`` signals that the calling thread has reached the barrier
+and returns an ``arrival_token``. The thread can then continue executing
+work that does not depend on other threads. ``barrier_wait()`` consumes the
+token and blocks until all threads in the group have called
+``barrier_arrive()``, at which point it is safe to read results written by
+other threads.
+
+.. code-block:: cpp
+
+  auto tok = g.barrier_arrive();
+
+  // Work that does not depend on other threads' results can go here.
+
+  g.barrier_wait(std::move(tok));
+
+The following example uses a split barrier on a ``thread_block`` to overlap
+a write to shared memory with a global memory write, avoiding an idle wait:
+
+.. code-block:: cpp
+
+  __global__ void split_barrier_example(float* out, float* in) {
+      namespace cg = cooperative_groups;
+
+      __shared__ float mid[32];
+      size_t i = threadIdx.x;
+      auto tb = cg::this_thread_block();
+
+      out[i] = in[i] * 2.0f;
+
+      auto tok = tb.barrier_arrive();
+
+      if (i == 0) {
+          for (size_t j = 0; j < 32; j++)
+              mid[j] = in[j];
+      }
+
+      tb.barrier_wait(std::move(tok));
+
+      out[i] += mid[i];
+  }
+
 .. _cg_operations:
 
 Operations
@@ -601,21 +691,50 @@ For bitwise-scans: (``bit_and``, ``bit_or``, ``bit_xor``)
 
 * AMD: ``unsigned int``, ``int``, ``unsigned long long`` or ``long long``
 
+memcpy_async
+------------
+
+To use ``memcpy_async``, include the optional header:
+
+  .. code-block:: cpp
+
+    #include <hip/cooperative_groups/memcpy_async.h>
+
+Cooperatively copies memory between global and shared (LDS) memory, distributing
+the work across all threads in the group. The copy is completed before the function
+returns; no separate ``wait`` call is needed.
+
+Two overloads are available:
+
+.. code-block:: cpp
+
+  // Byte-count overload
+  void memcpy_async(const TyGroup& group,
+                    TyElem* dst,
+                    const TyElem* src,
+                    const TySizeT& count);
+
+  // Layout overload: copies min(dstLayout, srcLayout) elements
+  void memcpy_async(const TyGroup& group,
+                    TyElem* dst, const DstLayout& dstLayout,
+                    const TyElem* src, const SrcLayout& srcLayout);
+
+The supported group types are ``thread_block``, ``coalesced_group``, and
+``thread_block_tile<N>``.
+
+**Performance**
+
+On devices that support hardware-accelerated asynchronous copies, ``memcpy_async``
+uses dedicated global-to-LDS and LDS-to-global transfer paths in widths of 4, 8,
+or 16 bytes. On other devices, the implementation falls back to a software copy
+loop with equivalent semantics.
+
 Unsupported NVIDIA CUDA features
 ================================
-
-HIP doesn't support the following NVIDIA CUDA optional headers:
-
-* ``cooperative_groups/memcpy_async.h``
-
-HIP doesn't support the following CUDA class in ``cooperative_groups`` namespace:
-
-* ``cluster_group``
 
 HIP doesn't support the following CUDA functions/operators in ``cooperative_groups`` namespace:
 
 * ``synchronize``
-* ``memcpy_async``
 * ``wait`` and ``wait_prior``
 * ``invoke_one`` and ``invoke_one_broadcast``
 * ``reduce_update_async`` and ``reduce_store_async``
