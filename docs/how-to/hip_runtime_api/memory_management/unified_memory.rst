@@ -125,7 +125,7 @@ allocators (e.g., ``new``, ``malloc()``) can be used.
       - ✅ :sup:`1`
     * - CDNA2
       - ✅
-      - ✅ :sup:`1`
+      - ✅ :sup:`1` :sup:`2`
     * - CDNA1
       - ✅
       - ❌
@@ -142,6 +142,9 @@ allocators (e.g., ``new``, ``malloc()``) can be used.
 
 :sup:`1` Works only with ``HSA_XNACK=1`` and kernels with HMM support. First GPU
 access causes recoverable page-fault.
+
+:sup:`2` XNACK is not supported on CDNA2 (MI200 series) in SR-IOV configurations.
+System allocator support is therefore unavailable in that environment.
 
 .. _memory allocation approaches in unified memory:
 
