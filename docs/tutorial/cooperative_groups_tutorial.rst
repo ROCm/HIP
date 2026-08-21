@@ -237,4 +237,9 @@ The kernel launch is done with the ``hipLaunchCooperativeKernel`` of the  cooper
 Conclusion
 ==========
 
-With cooperative groups, you can easily use custom partitions to create custom tiles for custom solutions. You can find the complete code at `cooperative groups ROCm example. <https://github.com/ROCm/rocm-examples/tree/develop/HIP-Basic/cooperative_groups>`_
+With cooperative groups, you can use custom partitions to create custom tiles for custom solutions. For complete code, see the `cooperative groups ROCm example. <https://github.com/ROCm/rocm-examples/tree/develop/HIP-Basic/cooperative_groups>`_.
+
+The following supplementary cooperative groups examples demonstrate additional API features:
+
+- `double-buffered tile <https://github.com/ROCm/rocm-examples/tree/amd-staging/HIP-Basic/cooperative_groups_double_buffered_tile>`_ combines ``memcpy_async`` with a split barrier.
+- `prefix sum <https://github.com/ROCm/rocm-examples/tree/amd-staging/HIP-Basic/cooperative_groups_prefix_sum>`_ showcases a parallel prefix sum implementation using ``inclusive_scan`` and ``exclusive_scan``.
