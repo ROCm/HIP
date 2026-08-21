@@ -239,8 +239,8 @@ Making device visible
 ---------------------------------------------------------------------------------
 
 For systems with multiple devices, you can choose to make only certain device(s) visible to HIP using
-``HIP_VISIBLE_DEVICES`` (or ``CUDA_VISIBLE_DEVICES`` on an NVIDIA platform). Once enabled, HIP can
-only view devices that have indices present in the sequence. For example:
+``HIP_VISIBLE_DEVICES``. Once enabled, HIP can only view devices that have indices present in the sequence.
+For example:
 
 .. code-block:: console
 

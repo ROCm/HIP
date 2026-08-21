@@ -21,7 +21,7 @@ environment variables in HIP are collected in the following table.
       - :doc:`GPU isolation <rocm:conceptual/gpu-isolation>`
       - Example: ``0,2``
 
-    * - | ``HIP_VISIBLE_DEVICES`` or ``CUDA_VISIBLE_DEVICES``
+    * - | ``HIP_VISIBLE_DEVICES``
         | Device indices exposed to HIP applications.
       - :doc:`GPU isolation <rocm:conceptual/gpu-isolation>`, :doc:`HIP debugging <hip:how-to/debugging>`
       - Example: ``0,2``
@@ -31,5 +31,3 @@ environment variables in HIP are collected in the following table.
   * On Linux, use ``ROCR_VISIBLE_DEVICES``.
 
   * On Windows, use ``HIP_VISIBLE_DEVICES``.
-
-  * For portability across different vendors, use ``CUDA_VISIBLE_DEVICES``.

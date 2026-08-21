@@ -65,7 +65,7 @@ and :doc:`GPU isolation <rocm:conceptual/gpu-isolation>`.
       - | 0: Disable. Kernel executes normally.
         | 1: Enable. Serializes kernel enqueue, behaves the same as ``AMD_SERIALIZE_KERNEL``.
 
-    * - | ``HIP_VISIBLE_DEVICES`` (or ``CUDA_VISIBLE_DEVICES``)
+    * - | ``HIP_VISIBLE_DEVICES``
         | Only devices whose index is present in the sequence are visible to HIP
       - Unset by default.
       - 0,1,2: Depending on the number of devices on the system.
