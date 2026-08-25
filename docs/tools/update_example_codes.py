@@ -130,6 +130,13 @@ urllib.request.urlretrieve(
     "docs/tools/example_codes/sequential_kernel_execution.hip"
 )
 
+# Using-HIP-Runtime-API / Execution-Context
+# TODO: switch branch from execution_context to amd-staging once the example is merged.
+urllib.request.urlretrieve(
+    "https://raw.githubusercontent.com/ROCm/rocm-examples/refs/heads/amd-staging/HIP-Basic/execution_context/main.hip",
+    "docs/tools/example_codes/execution_context.hip"
+)
+
 # Using-HIP-Runtime-API / Call-Stack
 urllib.request.urlretrieve(
     "https://raw.githubusercontent.com/ROCm/rocm-examples/amd-staging/HIP-Doc/Programming-Guide/Using-HIP-Runtime-API/Call-Stack/call_stack_management/main.cpp",
